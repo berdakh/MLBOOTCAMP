@@ -371,7 +371,7 @@ WO = {}
 for bits in (8, 4):
     m = copy.deepcopy(teacher_cpu)
     n_layers = S.fake_quantize_linears(m, bits=bits)
-    WO[bits] = accuracy(predict_logits(m, eval_texts, CPU), eval_y)
+    WO[bits] = accuracy(predict_logits(m.to(DEVICE), eval_texts, DEVICE), eval_y)  # fp math: any device
     print(f"weight-only int{bits} per-channel ({n_layers} Linear layers): accuracy {WO[bits]:.3f} "
           f"(fp32 {ACC_TEACHER:.3f})")
     del m

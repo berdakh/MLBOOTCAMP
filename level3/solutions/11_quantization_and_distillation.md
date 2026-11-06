@@ -63,11 +63,11 @@ With α = 1 and a student identical to the teacher the loss is 0.
 
 ✍️ / 🔬 Based on the table in 11.5 (your numbers will differ):
 
-**(a)** At batch 1 on one CPU thread, the fp32 teacher took ~45 ms (median) and
-the int8 teacher ~20 ms; neither leaves room for a 20 ms *p99* (p99 is well above
+**(a)** At batch 1 on one CPU thread, the fp32 teacher took ~45–55 ms (median) and
+the int8 teacher ~15–20 ms; neither leaves room for a 20 ms *p99* (p99 is well above
 the median, plus tokenisation and network). The TF-IDF student took ~1 ms. Batching
-on a CPU barely reduced the per-example cost of the transformer in our
-measurement (11.2), and waiting to fill batches adds latency, so batching does not
+on a CPU reduced the per-example cost of the transformer only modestly in our
+measurement (11.2, and it used two threads), and waiting to fill batches adds latency, so batching does not
 rescue the teacher here; it would on a GPU. At 2,000 requests/s, even the int8
 teacher would need ~40 single-threaded cores busy at all times, against roughly
 2 cores for the student.
@@ -119,13 +119,14 @@ train longer; then ensembling teachers for better soft targets.
 5. **Transfer set.** The teacher can label as much unlabelled in-domain text
    as you have, so the student learns from far more examples than were ever
    annotated: data, not just soft targets, is usually the big win. In 11.4 the
-   transfer-set variants beat the labelled-only ones, while soft targets on
-   the labelled set alone did not help this bag-of-words student.
+   transfer-set variants beat the labelled-only ones by 1–1.5 points
+   (0.849/0.843 vs 0.835), while soft targets on the labelled set alone did not
+   help this bag-of-words student (0.827).
 6. **4× cheaper with ≤ 1 point loss.** Measure first: latency/throughput at
    production batch and sequence sizes, cost per request, accuracy on a fixed
    evaluation set with confidence intervals. Then in order: serving
    improvements (batching, ONNX Runtime/TensorRT, fp16 on GPU), int8
-   quantisation (nearly free, ~2× on CPU in 11.2), shorter max sequence length
+   quantisation (nearly free, 2–3× on CPU in 11.2), shorter max sequence length
    if the data allows, distillation into a smaller student with a large
    transfer set (and quantise the student), then a cascade (cheap model first,
    expensive model on low-confidence cases). Validate the final choice with an

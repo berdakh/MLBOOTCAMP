@@ -71,9 +71,11 @@ def cost_per_1k(requests_per_second, price_per_hour, utilization):
     return 1000 * price_per_hour / (requests_per_second * 3600 * utilization)
 ```
 
-**In 12.8** (assumed $0.20/h, 40% utilisation) the measured CPU throughputs
-gave $0.00114 per 1,000 requests without batching (122 req/s) and $0.00045 with
-dynamic batching (308 req/s). Halving the cost needs any of: 2× throughput,
+**In 12.8** (assumed $0.20/h, 40% utilisation) the measured CPU throughputs of
+one run gave $0.00114 per 1,000 requests without batching (122 req/s) and
+$0.00045 with dynamic batching (308 req/s); on a quieter machine the no-batching
+plateau was higher (246 req/s), so the saving was smaller. 🔬 Your numbers depend
+on the machine. Halving the cost needs any of: 2× throughput,
 half the price (spot/reserved instances), or 2× utilisation (autoscaling).
 
 ---
@@ -127,7 +129,8 @@ and pricing/limits that reflect the longer context.
    `max_wait_ms` (a small fraction of the SLO, a few ms). At low load batches
    stay small and the wait is pure added latency (12.4: p50 grew from 18 to 55 ms
    as the wait went 0 → 25 ms at 4 clients); at high load batches fill without
-   waiting and throughput rises (12.4: 308 vs ~110 req/s at 32 clients).
+   waiting and throughput rises (12.4: ~310 req/s with batching vs a 110–245 req/s
+   plateau without, depending on machine load).
 3. **Load testing.** Report throughput and latency percentiles (p50, p95,
    p99) per offered load, error rate and batch-size distribution; means hide
    the tail that users and SLOs care about. Find capacity by increasing load
@@ -140,7 +143,7 @@ and pricing/limits that reflect the longer context.
    Decode generates one token per step: each step reads all weights and the KV
    cache for one token per sequence, memory-bound. The KV cache makes a decode
    step O(1) in the projections/MLP instead of re-running the whole prefix
-   (12.5 measured 1.4–1.8× more tokens/s with the cache for 32 new tokens; more
+   (12.5 measured 1.4–2.1× more tokens/s with the cache for 32 new tokens; more
    for longer outputs), at the cost of memory linear in sequence length.
 5. **Continuous batching and paged attention.** Continuous batching schedules
    at every decode step: finished sequences leave, waiting requests join, so

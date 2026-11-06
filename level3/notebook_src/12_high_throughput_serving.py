@@ -295,16 +295,23 @@ for max_batch, wait in [(1, 0.0), (32, 2.0)]:
 print(f"({time.time() - t0:.0f} s)")
 
 # %% [markdown]
-# **Expected (CPU, measured; one shared machine):**
+# **Expected (CPU, measured; one shared machine, so numbers move between runs):**
 #
 # * at concurrency 1 a batch can only ever hold one request, so batching can only *add*
-#   latency: the 2 ms wait plus the hand-off to a worker thread (our run: p50 6.5 → 15 ms);
-# * without batching, throughput **plateaus** immediately (~105–120 req/s in our run) and
-#   adding clients only adds queueing: p50 grows in proportion to the concurrency (35 ms at 4
-#   clients, 140 ms at 16, 290 ms at 32);
-# * with dynamic batching the mean batch size grows with load (1 → 3.4 → 7 → 8.6), throughput
-#   keeps rising (144 → 267 → 308 req/s, ~2.8× the plateau), and at 16–32 clients p50 is 3–4×
-#   lower than without batching (53 vs 140 ms; 78 vs 290 ms).
+#   latency: the 2 ms wait plus the hand-off to a worker thread (our runs: p50 5.6 → 8.4 ms
+#   on a quiet machine, 6.5 → 15 ms on a busy one);
+# * without batching, throughput **plateaus** from 4 clients on (~240 req/s on a quiet machine,
+#   ~110 on a busy one) and adding clients only adds queueing: p50 grows in proportion to
+#   the concurrency (quiet run: 16 ms at 4 clients, 65 ms at 16, 126 ms at 32);
+# * with dynamic batching the mean batch size grows with load (1 → 4 → ~7–8), throughput rises
+#   to ~310 req/s in both runs, and at 16–32 clients p50 is lower than without batching
+#   (quiet run: 48 vs 65 ms and 73 vs 126 ms; busy run: 53 vs 140 ms and 78 vs 290 ms).
+#
+# The gain here (1.3× on a quiet machine, 2.8× on a busy one) is capped by the Python HTTP
+# layer: parsing and answering a request costs a few ms of event-loop time whether or not it
+# is batched, so ~300 req/s is the ceiling of one uvicorn process on this CPU. When the model
+# call dominates, as for a transformer on a GPU, batching's gain approaches the 6× of 12.1.
+# Production servers also run several worker processes per machine.
 #
 # Read it as a **throughput–latency curve**: each configuration traces latency rising with
 # load, and batching moves the curve right (more requests per second at the same latency).
@@ -319,7 +326,7 @@ WAIT = [run_config(32, w, 4) for w in (0.0, 2.0, 10.0, 25.0)]
 # %% [markdown]
 # **Expected (CPU, measured):** as the wait grows from 0 to 25 ms the batches fill up (mean
 # 2.0 → 4.0: at most 4 requests can ever be waiting) but p50 grows by roughly the wait
-# (18 → 55 ms) and throughput *falls* (215 → 70 req/s), because each closed-loop client
+# (our runs: ~15–18 → 52–55 ms) and throughput *falls* (~215–255 → ~70–76 req/s), because each closed-loop client
 # waits longer per request. Note that `max_wait_ms=0` still batches (2.0 on average): it takes
 # whatever queued up while the previous batch was running. So: set `max_wait_ms` to
 # a small fraction of the latency SLO (a few ms), let `max_batch_size` be what the
@@ -396,10 +403,10 @@ _ = (OUT / "generation.json").write_text(json.dumps({"device": str(DEVICE), "new
                                                     "runs": GEN}, indent=2))
 
 # %% [markdown]
-# **Expected (CPU, 2 threads, measured; a busy shared machine):** batch 1 without the cache
-# ~7–10 tokens/s, with the cache ~10–17 tokens/s (our two runs: 1.4× and 1.8× faster; the gap
-# grows with the number of generated tokens, since an uncached step re-processes the whole
-# sequence); batch 8 with the cache ~57–86 tokens/s, 3–8× batch 1, because decode is
+# **Expected (CPU, 2 threads, measured; varies with machine load):** batch 1 without the cache
+# ~7–16 tokens/s, with the cache ~10–34 tokens/s (our runs: 1.4–2.1× faster; the gap grows
+# with the number of generated tokens, since an uncached step re-processes the whole
+# sequence); batch 8 with the cache ~57–119 tokens/s, 3.5–8× batch 1, because decode is
 # memory-bound and the weights are read once for all 8 sequences. Greedy GPT-2 text is
 # repetitive; that is the model, not a bug. **On a T4 you should see** hundreds of tokens/s
 # at batch 1 in fp16 and thousands at batch 8+ (not measured in our verification runs).
@@ -516,8 +523,8 @@ for name, rps, price in cases:
 
 # %% [markdown]
 # **Expected:** dynamic batching cuts the cost per request by the same factor as it raised
-# throughput (our run: $0.00114 → $0.00045 per 1,000 requests at 122 → 308 req/s), with the
-# same machine and price. The GPU row is arithmetic on assumptions, not a measurement. The levers on cost
+# throughput (busy run: $0.00114 → $0.00045 per 1,000 requests at 122 → 308 req/s; quiet run:
+# 246 → 315 req/s), with the same machine and price. The GPU row is arithmetic on assumptions, not a measurement. The levers on cost
 # are throughput (batching, quantisation, distillation, better kernels), price (spot/reserved
 # instances, cheaper hardware), and utilisation (autoscaling, mixing batch and online
 # traffic). For generation, quote cost per 1,000 *tokens*, and remember output tokens cost more
