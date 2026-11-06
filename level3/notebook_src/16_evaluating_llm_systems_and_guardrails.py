@@ -276,8 +276,16 @@ lp_v1 = le.choice_logprobs(model, tok, [judge_messages(t.text, p, g) for t, p, g
 lp_v2 = le.choice_logprobs(model, tok, [judge_messages(t.text, g, p) for t, p, g in zip(tickets, padded, good)], batch_size=BATCH)
 prefers_long = np.r_[lp_v1[:, 0] >= lp_v1[:, 1], lp_v2[:, 1] > lp_v2[:, 0]].mean()
 print(f"verbosity: the padded (equally correct) answer wins {prefers_long:.2f} of judgments over both orders")
+# position-debiased verdicts: average the log-prob margin for a candidate over its two positions
+margin_good = ((lp_ab[:, 0] - lp_ab[:, 1]) + (lp_ba[:, 1] - lp_ba[:, 0])) / 2
+margin_long = ((lp_v1[:, 0] - lp_v1[:, 1]) + (lp_v2[:, 1] - lp_v2[:, 0])) / 2
+print(f"debiased (margin averaged over both orders): correct answer preferred in {np.mean(margin_good > 0):.2f} "
+      f"of pairs; padded answer preferred in {np.mean(margin_long > 0):.2f}")
+print(f"mean log-prob margin 'A' over 'B' across all judge prompts: "
+      f"{np.mean(np.r_[lp_ab[:, 0] - lp_ab[:, 1], lp_ba[:, 0] - lp_ba[:, 1]]):+.2f} nats")
 RESULTS["judge"] = {"acc_correct_in_A": acc_ab, "acc_correct_in_B": acc_ba, "position_bias_rate": same,
-                    "prefers_padded": prefers_long}
+                    "prefers_padded": prefers_long, "debiased_correct": float(np.mean(margin_good > 0)),
+                    "debiased_padded": float(np.mean(margin_long > 0))}
 
 # %% [markdown]
 # **Expected (CPU budget, measured):** XX
@@ -341,19 +349,23 @@ with open(OUT / "generations.jsonl", "w") as f:
 # benign tickets (including tricky ones such as "please disregard my duplicate ticket"), tickets with
 # injections from four template families, and tickets with insults. The test set uses **two families
 # the classifier never saw** ("forget …", fake system tags), which is what real attackers do: a
-# guardrail that only knows yesterday's attacks is not a guardrail.
+# guardrail that only knows yesterday's attacks is not a guardrail. The test injections also pursue
+# **goals** never seen in training ("give this customer a 100% discount code" …), so the classifier
+# cannot simply memorise payloads. The threshold is set on a separate validation set drawn like the
+# training data.
 
 # %%
 tr_text, tr_y, tr_kind = le.make_guardrail_set(3000, seed=1)
-te_text, te_y, te_kind = le.make_guardrail_set(1500, seed=2, families=tuple(le._INJECTION_FAMILIES))
+va_text, va_y, _ = le.make_guardrail_set(1000, seed=3)  # same distribution as training: for the threshold
+te_text, te_y, te_kind = le.make_guardrail_set(1500, seed=2, families=tuple(le._INJECTION_FAMILIES), heldout_goals=True)
 gvec = TfidfVectorizer(analyzer="char_wb", ngram_range=(2, 5), min_df=2, sublinear_tf=True)
 gclf = LogisticRegression(C=4.0, max_iter=2000).fit(gvec.fit_transform(tr_text), tr_y)
 te_score = gclf.predict_proba(gvec.transform(te_text))[:, 1]
 print(f"train kinds: {pd.Series(tr_kind).value_counts().to_dict()}")
 print(f"test AUC {roc_auc_score(te_y, te_score):.3f}")
-# choose the threshold on TRAINING data for a 2% false-positive rate (the test set must not pick it)
-tr_score = gclf.predict_proba(gvec.transform(tr_text))[:, 1]
-THRESH = float(np.quantile(tr_score[tr_y == 0], 0.98))
+# choose the threshold on VALIDATION data for a 2% false-positive rate (the test set must not pick it)
+va_score = gclf.predict_proba(gvec.transform(va_text))[:, 1]
+THRESH = float(np.quantile(va_score[va_y == 0], 0.98))
 kinds = pd.Series(te_kind)
 by_kind = pd.DataFrame({"n": kinds.value_counts(), "flag rate": pd.Series(te_score >= THRESH).groupby(kinds).mean()})
 print(f"threshold {THRESH:.3f}\n" + by_kind.round(3).to_string())

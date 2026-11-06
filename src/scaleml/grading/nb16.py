@@ -53,7 +53,8 @@ def ex3(guardrail):
 
         from scaleml import llmeval as le
 
-        texts, labels, kinds = le.make_guardrail_set(400, seed=987_654, families=tuple(le._INJECTION_FAMILIES))
+        texts, labels, kinds = le.make_guardrail_set(400, seed=987_654, families=tuple(le._INJECTION_FAMILIES),
+                                                     heldout_goals=True)
         flags = np.array([bool(guardrail(t)) for t in texts])
         recall = flags[labels == 1].mean()
         fpr = flags[labels == 0].mean()

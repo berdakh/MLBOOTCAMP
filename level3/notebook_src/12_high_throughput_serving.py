@@ -100,8 +100,8 @@ OUT = ART / "level3" / "nb12"
 OUT.mkdir(parents=True, exist_ok=True)
 seed_everything(0)
 
-# The model we serve: an MLP whose weights (143 MB in fp32) are large compared with one input.
-IN_DIM, HIDDEN, N_CLASSES = 512, 4096, 10
+# The model we serve: an MLP whose weights (135 MB in fp32) are large compared with one input.
+IN_DIM, HIDDEN, N_CLASSES = 64, 4096, 10
 torch.manual_seed(0)
 mlp = torch.nn.Sequential(torch.nn.Linear(IN_DIM, HIDDEN), torch.nn.ReLU(), torch.nn.Linear(HIDDEN, HIDDEN),
                           torch.nn.ReLU(), torch.nn.Linear(HIDDEN, HIDDEN), torch.nn.ReLU(),
@@ -110,7 +110,7 @@ n_params = sum(p.numel() for p in mlp.parameters())
 print(f"served model: {n_params / 1e6:.1f}M parameters ({n_params * 4 / 1e6:.0f} MB fp32) on {DEVICE}")
 
 # %% [markdown]
-# **Expected:** `served model: 35.7M parameters (143 MB fp32)`.
+# **Expected:** `served model: 33.9M parameters (135 MB fp32)`.
 #
 # ## 12.1 · Why batching helps: latency vs batch size
 #
@@ -243,6 +243,8 @@ async def predict(req: PredictRequest):
     return {"label": await batcher.submit(req.features)}
 
 
+N_THREADS = torch.get_num_threads()
+torch.set_num_threads(1)  # leave a core for the server's event loop (and the load generator)
 server = S.UvicornThread(app, port=S.free_port()).start()
 print("serving at", server.url)
 rng = np.random.default_rng(0)
@@ -262,8 +264,10 @@ print("server answers:", got, "| direct model call:", want)
 # in a **separate process** (`load_test_process`) so that the client does not steal the
 # server's CPU time and GIL. We
 # compare **no batching** (`max_batch_size=1`) with **dynamic batching** (`max_batch_size=32,
-# max_wait_ms=2`) at 1, 4, 16 and 64 concurrent clients, and record throughput, p50 and p95
-# latency, and the mean batch size the model actually saw.
+# max_wait_ms=2`) at 1, 4, 16 and 32 concurrent clients, and record throughput, p50 and p95
+# latency, and the mean batch size the model actually saw. The model runs on **one** thread
+# here, so that the server's event loop and the load generator get the remaining cores (on a
+# 2-vCPU Colab machine everything else would starve).
 
 # %%
 N_REQ = 300 if DEVICE.type == "cpu" else 1000
@@ -272,7 +276,7 @@ N_REQ = 300 if DEVICE.type == "cpu" else 1000
 def run_config(max_batch, max_wait_ms, concurrency, n=N_REQ):
     batcher.max_batch_size, batcher.max_wait_ms = max_batch, max_wait_ms
     batcher.batch_sizes.clear()
-    S.load_test(server.url + "/predict", payloads[:20], concurrency=min(concurrency, 20))  # warm-up
+    S.load_test(server.url + "/predict", payloads[:concurrency], concurrency=concurrency)  # warm-up
     batcher.batch_sizes.clear()
     res = S.load_test_process(server.url + "/predict", (payloads * 10)[:n], concurrency=concurrency)
     row = {"max_batch": max_batch, "max_wait_ms": max_wait_ms, **res.summary(),
@@ -286,7 +290,7 @@ def run_config(max_batch, max_wait_ms, concurrency, n=N_REQ):
 LOAD = []
 t0 = time.time()
 for max_batch, wait in [(1, 0.0), (32, 2.0)]:
-    for conc in (1, 4, 16, 64):
+    for conc in (1, 4, 16, 32):
         LOAD.append(run_config(max_batch, wait, conc))
 print(f"({time.time() - t0:.0f} s)")
 
@@ -320,6 +324,7 @@ WAIT = [run_config(32, w, 4) for w in (0.0, 2.0, 10.0, 25.0)]
 
 # %%
 server.stop()
+torch.set_num_threads(N_THREADS)
 print("server stopped:", not server.thread.is_alive())
 (OUT / "load_test.json").write_text(json.dumps({"device": str(DEVICE), "batch_curve": BATCH_CURVE,
                                                 "load": LOAD, "max_wait_sweep": WAIT}, indent=2))
