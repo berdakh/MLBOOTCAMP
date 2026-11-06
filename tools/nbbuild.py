@@ -21,7 +21,8 @@ Usage::
 
     python tools/nbbuild.py            # build every source
     python tools/nbbuild.py --check    # fail if notebooks are stale (CI)
-    python tools/nbbuild.py 03_sql_for_ml
+    python tools/nbbuild.py 03_sql_for_ml      # substring of the path
+    python tools/nbbuild.py level2/            # one level
 """
 
 from __future__ import annotations
@@ -32,8 +33,10 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SRC_DIR = REPO_ROOT / "notebook_src"
-OUT_DIR = REPO_ROOT / "notebooks"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from levels import LEVELS  # noqa: E402
+from levels import sources as level_sources
+
 # Sources whose name starts with "_" are fragments/templates, not notebooks.
 
 KERNELSPEC = {
@@ -153,25 +156,26 @@ def main() -> int:
     parser.add_argument("--check", action="store_true", help="verify notebooks are up to date")
     args = parser.parse_args()
 
-    sources = sorted(p for p in SRC_DIR.glob("*.py") if not p.name.startswith("_"))
+    pairs = [(src, level.nb_dir / (src.stem + ".ipynb")) for level in LEVELS for src in level_sources(level)]
     if args.only:
-        sources = [s for s in sources if any(token in s.name for token in args.only)]
-    if not sources:
+        pairs = [(s, o) for s, o in pairs
+                 if any(token in s.relative_to(REPO_ROOT).as_posix() for token in args.only)]
+    if not pairs:
         print("no notebook sources matched", file=sys.stderr)
         return 1
 
-    OUT_DIR.mkdir(exist_ok=True)
     stale: list[str] = []
-    for src in sources:
-        out = OUT_DIR / (src.stem + ".ipynb")
+    for src, out in pairs:
+        out.parent.mkdir(parents=True, exist_ok=True)
         text = render(build_notebook(src))
         if args.check:
             if not out.exists() or out.read_text(encoding="utf-8") != text:
-                stale.append(out.name)
+                stale.append(str(out.relative_to(REPO_ROOT)))
             continue
         out.write_text(text, encoding="utf-8")
         n_cells = len(json.loads(text)["cells"])
         print(f"built {out.relative_to(REPO_ROOT)}  ({n_cells} cells)")
+    sources = pairs
 
     if args.check:
         if stale:

@@ -31,11 +31,13 @@ from nbclient import NotebookClient
 from nbclient.exceptions import CellExecutionError
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-NB_DIR = REPO_ROOT / "notebooks"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from levels import all_notebooks  # noqa: E402
 
 
 def versions() -> str:
-    mods = ["numpy", "pandas", "sklearn", "duckdb", "fastapi", "pydantic", "httpx", "uvicorn"]
+    mods = ["numpy", "pandas", "sklearn", "duckdb", "fastapi", "pydantic", "httpx", "uvicorn",
+            "torch", "transformers"]
     out = [f"python {platform.python_version()}"]
     for name in mods:
         try:
@@ -55,7 +57,7 @@ def run_one(path: Path, timeout: int, fresh: bool, save_dir: Path | None = None)
     start = time.time()
     try:
         NotebookClient(nb, timeout=timeout, kernel_name="python3",
-                       resources={"metadata": {"path": str(NB_DIR)}}).execute()
+                       resources={"metadata": {"path": str(path.parent)}}).execute()
         status, detail = "PASS", ""
     except CellExecutionError as exc:
         status, detail = "FAIL", str(exc).strip().splitlines()[-1][:300]
@@ -64,7 +66,7 @@ def run_one(path: Path, timeout: int, fresh: bool, save_dir: Path | None = None)
     finally:
         if save_dir is not None:
             save_dir.mkdir(parents=True, exist_ok=True)
-            nbformat.write(nb, save_dir / path.name)
+            nbformat.write(nb, save_dir / path.relative_to(REPO_ROOT).as_posix().replace("/", "__"))
         if env_backup is None:
             os.environ.pop("BOOTCAMP_ARTIFACTS", None)
         else:
@@ -81,9 +83,10 @@ def main() -> int:
     parser.add_argument("--save-executed", type=Path, help="write executed copies (with outputs) here")
     args = parser.parse_args()
 
-    notebooks = sorted(NB_DIR.glob("*.ipynb"))
+    notebooks = all_notebooks()
     if args.only:
-        notebooks = [n for n in notebooks if any(t in n.name for t in args.only)]
+        notebooks = [n for n in notebooks
+                     if any(t in n.relative_to(REPO_ROOT).as_posix() for t in args.only)]
     if args.shared and "BOOTCAMP_ARTIFACTS" not in os.environ:
         os.environ["BOOTCAMP_ARTIFACTS"] = tempfile.mkdtemp(prefix="nb-shared-")
 
@@ -97,8 +100,9 @@ def main() -> int:
     for path in notebooks:
         status, secs, detail = run_one(path, args.timeout, fresh=not args.shared, save_dir=args.save_executed)
         failures += status != "PASS"
-        print(f"{status}  {path.name:<48} {secs:6.1f}s  {detail}")
-        rows.append((path.name, status, secs, detail))
+        name = path.relative_to(REPO_ROOT).as_posix()
+        print(f"{status}  {name:<62} {secs:6.1f}s  {detail}")
+        rows.append((name, status, secs, detail))
 
     if args.report:
         lines = [
