@@ -248,6 +248,45 @@ def load_test(url: str, payloads: Sequence[dict], concurrency: int, timeout: flo
     return run_async(lambda: _load(url, payloads, concurrency, timeout))
 
 
+_LOADGEN = (
+    "import json, sys\n"
+    "from scaleml.serving import load_test\n"
+    "payloads = json.load(open(sys.argv[1]))\n"
+    "r = load_test(sys.argv[2], payloads, int(sys.argv[3]), float(sys.argv[4]))\n"
+    "print(json.dumps({'concurrency': r.concurrency, 'n_requests': r.n_requests, 'seconds': r.seconds,\n"
+    "                  'latencies_ms': r.latencies_ms, 'errors': r.errors}))\n"
+)
+
+
+def load_test_process(url: str, payloads: Sequence[dict], concurrency: int, timeout: float = 30.0) -> LoadResult:
+    """``load_test`` in a separate Python process, so the client does not share the server's GIL.
+
+    A load generator inside the server's own process steals CPU time (and the
+    GIL) from the server and makes it look slower than it is. Real load tests
+    run on other machines; a separate process is the closest we get here.
+    """
+    import json
+    import os
+    import subprocess
+    import sys
+    import tempfile
+    from pathlib import Path
+
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+        json.dump(list(payloads), f)
+    src = str(Path(__file__).resolve().parents[1])
+    env = {**os.environ, "PYTHONPATH": src + os.pathsep + os.environ.get("PYTHONPATH", ""),
+           "OMP_NUM_THREADS": "1"}
+    try:
+        proc = subprocess.run([sys.executable, "-c", _LOADGEN, f.name, url, str(concurrency), str(timeout)],
+                              capture_output=True, text=True, env=env, timeout=timeout * len(payloads) + 60)
+    finally:
+        os.unlink(f.name)
+    if proc.returncode != 0:
+        raise RuntimeError(f"load generator failed: {proc.stderr.strip()[-500:]}")
+    return LoadResult(**json.loads(proc.stdout.strip().splitlines()[-1]))
+
+
 # --------------------------------------------------------------------------- generation scheduling
 
 

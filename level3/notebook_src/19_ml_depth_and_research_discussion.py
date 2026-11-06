@@ -222,7 +222,8 @@ RESULTS["warmup"] = warm_rows
 # second-moment estimate built from very few gradients, so the effective step
 # is large and erratic exactly when the network is least robust. (A single
 # seed per cell: the 0.03-sized differences at 3e-3 are within seed noise;
-# the 0.3–0.5 gaps at high LR are not.) Runtime ~1 minute on 2 CPU threads.
+# the 0.3–0.5 gaps at high LR are not.) Runtime ~1 minute on 2 idle CPU threads
+# (up to ~6 minutes when our build machine was heavily shared).
 #
 # Production schedules combine warmup with a decay. `scaleml.train.linear_warmup_cosine`
 # (used by `train()`) is one; write it yourself as a function of the step:

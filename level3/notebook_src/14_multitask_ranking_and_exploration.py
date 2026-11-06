@@ -127,9 +127,9 @@ corr = np.corrcoef(np.log(test_df.true_ctr), np.log(test_df.true_cvr))[0, 1]
 print(f"correlation of log true CTR and log true CVR: {corr:+.2f}")
 
 # %% [markdown]
-# **Expected:** CTR ≈ 0.080, ~4,700 conversions, CVR among clicks ≈ 0.12, and a mean true CVR
-# that is **higher on non-clicked impressions** than on clicked ones (the negative correlation,
-# about −0.3): a model trained only on clicks sees the wrong slice of the population.
+# **Expected:** CTR ≈ 0.080, 3,581 conversions, CVR among clicks ≈ 0.15, and a mean true CVR that
+# is **higher on non-clicked impressions** (≈ 0.22) than on clicked ones (≈ 0.15), because of the
+# negative correlation (−0.31): a model trained only on clicks sees the wrong slice of the population.
 
 # %% [markdown]
 # ## 14.2 · Shared-bottom, MMoE and ESMM
@@ -229,7 +229,24 @@ print("MMoE mean gate weights per task (rows: CTR, CVR; columns: experts):")
 print(np.round(np.stack([g.mean(0).cpu().numpy() for g in gates.last_gates]), 3))
 
 # %% [markdown]
-# **Expected (CPU budget, measured):** XX
+# **Expected (CPU budget, measured):** each model trains in ~10–70 s on 2 CPU threads (our runs varied
+# a lot with machine load). Results from our run:
+#
+# * **CTR**: all three are close (NE 0.850–0.855, AUC ≈ 0.78); ESMM is slightly best (0.850), since its
+#   CTCVR loss adds signal to the shared layers. The oracle reaches NE 0.757.
+# * **Shared-bottom vs MMoE**: nearly identical (MMoE ahead by ~0.001 NE and ~0.001 CVR AUC on clicks). The
+#   gates stay close to uniform (each expert ~0.3–0.36 for both tasks): with this mild task conflict
+#   and one epoch, the experts did not specialise. Re-measure before paying MMoE's extra compute.
+# * **Selection bias, measured**: the naive models' pCVR is calibrated on *clicked* impressions
+#   (pred/true ≈ 1.00–1.02) but **under-predicts by 14–19% on non-clicked impressions** (≈ 0.82–0.86),
+#   exactly the population it never trained on. Their CVR AUC is about the same on clicked
+#   impressions and on all impressions with counterfactual labels (≈ 0.70).
+# * **ESMM** does *not* fix it here: its pCVR is even more biased on non-clicked impressions (≈ 0.77)
+#   and ranks much worse (CVR AUC ≈ 0.59), and its pCTCVR AUC (≈ 0.75) is below the naive models' (≈ 0.77).
+#   pCVR only receives gradient through the product `pCTR · pCVR`, which is weak where pCTR is
+#   small, and one epoch on ~3,600 conversions is not enough. The ESMM paper's gains were reported
+#   on billions of impressions; in your system, measure. This is also why later work adds explicit
+#   corrections (inverse propensity weighting, doubly robust estimators, e.g. ESCM², Wang et al. 2022).
 
 # %% [markdown]
 # ## 14.3 · Blending objectives
@@ -290,7 +307,13 @@ plt.show()
 RESULTS["blending"] = grid.round(3).to_dict(orient="records")
 
 # %% [markdown]
-# **Expected (measured):** XX
+# **Expected (measured):** a random choice gives ≈ 77 clicks and ≈ 145 value per 1,000 requests.
+# Ranking by value alone (`a = b = 0`) gets few clicks (≈ 76); clicks peak at ≈ 244 with `a = 2, b = 0`
+# but value drops to ≈ 441; value peaks around `a = 1, b = 1.5` (≈ 562) or `a = b = 1` (≈ 560, 190 clicks).
+# The frontier runs from (≈ 171 clicks, ≈ 562 value) to (≈ 244 clicks, ≈ 441 value): moving along it trades
+# ~25% of value for ~40% more clicks. Exponents above 1 help clicks here because sharpening the
+# predicted CTR offsets the model's under-confidence; with a perfectly calibrated model `a = b = 1` is
+# exactly "expected value per impression".
 
 # %% [markdown]
 # ## 14.4 · Auctions: eCPM, first and second price, reserves, calibration
@@ -341,9 +364,9 @@ for r in [0.0, 0.25, 0.5, 0.75]:
     print(f"  second price, reserve {r:.2f}: revenue {rev:.4f} | unsold {np.mean(top < r):.1%}")
 
 # %% [markdown]
-# **Expected:** both formats ≈ 0.600 (theory 3/5); the reserve raises revenue from 0.600 to ≈ 0.62
-# at 0.25 and ≈ 0.64 at 0.5, then falls at 0.75 as more impressions go unsold (~32%). Seeded,
-# so the numbers repeat.
+# **Expected:** both formats ≈ 0.600 (theory 3/5); a reserve of 0.5 raises revenue to ≈ 0.613 (with 6%
+# of impressions unsold), while 0.75 overshoots: revenue falls to ≈ 0.538 with ~32% unsold. Seeded, so
+# the numbers repeat.
 #
 # Now calibration. Each auction has 5 ads drawn from the test set (true CTR) with log-normal
 # per-click bids. We vary how pCTR relates to the truth and measure, per 1,000 auctions, the
@@ -396,7 +419,16 @@ RESULTS["auctions"] = auc_df.round(4).to_dict(orient="records")
 print(auc_df.round(3).to_string(index=False))
 
 # %% [markdown]
-# **Expected (measured):** XX
+# **Expected (measured):** with calibrated pCTR, ≈ 102.7 revenue and ≈ 275.5 advertiser value per 1,000
+# auctions (no reserve). **Everyone over-predicted ×1.5 changes nothing**: identical winners and
+# per-click prices, because the factor cancels in `bid₂·pCTR₂/pCTR₁` (the reserve here is per click,
+# so it is not affected either). **Advertiser 0 over-predicted** raises its win share from 0.19 to 0.26:
+# it wins auctions it should lose, while revenue and total value drop slightly (≈ 101.8, ≈ 273.5). Its
+# value/cost *rises* (2.67 → 3.05): its inflated pCTR sits in the denominator of its own price, so it
+# pays less per click; the other advertisers bear the cost. Under-prediction does the reverse (win
+# share 0.14). Unbiased noise costs the most revenue (≈ 99.5): misranking from noise is a loss even
+# without bias. A reserve of 1.0 per click raises revenue (≈ 151) but lowers advertiser value (some
+# impressions go unsold, others pay the floor).
 
 # %% [markdown]
 # ## 14.5 · Exploration: bandits and cold-start ads
@@ -488,7 +520,14 @@ fig.savefig(OUT / "regret.png", dpi=120)
 plt.show()
 
 # %% [markdown]
-# **Expected (measured):** XX
+# **Expected (measured; seeded, so it repeats):** after 50,000 rounds uniform play loses ≈ 999 clicks.
+# Pure greedy averages ≈ 900 with an enormous spread across runs (sd ≈ 581): after one impression
+# per ad most estimates are 0, and greedy often locks onto a mediocre ad forever. UCB1 is poor here
+# (≈ 763): its bonus `√(2 ln t / n)` is sized for rewards spread over [0, 1] and is huge relative to
+# 1–5% CTRs, so it keeps exploring (KL-UCB fixes that). ε-greedy and Thompson end at about the same
+# total (≈ 185) but Thompson adds less regret in the second half (≈ 42 vs ≈ 49, and ε-greedy's
+# slope never falls below ε × the average gap) and is far more consistent across runs (sd ≈ 51 vs
+# ≈ 123).
 #
 # ### Cold-start ads
 #
@@ -543,7 +582,10 @@ RESULTS["cold_start"] = {p: {"regret": round(float(r[-1]), 2), "young_share": ro
 print("saved", OUT / "results.json")
 
 # %% [markdown]
-# **Expected (measured):** XX
+# **Expected (measured):** Thompson sampling halves the regret of greedy (≈ 344 vs ≈ 690 over 30,000
+# rounds; ε-greedy ≈ 542) by giving young ads ~28% of impressions instead of ~11%. Greedy with an
+# average prior only tries a new ad when every alive incumbent looks worse than 3%, so it misses the
+# rare great new ads, and as old ads expire it keeps choosing among poorly measured ones.
 #
 # Production versions add context (contextual bandits such as LinUCB, or Thompson sampling on a
 # Bayesian last layer of the CTR model), cap the exploration budget (e.g. 1–5% of traffic, or a

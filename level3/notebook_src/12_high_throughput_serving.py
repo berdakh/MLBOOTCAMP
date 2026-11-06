@@ -100,8 +100,8 @@ OUT = ART / "level3" / "nb12"
 OUT.mkdir(parents=True, exist_ok=True)
 seed_everything(0)
 
-# The model we serve: an MLP whose weights (25 MB in fp32) are large compared with one input.
-IN_DIM, HIDDEN, N_CLASSES = 512, 2048, 10
+# The model we serve: an MLP whose weights (143 MB in fp32) are large compared with one input.
+IN_DIM, HIDDEN, N_CLASSES = 512, 4096, 10
 torch.manual_seed(0)
 mlp = torch.nn.Sequential(torch.nn.Linear(IN_DIM, HIDDEN), torch.nn.ReLU(), torch.nn.Linear(HIDDEN, HIDDEN),
                           torch.nn.ReLU(), torch.nn.Linear(HIDDEN, HIDDEN), torch.nn.ReLU(),
@@ -110,7 +110,7 @@ n_params = sum(p.numel() for p in mlp.parameters())
 print(f"served model: {n_params / 1e6:.1f}M parameters ({n_params * 4 / 1e6:.0f} MB fp32) on {DEVICE}")
 
 # %% [markdown]
-# **Expected:** `served model: 9.5M parameters (38 MB fp32)`.
+# **Expected:** `served model: 35.7M parameters (143 MB fp32)`.
 #
 # ## 12.1 · Why batching helps: latency vs batch size
 #
@@ -125,10 +125,11 @@ rows = []
 with torch.inference_mode():
     for bs in (1, 2, 4, 8, 16, 32, 64, 128):
         x = torch.randn(bs, IN_DIM, device=DEVICE)
-        t = prof.benchmark(lambda x=x: mlp(x), DEVICE, warmup=3, iters=10, min_seconds=0.1)["median_s"]
-        rows.append({"batch": bs, "ms": t * 1e3, "per_example_ms": t * 1e3 / bs, "examples_per_s": bs / t})
-        print(f"batch {bs:4d}: {t * 1e3:7.2f} ms per call | {t * 1e3 / bs:6.3f} ms per example | "
-              f"{bs / t:9,.0f} examples/s")
+        r = prof.benchmark(lambda x=x: mlp(x), DEVICE, warmup=3, iters=15, min_seconds=0.2)
+        t = r["min_s"]  # best of the repeats: least disturbed by other processes on a shared machine
+        rows.append({"batch": bs, "ms": t * 1e3, "median_ms": r["median_s"] * 1e3, "examples_per_s": bs / t})
+        print(f"batch {bs:4d}: {t * 1e3:7.2f} ms per call (median {r['median_s'] * 1e3:7.2f}) | "
+              f"{t * 1e3 / bs:6.3f} ms per example | {bs / t:9,.0f} examples/s")
 BATCH_CURVE = rows
 
 # %% [markdown]
@@ -257,7 +258,9 @@ print("server answers:", got, "| direct model call:", want)
 # ## 12.4 · Load test: throughput vs latency
 #
 # A closed-loop load test: `concurrency` clients, each sending its next request as soon as
-# the previous answer arrives (`scaleml.serving.load_test`, using `httpx.AsyncClient`). We
+# the previous answer arrives (`scaleml.serving.load_test`, using `httpx.AsyncClient`), run
+# in a **separate process** (`load_test_process`) so that the client does not steal the
+# server's CPU time and GIL. We
 # compare **no batching** (`max_batch_size=1`) with **dynamic batching** (`max_batch_size=32,
 # max_wait_ms=2`) at 1, 4, 16 and 64 concurrent clients, and record throughput, p50 and p95
 # latency, and the mean batch size the model actually saw.
@@ -271,7 +274,7 @@ def run_config(max_batch, max_wait_ms, concurrency, n=N_REQ):
     batcher.batch_sizes.clear()
     S.load_test(server.url + "/predict", payloads[:20], concurrency=min(concurrency, 20))  # warm-up
     batcher.batch_sizes.clear()
-    res = S.load_test(server.url + "/predict", (payloads * 10)[:n], concurrency=concurrency)
+    res = S.load_test_process(server.url + "/predict", (payloads * 10)[:n], concurrency=concurrency)
     row = {"max_batch": max_batch, "max_wait_ms": max_wait_ms, **res.summary(),
            "mean_batch": float(np.mean(batcher.batch_sizes)) if batcher.batch_sizes else float("nan")}
     print(f"max_batch {max_batch:3d}, wait {max_wait_ms:4.1f} ms | conc {concurrency:3d} | "
@@ -380,8 +383,8 @@ for batch_prompts, use_cache in [(prompts[:1], False), (prompts[:1], True), (pro
     print(f"batch {r['batch']}, use_cache={str(use_cache):5} -> {r['tokens_per_s']:7.1f} tokens/s "
           f"({r['seconds']:.2f} s for {NEW_TOKENS} new tokens per sequence)")
 print("sample (greedy):", repr(r["text"][:120]))
-(OUT / "generation.json").write_text(json.dumps({"device": str(DEVICE), "new_tokens": NEW_TOKENS, "runs": GEN},
-                                                indent=2))
+_ = (OUT / "generation.json").write_text(json.dumps({"device": str(DEVICE), "new_tokens": NEW_TOKENS,
+                                                    "runs": GEN}, indent=2))
 
 # %% [markdown]
 # **Expected (CPU, 2 threads, measured):** with the cache, batch 1 generates a few tens of
