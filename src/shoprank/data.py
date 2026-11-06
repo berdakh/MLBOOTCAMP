@@ -219,7 +219,7 @@ def write_dataset(world: World, directory: Path, partition_by_day: bool = False)
     for i, chunk in enumerate(simulate_logs(world)):
         if partition_by_day:
             for day, part in chunk.groupby("day"):
-                pdir = imp_dir / f"day={int(day):02d}"
+                pdir = imp_dir / f"day={int(day)}"  # unpadded: DuckDB infers an integer
                 pdir.mkdir(exist_ok=True)
                 part.drop(columns="day").to_parquet(pdir / f"part-{i:04d}.parquet", index=False)
         else:
