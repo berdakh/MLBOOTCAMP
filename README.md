@@ -16,6 +16,19 @@ deployment, monitoring and explaining your decisions under questioning.
 
 <img src="docs/assets/diagrams/roadmap.svg" alt="Five-day roadmap: reproducible projects, evaluation, serving, operations, interview demonstration" width="100%">
 
+## Three levels
+
+| Level | Length | Focus | Compute |
+|---|---|---|---|
+| **1 · Bootcamp** (this page) | 5 days · 18 notebooks | One end-to-end project: reproducibility, SQL, evaluation, APIs, tests, deployment, monitoring, interview demo | Colab CPU |
+| **[2 · Applied ML at Scale](level2/README.md)** | 10 days · 20 notebooks | Ranking and recommendations over large logs: data at scale, feature stores, position bias, learning to rank, retrieval, experimentation, ML and coding interviews | Colab CPU |
+| **[3 · Deep Learning & Large-Scale Systems](level3/README.md)** | 10 days · 20 notebooks | GPU performance, transformers, fine-tuning, retrieval models, distributed training, efficient inference, ads ranking, LLM evaluation, staff-level design, the full loop | Colab T4 GPU |
+
+Levels 2 and 3 together target **ML engineer roles at large technology
+companies**: their coding, ML coding, ML system design, ML depth and
+behavioural rounds, and the engineering behind them. Each level ends with a
+held-out evaluation and a mock interview loop.
+
 ---
 
 ## Quick start
@@ -141,7 +154,8 @@ A repository template for each capstone is in [capstones/template/](capstones/te
 ## What is in this repository
 
 ```
-notebooks/          18 teaching notebooks (generated, outputs cleared)
+notebooks/          Level 1: 18 teaching notebooks (generated, outputs cleared)
+level2/ level3/     Levels 2 and 3: notebook_src/, notebooks/, solutions/, requirements.txt
 notebook_src/       their source, percent-format .py - edit these
 src/churnlab/       the project as a small, readable package
     data.py           dataset generator, checksums, downloads
@@ -157,6 +171,8 @@ src/churnlab/       the project as a small, readable package
     client.py         timeout- and retry-aware client
     settings.py logs.py monitoring.py colab.py bootstrap.py checks.py
     grading/          self-checks for every coded exercise
+src/shoprank/       Level 2 package: ShopStream marketplace, ranking metrics, topic modules
+src/scaleml/        Level 3 package: devices and budgets, training loop, text data, topic modules
 data/raw/           the committed synthetic extract (4 gzipped CSVs, SHA-256 pinned)
 solutions/          worked answers (markdown) + reference code that CI grades
 deploy/             reference Dockerfile, serve.py and CI workflow (generated on Day 4)

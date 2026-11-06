@@ -57,7 +57,7 @@ def resolve(source: Path, target: str) -> bool:
 
 def main() -> int:
     files = [REPO_ROOT / "README.md", *sorted((REPO_ROOT / "docs").rglob("*.md"))]
-    for folder in ("data", "solutions", "capstones", "notebooks", "deploy"):
+    for folder in ("data", "solutions", "capstones", "notebooks", "deploy", "level2", "level3"):
         files += sorted((REPO_ROOT / folder).rglob("*.md"))
 
     problems: list[str] = []

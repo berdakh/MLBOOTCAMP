@@ -127,3 +127,19 @@ Keep the daily drills going at 20–30 minutes; fluency fades quickly without
 them. Keep adding to the question bank answers you have practised aloud. And
 apply: real interviews are themselves practice, and their feedback is the most
 accurate measure of readiness you will get.
+
+## Beyond the first month: Levels 2 and 3
+
+The four weeks above prepare you for modeling-focused roles at most
+companies. For **ML engineer roles at large technology companies**, continue
+with the two advanced levels. At about three hours a day:
+
+| Weeks | Do | Keep going in parallel |
+|---|---|---|
+| 5–6 | [Level 2 · Applied ML at Scale](https://github.com/berdakh/MLBOOTCAMP/blob/main/level2/README.md), Days 1–10 | 30 min/day of coding-pattern drills (Level 2 notebooks 15–16) |
+| 7–8 | [Level 3 · Deep Learning & Large-Scale Systems](https://github.com/berdakh/MLBOOTCAMP/blob/main/level3/README.md), Days 1–10, on a Colab T4 | the drills; one ML system design per week |
+| 9–10 | One capstone extended with a Level 2–3 technique (e.g. MovieLens with a two-tower retriever and LambdaMART; Civil Comments with a fine-tuned transformer and subgroup analysis) | two full mock loops (Level 3 notebook 20), with a real interviewer if you can |
+
+Levels 2 and 3 are dense, so expect some days to spill over. Being honest
+about what is still shaky, using each level's final mock loop, matters more
+than finishing on schedule.

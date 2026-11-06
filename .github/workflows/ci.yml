@@ -40,6 +40,24 @@ jobs:
         if: matrix.python-version == '3.12'
         run: cd capstones/template && python -m pytest -q
 
+  levels:
+    # Levels 2-3 graders and reference solutions need PyTorch, LightGBM, FAISS.
+    # CPU wheels keep the job small; no Hugging Face downloads are needed here.
+    name: Level 2-3 graders vs reference solutions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r level3/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Graders accept their reference solutions
+        run: python -m pytest tests/test_solutions.py -k "level2 or level3"
+
   execute:
     # Runs every notebook top to bottom, each in a fresh artifact directory -
     # the closest CI gets to "a new Colab runtime". Slower, so on main and on demand.
