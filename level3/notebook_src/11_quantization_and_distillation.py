@@ -195,8 +195,9 @@ print(f"teacher accuracy on {len(eval_y)} eval examples: {ACC_TEACHER:.3f}")
 
 # %% [markdown]
 # **Expected (CPU budget, measured):** 67.0M parameters, 21.9M trainable; 47 steps in
-# ~120–160 s (10–12 examples/s; slower on a busy machine); the logged loss falls from ~1.2 to
-# ~0.3; accuracy 0.866 in our runs (4 balanced classes, so chance is 0.25). Ignore the
+# ~100–160 s (10–15 examples/s; slower on a busy machine); the logged loss falls from ~1.15 to
+# ~0.35; accuracy 0.878 in our final run (0.866 in an earlier run with a different random
+# sample; 4 balanced classes, so chance is 0.25). Ignore the
 # load report listing `vocab_*` as unexpected and `classifier`/`pre_classifier` as missing:
 # the masked-language-model head is dropped and a new classification head is created. **On a T4 you should see** full
 # fine-tuning on 20k examples reach ~0.92–0.94 in roughly 10 minutes (not measured in our
@@ -244,8 +245,9 @@ if teacher_int8 is not None:
 # **Expected (CPU, measured):** 38 Linear layers quantised (6 layers × (Q, K, V, output, 2 FFN)
 # = 36, plus the pre-classifier and classifier); the file shrinks from 268 MB to 139 MB
 # (52%), not to 25%, because the **embeddings** (23.4M of the 67M parameters) are not
-# `nn.Linear` and stay fp32. Accuracy barely moves (our run: 0.866 → 0.872; int8 and fp32
-# made the same prediction on 97.2% of examples, so the +0.6 point is noise, not a gain).
+# `nn.Linear` and stay fp32. Accuracy does not move (our run: 0.878 → 0.878), yet int8 and
+# fp32 made the same prediction on only 95.6% of examples: some answers flipped both ways.
+# Same accuracy is not the same model; check agreement (and calibration) too.
 #
 # Now latency. We time the model's forward pass alone (tokenisation excluded), for a single
 # request on **one thread** (how CPU servers usually run: several single-threaded workers,
@@ -276,13 +278,13 @@ if "int8" in LAT:
           f"{LAT['fp32']['batch32_ms'] / LAT['int8']['batch32_ms']:.2f}x at batch 32")
 
 # %% [markdown]
-# **Expected (CPU, measured):** fp32 batch 1 ~45 ms on one thread, batch 32 ~1.3–1.5 s on two;
-# int8 ~2.3× faster at batch 1 (~20 ms) and ~2.5× at batch 32 in our run (it depends on the
-# CPU's int8 instructions, e.g. AVX-512 VNNI, and on machine load: on a heavily loaded machine
-# we also saw multi-threaded int8 runs *slower* than fp32, which is why single requests are
-# timed on one thread). Per example, batch 32 is no cheaper than batch 1 here: on a CPU a
-# 64-token sequence already makes the matrix products large; on a GPU batching matters far
-# more (notebook 12).
+# **Expected (CPU, measured):** fp32 batch 1 ~45–55 ms on one thread, batch 32 ~0.7–1.5 s on
+# two; int8 is 2–3× faster (our runs: 2.3× and 3.3× at batch 1, ~15–20 ms; 2.2× and 2.5× at
+# batch 32). It depends on the CPU's int8 instructions (e.g. AVX-512 VNNI) and on machine
+# load: on a heavily loaded machine we also saw multi-threaded int8 runs *slower* than fp32,
+# which is why single requests are timed on one thread. On a CPU, batching cuts the cost per
+# example only modestly (a 64-token sequence already makes the matrix products large); on a
+# GPU it matters far more (notebook 12).
 #
 # ## 11.3 · Quantising a weight matrix by hand
 #
@@ -375,9 +377,9 @@ for bits in (8, 4):
     del m
 
 # %% [markdown]
-# **Expected (CPU, measured):** weight-only int8 gives exactly the fp32 accuracy (0.866), and,
-# perhaps surprisingly, per-channel int4 without groups also holds up on this task (0.870 in our
-# run) despite a ~15% weight error. A 4-class classifier with comfortable margins is robust;
+# **Expected (CPU, measured):** weight-only int8 matches fp32 (our run: 0.880 vs 0.878), and,
+# perhaps surprisingly, per-channel int4 without groups also holds up on this task (0.876)
+# despite a ~15% weight error. A 4-class classifier with comfortable margins is robust;
 # do not generalise from it. Generative LLMs compound errors over many tokens and are much more
 # sensitive, which is why 4-bit LLM loaders use small groups (64–128 weights per scale) and
 # calibration (GPTQ, AWQ), and why int8 is the "safe default". Always measure on your task.
@@ -527,12 +529,15 @@ for name, (X, y, tl, alpha) in variants.items():
 print(f"(12 students trained in {time.time() - t0:.0f} s) | teacher: {ACC_TEACHER:.3f}")
 
 # %% [markdown]
-# **Expected (CPU budget, measured):** the teacher labels 3,000 texts in about a minute and
-# is right on ~85% of the transfer set. The students land well below the teacher (a bag of
+# **Expected (CPU budget, measured):** the teacher labels 2,500 texts in about a minute and
+# is right on ~90% of the transfer set (0.896). The students land below the teacher (a bag of
 # n-grams cannot match a transformer) and their differences are small: compare the means
-# with the seed spread before believing any ranking. In our run the transfer-set variants
-# (C, D) were best, gaining a couple of points over A because they see twice as much text;
-# soft targets alone on the labelled set (B vs A) changed little. **More data labelled by
+# with the seed spread (±0.002–0.003) before believing any ranking. Our run: A 0.835,
+# B 0.827, C 0.849, D 0.843. The transfer-set variants (C, D) gained 1–1.5 points over A
+# because they see 1.7× as much text; soft targets alone on the labelled set (B) did not help
+# this student (slightly worse), and with the transfer set plain pseudo-labels (C) did as
+# well as full distillation (D). An earlier run with a different sample gave the same
+# pattern (A 0.836, B 0.831, C 0.841, D 0.839). **More data labelled by
 # the teacher is usually the biggest win of distillation**, and soft targets matter more when
 # the student is a smaller version of the teacher (same tokenizer, a few layers, e.g.
 # DistilBERT itself was distilled from BERT) than for a very different model like ours.
@@ -567,9 +572,9 @@ for r in rows:
 print("wrote", OUT / "compression_table.json")
 
 # %% [markdown]
-# **Expected (CPU, measured):** the teacher at ~0.85 accuracy, tens of ms per request and
-# ~268 MB; int8 about as accurate, faster, ~139 MB; the student a few points less accurate,
-# ~1 ms per request including TF-IDF (tens of times faster) and a few MB. **On a T4 you should
+# **Expected (CPU, measured; our final run):** the teacher at 0.878 accuracy, ~53 ms per
+# request and 268 MB; int8 equally accurate, ~16 ms, 139 MB; the student 0.849 (3 points
+# below), ~0.8 ms per request including TF-IDF (tens of times faster) and 2.8 MB. **On a T4 you should
 # see** the teacher at ~0.93 accuracy and a few ms per request in fp16 (not measured in our
 # verification runs): the GPU changes the latency column, not the ranking of sizes.
 #
