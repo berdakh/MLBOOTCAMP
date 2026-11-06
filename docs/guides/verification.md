@@ -6,7 +6,7 @@ nav_order: 11
 
 # What was verified, and what was not
 
-This page records exactly what was executed when the course was built. It
+This page records exactly what was executed when the course was built (Level 1 first; Levels 2–3 at the end). It
 does **not** claim Colab testing: none of these runs happened in Google Colab.
 
 ## Summary
@@ -122,3 +122,78 @@ pip install -r requirements.txt -r requirements-dev.txt
 make check                 # sync, structure, links, unit tests
 make run-notebooks         # executes all 18; writes docs/guides/verification-log.md
 ```
+
+
+## Levels 2 and 3
+
+All 58 notebooks (Level 1: 18, Level 2: 20, Level 3: 20) were executed top to
+bottom, each from an empty artifact directory, with exercises unattempted:
+**58/58 pass**. Environment: Python 3.12, PyTorch 2.8 (CPU), Transformers 5.x,
+numpy 2.0.2, pandas 2.2.2, scikit-learn 1.6.1, with OMP_NUM_THREADS=2 on a
+4-core machine. **CPU only: no GPU was available**, so Level 3 ran with its
+reduced  budget and every T4 statement in it is marked "not measured in
+our verification runs". The full test suite (599 tests, including every Level 2
+and Level 3 grader against its reference solution) passes in this environment.
+
+Hugging Face Hub downloads used  on the build machine
+(its network blocked the Xet transfer host). Colab does not need this.
+
+### Level 2
+
+| Notebook | Result | Seconds |
+|---|---|---:|
+| `level2/notebooks/01_event_logs_and_columnar_data.ipynb` | PASS | 50 |
+| `level2/notebooks/02_aggregation_and_joins_at_scale.ipynb` | PASS | 20 |
+| `level2/notebooks/03_feature_pipelines_and_feature_stores.ipynb` | PASS | 36 |
+| `level2/notebooks/04_streaming_features.ipynb` | PASS | 15 |
+| `level2/notebooks/05_implicit_feedback_and_position_bias.ipynb` | PASS | 22 |
+| `level2/notebooks/06_learning_to_rank.ipynb` | PASS | 68 |
+| `level2/notebooks/07_candidate_generation.ipynb` | PASS | 26 |
+| `level2/notebooks/08_two_tower_retrieval_and_ann.ipynb` | PASS | 60 |
+| `level2/notebooks/09_pytorch_training_done_right.ipynb` | PASS | 48 |
+| `level2/notebooks/10_sequence_models_for_user_behavior.ipynb` | PASS | 74 |
+| `level2/notebooks/11_ab_testing_fundamentals.ipynb` | PASS | 18 |
+| `level2/notebooks/12_advanced_experimentation.ipynb` | PASS | 35 |
+| `level2/notebooks/13_ml_from_scratch_1.ipynb` | PASS | 4 |
+| `level2/notebooks/14_ml_from_scratch_2.ipynb` | PASS | 2 |
+| `level2/notebooks/15_coding_patterns_1.ipynb` | PASS | 2 |
+| `level2/notebooks/16_coding_patterns_2.ipynb` | PASS | 1 |
+| `level2/notebooks/17_serving_a_ranking_cascade.ipynb` | PASS | 33 |
+| `level2/notebooks/18_model_optimization_for_inference.ipynb` | PASS | 41 |
+| `level2/notebooks/19_recsys_and_search_system_design.ipynb` | PASS | 5 |
+| `level2/notebooks/20_final_evaluation_and_mock_loop.ipynb` | PASS | 35 |
+
+### Level 3 (CPU budget)
+
+| Notebook | Result | Seconds |
+|---|---|---:|
+| `level3/notebooks/01_gpu_fundamentals_and_profiling.ipynb` | PASS | 10 |
+| `level3/notebooks/02_training_efficiency_and_memory.ipynb` | PASS | 40 |
+| `level3/notebooks/03_transformer_from_scratch.ipynb` | PASS | 34 |
+| `level3/notebooks/04_pretrained_transformers_and_tokenization.ipynb` | PASS | 65 |
+| `level3/notebooks/05_fine_tuning_a_classifier.ipynb` | PASS | 271 |
+| `level3/notebooks/06_parameter_efficient_fine_tuning.ipynb` | PASS | 250 |
+| `level3/notebooks/07_embeddings_and_semantic_search.ipynb` | PASS | 119 |
+| `level3/notebooks/08_contrastive_training_and_reranking.ipynb` | PASS | 202 |
+| `level3/notebooks/09_distributed_data_parallel.ipynb` | PASS | 40 |
+| `level3/notebooks/10_scaling_to_large_models.ipynb` | PASS | 9 |
+| `level3/notebooks/11_quantization_and_distillation.ipynb` | PASS | 226 |
+| `level3/notebooks/12_high_throughput_serving.ipynb` | PASS | 74 |
+| `level3/notebooks/13_ctr_prediction_at_scale.ipynb` | PASS | 70 |
+| `level3/notebooks/14_multitask_ranking_and_exploration.ipynb` | PASS | 47 |
+| `level3/notebooks/15_fairness_robustness_and_privacy.ipynb` | PASS | 59 |
+| `level3/notebooks/16_evaluating_llm_systems_and_guardrails.ipynb` | PASS | 215 |
+| `level3/notebooks/17_ml_platform_design.ipynb` | PASS | 3 |
+| `level3/notebooks/18_large_scale_design_cases.ipynb` | PASS | 3 |
+| `level3/notebooks/19_ml_depth_and_research_discussion.ipynb` | PASS | 96 |
+| `level3/notebooks/20_full_interview_loop_and_portfolio.ipynb` | PASS | 3 |
+
+### Not verified for Levels 2–3
+
+* Any run on a GPU, including Colab's T4: the `gpu` budget paths, fp16
+  autocast speed-ups, CUDA memory statistics, and the optional bitsandbytes cells.
+* The Colab setup cells (`pip install -r level2/requirements.txt`,
+  `level3/requirements.txt`) against Colab's preinstalled versions.
+* Multi-GPU and multi-node behaviour: taught with real multi-process gloo code
+  plus arithmetic, never measured on more than one machine.
+* Timings: measured on a shared 4-core machine and only indicative.
