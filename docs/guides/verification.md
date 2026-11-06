@@ -131,7 +131,7 @@ bottom, each from an empty artifact directory, with exercises unattempted:
 **58/58 pass**. Environment: Python 3.12, PyTorch 2.8 (CPU), Transformers 5.x,
 numpy 2.0.2, pandas 2.2.2, scikit-learn 1.6.1, with OMP_NUM_THREADS=2 on a
 4-core machine. **CPU only: no GPU was available**, so Level 3 ran with its
-reduced  budget and every T4 statement in it is marked "not measured in
+reduced `cpu` budget and every T4 statement in it is marked "not measured in
 our verification runs". The full test suite (599 tests, including every Level 2
 and Level 3 grader against its reference solution) passes in this environment.
 
