@@ -273,7 +273,7 @@ del enc_inbatch
 
 # %% [markdown]
 # **Expected (CPU, measured):** 320 pairs from 301 train queries in 20 batches of 16;
-# 20 steps in ~31 s; the logged loss falls from ~0.42 to ~0.17 (the base model already separates
+# 20 steps in 31–68 s (two runs; the slower one on a shared machine); the logged loss falls from ~0.42 to ~0.17 (the base model already separates
 # most in-batch pairs: random negatives are easy); test nDCG@10 0.765, Recall@100 0.983.
 #
 # ## 8.3 · Hard negatives mined with BM25
@@ -334,7 +334,7 @@ print("test:", metrics["dense: + hard-neg FT"])
 # **Expected (CPU, measured):** one hard negative for each of 301 train queries; for
 # 15 % of queries BM25's highest-ranked *unlabelled* document is a judged positive of some other
 # claim, i.e. topically on target, the false-negative risk that `SKIP_TOP` limits. Each batch
-# now carries 16 extra documents, so a step is slower (20 steps in ~51 s) and the loss is
+# now carries 16 extra documents, so a step is slower (20 steps in 51–91 s) and the loss is
 # higher (~0.89 → ~0.48): hard negatives *are* harder. Test nDCG@10 0.760, Recall@100 0.977.
 
 # %%
@@ -432,16 +432,16 @@ for r in rows:
     print(f"{r['depth']:>13} {r['ndcg@10']:8.3f} {r['ms_per_query']:9.0f}")
 
 # %% [markdown]
-# **Expected (CPU, measured):** 23.9 ms per (query, document) pair on 2 CPU
-# threads; the first stage already has every relevant document in its top 50 for these 30
+# **Expected (CPU, measured):** 24–41 ms per (query, document) pair on 2 CPU
+# threads (two runs; the machine was shared in the second); the first stage already has every relevant document in its top 50 for these 30
 # queries (ceiling 1.000), and:
 #
 # | re-rank depth | nDCG@10 | ms/query |
 # |---|---|---|
 # | 0 (first stage only) | 0.840 | 0 |
-# | 10 | 0.773 | ~250 |
-# | 20 | 0.768 | ~480 |
-# | 50 | 0.757 | ~1,230 |
+# | 10 | 0.773 | 250–640 |
+# | 20 | 0.768 | 480–850 |
+# | 50 | 0.757 | 1,230–1,910 |
 #
 # **The re-ranker made the ranking worse**, and the deeper it re-ranks, the worse (with only 30
 # queries, each nDCG value has a standard error of several points, but the direction was the

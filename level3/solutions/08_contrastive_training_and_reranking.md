@@ -60,7 +60,7 @@ the top 3.
   denoising, a held-out judged set.
 * **(b) Add a cross-encoder re-ranker.** Effect: better ordering of the top k when the
   re-ranker matches the domain; it cannot improve recall beyond the first stage's depth.
-  Cost: depth × a forward pass per query (in our CPU run 24 ms per pair, ~1.2 s for 50;
+  Cost: depth × a forward pass per query (in our CPU runs 24–41 ms per pair, 1.2–1.9 s for 50;
   🔬 tens of ms on a GPU), a GPU fleet at high QPS. Risk: **domain mismatch**; the
   MS MARCO re-ranker *lowered* SciFact nDCG@10 in our run (0.840 → 0.757 at depth 50 on 30
   queries). Fine-tune it on in-domain pairs before trusting it.

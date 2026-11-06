@@ -271,8 +271,21 @@ def run_trained(name, model, lr):
                       max_grad_norm=1.0, log_every=10_000)
     res = train(model, batches, ft.classification_loss(DEVICE), DEVICE, cfg)
     acc = float((ft.predict_logits(model, enc_test, DEVICE).argmax(1) == y_test).mean())
+    # Wall time of a whole epoch is at the mercy of other processes; a median over repeated
+    # steps on one fixed batch is a steadier comparison between methods.
+    fixed = {k: v.to(DEVICE) for k, v in first.items()}
+    opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=0.0)  # lr 0: weights unchanged
+
+    def step():
+        model(**fixed).loss.backward()
+        opt.step()
+        opt.zero_grad(set_to_none=True)
+
+    model.train()
+    step_ms = prof.benchmark(step, DEVICE, warmup=1, iters=3)["median_s"] * 1e3
     row = {"method": name, "trainable": count_parameters(model, trainable_only=True), "test_acc": acc,
-           "s_per_epoch": res.seconds / BUDGET.epochs, "examples_per_s": res.examples_per_second}
+           "s_per_epoch": res.seconds / BUDGET.epochs, "ms_per_step": step_ms,
+           "examples_per_s": res.examples_per_second}
     if IS_CUDA:
         row.update(memory="peak (measured)", memory_mb=prof.cuda_peak_mb(DEVICE))
     else:
@@ -292,7 +305,7 @@ probe_s = time.time() - t0
 probe = make_pipeline(StandardScaler(), LogisticRegression(C=0.1, max_iter=3000)).fit(e_train, y_train)
 probe_acc = probe.score(ft.frozen_embeddings(encoder, enc_test, DEVICE), y_test)
 rows.append({"method": "linear probe", "trainable": 768 * len(LABELS) + len(LABELS), "test_acc": float(probe_acc),
-             "s_per_epoch": probe_s, "examples_per_s": len(y_train) / probe_s,
+             "s_per_epoch": probe_s, "ms_per_step": float("nan"), "examples_per_s": len(y_train) / probe_s,
              "memory": "peak (measured)" if IS_CUDA else "estimate",
              "memory_mb": prof.cuda_peak_mb(DEVICE) if IS_CUDA else 4 * count_parameters(encoder) / 2**20})
 print({k: (round(v, 3) if isinstance(v, float) else v) for k, v in rows[-1].items()})
@@ -308,9 +321,9 @@ for r in (4, 8):
 rows.append(run_trained("full fine-tuning", new_classifier(), lr=5e-5))
 
 # %%
-print(f"{'method':17} {'trainable':>10} {'test acc':>8} {'s/epoch':>8} {'memory MB':>10}")
+print(f"{'method':17} {'trainable':>10} {'test acc':>8} {'s/epoch':>8} {'ms/step':>8} {'memory MB':>10}")
 for r in rows:
-    print(f"{r['method']:17} {r['trainable']:>10,} {r['test_acc']:>8.3f} {r['s_per_epoch']:>8.1f} "
+    print(f"{r['method']:17} {r['trainable']:>10,} {r['test_acc']:>8.3f} {r['s_per_epoch']:>8.1f} {r['ms_per_step']:>8.0f} "
           f"{r['memory_mb']:>10.0f}  ({r['memory']})")
 n = len(y_test)
 print(f"(test set of {n}: one standard error is about ±{np.sqrt(0.25 / n):.3f} at 50 % accuracy, "

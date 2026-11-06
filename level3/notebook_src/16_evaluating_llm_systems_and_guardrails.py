@@ -195,7 +195,13 @@ RESULTS["prompts"] = {v: {"field_f1": float(scores[v]["f1"].mean()), "exact": fl
 RESULTS["schema_minus_terse_f1"] = {"diff": d, "ci": [lo, hi]}
 
 # %% [markdown]
-# **Expected (CPU budget, measured):** XX
+# **Expected (CPU budget, measured; greedy decoding, so the replies repeat):** terse field-F1 ≈ 0.69
+# (exact match 0/12), schema ≈ 0.80 (exact match 3/12). The paired difference is +0.12 with a 95% CI of
+# roughly [+0.01, +0.23]: probably real, but the interval is wide, and with 12 tickets a single reply
+# moves the mean by ~0.02. Per field, schema fixes `name` (0.58 → 1.00) and `issue` (0.25 → 0.67) but
+# often leaves `product` empty (0.92 → 0.33): **better on average is not better everywhere**. Terse
+# replies are longer (≈ 45 vs ≈ 32 output tokens) because of Markdown fences and line breaks. Timing on
+# a shared 2-thread CPU: ~3 s per request in batches of 6.
 #
 # Reading the replies (always read them!) shows *why* the scores differ: format (Markdown code
 # fences, multi-line JSON) costs tokens, free-text `issue` values ("Order has not been received")
@@ -288,7 +294,13 @@ RESULTS["judge"] = {"acc_correct_in_A": acc_ab, "acc_correct_in_B": acc_ba, "pos
                     "debiased_padded": float(np.mean(margin_long > 0))}
 
 # %% [markdown]
-# **Expected (CPU budget, measured):** XX
+# **Expected (CPU budget, measured):** an extreme case: the 0.5B judge answers "A" for **every** prompt
+# (accuracy 1.00 when the correct answer is in slot A, 0.00 in slot B, position-bias rate 1.00, an average
+# margin of ~5 nats in favour of "A"). Its single verdicts are worthless. Averaging the log-prob margin
+# over both orders removes the slot effect and leaves a weak but real signal: the correct extraction is
+# preferred in 0.75 of the pairs. The verbosity test reads 0.50 from the raw verdicts (pure position
+# bias), but debiased, the padded answer is preferred in **all** 12 pairs: verbosity bias, hidden under
+# the position bias until you remove it. Larger judges show the same biases, less extremely.
 #
 # Mitigations: always judge both orders and count only consistent verdicts (or average the
 # probabilities); use a stronger judge than the systems being judged and never the same model;
@@ -328,7 +340,10 @@ with open(OUT / "generations.jsonl", "w") as f:
         f.write(json.dumps(r, default=str) + "\n")
 
 # %% [markdown]
-# **Expected (CPU budget, measured):** XX
+# **Expected (CPU budget, measured):** attacks succeed on 8/12 tickets with the terse prompt (0.67) and
+# 6/12 with the schema prompt (0.50), whose system message explicitly says to ignore instructions in the
+# ticket: the warning helps a little, and the confidence intervals overlap (≈ [0.42, 0.92] and
+# [0.25, 0.75]). Field-F1 drops on injected tickets for both prompts (schema 0.80 → 0.58).
 #
 # There is no complete fix for prompt injection today. Layers that help: treat model output as
 # untrusted (validate it against a schema and business rules, e.g. "refunds above $X need a human");
@@ -371,7 +386,10 @@ by_kind = pd.DataFrame({"n": kinds.value_counts(), "flag rate": pd.Series(te_sco
 print(f"threshold {THRESH:.3f}\n" + by_kind.round(3).to_string())
 
 # %% [markdown]
-# **Expected (measured):** XX
+# **Expected (measured):** test AUC ≈ 0.998 and a threshold ≈ 0.05; at that threshold 2.5% of benign
+# test tickets are flagged (the budget was 2% on validation data) and every seen injection family and
+# abuse is caught, but recall on the unseen fake-system-tag family drops to ≈ 0.89. On real traffic,
+# unseen attacks degrade much more: synthetic templates are far more regular than people.
 
 # %% [markdown]
 # > **Exercise 3.** Write `guardrail(text) -> bool` (True = block) combining rules and/or the classifier
@@ -424,7 +442,10 @@ print(f"on the LLM tickets: blocks {blocked_inj:.2f} of injected tickets and {bl
 RESULTS["guardrail_on_llm_tickets"] = {"blocked_injected": blocked_inj, "blocked_clean": blocked_clean}
 
 # %% [markdown]
-# **Expected (measured):** XX
+# **Expected (measured):** rules alone: recall ≈ 0.82 at FPR 0 (precise, but no abuse rules, so abuse
+# recall 0); the classifier alone: recall ≈ 0.98 at FPR ≈ 0.025, 0.95 on unseen families; together: recall
+# 1.00 at FPR ≈ 0.025. Both run in well under a millisecond per message, thousands of times cheaper than a
+# generation. The combined guardrail blocks all 12 injected LLM tickets and none of the clean ones.
 
 # %% [markdown]
 # ## 16.6 · Latency and cost per request
@@ -453,7 +474,11 @@ print(cost.round(4).to_string(index=False))
 print("saved", OUT / "results.json", "and", OUT / "generations.jsonl")
 
 # %% [markdown]
-# **Expected (CPU budget, measured):** XX
+# **Expected (CPU budget, measured):** terse ≈ 63 prompt and ≈ 45 output tokens per request, schema ≈ 130
+# and ≈ 32; ~3–3.5 s per request (batched by 6 on 2 CPU threads, so ~9–16 output tokens/s). With the
+# placeholder prices that is ≈ $0.28–0.34 per 1,000 requests self-hosted on this (slow) machine and
+# ≈ $0.025 API-style. The schema prompt doubles the input tokens but shortens the output, and output
+# tokens dominate latency.
 #
 # **On a T4 you should see** this model generate hundreds of tokens per second in batches of 16,
 # i.e. a small fraction of a second per request (not measured in our verification runs; notebook 12

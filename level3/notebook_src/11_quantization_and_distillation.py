@@ -110,7 +110,7 @@ CPU = torch.device("cpu")
 BERT_ID, BERT_REV = "distilbert/distilbert-base-uncased", "12040accade4e8a0f71eabdb258fecc2e7e948be"
 print(f"model card: https://huggingface.co/{BERT_ID} | data card: https://huggingface.co/datasets/fancyzhx/ag_news")
 N_LABELLED = BUDGET.train_examples
-N_TRANSFER = BUDGET.train_examples  # extra *unlabelled* text for distillation (labels are dropped)
+N_TRANSFER = BUDGET.train_examples if DEVICE.type == "cuda" else 1000  # extra *unlabelled* text for distillation
 MAX_LEN = BUDGET.max_seq_len
 FROZEN_LAYERS = 3 if DEVICE.type == "cpu" else 0  # CPU budget: train only the top 3 of 6 layers
 
@@ -125,7 +125,7 @@ print(f"labels: {LABELS} | labelled {len(lab_df)}, unlabelled transfer {len(tran
 
 # %% [markdown]
 # **Expected:** the two card links, labels `['World', 'Sports', 'Business', 'Sci/Tech']`,
-# 1,500 labelled + 1,500 transfer + 500 evaluation examples on the CPU budget (20,000 /
+# 1,500 labelled + 1,000 transfer + 500 evaluation examples on the CPU budget (20,000 /
 # 20,000 / 4,000 on a T4). The first run downloads AG News (~30 MB) and the tokenizer.
 #
 # ## 11.1 · The teacher: fine-tune DistilBERT
@@ -194,9 +194,11 @@ ACC_TEACHER = accuracy(teacher_logits_eval, eval_y)
 print(f"teacher accuracy on {len(eval_y)} eval examples: {ACC_TEACHER:.3f}")
 
 # %% [markdown]
-# **Expected (CPU budget, measured):** 66.96M parameters, 21.3M trainable; 47 steps in
-# ~120 s (~12 examples/s); the loss falls from ~1.3 to ~0.4; accuracy ≈ 0.85 (our run:
-# 0.852; 4 balanced classes, so chance is 0.25). **On a T4 you should see** full
+# **Expected (CPU budget, measured):** 67.0M parameters, 21.9M trainable; 47 steps in
+# ~120–160 s (10–12 examples/s; slower on a busy machine); the logged loss falls from ~1.2 to
+# ~0.3; accuracy 0.866 in our runs (4 balanced classes, so chance is 0.25). Ignore the
+# load report listing `vocab_*` as unexpected and `classifier`/`pre_classifier` as missing:
+# the masked-language-model head is dropped and a new classification head is created. **On a T4 you should see** full
 # fine-tuning on 20k examples reach ~0.92–0.94 in roughly 10 minutes (not measured in our
 # verification runs).
 #
@@ -239,11 +241,11 @@ if teacher_int8 is not None:
     print(f"accuracy fp32 {ACC_TEACHER:.3f} -> int8 {ACC_INT8:.3f} | same prediction on {agree:.1%} of examples")
 
 # %% [markdown]
-# **Expected (CPU, measured):** 37 Linear layers quantised (6 × (Q, K, V, out, 2 FFN) + the
-# pre-classifier and classifier); the file shrinks from ~268 MB to ~139 MB (~52%), not to
-# 25%, because the **embeddings** (23.4M of the 67M parameters) are not `nn.Linear` and stay
-# fp32. Accuracy changes by at most about one point (our run: see the printout; int8 and
-# fp32 made the same prediction on ~97–99% of examples).
+# **Expected (CPU, measured):** 38 Linear layers quantised (6 layers × (Q, K, V, output, 2 FFN)
+# = 36, plus the pre-classifier and classifier); the file shrinks from 268 MB to 139 MB
+# (52%), not to 25%, because the **embeddings** (23.4M of the 67M parameters) are not
+# `nn.Linear` and stay fp32. Accuracy barely moves (our run: 0.866 → 0.872; int8 and fp32
+# made the same prediction on 97.2% of examples, so the +0.6 point is noise, not a gain).
 #
 # Now latency. We time the model's forward pass alone (tokenisation excluded), for a single
 # request on **one thread** (how CPU servers usually run: several single-threaded workers,
@@ -274,10 +276,13 @@ if "int8" in LAT:
           f"{LAT['fp32']['batch32_ms'] / LAT['int8']['batch32_ms']:.2f}x at batch 32")
 
 # %% [markdown]
-# **Expected (CPU, 2 threads, measured):** batch 1 in a few tens of milliseconds, a batch of
-# 32 in ~1 s for fp32; int8 is faster (our runs: ~1.3–2×; it depends on the CPU's int8
-# instructions, e.g. AVX-512 VNNI, and on machine load). Batching cuts the cost per example by
-# a large factor for both, a theme of notebook 12.
+# **Expected (CPU, measured):** fp32 batch 1 ~45 ms on one thread, batch 32 ~1.3–1.5 s on two;
+# int8 ~2.3× faster at batch 1 (~20 ms) and ~2.5× at batch 32 in our run (it depends on the
+# CPU's int8 instructions, e.g. AVX-512 VNNI, and on machine load: on a heavily loaded machine
+# we also saw multi-threaded int8 runs *slower* than fp32, which is why single requests are
+# timed on one thread). Per example, batch 32 is no cheaper than batch 1 here: on a CPU a
+# 64-token sequence already makes the matrix products large; on a GPU batching matters far
+# more (notebook 12).
 #
 # ## 11.3 · Quantising a weight matrix by hand
 #
@@ -349,11 +354,12 @@ print(f"memory: fp32 {W.numel() * 4 / 1e6:.2f} MB | int8 + scales {W.numel() / 1
       f"| int4 packed {W.numel() / 2e6:.2f} MB")
 
 # %% [markdown]
-# **Expected (measured):** the matrix is 3072 × 768. Per-tensor int8 gives a weight error of
-# a few × 1e-3 relative; per-channel int8 is smaller (the rows' ranges differ, so per-row
-# steps are finer); int4 is ~16× worse than per-channel int8 (an int4 step is 127/7 ≈ 18×
-# larger). The relative error of the layer's *output* on real activations is similar to the
-# weight error, because rounding errors are roughly independent and partly average out.
+# **Expected (measured):** the matrix is 3072 × 768 and its rows' maxima range from 0.066 to
+# 0.346. Per-tensor int8: relative weight error 1.9e-2; per-channel int8: 8.0e-3 (2.4× smaller,
+# because small-range rows get finer steps); per-channel int4: 1.5e-1 (an int4 step is
+# 127/7 ≈ 18× coarser). The relative error of the layer's *output* on real activations is
+# of the same order (1.2e-2, 5.3e-3, 9.6e-2): rounding errors are roughly independent and
+# partly average out in each dot product. Memory: 9.4 MB fp32 → 2.4 MB int8 → 1.2 MB int4.
 #
 # What matters is the effect on the *task*. Simulate weight-only quantisation of **every**
 # Linear layer (quantise → dequantise in place, compute in fp32) and re-evaluate:
@@ -369,10 +375,12 @@ for bits in (8, 4):
     del m
 
 # %% [markdown]
-# **Expected (CPU, measured):** weight-only int8 matches fp32 within ~0.5 point; per-channel
-# int4 without groups loses more (our run: a few points). This is why 4-bit LLM loaders use
-# small groups (64–128 weights per scale) and calibration (GPTQ, AWQ), and why int8 is the
-# "safe default".
+# **Expected (CPU, measured):** weight-only int8 gives exactly the fp32 accuracy (0.866), and,
+# perhaps surprisingly, per-channel int4 without groups also holds up on this task (0.870 in our
+# run) despite a ~15% weight error. A 4-class classifier with comfortable margins is robust;
+# do not generalise from it. Generative LLMs compound errors over many tokens and are much more
+# sensitive, which is why 4-bit LLM loaders use small groups (64–128 weights per scale) and
+# calibration (GPTQ, AWQ), and why int8 is the "safe default". Always measure on your task.
 #
 # **Optional GPU extension.** On a T4 you can load the teacher in 8-bit or 4-bit with
 # `bitsandbytes` (`BitsAndBytesConfig(load_in_8bit=True)` or `load_in_4bit=True`) and compare
@@ -434,7 +442,7 @@ grade.ex2(kd_loss)
 # %% [markdown]
 # The student: TF-IDF features (unigrams + bigrams, 5,000 features) and a one-hidden-layer
 # MLP: ~640k parameters, about 100× fewer than the teacher, and no attention at all. The
-# teacher labels the 1,500 labelled examples and the 1,500 unlabelled transfer examples
+# teacher labels the 1,500 labelled examples and the unlabelled transfer examples
 # (forward passes only). Four ways to train the same student, 3 seeds each:
 #
 # * **A**: hard labels, labelled set only (no teacher);
@@ -442,6 +450,9 @@ grade.ex2(kd_loss)
 # * **C**: hard *pseudo-labels* (the teacher's argmax) on labelled + transfer;
 # * **D**: distillation on labelled + transfer (true labels where known, the teacher's argmax as
 #   the hard target elsewhere).
+#
+# (Fixed TF-IDF features keep the student's training to seconds; on the CPU budget the transfer set
+# is 1,000 texts.)
 
 # %%
 from sklearn.feature_extraction.text import TfidfVectorizer

@@ -133,10 +133,10 @@ with torch.inference_mode():
 BATCH_CURVE = rows
 
 # %% [markdown]
-# **Expected (CPU, 2 threads, measured):** batch 1 takes a few milliseconds, and the time per
-# call grows much more slowly than the batch: throughput rises by roughly an order of
-# magnitude between batch 1 and batch 64–128 (our run: see the printout; the exact numbers
-# depend on the CPU and its load). **On a T4 you should see** the same shape, more extreme:
+# **Expected (CPU, 2 threads, measured; best of the repeats):** batch 1 takes ~3 ms and
+# batch 32 only ~15 ms, so throughput rises from ~330 to ~2,100 examples/s, and ~2,900 at
+# batch 128 (our run). The time per call grows much more slowly than the batch until the
+# matrix products become compute-bound. Exact numbers depend on the CPU and its load. **On a T4 you should see** the same shape, more extreme:
 # a batch-1 call is dominated by kernel launches and weight reads (~320 GB/s of memory
 # bandwidth against 65 TFLOP/s of fp16 compute, a ratio of ~200 FLOPs per byte), so
 # throughput keeps rising until batches of hundreds (not measured in our verification runs).
@@ -295,14 +295,16 @@ for max_batch, wait in [(1, 0.0), (32, 2.0)]:
 print(f"({time.time() - t0:.0f} s)")
 
 # %% [markdown]
-# **Expected (CPU, measured; server and clients share the machine):**
+# **Expected (CPU, measured; one shared machine):**
 #
-# * at concurrency 1 the two configurations are similar (a batch can only ever hold one
-#   request); batching adds at most the 2 ms wait;
-# * without batching, throughput **plateaus** once the model is saturated, and adding clients
-#   only adds queueing: p50 and p95 grow roughly in proportion to the concurrency;
-# * with dynamic batching the mean batch size grows with concurrency (our run: ~1 → ~4 → ~15 → ~30),
-#   throughput keeps rising, and p95 at 64 clients is several times lower than without batching.
+# * at concurrency 1 a batch can only ever hold one request, so batching can only *add*
+#   latency: the 2 ms wait plus the hand-off to a worker thread (our run: p50 6.5 → 15 ms);
+# * without batching, throughput **plateaus** immediately (~105–120 req/s in our run) and
+#   adding clients only adds queueing: p50 grows in proportion to the concurrency (35 ms at 4
+#   clients, 140 ms at 16, 290 ms at 32);
+# * with dynamic batching the mean batch size grows with load (1 → 3.4 → 7 → 8.6), throughput
+#   keeps rising (144 → 267 → 308 req/s, ~2.8× the plateau), and at 16–32 clients p50 is 3–4×
+#   lower than without batching (53 vs 140 ms; 78 vs 290 ms).
 #
 # Read it as a **throughput–latency curve**: each configuration traces latency rising with
 # load, and batching moves the curve right (more requests per second at the same latency).
@@ -315,9 +317,11 @@ print(f"({time.time() - t0:.0f} s)")
 WAIT = [run_config(32, w, 4) for w in (0.0, 2.0, 10.0, 25.0)]
 
 # %% [markdown]
-# **Expected (CPU, measured):** as the wait grows from 0 to 25 ms the batches get a bit
-# fuller (at most 4 requests can ever be waiting) but p50 grows by roughly the wait, and
-# throughput *falls*, because each client waits longer per request. So: set `max_wait_ms` to
+# **Expected (CPU, measured):** as the wait grows from 0 to 25 ms the batches fill up (mean
+# 2.0 → 4.0: at most 4 requests can ever be waiting) but p50 grows by roughly the wait
+# (18 → 55 ms) and throughput *falls* (215 → 70 req/s), because each closed-loop client
+# waits longer per request. Note that `max_wait_ms=0` still batches (2.0 on average): it takes
+# whatever queued up while the previous batch was running. So: set `max_wait_ms` to
 # a small fraction of the latency SLO (a few ms), let `max_batch_size` be what the
 # hardware can process within the SLO, and let load decide the batch size. Some systems
 # adapt the wait to the observed arrival rate.
@@ -392,10 +396,10 @@ _ = (OUT / "generation.json").write_text(json.dumps({"device": str(DEVICE), "new
                                                     "runs": GEN}, indent=2))
 
 # %% [markdown]
-# **Expected (CPU, 2 threads, measured):** with the cache, batch 1 generates a few tens of
-# tokens per second; without it, noticeably fewer (our run: see the printout; the gap grows with
-# the number of generated tokens, since the uncached step cost grows with length); batch 8
-# with the cache produces several times more tokens per second than batch 1, because decode is
+# **Expected (CPU, 2 threads, measured; a busy shared machine):** batch 1 without the cache
+# ~7–10 tokens/s, with the cache ~10–17 tokens/s (our two runs: 1.4× and 1.8× faster; the gap
+# grows with the number of generated tokens, since an uncached step re-processes the whole
+# sequence); batch 8 with the cache ~57–86 tokens/s, 3–8× batch 1, because decode is
 # memory-bound and the weights are read once for all 8 sequences. Greedy GPT-2 text is
 # repetitive; that is the model, not a bug. **On a T4 you should see** hundreds of tokens/s
 # at batch 1 in fp16 and thousands at batch 8+ (not measured in our verification runs).
@@ -429,11 +433,11 @@ print(f"(static batching with requests sorted by length - impossible online, len
       f"{sorted_static['utilization']:.0%})")
 
 # %% [markdown]
-# **Expected (simulation, seeded):** median ~60, mean ~100, max a few hundred tokens; static
-# batching keeps only ~35–45% of the slots busy, continuous batching ~95%+, so it needs about
-# 2–3× fewer decode steps for the same tokens. Since a decode step costs about the same
+# **Expected (simulation, seeded):** median 57, mean 95, max 1,024 tokens (one request hit
+# the cap); static batching keeps only 26% of the slots busy, continuous batching 97%, so it
+# needs 3.7× fewer decode steps (11,497 vs 3,133) for the same tokens. Since a decode step costs about the same
 # whatever the batch holds (memory-bound), **fewer steps means proportionally more
-# throughput**. Sorting by length would help static batching, but output lengths are unknown
+# throughput**. Sorting by length would help static batching (82%), but output lengths are unknown
 # until generation ends.
 #
 # ## 12.7 · Paged attention: the memory side
@@ -463,7 +467,7 @@ print(f"64 sequences: tokens actually stored {sum(used):,} | reserved contiguous
 # model (32 layers, 32 heads of 128, no grouped-query attention) needs 512 KB per token, i.e.
 # ~1 GB for a single 2,048-token sequence: the KV cache, not the weights, limits how many
 # sequences fit. Reserving the maximum length per request leaves most of that memory unused
-# (our simulation: ~25% used); allocating fixed-size blocks on demand uses ~95%+.
+# (our simulation: 24% used); allocating 16-token blocks on demand uses 98%.
 #
 # **Paged attention** (vLLM, Kwon et al. 2023) stores each sequence's KV cache in fixed-size
 # blocks (e.g. 16 tokens) anywhere in GPU memory, with a per-sequence *block table* (like
@@ -512,7 +516,8 @@ for name, rps, price in cases:
 
 # %% [markdown]
 # **Expected:** dynamic batching cuts the cost per request by the same factor as it raised
-# throughput (our run: see the printout), with the same machine and price. The levers on cost
+# throughput (our run: $0.00114 → $0.00045 per 1,000 requests at 122 → 308 req/s), with the
+# same machine and price. The GPU row is arithmetic on assumptions, not a measurement. The levers on cost
 # are throughput (batching, quantisation, distillation, better kernels), price (spot/reserved
 # instances, cheaper hardware), and utilisation (autoscaling, mixing batch and online
 # traffic). For generation, quote cost per 1,000 *tokens*, and remember output tokens cost more
