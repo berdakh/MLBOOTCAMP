@@ -101,8 +101,8 @@ exact in the dtype you merged in.
    many tasks share one embedding service, or when labelled data is tiny. LoRA when the
    representation must adapt but memory, storage or many-task serving matter. Full FT
    when you have lots of data, a big domain shift, and the budget, or need the last point.
-5. **Merged vs unmerged.** Merged: no extra latency (in 6.5 unmerged was ~10 % slower
-   on CPU), but one task per model copy. Unmerged: small overhead, any number of
+5. **Merged vs unmerged.** Merged: no extra latency (in 6.5 the difference was within
+   noise on CPU: 790–890 vs 800–810 ms per batch), but one task per model copy. Unmerged: small overhead, any number of
    adapters per base, hot-swap and roll back independently. For 1,000 customers: a shared
    base fleet with batched multi-adapter kernels (S-LoRA/Punica/vLLM), adapters (~3 MB
    each here) cached in GPU memory by popularity and paged from CPU/disk otherwise.

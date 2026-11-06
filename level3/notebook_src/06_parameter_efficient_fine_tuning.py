@@ -332,19 +332,22 @@ _ = (OUT / "peft_comparison.json").write_text(json.dumps({"device": describe(DEV
                                                      "n_test": N_EVAL, "rows": rows}, indent=2, default=float))
 
 # %% [markdown]
-# **Expected (CPU budget, measured):** (one run on 2 shared CPU threads; time and accuracy vary
-# between runs)
+# **Expected (CPU budget, measured):** accuracies and memory were identical in our runs;
+# times vary with whatever else runs on the machine (epoch times below are the range over
+# three runs on a shared 4-core machine; ms/step is the steadier median from the last run):
 #
-# | method | trainable | test acc | s/epoch | memory (estimate) |
-# |---|---|---|---|---|
-# | linear probe | 3,076 | 0.833 | 17.5 | 253 MB |
-# | LoRA r=4 | 667,396 | 0.830 | 37.3 | 771 MB (505 MB activations) |
-# | LoRA r=8 | 741,124 | 0.837 | 48.3 | 773 MB (505 MB activations) |
-# | full fine-tuning | 66,956,548 | 0.847 | 82.1 | 2,016 MB (739 MB activations) |
+# | method | trainable | test acc | s/epoch | ms/step | memory (estimate) |
+# |---|---|---|---|---|---|
+# | linear probe | 3,076 | 0.833 | 18–32 | – | 253 MB |
+# | LoRA r=4 | 667,396 | 0.830 | 37–101 | ~1,800 | 771 MB (505 MB activations) |
+# | LoRA r=8 | 741,124 | 0.837 | 36–102 | ~1,750 | 773 MB (505 MB activations) |
+# | full fine-tuning | 66,956,548 | 0.847 | 57–82 | ~2,850 | 2,016 MB (739 MB activations) |
 #
 # All four accuracies lie within about one standard error (±0.02 at 300 examples) of each
-# other: this budget cannot rank them. LoRA trained ~1.7–2.2× faster per epoch than full
-# fine-tuning here and needed ~38 % of its estimated memory.
+# other: this budget cannot rank them. A LoRA training step was ~1.6× faster than a full
+# fine-tuning step, and LoRA needed ~38 % of the estimated memory. Note how unreliable whole-epoch
+# wall times are on a shared machine (one run even had LoRA epochs *slower* than full
+# fine-tuning): benchmark repeated steps back to back, as `ms/step` does.
 #
 # **What the table says, and what it does not.**
 #
@@ -358,7 +361,7 @@ _ = (OUT / "peft_comparison.json").write_text(json.dumps({"device": describe(DEV
 #   at 7B it is the difference between fitting and not fitting (6.1).
 # * **Time**: LoRA skips the weight-gradient matmuls of frozen layers (about half of the
 #   backward FLOPs, a third of the step) and the AdamW update of 67M parameters, but still
-#   computes activation gradients through every layer. On our CPU that gave 1.7–2.2× per epoch;
+#   computes activation gradients through every layer. On our CPU a step was ~1.6× faster;
 #   expect less on a GPU, where the optimiser step is cheap relative to the matmuls.
 # * **Accuracy**: with this tiny budget the ranking is noisy. With more data, LoRA usually
 #   gets within a point or so of full fine-tuning on classification tasks like this.
@@ -458,9 +461,10 @@ print(f"peft merge_and_unload -> {type(peft_merged).__name__}, max |logit differ
 # **Expected (CPU, measured):** 0 `LoRALinear` layers left after merging and a max logit
 # difference of ~1e-6 (float rounding: `W + s·BA` is summed in a different order than
 # `Wx + s·B(Ax)`); `peft`'s `merge_and_unload` returns a plain `DistilBertForSequenceClassification`
-# with the same ~1e-6 difference. A batch of 32 took 890 ms unmerged vs 811 ms merged on CPU
-# (~10 %, noisy): the adapter matmuls are small but are extra kernel launches per layer, which
-# matters more for small batches on a GPU.
+# with the same ~1e-6 difference. A batch of 32 took 790–890 ms unmerged vs 800–810 ms merged on
+# CPU in our runs: no difference beyond noise here, because the rank-8 matmuls are tiny next to the
+# 768-wide ones. The overhead shows up as extra kernel launches per layer, which matters more for
+# small batches on a GPU and for many adapted layers in a large model.
 #
 # ## 6.6 · Serving many adapters on one base model
 #
