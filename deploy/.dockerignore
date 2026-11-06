@@ -1,0 +1,36 @@
+# Copy to the repository root before building (Docker reads .dockerignore from the
+# root of the build context):  cp deploy/.dockerignore .dockerignore
+
+# Secrets must never enter an image.
+.env
+.env.*
+*.key
+secrets.json
+
+# Version control, caches and environments.
+.git
+.github
+**/__pycache__
+**/*.py[cod]
+.venv
+venv
+.pytest_cache
+.ruff_cache
+**/.ipynb_checkpoints
+
+# Course material the service does not need.
+notebooks
+notebook_src
+docs
+capstones
+solutions
+tests
+tools
+data
+generated
+
+# Models travel through the registry, mounted at run time. To bake one bundle
+# into the image instead, keep this line and add an exception such as:
+#   !artifacts/registry/v1
+artifacts
+*.joblib

@@ -1,0 +1,42 @@
+# Copy this template, then rename the package `capstone` (src/capstone, this file,
+# the Makefile and the tests) to something specific, e.g. `ercotload`.
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "capstone"                      # TODO: rename
+version = "0.1.0"
+description = "TODO: one sentence - what question this project answers, on which public dataset"
+readme = "README.md"
+requires-python = ">=3.11"             # 3.11+ for tomllib (config reading, no YAML dependency)
+license = { text = "MIT" }             # your code; the DATA keeps its own licence (see DATA_CARD.md)
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "scikit-learn>=1.4",
+    "joblib>=1.3",
+    "fastapi>=0.110",
+    "pydantic>=2.6",
+    "uvicorn>=0.29",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.6", "httpx>=0.27"]
+# torch = ["torch>=2.2"]               # TODO: only if your capstone needs it (C-MAPSS, Civil Comments)
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "W"]
+ignore = ["E501", "B008"]

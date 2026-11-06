@@ -1,0 +1,9 @@
+# Level 2 adds ranking, retrieval and deep-learning libraries to Level 1's.
+# Colab preinstalls torch and lightgbm; pip skips what is already satisfied.
+-r ../requirements.txt
+torch>=2.2
+lightgbm>=4.0
+faiss-cpu>=1.8
+onnx>=1.15
+onnxruntime>=1.17
+scipy>=1.11

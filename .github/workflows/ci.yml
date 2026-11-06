@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Tests, notebook sync and structure
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt ruff
+      - name: Lint
+        run: ruff check src tests tools solutions
+      - name: Unit tests, graders vs reference solutions
+        run: python -m pytest
+      - name: Notebooks in sync with notebook_src/
+        run: python tools/nbbuild.py --check
+      - name: Diagrams in sync with their generator
+        run: python tools/make_diagrams.py --check
+      - name: Notebook structure, syntax, links, Colab badges
+        run: python tools/check_notebooks.py
+      - name: Documentation links
+        run: python tools/check_links.py
+      - name: Capstone template tests
+        if: matrix.python-version == '3.12'
+        run: cd capstones/template && python -m pytest -q
+
+  levels:
+    # Levels 2-3 graders and reference solutions need PyTorch, LightGBM, FAISS.
+    # CPU wheels keep the job small; no Hugging Face downloads are needed here.
+    name: Level 2-3 graders vs reference solutions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r level3/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Graders accept their reference solutions
+        run: python -m pytest tests/test_solutions.py -k "level2 or level3"
+
+  execute:
+    # Runs every notebook top to bottom, each in a fresh artifact directory -
+    # the closest CI gets to "a new Colab runtime". Slower, so on main and on demand.
+    name: Execute all notebooks
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -r requirements-lock.txt -r requirements-dev.txt
+      - name: Execute notebooks
+        run: python tools/run_notebooks.py --report verification-log.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: notebook-verification
+          path: verification-log.md
