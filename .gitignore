@@ -1,0 +1,40 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# --- Environments ---
+.venv/
+venv/
+env/
+
+# --- Tooling caches ---
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# --- Course artifacts (rebuilt by churnlab.bootstrap; never committed) ---
+# Models are pickles: they execute code when loaded, and they can encode
+# training data. Share them deliberately, not by accident.
+artifacts/
+artifacts.zip
+*.joblib
+mlruns/
+# Written by notebooks into the working tree
+generated/
+data/drift/
+
+# --- Secrets ---
+.env
+.env.*
+*.key
+secrets.json
+
+# --- OS / editors ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

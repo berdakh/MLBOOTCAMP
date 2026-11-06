@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 320" role="img" aria-label="Point-in-time features and labels"><title>Point-in-time features and labels</title><style>
+  .bg{fill:#ffffff} .box{fill:#f4f6fb;stroke:#3b4a6b;stroke-width:1.5}
+  .accent{fill:#e3f0ff;stroke:#1f6feb;stroke-width:1.8} .warn{fill:#fff1e6;stroke:#c2410c;stroke-width:1.5}
+  .ok{fill:#e8f7ee;stroke:#15803d;stroke-width:1.5} .muted{fill:#f8f8f8;stroke:#9aa3b2;stroke-width:1;stroke-dasharray:4 3}
+  .t{font:600 14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;fill:#1b2333}
+  .s{font:12px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;fill:#4a5568}
+  .h{font:700 17px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;fill:#1b2333}
+  .line{stroke:#3b4a6b;stroke-width:1.6;fill:none} .arrowhead{fill:#3b4a6b}
+  @media (prefers-color-scheme: dark){
+    .bg{fill:#0f1420} .box{fill:#1a2233;stroke:#8da2c9} .accent{fill:#132a4a;stroke:#58a6ff}
+    .warn{fill:#3a2414;stroke:#f0883e} .ok{fill:#12301f;stroke:#3fb950} .muted{fill:#161b26;stroke:#5c667a}
+    .t,.h{fill:#e6edf3} .s{fill:#a9b4c4} .line{stroke:#8da2c9} .arrowhead{fill:#8da2c9}
+  }
+</style><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrowhead" d="M0,0 L10,5 L0,10 z"/></marker></defs><rect class="bg" x="0" y="0" width="1000" height="320" rx="10"/><text class="h" x="500" y="32" text-anchor="middle">One snapshot T: features look back, the label looks forward</text><path class="line" d="M40,185 L960,185" marker-end="url(#ah)"/><text class="s" x="960" y="209" text-anchor="end">time</text><rect class="accent" x="240" y="135" width="300" height="34" rx="3"/><text class="t" x="390" y="157" text-anchor="middle">features: rows with timestamp &lt; T</text><rect class="muted" x="130" y="95" width="410" height="30" rx="3"/><text class="s" x="335" y="115" text-anchor="middle">90-day ticket / payment windows</text><rect class="ok" x="560" y="201" width="200" height="34" rx="3"/><text class="t" x="660" y="223" text-anchor="middle">label: churn in [T, T+30d)</text><path class="line" d="M550,85 L550,255" stroke-dasharray="5 4"/><text class="t" x="550" y="79" text-anchor="middle">snapshot T</text><rect class="warn" x="470" y="201" width="70" height="34" rx="3"/><text class="s" x="460" y="215" text-anchor="end">a usage week that ends</text><text class="s" x="460" y="231" text-anchor="end">after T is excluded</text><text class="s" x="40" y="300" text-anchor="start">Leakage = any feature computed from rows at or after T (including &#x27;status&#x27; columns exported today).</text></svg>

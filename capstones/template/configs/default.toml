@@ -1,0 +1,30 @@
+# Read with tomllib (standard library, Python 3.11+). No YAML dependency.
+# Every number that changes a result lives here, so a run is reproducible from
+# (git commit, this file, data checksum).
+
+[project]
+name = "capstone"          # TODO
+seed = 42
+
+[data]
+# TODO: the official URL from DATA_CARD.md and its SHA-256 after first download.
+url = ""
+sha256 = ""
+raw_dir = "data/raw"
+processed_dir = "data/processed"
+
+[split]
+# TODO: choose ONE scheme and justify it in the README (time / group / both).
+kind = "time"              # "time" or "group"
+time_column = "timestamp"
+group_column = "entity_id"
+cutoff = "2020-01-01"      # rows strictly before -> train; on/after -> test
+test_fraction = 0.2        # used when kind = "group"
+
+[model]
+kind = "ridge"             # baseline is always trained as well
+alpha = 1.0
+
+[paths]
+artifacts_dir = "artifacts"
+reports_dir = "reports"
