@@ -145,7 +145,10 @@ RESULTS["overall_auc"] = round(auc_all, 4)
 print(f"TF-IDF {X_train.shape[1]:,} features, trained in {time.perf_counter() - t0:.1f} s | test AUC {auc_all:.4f}")
 
 # %% [markdown]
-# **Expected:** XX
+# **Expected (CPU budget, measured):** 60,000 training and 40,000 test comments, ~11% toxic; identity
+# mentions range from 486 (psychiatric or mental illness) to ~5,000 (female) test comments, and the
+# toxic rate is much higher among comments mentioning *black*, *white*, *homosexual* or *muslim*
+# (23–33%) than overall (11%). ~190,000 TF-IDF features, trained in ~15–35 s; test AUC ≈ 0.893.
 #
 # ## 15.2 · Subgroup metrics: subgroup AUC, BPSN, BNSP
 #
@@ -208,7 +211,14 @@ RESULTS["subgroups"] = sub.round(4).to_dict(orient="index")
 RESULTS["jigsaw_final_metric"] = round(final, 4)
 
 # %% [markdown]
-# **Expected (measured):** XX
+# **Expected (measured):** overall AUC 0.893, but subgroup AUCs of 0.78–0.80 for *black*,
+# *homosexual_gay_or_lesbian*, *muslim* and *white*, and **BPSN AUCs as low as 0.67–0.75** for them,
+# while their BNSP AUCs are high (0.91–0.95). That pattern (low BPSN, high BNSP) is the signature of
+# the identity term itself pushing scores up: benign comments mentioning these groups score like toxic
+# ones. *christian* shows the opposite (BPSN 0.91, BNSP 0.86). At threshold 0.5 the FPR on benign
+# comments mentioning *black* is 0.083 against 0.010 overall (an 8× ratio). The Jigsaw summary metric
+# is ≈ 0.848. Note also the overall FNR of 0.72 at 0.5: with an 11% base rate a logistic regression
+# rarely scores above 0.5, so a real deployment would pick a lower threshold (next section).
 
 # %% [markdown]
 # ## 15.3 · Threshold effects
@@ -246,7 +256,12 @@ print(f"background (no identity mentioned) FPR at 0.5: {target_fpr:.3f}")
 print(pd.DataFrame(rows).round(3).to_string(index=False))
 
 # %% [markdown]
-# **Expected (measured):** XX
+# **Expected (measured):** at every threshold the benign comments mentioning *black*, *homosexual* or
+# *muslim* are flagged 4–8× more often than benign comments overall (at 0.3: 13–22% vs 3.5%); *christian*
+# is close to the overall rate. Background comments (no identity mentioned) have an FPR of only 0.004 at
+# 0.5. Per-group thresholds equalise FPR at 0.004 but need thresholds of 0.81–0.88 for those groups, and
+# their FNR rises to 0.91–0.94: most toxic comments about these groups would then go unflagged. Equal
+# FPR was bought with unequal (and worse) FNR, which is the trade-off the impossibility results predict.
 
 # %% [markdown]
 # ## 15.4 · Robustness: distribution shift
@@ -286,7 +301,11 @@ RESULTS["shift"] = {f"{a}/{b}": v for (a, b), v in shift.round(4).to_dict(orient
 print(shift.round(3).to_string())
 
 # %% [markdown]
-# **Expected (measured):** XX
+# **Expected (measured):** both shifts cost a little ranking quality (AUC 0.868 → 0.855 for time, 0.866
+# → 0.859 for source) and more **calibration**: the ratio of mean score to toxic rate drops from 0.89 to
+# 0.82 on late-2017 comments (whose toxic rate is higher, 0.124 vs 0.108). On a random split none of
+# this would be visible. A transformer would probably degrade less on vocabulary drift, but that
+# has to be measured with the same protocol.
 #
 # ## 15.5 · Robustness: perturbations and counterfactual identity swaps
 #
@@ -345,7 +364,13 @@ RESULTS["swaps"] = swaps.round(4).to_dict(orient="records")
 print(swaps.round(3).to_string(index=False))
 
 # %% [markdown]
-# **Expected (measured):** XX
+# **Expected (measured):** typos in 20% of the words reduce recall on toxic comments from 0.285 to
+# 0.254 (−11% relative), with a word-level model that has never seen the misspelt tokens (character
+# n-grams or subword models are more robust). The template test is stark: neutral sentences score
+# 0.50 with "gay", 0.30 with "black", 0.20 with "muslim", against ≈ 0.03–0.05 for "american",
+# "straight", "christian" or "young". Swapping the term in real non-toxic comments lowers their mean
+# score (e.g. "gay" → "straight": 0.187 → 0.077, flag rate at 0.5: 5.7% → 0.7%): the model's decision
+# depends on *who* is mentioned, which is exactly what counterfactual fairness forbids.
 
 # %% [markdown]
 # ## 15.6 · Privacy: PII, membership inference
@@ -398,7 +423,12 @@ RESULTS["membership_inference"] = mi.round(4).to_dict(orient="records")
 print(mi.round(3).to_string(index=False))
 
 # %% [markdown]
-# **Expected (measured):** XX
+# **Expected (measured):** our regex redactor rewrites the synthetic string; in 40,000 test comments it
+# finds no emails or phone numbers (the dataset was already filtered) but ~1,100 URLs. With C = 100 the
+# model fits the training set perfectly (train AUC 1.000), members have a mean loss of 0.016 against 0.365
+# for non-members, and the loss-threshold attack reaches AUC ≈ 0.64. Stronger regularisation (C = 0.1)
+# brings the attack down to ≈ 0.57 at a small cost in test AUC (0.785 → 0.774). The attack AUC tracks
+# the train/test loss gap, i.e. memorisation.
 #
 # ## 15.7 · Differential privacy: DP-SGD
 #
@@ -413,7 +443,7 @@ print(mi.round(3).to_string(index=False))
 #
 # The privacy cost ε then follows from the noise multiplier σ, the sampling rate and the number of
 # steps, computed by a **privacy accountant** (Opacus, TensorFlow Privacy). We implement DP-SGD for
-# logistic regression on 128-dimensional SVD features of the TF-IDF matrix (per-example gradients of
+# logistic regression on 96-dimensional SVD features of the TF-IDF matrix (per-example gradients of
 # logistic regression are `(p − y)·x`, so no special library is needed).
 
 # %% [markdown]
@@ -439,7 +469,7 @@ def reference_clip_and_noise(g, clip, sigma, rng):
 
 
 t0 = time.perf_counter()
-svd = TruncatedSVD(128, random_state=0).fit(X_train)
+svd = TruncatedSVD(96, random_state=0).fit(X_train[:20_000])  # fit on a subset to keep it fast
 Z_tr, Z_te = svd.transform(X_train), svd.transform(X_test)
 mu, sd = Z_tr.mean(0), Z_tr.std(0) + 1e-8
 Z_tr = np.c_[(Z_tr - mu) / sd, np.ones(len(Z_tr))]  # standardise, add a bias column
