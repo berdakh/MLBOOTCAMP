@@ -1,11 +1,4 @@
----
-title: "Capstone 1 · ERCOT load forecasting"
-parent: Capstones
-nav_order: 1
----
-
 # Capstone 1 · Day-ahead hourly load forecasting for the Texas grid (ERCOT)
-{: .no_toc }
 
 **Recommended order: 2nd** · MVP ≈ 4–5 days at 3 h/day · CPU only
 
@@ -13,8 +6,6 @@ A public-data demonstration inspired by energy-industry forecasting problems.
 It uses load data that ERCOT publishes on its website; it is not work for,
 or endorsed by, ERCOT or any utility, retailer or trading company.
 
-1. TOC
-{:toc}
 
 ---
 

@@ -1,11 +1,4 @@
----
-title: Capstones
-nav_order: 5
-has_children: true
----
-
 # Capstones
-{: .no_toc }
 
 Five independent portfolio projects on real public data. Each one takes the
 habits from the five-day bootcamp (checksummed data, leakage-safe splits, an
@@ -14,8 +7,6 @@ with a different shape: run-to-failure sensor data, an hourly time series,
 messy transactions, a ranking problem and a text classifier with a human in
 the loop.
 
-1. TOC
-{:toc}
 
 ---
 
@@ -53,11 +44,11 @@ README), not the order to do them in. The recommended order is below.
 
 | # | Capstone | Core skill it proves | Recommended order | MVP budget at 3 h/day |
 |---|---|---|---|---|
-| 1 | [ERCOT hourly load forecasting](01-ercot-load-forecasting.html) | Rolling-origin backtests, seasonal baselines, peak-hour error | 2nd | 4–5 days (12–15 h) |
-| 2 | [C-MAPSS predictive maintenance](02-cmapss-predictive-maintenance.html) | Engine-level splits, RUL metrics, a compact PyTorch temporal model | **1st** | 4 days (12 h) |
-| 3 | [Online Retail demand forecasting](03-online-retail-forecasting.html) | SQL cleaning of messy transactions, intermittent demand, sales ≠ demand | 3rd | 5 days (15 h) |
-| 4 | [MovieLens recommendations](04-movielens-recommendations.html) | Time-aware ranking evaluation, Recall@10 / NDCG@10, cold start | 4th | 4–5 days (12–15 h) |
-| 5 | [Civil Comments moderation triage](05-civil-comments-moderation.html) | PR-AUC, thresholds under review capacity, subgroup error rates | 5th | 5 days (15 h) |
+| 1 | [ERCOT hourly load forecasting](01-ercot-load-forecasting.md) | Rolling-origin backtests, seasonal baselines, peak-hour error | 2nd | 4–5 days (12–15 h) |
+| 2 | [C-MAPSS predictive maintenance](02-cmapss-predictive-maintenance.md) | Engine-level splits, RUL metrics, a compact PyTorch temporal model | **1st** | 4 days (12 h) |
+| 3 | [Online Retail demand forecasting](03-online-retail-forecasting.md) | SQL cleaning of messy transactions, intermittent demand, sales ≠ demand | 3rd | 5 days (15 h) |
+| 4 | [MovieLens recommendations](04-movielens-recommendations.md) | Time-aware ranking evaluation, Recall@10 / NDCG@10, cold start | 4th | 4–5 days (12–15 h) |
+| 5 | [Civil Comments moderation triage](05-civil-comments-moderation.md) | PR-AUC, thresholds under review capacity, subgroup error rates | 5th | 5 days (15 h) |
 
 A copyable repository layout for every capstone (package skeleton, FastAPI
 app factory, tests, CI, README / model card / data card templates) is in
@@ -131,7 +122,7 @@ run). So:
 * **Extensions are optional.** Every brief separates the MVP from extensions,
   and marks GPU-only items. None of the MVPs needs a GPU.
 * Keep doing ~30 minutes of SQL / Python drills and one mock question per day
-  alongside the capstones; see the [study plan](../guides/study-plan.html).
+  alongside the capstones; see the [study plan](../guides/study-plan.md).
 
 | Capstone | MVP | Typical extensions | Where time usually goes |
 |---|---|---|---|
@@ -181,7 +172,7 @@ repository as an issue or a checklist.
 ## Shared capstone rubric (100 points)
 
 Score your own repository, then ask someone else to. The
-[readiness rubric](../guides/readiness-rubric.html) uses the total.
+[readiness rubric](../guides/readiness-rubric.md) uses the total.
 
 | Area | Points | Full marks | Half marks | Zero |
 |---|---:|---|---|---|
@@ -224,4 +215,4 @@ the operational pieces. Copy the ideas, not necessarily the code:
 
 Each brief ends with a specific suggestion for that dataset. For interview
 practice beyond the per-capstone questions, see the
-[interview question bank](../guides/interview-questions.html).
+[interview question bank](../guides/interview-questions.md).

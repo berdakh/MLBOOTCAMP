@@ -1,18 +1,9 @@
----
-title: Working in Colab
-parent: Guides
-nav_order: 3
----
-
 # Working in Colab
-{: .no_toc }
 
 Every notebook runs in a free Colab CPU runtime. The one thing to understand
 is that a Colab runtime is **temporary**, and to decide in advance how you will
 keep your work.
 
-1. TOC
-{:toc}
 
 ---
 
@@ -51,8 +42,7 @@ produced, deterministically. So you **never lose the ability to continue**.
 What you can lose is your own work: a model you tuned differently, an exercise
 answer you wrote in a cell, notes. Options 1 and 2 protect that.
 
-{: .tip }
-> Notebook cells you edit are part of the notebook, not the artifacts. To keep
+> **Tip:** Notebook cells you edit are part of the notebook, not the artifacts. To keep
 > them, *File → Save a copy in Drive* before you start working. Otherwise your
 > edits live only in the browser tab.
 
@@ -73,7 +63,7 @@ Things to know:
 
 - A model saved to Drive in one session may be loaded in a later session where
   Colab has a newer scikit-learn. The loader then warns about a version
-  mismatch. See [Troubleshooting](troubleshooting.html#scikit-learn-version-mismatch-when-loading-a-bundle).
+  mismatch. See [Troubleshooting](troubleshooting.md#scikit-learn-version-mismatch-when-loading-a-bundle).
 - Two notebooks running at once with `USE_DRIVE = True` write to the same
   folder. That is fine for reading; avoid training into the same registry
   from two notebooks at the same moment.
@@ -145,7 +135,7 @@ internet. That is enough for everything in the course. Exposing it publicly
 needs a tunnelling service or a real host, which is outside the course.
 
 If you rerun a cell that starts the server, the port may still be in use; see
-[Troubleshooting](troubleshooting.html#port-already-in-use).
+[Troubleshooting](troubleshooting.md#port-already-in-use).
 
 ## Working on capstones in Colab
 

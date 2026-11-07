@@ -1,18 +1,9 @@
----
-title: Four-week study plan
-parent: Guides
-nav_order: 5
----
-
 # Four-week study plan
-{: .no_toc }
 
 About a month at **3 hours a day**. Week 1 is the bootcamp. Weeks 2–4 turn what
 the bootcamp introduced into skills you can use under pressure: capstones on
 real public data, daily SQL and Python drills, and weekly mock interviews.
 
-1. TOC
-{:toc}
 
 ---
 
@@ -37,7 +28,7 @@ Fluency comes from repetition with feedback. No course compresses that.
 |---|---|---|
 | Drills | 30 | SQL or Python, timed, from a blank editor (alternate days). Notebook 16 is the template. |
 | Capstone | 120 | The current capstone, following its brief |
-| Explain | 30 | Explain today's capstone work aloud or in writing, as if to an interviewer; answer two questions from the [question bank](interview-questions.html) |
+| Explain | 30 | Explain today's capstone work aloud or in writing, as if to an interviewer; answer two questions from the [question bank](interview-questions.md) |
 
 On mock-interview days (one per week), replace the capstone block with the
 mock and its review.
@@ -46,13 +37,13 @@ mock and its review.
 
 | Day | Session (~3 h) |
 |---|---|
-| 1 | Day 0: [before you start](before-you-start.html), the diagnostic, then start [Day 1](../days/day-1.html) |
-| 2 | Finish [Day 1](../days/day-1.html): reproducible project, validation, SQL, splits |
-| 3 | [Day 2](../days/day-2.html): pipelines, model selection, thresholds, artifacts |
-| 4 | [Day 3](../days/day-3.html): FastAPI, consistent serving, clients and tests |
-| 5 | [Day 4](../days/day-4.html): packaging, health and latency, monitoring and rollback |
-| 6 | [Day 5](../days/day-5.html): final evaluation, drills, system design and mock |
-| 7 | Rest, or catch up. Score yourself on the [readiness rubric](readiness-rubric.html). Choose your first capstone |
+| 1 | Day 0: [before you start](before-you-start.md), the diagnostic, then start [Day 1](../days/day-1.md) |
+| 2 | Finish [Day 1](../days/day-1.md): reproducible project, validation, SQL, splits |
+| 3 | [Day 2](../days/day-2.md): pipelines, model selection, thresholds, artifacts |
+| 4 | [Day 3](../days/day-3.md): FastAPI, consistent serving, clients and tests |
+| 5 | [Day 4](../days/day-4.md): packaging, health and latency, monitoring and rollback |
+| 6 | [Day 5](../days/day-5.md): final evaluation, drills, system design and mock |
+| 7 | Rest, or catch up. Score yourself on the [readiness rubric](readiness-rubric.md). Choose your first capstone |
 
 Week 1 deliverable: the TaskFlow project in your own git repository, a
 recorded five-minute walkthrough, and your first rubric scores.
@@ -86,7 +77,7 @@ recorded five-minute walkthrough, and your first rubric scores.
 
 ## Which capstones, in which order
 
-Five capstone briefs are in [Capstones](../capstones/), with a recommended
+Five capstone briefs are in [Capstones](../capstones/index.md), with a recommended
 order and reasoning. At the pace above, **three capstone MVPs** fit in weeks
 2–4 alongside drills and mocks: an MVP takes roughly 4–5 days at 3 hours a
 day, and extensions take longer. The capstone index recommends C-MAPSS
@@ -95,11 +86,11 @@ capstones A, B and C. Do the remaining two afterwards. To choose the third:
 
 | If you are targeting… | Prioritise |
 |---|---|
-| Energy, utilities, forecasting teams | [ERCOT load forecasting](../capstones/01-ercot-load-forecasting.html) |
-| Industrial, IoT, sensor and signal-processing roles (closest to EEG work) | [C-MAPSS predictive maintenance](../capstones/02-cmapss-predictive-maintenance.html) |
-| Retail, marketplace, supply chain | [Online Retail forecasting](../capstones/03-online-retail-forecasting.html) |
-| Recommendations, ranking, personalisation | [MovieLens recommendations](../capstones/04-movielens-recommendations.html) |
-| Trust and safety, content, NLP-adjacent | [Civil Comments moderation](../capstones/05-civil-comments-moderation.html) |
+| Energy, utilities, forecasting teams | [ERCOT load forecasting](../capstones/01-ercot-load-forecasting.md) |
+| Industrial, IoT, sensor and signal-processing roles (closest to EEG work) | [C-MAPSS predictive maintenance](../capstones/02-cmapss-predictive-maintenance.md) |
+| Retail, marketplace, supply chain | [Online Retail forecasting](../capstones/03-online-retail-forecasting.md) |
+| Recommendations, ranking, personalisation | [MovieLens recommendations](../capstones/04-movielens-recommendations.md) |
+| Trust and safety, content, NLP-adjacent | [Civil Comments moderation](../capstones/05-civil-comments-moderation.md) |
 
 ## Mock interviews
 
@@ -108,7 +99,7 @@ capstones A, B and C. Do the remaining two afterwards. To choose the third:
 - **Use a real person when you can**: a colleague, a friend in industry, a
   peer-practice community. Self-scored mocks are better than none, but you
   will be generous to yourself.
-- **Score with the [readiness rubric](readiness-rubric.html)**, and write down
+- **Score with the [readiness rubric](readiness-rubric.md)**, and write down
   the two weakest moments and what a better answer would have said.
 - **Vary the format**: project deep-dive, live coding, ML system design,
   ML breadth questions, behavioural.

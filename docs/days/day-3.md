@@ -1,19 +1,10 @@
----
-title: "Day 3 · Serving predictions"
-parent: Daily plan
-nav_order: 3
----
-
 # Day 3 — Serving predictions
-{: .no_toc }
 
 **Goal:** by the end of today the model from Day 2 sits behind a FastAPI
 service with a written contract, returns the same scores the notebook did,
 reports which model version produced each answer, and is covered by tests and
 called by a client that knows how to fail.
 
-1. TOC
-{:toc}
 
 ---
 
@@ -86,12 +77,12 @@ Read the skew-check cell of notebook 10 and run it; it takes a minute.
 
 | Symptom | Fix |
 |---|---|
-| `422 Unprocessable Entity` | Working as intended: read `detail[].loc` and `detail[].msg` — see [Troubleshooting](../guides/troubleshooting.html#422-unprocessable-entity) |
-| `address already in use` when starting uvicorn | A server from an earlier cell is still running — see [Troubleshooting](../guides/troubleshooting.html#port-already-in-use) |
-| Edited `api.py` but nothing changed | The module is cached — see [Troubleshooting](../guides/troubleshooting.html#code-changes-not-picked-up) |
-| `InconsistentVersionWarning` / "model trained with sklearn …" | See [Troubleshooting](../guides/troubleshooting.html#scikit-learn-version-mismatch-when-loading-a-bundle) |
+| `422 Unprocessable Entity` | Working as intended: read `detail[].loc` and `detail[].msg` — see [Troubleshooting](../guides/troubleshooting.md#422-unprocessable-entity) |
+| `address already in use` when starting uvicorn | A server from an earlier cell is still running — see [Troubleshooting](../guides/troubleshooting.md#port-already-in-use) |
+| Edited `api.py` but nothing changed | The module is cached — see [Troubleshooting](../guides/troubleshooting.md#code-changes-not-picked-up) |
+| `InconsistentVersionWarning` / "model trained with sklearn …" | See [Troubleshooting](../guides/troubleshooting.md#scikit-learn-version-mismatch-when-loading-a-bundle) |
 
 ## Optional reading
 
-- [Handbook 5 · Serving](../handbook/05-serving.html)
-- [Cheat sheet: FastAPI and pytest](../guides/cheatsheet.html)
+- [Handbook 5 · Serving](../handbook/05-serving.md)
+- [Cheat sheet: FastAPI and pytest](../guides/cheatsheet.md)

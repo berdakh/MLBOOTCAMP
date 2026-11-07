@@ -1,17 +1,8 @@
----
-title: "4 · Evaluation and decisions"
-parent: Handbook
-nav_order: 4
----
-
 # Evaluation and decisions
-{: .no_toc }
 
 A model produces scores. A business makes decisions. Evaluation connects the
 two, and it has to be honest about uncertainty at every step.
 
-1. TOC
-{:toc}
 
 ---
 

@@ -1,19 +1,10 @@
----
-title: "Day 2 · Evaluation & improvement"
-parent: Daily plan
-nav_order: 2
----
-
 # Day 2 — Evaluation & improvement
-{: .no_toc }
 
 **Goal:** by the end of today you have chosen a model for a reason you can
 defend, attached uncertainty to every number you report, turned scores into a
 decision with a threshold derived from stated costs, and saved the result as a
 versioned artifact that someone else could load and audit.
 
-1. TOC
-{:toc}
 
 ---
 
@@ -76,8 +67,7 @@ metrics. Every one of those fields answers a question you will be asked.
 | A registry in your artifact directory with at least two versions and a `CURRENT` pointer, and a model card draft | Notebook 08 |
 | Spoken answers to every checkpoint question in 05–08 | Checkpoints |
 
-{: .important }
-> All of today's numbers are **validation** numbers. The test period is touched
+> **Important:** All of today's numbers are **validation** numbers. The test period is touched
 > once, on Day 5. If you looked at test scores to choose anything today, your
 > Day 5 result is no longer an unbiased estimate. Say so if it happened.
 
@@ -93,5 +83,5 @@ bundle from notebook 08. The catch-up cell on Day 3 builds the registry for you.
 
 ## Optional reading
 
-- [Handbook 4 · Evaluation and decisions](../handbook/04-evaluation-and-decisions.html)
-- [Interview questions: evaluation](../guides/interview-questions.html#evaluation-and-metrics)
+- [Handbook 4 · Evaluation and decisions](../handbook/04-evaluation-and-decisions.md)
+- [Interview questions: evaluation](../guides/interview-questions.md#evaluation-and-metrics)

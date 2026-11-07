@@ -1,11 +1,4 @@
----
-title: Glossary
-parent: Guides
-nav_order: 9
----
-
 # Glossary
-{: .no_toc }
 
 Terms used in the course, with the meaning they have here. Where a term has a
 research counterpart, it is given in brackets.

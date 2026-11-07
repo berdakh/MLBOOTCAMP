@@ -1,17 +1,8 @@
----
-title: "6 · Operations and monitoring"
-parent: Handbook
-nav_order: 6
----
-
 # Operations and monitoring
-{: .no_toc }
 
 A model is not finished when it ships. It is starting. This chapter is about
 knowing whether it still works, and what to do when it does not.
 
-1. TOC
-{:toc}
 
 ---
 

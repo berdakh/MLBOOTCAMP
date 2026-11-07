@@ -1,11 +1,4 @@
----
-title: "Capstone 2 · C-MAPSS predictive maintenance"
-parent: Capstones
-nav_order: 2
----
-
 # Capstone 2 · Predictive maintenance on NASA C-MAPSS
-{: .no_toc }
 
 **Recommended order: 1st** · MVP ≈ 4 days at 3 h/day · CPU only (GPU optional)
 
@@ -14,8 +7,6 @@ maintenance problems. It uses **simulated** turbofan degradation data
 published by NASA; it is not work for NASA, an airline, an engine maker or an
 energy company, and it says nothing about any real fleet.
 
-1. TOC
-{:toc}
 
 ---
 

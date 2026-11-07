@@ -1,11 +1,4 @@
----
-title: "Capstone 3 · Online Retail demand forecasting"
-parent: Capstones
-nav_order: 3
----
-
 # Capstone 3 · Weekly product demand forecasting on UCI Online Retail II
-{: .no_toc }
 
 **Recommended order: 3rd** · MVP ≈ 5 days at 3 h/day · CPU only
 
@@ -14,8 +7,6 @@ problems. It uses transaction data from one UK online gift retailer published
 on the UCI Machine Learning Repository; it is not work for, or endorsed by,
 Amazon or any other retailer, and nothing here describes their systems.
 
-1. TOC
-{:toc}
 
 ---
 

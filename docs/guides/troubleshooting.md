@@ -1,17 +1,8 @@
----
-title: Troubleshooting
-parent: Guides
-nav_order: 10
----
-
 # Troubleshooting
-{: .no_toc }
 
 Start here when something breaks. Organised by what you see. Each notebook
 also ends with a short troubleshooting table for its own failures.
 
-1. TOC
-{:toc}
 
 ---
 
@@ -30,8 +21,9 @@ also ends with a short troubleshooting table for its own failures.
 
 ## Colab and environment
 
+<a id="colab-disconnected-and-my-artifacts-are-gone"></a>
+
 ### Colab disconnected and my artifacts are gone
-{: #colab-disconnected-and-my-artifacts-are-gone }
 
 **Cause.** The runtime was recycled (idle too long, or the session limit).
 Everything under `/content` is deleted, including the default artifact
@@ -41,7 +33,7 @@ directory.
 the split and the registry deterministically, usually in under a minute.
 
 **Prevent.** Set `USE_DRIVE = True` in the setup cell, or export a zip at the
-end of each session. See [Working in Colab](colab.html#disconnects). Your own
+end of each session. See [Working in Colab](colab.md#disconnects). Your own
 cell edits are not artifacts: *File → Save a copy in Drive* keeps them.
 
 ### `ModuleNotFoundError: No module named 'churnlab'`
@@ -50,8 +42,9 @@ The setup cell has not run in this runtime, or you started Python from a
 directory outside the repository. Run the setup cell. Locally, either run from
 the repository root or `pip install -e .`.
 
+<a id="pip-conflicts-in-colab"></a>
+
 ### pip warnings or conflicts during the Colab setup cell
-{: #pip-conflicts-in-colab }
 
 You may see:
 
@@ -77,8 +70,9 @@ of a different version.
 you need a specific version. If you do need one (for example to match a saved
 model's scikit-learn), install it, restart the session, then run from the top.
 
+<a id="code-changes-not-picked-up"></a>
+
 ### Code changes not picked up
-{: #code-changes-not-picked-up }
 
 You edited `src/churnlab/api.py` (or a capstone module), reran the cell, and
 nothing changed.
@@ -108,8 +102,9 @@ not re-read the file.
 A uvicorn server running in the background is a **separate process**: it does
 not see your changes until you stop and restart it.
 
+<a id="port-already-in-use"></a>
+
 ### Port already in use
-{: #port-already-in-use }
 
 ```
 ERROR:    [Errno 98] Address already in use
@@ -138,8 +133,9 @@ or by checking the port before starting.
 
 ## Data
 
+<a id="the-na-region-became-missing"></a>
+
 ### The `NA` region became missing
-{: #the-na-region-became-missing }
 
 **Symptom.** After reading a raw CSV yourself, the region `NA` (North America)
 has disappeared, region has far more missing values than the roughly 2%
@@ -159,8 +155,9 @@ That is what `churnlab.data.load_raw` does. Use it, or copy its arguments.
 The same trap catches country codes (Namibia is `NA`), gene names, and
 abbreviations in free text.
 
+<a id="duckdb-type-errors"></a>
+
 ### DuckDB type errors
-{: #duckdb-type-errors }
 
 Typical messages:
 
@@ -190,14 +187,15 @@ con.execute("DESCRIBE SELECT * FROM usage_weekly").df()
 Usually a boundary: `<` versus `<=`, or using `week_start` where the week's
 *end* (`week_start + INTERVAL 7 DAY`) is meant. Compare on one customer and one
 snapshot, printing the rows each version includes. See
-[Handbook 3](../handbook/03-data-sql-and-leakage.html#point-in-time-correctness).
+[Handbook 3](../handbook/03-data-sql-and-leakage.md#point-in-time-correctness).
 
 ---
 
 ## Models and artifacts
 
+<a id="scikit-learn-version-mismatch-when-loading-a-bundle"></a>
+
 ### scikit-learn version mismatch when loading a bundle
-{: #scikit-learn-version-mismatch-when-loading-a-bundle }
 
 Warnings such as:
 
@@ -245,8 +243,9 @@ version first.
 
 ## API
 
+<a id="422-unprocessable-entity"></a>
+
 ### 422 Unprocessable Entity
-{: #422-unprocessable-entity }
 
 **This is the contract working.** The request did not match the schema. Read
 the body:
@@ -308,7 +307,7 @@ configures `testpaths` and the import path.
 
 - Reduce the problem: one customer, one snapshot, one request.
 - Read the source. The `churnlab` modules are short and commented.
-- Check [Verification](verification.html) for what was tested in which
+- Check [Verification](verification.md) for what was tested in which
   environment.
 - Open an issue on the [repository](https://github.com/berdakh/MLBOOTCAMP/issues)
   with the full traceback, the versions from the three questions above, and

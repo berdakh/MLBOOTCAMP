@@ -1,18 +1,9 @@
----
-title: Daily plan
-nav_order: 2
-has_children: true
----
-
 # The five-day plan
-{: .no_toc }
 
 Five days of about **3 hours** each, plus a one-hour diagnostic before you start.
 Self-paced: a "day" is a session, not a calendar day, and nothing breaks if a
 day takes two sittings.
 
-1. TOC
-{:toc}
 
 ---
 
@@ -34,35 +25,36 @@ day takes two sittings.
 Every notebook starts with a setup cell and a catch-up cell. The catch-up cell
 rebuilds anything earlier notebooks would have produced, so **any notebook runs
 in a fresh Colab runtime** even if you skipped the previous one or your session
-was recycled. See the [Colab guide](../guides/colab.html).
+was recycled. See the [Colab guide](../guides/colab.md).
 
 ## The week at a glance
 
 | Day | Theme | Notebooks | Notebook time |
 |---|---|---|---|
 | 0 | The diagnostic | 00 | 60 min |
-| [1](day-1.html) | Reproducible ML projects | 01–04 | ~185 min |
-| [2](day-2.html) | Evaluation & improvement | 05–08 | ~180 min |
-| [3](day-3.html) | Serving predictions | 09–11 | ~160 min + review |
-| [4](day-4.html) | Deployment & operations | 12–14 | ~160 min + review |
-| [5](day-5.html) | Interview demonstration | 15–17 | ~180 min |
+| [1](day-1.md) | Reproducible ML projects | 01–04 | ~185 min |
+| [2](day-2.md) | Evaluation & improvement | 05–08 | ~180 min |
+| [3](day-3.md) | Serving predictions | 09–11 | ~160 min + review |
+| [4](day-4.md) | Deployment & operations | 12–14 | ~160 min + review |
+| [5](day-5.md) | Interview demonstration | 15–17 | ~180 min |
 
 Times are for working through the notebook *and* its exercises at a steady
 pace. Expect the first day to run long while you get used to the setup.
 
 ---
 
+<a id="day-0"></a>
+
 ## Day 0 — the diagnostic
-{: #day-0 }
 
 **Goal:** an honest measurement of where you start, so you spend the week on
 your weak areas rather than your comfortable ones.
 
 | Time | Activity | Notebook |
 |---|---|---|
-| 0:00–0:10 | [Before you start](../guides/before-you-start.html) checklist | — |
+| 0:00–0:10 | [Before you start](../guides/before-you-start.md) checklist | — |
 | 0:10–1:10 | The diagnostic: Python, pandas, SQL, testing, evaluation | `00_diagnostic` · [GitHub](https://github.com/berdakh/MLBOOTCAMP/blob/main/notebooks/00_diagnostic.ipynb) · [Colab](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/notebooks/00_diagnostic.ipynb) |
-| 1:10–1:20 | Write down your results and read the routing table | [Diagnostic guide](../guides/diagnostic.html) |
+| 1:10–1:20 | Write down your results and read the routing table | [Diagnostic guide](../guides/diagnostic.md) |
 
 ### The one idea
 
@@ -83,7 +75,7 @@ your weak areas rather than your comfortable ones.
 
 - Your result for each area, written down somewhere you will see again on Day 5.
 - A short list: the two areas you scored lowest in, and which days cover them
-  (the [diagnostic guide](../guides/diagnostic.html) has the routing table).
+  (the [diagnostic guide](../guides/diagnostic.md) has the routing table).
 
 ### If you only have 90 minutes
 
@@ -109,5 +101,5 @@ version of that day.
 
 The bootcamp leaves you with one project and a map of your gaps. The next
 three weeks are capstones, daily SQL and Python drills, and mock interviews:
-see the [four-week study plan](../guides/study-plan.html) and the
-[capstones](../capstones/).
+see the [four-week study plan](../guides/study-plan.md) and the
+[capstones](../capstones/index.md).

@@ -1,11 +1,4 @@
----
-title: "Capstone 4 · MovieLens recommendations"
-parent: Capstones
-nav_order: 4
----
-
 # Capstone 4 · Top-10 movie recommendations on MovieLens, evaluated in time
-{: .no_toc }
 
 **Recommended order: 4th** · MVP ≈ 4–5 days at 3 h/day · CPU only
 
@@ -15,8 +8,6 @@ published by GroupLens; it is not work for, or endorsed by, Meta, Amazon,
 Netflix or any other platform, and — because of the dataset's licence — it
 must stay a **non-commercial** demonstration.
 
-1. TOC
-{:toc}
 
 ---
 

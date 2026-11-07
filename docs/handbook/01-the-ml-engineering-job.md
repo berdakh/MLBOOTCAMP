@@ -1,17 +1,8 @@
----
-title: "1 · The ML engineering job"
-parent: Handbook
-nav_order: 1
----
-
 # The ML engineering job
-{: .no_toc }
 
 What the three job titles this course targets usually mean, what a researcher
 already brings, and which research habits need to change.
 
-1. TOC
-{:toc}
 
 ---
 
@@ -53,7 +44,7 @@ These transfer directly, and you should say so in interviews, with examples:
 If you did EEG/BCI work, your cross-subject evaluation story is one of the
 strongest leakage stories you can tell. It is concrete, it has a measurable
 before and after, and it maps exactly onto entity leakage in customer, patient
-or device data. See the [STAR examples](../guides/interview-questions.html#behavioural-questions).
+or device data. See the [STAR examples](../guides/interview-questions.md#behavioural-questions).
 
 ## Research habits that hurt
 
@@ -99,7 +90,7 @@ Across all three roles, interviewers repeatedly probe the same things:
 - **Can you communicate?** A clear two-minute explanation beats a complete
   twenty-minute one.
 
-The [interview question bank](../guides/interview-questions.html) is organised
+The [interview question bank](../guides/interview-questions.md) is organised
 around those four.
 
 ## Honest limits of this course

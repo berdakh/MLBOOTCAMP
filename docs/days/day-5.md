@@ -1,18 +1,9 @@
----
-title: "Day 5 · Interview demonstration"
-parent: Daily plan
-nav_order: 5
----
-
 # Day 5 — Interview demonstration
-{: .no_toc }
 
 **Goal:** by the end of today you have one honest, final number for the
 project, the documents that let a stranger understand and reuse it, and a
 first measurement of how you perform when someone is asking the questions.
 
-1. TOC
-{:toc}
 
 ---
 
@@ -81,13 +72,13 @@ your daily practice.
 
 ## What comes next
 
-Five days is a start. Use the [readiness rubric](../guides/readiness-rubric.html)
-to score yourself today, then follow the [four-week study plan](../guides/study-plan.html):
+Five days is a start. Use the [readiness rubric](../guides/readiness-rubric.md)
+to score yourself today, then follow the [four-week study plan](../guides/study-plan.md):
 capstones, daily drills and weekly mock interviews. The capstone briefs and
-recommended order are in [Capstones](../capstones/).
+recommended order are in [Capstones](../capstones/index.md).
 
 ## Optional reading
 
-- [Handbook 7 · ML system design](../handbook/07-ml-system-design.html)
-- [Handbook 1 · The ML engineering job](../handbook/01-the-ml-engineering-job.html)
-- [Interview question bank](../guides/interview-questions.html)
+- [Handbook 7 · ML system design](../handbook/07-ml-system-design.md)
+- [Handbook 1 · The ML engineering job](../handbook/01-the-ml-engineering-job.md)
+- [Interview question bank](../guides/interview-questions.md)

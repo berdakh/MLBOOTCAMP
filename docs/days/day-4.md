@@ -1,24 +1,14 @@
----
-title: "Day 4 · Deployment & operations"
-parent: Daily plan
-nav_order: 4
----
-
 # Day 4 — Deployment & operations
-{: .no_toc }
 
 **Goal:** by the end of today you can package the service, configure it
 without editing code, tell whether it is alive and whether it is ready,
 measure its latency honestly, notice when its inputs drift, and roll back a
 bad model in one step.
 
-1. TOC
-{:toc}
 
 ---
 
-{: .note }
-> Colab cannot run Docker or host a public server. Today you **write and
+> **Note:** Colab cannot run Docker or host a public server. Today you **write and
 > explain** a Dockerfile and a CI workflow, and run the service locally inside
 > the notebook. Building the image or deploying it publicly is an **optional
 > external extension** on your own machine or a cloud account.
@@ -87,5 +77,5 @@ Read the Dockerfile notebook 12 generates and `src/churnlab/settings.py`
 
 ## Optional reading
 
-- [Handbook 6 · Operations and monitoring](../handbook/06-operations-and-monitoring.html)
-- [Interview questions: operations](../guides/interview-questions.html#deployment-and-operations)
+- [Handbook 6 · Operations and monitoring](../handbook/06-operations-and-monitoring.md)
+- [Interview questions: operations](../guides/interview-questions.md#deployment-and-operations)
