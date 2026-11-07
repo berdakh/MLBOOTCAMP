@@ -1,17 +1,8 @@
----
-title: Cheat sheet
-parent: Guides
-nav_order: 8
----
-
 # Cheat sheet
-{: .no_toc }
 
 Short snippets for the things you will write most often. They are reminders,
 not a substitute for being able to write them from a blank file.
 
-1. TOC
-{:toc}
 
 ---
 

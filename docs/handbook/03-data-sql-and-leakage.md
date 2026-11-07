@@ -1,17 +1,8 @@
----
-title: "3 · Data, SQL and leakage"
-parent: Handbook
-nav_order: 3
----
-
 # Data, SQL and leakage
-{: .no_toc }
 
 Most production models that disappoint were evaluated on information they
 would not have had at prediction time. This chapter is about preventing that.
 
-1. TOC
-{:toc}
 
 ---
 

@@ -1,18 +1,9 @@
----
-title: "5 · Serving"
-parent: Handbook
-nav_order: 5
----
-
 # Serving
-{: .no_toc }
 
 Putting a model behind an interface other software can call, so that it
 returns the same answer it gave in your notebook, fails clearly when the input
 is wrong, and tells you which model answered.
 
-1. TOC
-{:toc}
 
 ---
 

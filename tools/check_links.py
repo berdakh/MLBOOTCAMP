@@ -2,9 +2,9 @@
 """Check that every relative link in the markdown files points at a real file.
 
 Covers README.md and the markdown under docs/, solutions/, capstones/,
-notebooks/, deploy/ and data/. Jekyll serves ``foo.md`` as
-``foo.html``, so a link to ``guides/setup.html`` is satisfied by
-``guides/setup.md``.
+notebooks/, deploy/, data/, level2/ and level3/. The docs are read directly on
+GitHub (there is no generated site), so a link must name the real file:
+``guides/setup.md``, not ``guides/setup.html``.
 
 External links (http/https) are not fetched - that would make the check slow
 and flaky.
@@ -48,10 +48,6 @@ def resolve(source: Path, target: str) -> bool:
         return True  # a pure anchor
     base = source.parent
     candidates = [base / clean]
-    if clean.endswith(".html"):
-        candidates.append((base / clean).with_suffix(".md"))
-    if clean.endswith("/"):
-        candidates.append(base / clean / "index.md")
     return any(candidate.exists() for candidate in candidates)
 
 

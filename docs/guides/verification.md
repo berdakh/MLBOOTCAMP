@@ -1,9 +1,3 @@
----
-title: Verification
-parent: Guides
-nav_order: 11
----
-
 # What was verified, and what was not
 
 This page records exactly what was executed when the course was built (Level 1 first; Levels 2–3 at the end). It
@@ -85,7 +79,7 @@ yours.
 
 * **Google Colab itself.** First run in Colab: the setup cell's `git clone`
   and `pip install -r requirements.txt` against Colab's preinstalled versions.
-  If something breaks there, see [troubleshooting](troubleshooting.html) and
+  If something breaks there, see [troubleshooting](troubleshooting.md) and
   please open an issue with the notebook number and the error.
 * **Optional GPU extension** (notebook 06, a small PyTorch MLP). Guarded by
   `RUN_GPU_EXTENSION = False` and never executed. PyTorch was not installed

@@ -1,25 +1,15 @@
----
-title: "Day 1 · Reproducible ML projects"
-parent: Daily plan
-nav_order: 1
----
-
 # Day 1 — Reproducible ML projects
-{: .no_toc }
 
 **Goal:** by the end of today you have a training table you can trust: data
 that has been checked against a written contract, features computed in SQL
 using only information available at prediction time, and a split that
 measures what production will actually experience.
 
-1. TOC
-{:toc}
 
 ---
 
-{: .warning }
-> Did you do the [diagnostic](index.html#day-0) and the
-> [before-you-start checklist](../guides/before-you-start.html)? The first
+> **Warning:** Did you do the [diagnostic](index.md#day-0) and the
+> [before-you-start checklist](../guides/before-you-start.md)? The first
 > notebook assumes the setup cell works for you.
 
 ## Schedule
@@ -52,7 +42,7 @@ The run record (what code, what data, what config, what seed) is the thing you
 will be asked for when a number is questioned in three weeks. Note also where
 your artifact directory is: in Colab it disappears when the runtime does,
 unless you use the `USE_DRIVE` switch or export a zip
-([Colab guide](../guides/colab.html)).
+([Colab guide](../guides/colab.md)).
 
 **In notebook 02**, the defects are planted, at known rates, so you can check
 that your validation finds them: a status column that describes the account
@@ -108,11 +98,11 @@ you will need it then.
 | Symptom | Fix |
 |---|---|
 | `ModuleNotFoundError: churnlab` | Run the setup cell (the first code cell) |
-| The `NA` region has vanished and "unknown" is huge | You read a CSV without `keep_default_na=False` — see [Troubleshooting](../guides/troubleshooting.html#the-na-region-became-missing) |
-| DuckDB `Binder Error` comparing dates and strings | A date column was not parsed — see [Troubleshooting](../guides/troubleshooting.html#duckdb-type-errors) |
+| The `NA` region has vanished and "unknown" is huge | You read a CSV without `keep_default_na=False` — see [Troubleshooting](../guides/troubleshooting.md#the-na-region-became-missing) |
+| DuckDB `Binder Error` comparing dates and strings | A date column was not parsed — see [Troubleshooting](../guides/troubleshooting.md#duckdb-type-errors) |
 | Artifacts gone after a break | The runtime was recycled; re-run from the top, the catch-up cell rebuilds them |
 
 ## Optional reading
 
-- [Handbook 2 · Reproducibility](../handbook/02-reproducibility.html)
-- [Handbook 3 · Data, SQL and leakage](../handbook/03-data-sql-and-leakage.html)
+- [Handbook 2 · Reproducibility](../handbook/02-reproducibility.md)
+- [Handbook 3 · Data, SQL and leakage](../handbook/03-data-sql-and-leakage.md)

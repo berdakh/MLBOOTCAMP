@@ -1,19 +1,10 @@
----
-title: Interpreting the diagnostic
-parent: Guides
-nav_order: 4
----
-
 # Interpreting the diagnostic
-{: .no_toc }
 
 [Notebook 00](https://github.com/berdakh/MLBOOTCAMP/blob/main/notebooks/00_diagnostic.ipynb)
 ([Colab](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/notebooks/00_diagnostic.ipynb))
 measures five areas: **Python, pandas, SQL, testing and evaluation**. This page
 explains how to read your result and where to spend extra time.
 
-1. TOC
-{:toc}
 
 ---
 
@@ -43,11 +34,11 @@ purpose. Interviews are timed.
 
 | Area | Days and notebooks that train it | Handbook | Extra practice |
 |---|---|---|---|
-| **Python** (functions, data structures, errors, modules) | Day 1 (01), Day 3 (09–11), Day 5 (16) | [2 · Reproducibility](../handbook/02-reproducibility.html) | Rebuild one `churnlab` module from a blank file each week |
-| **pandas** (selection, groupby, merge, time) | Day 1 (02, 04), Day 2 (08) | [3 · Data, SQL and leakage](../handbook/03-data-sql-and-leakage.html) | Translate each SQL drill into pandas as well |
-| **SQL** (joins, aggregation, windows, dates) | Day 1 (03), Day 5 (16) | [3 · Data, SQL and leakage](../handbook/03-data-sql-and-leakage.html) | Daily 20–30 minute SQL drills in weeks 2–4 |
-| **Testing** (pytest, fixtures, what to assert) | Day 3 (09, 11), Day 4 (12) | [5 · Serving](../handbook/05-serving.html) | Write tests first for each capstone module |
-| **Evaluation** (metrics for imbalance, uncertainty, thresholds) | Day 1 (04), Day 2 (05–08), Day 5 (15) | [4 · Evaluation and decisions](../handbook/04-evaluation-and-decisions.html) | Explain one capstone result per week aloud with its interval |
+| **Python** (functions, data structures, errors, modules) | Day 1 (01), Day 3 (09–11), Day 5 (16) | [2 · Reproducibility](../handbook/02-reproducibility.md) | Rebuild one `churnlab` module from a blank file each week |
+| **pandas** (selection, groupby, merge, time) | Day 1 (02, 04), Day 2 (08) | [3 · Data, SQL and leakage](../handbook/03-data-sql-and-leakage.md) | Translate each SQL drill into pandas as well |
+| **SQL** (joins, aggregation, windows, dates) | Day 1 (03), Day 5 (16) | [3 · Data, SQL and leakage](../handbook/03-data-sql-and-leakage.md) | Daily 20–30 minute SQL drills in weeks 2–4 |
+| **Testing** (pytest, fixtures, what to assert) | Day 3 (09, 11), Day 4 (12) | [5 · Serving](../handbook/05-serving.md) | Write tests first for each capstone module |
+| **Evaluation** (metrics for imbalance, uncertainty, thresholds) | Day 1 (04), Day 2 (05–08), Day 5 (15) | [4 · Evaluation and decisions](../handbook/04-evaluation-and-decisions.md) | Explain one capstone result per week aloud with its interval |
 
 Two areas the diagnostic does not cover directly, and which most researchers
 also need to practise: **APIs and deployment** (Days 3–4) and **communication**
@@ -67,5 +58,5 @@ service before.
 
 Retake the diagnostic, or compare with notebook 16's drills, at the end of
 Day 5 and again at the end of each week. Keep the numbers in one place. The
-[readiness rubric](readiness-rubric.html) is the broader measure; the
+[readiness rubric](readiness-rubric.md) is the broader measure; the
 diagnostic is the quick one.

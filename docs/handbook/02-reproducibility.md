@@ -1,18 +1,9 @@
----
-title: "2 · Reproducibility"
-parent: Handbook
-nav_order: 2
----
-
 # Reproducibility
-{: .no_toc }
 
 A result is reproducible when someone else, on another machine, months later,
 can get the same number from the same inputs, and can tell you exactly what
 those inputs were.
 
-1. TOC
-{:toc}
 
 ---
 
@@ -130,7 +121,7 @@ A Colab runtime is temporary: when it disconnects, everything under `/content`
 is deleted. Treat that as a feature. If your project only works in the session
 where you built it, it is not reproducible. The course offers three safety
 nets (Drive, zip export, and deterministic rebuild); see the
-[Colab guide](../guides/colab.html).
+[Colab guide](../guides/colab.md).
 
 ## Interview angle
 

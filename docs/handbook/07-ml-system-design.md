@@ -1,19 +1,10 @@
----
-title: "7 · ML system design"
-parent: Handbook
-nav_order: 7
----
-
 # ML system design
-{: .no_toc }
 
 An ML system design interview gives you a vague product problem and 35–45
 minutes. It tests whether you can turn ambiguity into a system that makes good
 decisions, can be evaluated honestly, and can be operated. This chapter gives a
 framework and one worked sketch.
 
-1. TOC
-{:toc}
 
 ---
 
@@ -144,8 +135,8 @@ designs for twenty products.
 ## Practising
 
 - Notebook 17 has its own worked design and a scored mock interview.
-- The [interview question bank](../guides/interview-questions.html#ml-system-design)
+- The [interview question bank](../guides/interview-questions.md#ml-system-design)
   has more prompts.
 - Practise aloud, timed, and record yourself. Score with the
-  [readiness rubric](../guides/readiness-rubric.html). Reading designs is not
+  [readiness rubric](../guides/readiness-rubric.md). Reading designs is not
   the same skill as producing one under time pressure.

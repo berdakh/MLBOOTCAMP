@@ -1,11 +1,4 @@
----
-title: Readiness rubric
-parent: Guides
-nav_order: 6
----
-
 # Readiness rubric
-{: .no_toc }
 
 A way to judge, honestly, whether you can do the job's core tasks **on your
 own**. It scores three abilities in each of seven areas:
@@ -17,8 +10,6 @@ own**. It scores three abilities in each of seven areas:
 Recognising the right answer when you see it is not on the scale. Interviews
 and jobs need production, not recognition.
 
-1. TOC
-{:toc}
 
 ---
 
@@ -117,7 +108,7 @@ week. Record the results in one table so you can see movement.
 
 ### Drill 2: explain to camera (Explain)
 
-1. Pick a question from the [question bank](interview-questions.html) or a
+1. Pick a question from the [question bank](interview-questions.md) or a
    checkpoint question.
 2. Record yourself answering it aloud, without notes, in at most 3 minutes.
 3. Watch it back. Compare with "a strong answer covers…". Count how many

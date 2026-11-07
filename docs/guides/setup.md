@@ -1,24 +1,15 @@
----
-title: Setup
-parent: Guides
-nav_order: 2
----
-
 # Setup
-{: .no_toc }
 
 Two ways to run the course. Colab needs nothing installed. A local install is
 closer to how you will work on the job, and is needed for the optional
 Docker extension.
 
-1. TOC
-{:toc}
 
 ---
 
 ## Option A: Google Colab (nothing to install)
 
-1. Open any notebook from its Colab link (each [day page](../days/) has them),
+1. Open any notebook from its Colab link (each [day page](../days/index.md) has them),
    for example [notebook 00](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/notebooks/00_diagnostic.ipynb).
 2. *Runtime → Run all*, or run the first code cell on its own.
 
@@ -38,7 +29,7 @@ Near the top of the setup cell is one switch:
 USE_DRIVE = False  # True: keep artifacts in Google Drive so they survive a disconnect
 ```
 
-Read [Working in Colab](colab.html) before deciding. In short: `True` asks you
+Read [Working in Colab](colab.md) before deciding. In short: `True` asks you
 to authorise Google Drive once per session and then keeps your work across
 disconnects.
 
@@ -79,7 +70,7 @@ pip install -e .
 
 This makes `import churnlab` work from any directory, and changes you make to
 `src/churnlab/*.py` are picked up after a kernel restart (or an
-`importlib.reload`, see [Troubleshooting](troubleshooting.html#code-changes-not-picked-up)).
+`importlib.reload`, see [Troubleshooting](troubleshooting.md#code-changes-not-picked-up)).
 The notebooks' setup cell works without it.
 
 ### Exact versions

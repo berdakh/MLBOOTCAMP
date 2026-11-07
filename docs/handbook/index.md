@@ -1,9 +1,3 @@
----
-title: Handbook
-nav_order: 3
-has_children: true
----
-
 # Handbook
 
 The ideas behind each day, without code. Each chapter is readable in 20–30
@@ -12,13 +6,13 @@ whether you prefer the map before or after the territory.
 
 | # | Chapter | Read with | Covers |
 |---|---|---|---|
-| 1 | [The ML engineering job](01-the-ml-engineering-job.html) | Before Day 1 | MLE vs Applied Scientist vs Algorithm Engineer; which research habits transfer and which hurt |
-| 2 | [Reproducibility](02-reproducibility.html) | Day 1 | What "re-runnable" means, environments, seeds, config, run records, data versions |
-| 3 | [Data, SQL and leakage](03-data-sql-and-leakage.html) | Day 1 | Point-in-time correctness, label leakage, group and temporal leakage, the cross-subject analogy |
-| 4 | [Evaluation and decisions](04-evaluation-and-decisions.html) | Day 2 | Metrics for imbalance, confidence intervals, cluster bootstrap, thresholds from costs, calibration, slices |
-| 5 | [Serving](05-serving.html) | Day 3 | Contracts, training/serving skew, the app factory, idempotence, batching, latency |
-| 6 | [Operations and monitoring](06-operations-and-monitoring.html) | Day 4 | Health vs readiness, logs, SLOs, drift vs performance, delayed labels, rollback, canary and shadow |
-| 7 | [ML system design](07-ml-system-design.html) | Day 5 | A framework, and one worked sketch |
+| 1 | [The ML engineering job](01-the-ml-engineering-job.md) | Before Day 1 | MLE vs Applied Scientist vs Algorithm Engineer; which research habits transfer and which hurt |
+| 2 | [Reproducibility](02-reproducibility.md) | Day 1 | What "re-runnable" means, environments, seeds, config, run records, data versions |
+| 3 | [Data, SQL and leakage](03-data-sql-and-leakage.md) | Day 1 | Point-in-time correctness, label leakage, group and temporal leakage, the cross-subject analogy |
+| 4 | [Evaluation and decisions](04-evaluation-and-decisions.md) | Day 2 | Metrics for imbalance, confidence intervals, cluster bootstrap, thresholds from costs, calibration, slices |
+| 5 | [Serving](05-serving.md) | Day 3 | Contracts, training/serving skew, the app factory, idempotence, batching, latency |
+| 6 | [Operations and monitoring](06-operations-and-monitoring.md) | Day 4 | Health vs readiness, logs, SLOs, drift vs performance, delayed labels, rollback, canary and shadow |
+| 7 | [ML system design](07-ml-system-design.md) | Day 5 | A framework, and one worked sketch |
 
 ## Conventions
 

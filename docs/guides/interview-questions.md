@@ -1,27 +1,19 @@
----
-title: Interview question bank
-parent: Guides
-nav_order: 7
----
-
 # Interview question bank
-{: .no_toc }
 
 Questions by topic, each with what **a strong answer covers**. These are not
 scripts to memorise. Use them for the *explain to camera* drill in the
-[readiness rubric](readiness-rubric.html): answer aloud first, then compare.
+[readiness rubric](readiness-rubric.md): answer aloud first, then compare.
 
 The points listed are what interviewers commonly listen for. A strong answer
 does not need all of them, and it should be in your own words with your own
 examples.
 
-1. TOC
-{:toc}
 
 ---
 
+<a id="data-sql-and-leakage"></a>
+
 ## Data, SQL and leakage
-{: #data-sql-and-leakage }
 
 ### Write a query giving, for each customer and snapshot date, their sessions in the 28 days before the snapshot.
 
@@ -67,8 +59,9 @@ values, uniqueness, keys); row counts and freshness; distribution comparisons
 with what you expect; defaults and sentinels (`-1`, `9999`, `NA`); documenting
 each cleaning decision; running checks automatically on every load.
 
+<a id="evaluation-and-metrics"></a>
+
 ## Evaluation and metrics
-{: #evaluation-and-metrics }
 
 ### Why is accuracy a poor metric for churn prediction? What would you use?
 
@@ -204,8 +197,9 @@ overhead; batching; loading the model once; avoiding per-request DataFrame
 work; simpler features or model; caching; hardware and concurrency; trading off
 accuracy explicitly.
 
+<a id="deployment-and-operations"></a>
+
 ## Deployment and operations
-{: #deployment-and-operations }
 
 ### What is the difference between a liveness probe and a readiness probe?
 
@@ -235,8 +229,9 @@ A strong answer covers: linting, unit tests, data contract tests on a sample, a
 small training run, API contract tests, building the image; failing fast;
 keeping it quick; separate, slower model-quality checks before promotion.
 
+<a id="monitoring"></a>
+
 ## Monitoring
-{: #monitoring }
 
 ### How would you monitor this model in production?
 
@@ -266,11 +261,12 @@ matters to the model; check the score distribution and any matured
 performance; decide between ignore, fix the pipeline, retrain, or roll back;
 write it up.
 
+<a id="ml-system-design"></a>
+
 ## ML system design
-{: #ml-system-design }
 
 Practise each aloud, in 35–40 minutes, with the framework from
-[Handbook 7](../handbook/07-ml-system-design.html).
+[Handbook 7](../handbook/07-ml-system-design.md).
 
 ### Design a system to predict which customers will churn next month.
 
@@ -307,8 +303,9 @@ missed failure vs a needless inspection; splitting by unit (machine) not by
 time step; remaining-useful-life vs failure-within-horizon framing; sensor
 data quality; alert fatigue; edge vs cloud inference.
 
+<a id="behavioural-questions"></a>
+
 ## Behavioural questions
-{: #behavioural-questions }
 
 Use **STAR**: **S**ituation (one or two sentences of context), **T**ask (what
 you were responsible for), **A**ction (what *you* did, specifically), **R**esult

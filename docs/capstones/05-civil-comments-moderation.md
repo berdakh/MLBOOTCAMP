@@ -1,11 +1,4 @@
----
-title: "Capstone 5 · Civil Comments moderation triage"
-parent: Capstones
-nav_order: 5
----
-
 # Capstone 5 · Toxic-comment triage for human review on Civil Comments
-{: .no_toc }
 
 **Recommended order: 5th** · MVP ≈ 5 days at 3 h/day · CPU core, GPU optional
 
@@ -15,8 +8,6 @@ endorsed by, Meta, Google, Jigsaw or any platform, and it describes no real
 moderation system. The model **ranks comments for human review**; it does not
 remove anything on its own.
 
-1. TOC
-{:toc}
 
 ---
 
