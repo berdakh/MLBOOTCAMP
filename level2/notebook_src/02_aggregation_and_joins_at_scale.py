@@ -309,8 +309,12 @@ asof = con.execute("""
     FROM imps i ASOF JOIN price_log p
       ON i.item_id = p.item_id AND i.ts >= p.valid_from
     ORDER BY i.request_id, i.position""").df()
-check = pd.merge_asof(imps[["request_id", "position", "item_id", "ts"]].sort_values("ts"),
-                      price_log.sort_values("valid_from"), left_on="ts", right_on="valid_from",
+# merge_asof needs both keys at the same resolution. pandas 3 may store one
+# as datetime64[us] and the other as [ns] and refuses to mix them, so say it.
+left = imps[["request_id", "position", "item_id", "ts"]].astype({"ts": "datetime64[ns]"})
+right = price_log.astype({"valid_from": "datetime64[ns]"})
+check = pd.merge_asof(left.sort_values("ts"), right.sort_values("valid_from"),
+                      left_on="ts", right_on="valid_from",
                       by="item_id", direction="backward").sort_values(["request_id", "position"])
 latest = price_log.groupby("item_id").price.last()
 print("DuckDB ASOF == pandas merge_asof:", np.allclose(asof.price_at_ts, check.price))
@@ -523,6 +527,7 @@ grade.ex2(partitioned_count)
 # | Hand-written aggregation differs from DuckDB | dtypes differ (int64 vs int32) in `equals`, or rows not sorted by key | compare `sort_index()` results with `np.array_equal` / cast dtypes |
 # | `Binder Error: … ASOF JOIN` | the inequality is not `>=`/`>`/`<`/`<=` on comparable types, or there is no equality key | `ON a.key = b.key AND a.ts >= b.valid_from`; cast timestamps to the same type |
 # | `merge_asof` raises `left keys must be sorted` | merge_asof needs both frames sorted by the `on` column | `sort_values(ts)` on both, then restore the original order |
+# | `MergeError: incompatible merge keys ... datetime64[us] and datetime64[ns]` | pandas 3 keeps different time resolutions per column | cast both keys with `.astype("datetime64[ns]")` before the join |
 # | Dedup leaves duplicates | the dedup key includes a column that differs between deliveries (`ingest_ts`) | partition by the event's identity only (`request_id, position` / `event_id`) |
 # | The skewed join runs for minutes or exhausts memory | you materialised the `a × b` rows (e.g. `.df()` without aggregation) | aggregate the many-rows side first; never fetch the raw join |
 # | Reservoir sample changes between runs | global `random` or no seed | use `random.Random(seed)`; never re-seed inside the loop |
