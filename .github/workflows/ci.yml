@@ -61,21 +61,38 @@ jobs:
   execute:
     # Runs every notebook top to bottom, each in a fresh artifact directory -
     # the closest CI gets to "a new Colab runtime". Slower, so on main and on demand.
-    name: Execute all notebooks
+    # One job per level: Level 1 uses the pinned teaching environment; Levels 2-3
+    # add CPU PyTorch, LightGBM, FAISS and Transformers. Level 3 runs with its
+    # reduced "cpu" budget (runners have no GPU) and downloads small public
+    # models and datasets from the Hugging Face Hub.
+    name: Execute notebooks (${{ matrix.level }})
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        level: [level1, level2, level3]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install
+      - name: Install (Level 1)
+        if: matrix.level == 'level1'
         run: pip install -r requirements-lock.txt -r requirements-dev.txt
+      - name: Install (Levels 2-3)
+        if: matrix.level != 'level1'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r level3/requirements.txt -r requirements-dev.txt --extra-index-url https://download.pytorch.org/whl/cpu
       - name: Execute notebooks
-        run: python tools/run_notebooks.py --report verification-log.md
+        env:
+          OMP_NUM_THREADS: "2"
+        run: python tools/run_notebooks.py --level ${{ matrix.level }} --timeout 1800 --report verification-log-${{ matrix.level }}.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: notebook-verification
-          path: verification-log.md
+          name: notebook-verification-${{ matrix.level }}
+          path: verification-log-${{ matrix.level }}.md
