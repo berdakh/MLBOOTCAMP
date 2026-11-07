@@ -76,7 +76,34 @@ print(f"small dataset ready in {time.perf_counter() - t0:.1f} s")
 # Colab CPU), then `using cached ...` on re-runs.
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Impression** | one item shown to one user at one position | one row of `impressions`: 10 per request |
+# | **Request** | one feed load: the 10 items shown together | `request_id`; ~245,000 in `small` |
+# | **Logging policy** | the production ranker that chose what was shown | ShopStream's popularity + weak-affinity mix |
+# | **Exploration traffic** | requests shown in random order, on purpose | `is_random = True`, 5% of requests |
+# | **Examination** | the user actually looked at the item; never logged | the hidden `examined` column |
+# | **Columnar format** | a file that stores each column contiguously, typed and compressed | Parquet, vs row-by-row CSV |
+# | **Row group** | a horizontal slice of a Parquet file with min/max per column | ~20 groups of 122,880 rows |
+# | **Hive partitioning** | one folder per value of a column, value in the path | `day=0/` … `day=55/` |
+# | **Partition pruning** | skipping whole folders from the path alone | `Scanning Files: 7/56` |
+# | **Predicate pushdown** | applying a filter inside the scan, using file statistics | row groups skipped by `request_id` range |
+# | **Out-of-core** | processing data larger than memory by streaming and spilling | DuckDB with `memory_limit = '64MB'` |
+# | **Stable hash sample** | keep a key if hash(salt + key) falls in a bucket; same answer everywhere | `sha256(f"{salt}:{user_id}")` |
+
+# %% [markdown]
+# ### The world behind the log
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-shopstream-at-a-glance.svg" alt="ShopStream: users and items, a logging policy, position-biased examination, clicks and purchases; logged columns vs hidden truth" width="100%">
+#
+# *What to notice:* the log records *what was shown where* and *what was clicked*, but examination and true relevance stay in the red box. Every Level 2 method is graded against that box.
+
+# %% [markdown]
 # ## 1.1 · What a good log row contains
+#
+# > 💡 **Intuition.** A log row is a witness statement: *who, what, where, when, chosen by whom, and what happened next*. A detective can reconstruct a case from complete statements; a missing "where" (position) or "chosen by whom" (policy version) cannot be recovered later. *Where it breaks down:* a witness can at least say what they looked at; a log never can (examination is invisible).
 #
 # One impression row should let you answer, months later: *who saw what,
 # where, when, chosen by which system, with what probability, and what
@@ -200,6 +227,8 @@ del df_csv, df_pq, df_2  # free memory before the larger steps
 # types, so every reader re-guesses them. With Parquet, the schema travels
 # with the data.
 #
+# > 💡 **Intuition.** CSV is a stack of index cards, one per impression: to total the `clicked` field you pick up every card. Parquet is a ledger with one page per column, and a sticky note on each chapter saying "request ids 24k–37k in here". You open only the pages and chapters you need. *Where it breaks down:* changing one row in Parquet means rewriting a whole file; columnar formats are for reading, not for row-by-row updates.
+#
 # **Row groups and statistics.** The file was written sorted by
 # `request_id`. Each row group stores min/max per column, so a filter like
 # `request_id BETWEEN 100000 AND 100500` can skip every row group whose
@@ -241,6 +270,11 @@ print("row groups that may contain user_id == 4242:", sum(lo <= 4242 <= hi for l
 # `day` removes whole files from the scan *before any is opened*. Write a
 # day-partitioned copy of `small` (DuckDB does it in one statement) and ask
 # DuckDB what it actually scanned.
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-scan-skipping.svg" alt="Partition pruning, row-group statistics and column projection: three ways a columnar scan reads less" width="100%">
+#
+# *What to notice:* each level skips work *before* decompressing anything: folders by name, row groups by their min/max footer, columns by layout. The plan below shows the first and third.
 
 # %%
 PART = L2 / "shopstream_small_by_day" / "impressions"
@@ -398,6 +432,8 @@ pd.DataFrame({name: metrics(df) for name, df in samples.items()}).T.round(3)
 #   only about 25-30 in the row and request samples. A per-user metric needs
 #   *all* of a user's rows: sample users.
 #
+# > 💡 **Intuition.** Sampling rows to measure "did the request get a click?" is like tearing out 10% of a book's pages at random and asking how many chapters have a happy ending: each chapter survives as a page or two, and most of the endings are gone. *Tiny example:* a request with one click, rows kept with probability 0.1: the request survives (any of its 10 rows kept) with probability $1-0.9^{10}=0.65$, but its click survives with probability only 0.1, so given that it survives, it shows a click $0.1/0.65 \approx 15\%$ of the time instead of 100%.
+#
 # **Rule:** sample at the level of the unit your metric is computed over (or
 # coarser). Requests for ranking metrics; users for anything per-user, and for
 # A/B tests (Day 6), where the user is the randomisation unit.
@@ -497,6 +533,56 @@ grade.ex2(daily_ctr_by_position_sql)
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · Standard error of a sampled click rate.** In words: a CTR from $n$ independent rows wobbles by about $\sqrt{p(1-p)/n}$ from sample to sample.
+#
+# $$
+# \operatorname{SE}(\hat p) = \sqrt{\frac{p\,(1-p)}{n}}
+# $$
+#
+# * $p$: the true click rate; $\hat p$: the rate in the sample; $n$: rows in the sample.
+# * *Example:* $p = 0.137$, a 10% row sample of `small` has $n \approx 245{,}000$, so $\operatorname{SE} = \sqrt{0.137 \cdot 0.863 / 245{,}000} \approx 0.0007$. A difference of 0.001 between two such samples is noise.
+#
+# **2 · What row sampling does to a per-request metric.** In words: a request with $c$ clicks keeps at least one of them with probability $1-(1-f)^c$, and survives at all with probability $1-(1-f)^{10}$.
+#
+# $$
+# P(\text{click kept} \mid \text{request kept}) = \frac{\mathbb{E}\left[1-(1-f)^{c}\right]}{1-(1-f)^{10}}
+# $$
+#
+# * $f$: the row sampling rate; $c$: clicks in the request (0 to 10); 10 rows per request.
+# * *Example:* $f = 0.1$, one click: $0.1 / 0.651 = 0.15$; two clicks: $0.19 / 0.651 = 0.29$. The full log says 1.0 for both.
+#
+# **3 · A hash sample's size.** In words: each key is kept with probability $q$, independently of its id, so the sample size is binomial.
+#
+# $$
+# \mathbb{E}[\text{kept}] = N q, \qquad \operatorname{SD}[\text{kept}] = \sqrt{N q (1-q)}
+# $$
+#
+# * $N$: number of keys (users); $q$: the share kept (`pct / 100`).
+# * *Example:* $N = 10{,}000$ users at $q = 0.1$: $1{,}000 \pm 30$. The 1,030 users you got above is one standard deviation high, which is what chance looks like.
+#
+# The cell below checks equations 1 and 2 against the log itself.
+
+# %%
+# Check the sampling formulas against the real log (a few seconds)
+clk = imps["clicked"].to_numpy()
+p_hat, n_keep = clk.mean(), int(0.10 * len(clk))
+rng_check = np.random.default_rng(1)
+ctrs = [clk[rng_check.random(len(clk)) < 0.10].mean() for _ in range(30)]
+print(f"1. SE formula {np.sqrt(p_hat * (1 - p_hat) / n_keep):.5f} | "
+      f"spread of 30 real 10% row samples {np.std(ctrs):.5f}")
+
+f = 0.10
+clicks_per_request = imps.groupby("request_id")["clicked"].sum().to_numpy()
+predicted = (1 - (1 - f) ** clicks_per_request).mean() / (1 - (1 - f) ** 10)
+print(f"2. predicted share of row-sampled requests with a click: {predicted:.3f} "
+      f"(measured above: about 0.20)")
+
+# %% [markdown]
+# **Expected:** the formula and the measured spread agree to within about 20% (both about 0.0007), and the predicted share is about 0.20, matching the row sample in 1.6.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

@@ -65,6 +65,23 @@ tables = bootstrap.load_clean()  # raw extract, verified and cleaned (notebook 0
 {name: df.shape for name, df in tables.items()}
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **DuckDB** | an analytical SQL database that runs inside Python, no server | `con.execute(sql).df()` |
+# | **Inner vs left join** | inner keeps matching pairs only; left keeps every left row, NULL where no match | customers with no tickets survive only a `LEFT JOIN` |
+# | **One-to-many** | one row on one side matches many on the other | one customer, 41 usage weeks |
+# | **Fan-out** | a join that repeats rows, inflating sums and counts silently | 212 sessions reported as 1,484 |
+# | **Window function** | a value computed from related rows (the window) without collapsing them | `LAG(sessions)` over a customer's weeks |
+# | **`QUALIFY`** | filters on a window function, like `HAVING` filters on an aggregate | keep `ROW_NUMBER() = 1` per customer |
+# | **Frame (`ROWS` / `RANGE`)** | which rows a window includes: a count of rows, or a span of values such as dates | `RANGE BETWEEN INTERVAL 21 DAY PRECEDING` |
+# | **Snapshot date T** | the day a prediction is made | 2024-03-01 |
+# | **Point-in-time feature** | a feature built only from rows that existed before T | usage from weeks that ended by T |
+# | **Half-open interval [a, b)** | includes a, excludes b | the label window [T, T + 30 days) |
+# | **`COALESCE`** | the first non-NULL argument | "no tickets" becomes 0 after a left join |
+
+# %% [markdown]
 # ## 3.1 · DuckDB: SQL on DataFrames
 #
 # DuckDB is an in-process analytical database: no server, nothing to install
@@ -170,6 +187,16 @@ SELECT
 # (week, ticket) pair: each usage row is repeated once per ticket and each
 # ticket once per week. No error, no warning, plausible-looking numbers. Over
 # the whole table:
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-join-fanout.svg" alt="Joining usage and tickets to a customer before aggregating creates 287 row pairs and inflates sessions to 1,484; aggregating each table to one row first gives 212 sessions and 7 tickets" width="100%">
+#
+# *What to notice:* the bug is in the order of operations, not in any single clause; the same tables and the same SUM give the right answer once each table is collapsed to one row per key first.
+#
+# > 💡 **Intuition.** Fan-out is a multiplication table: 41 weeks along one
+# > side, 7 tickets along the other, and the join fills in all 287 cells.
+# > Any sum over that table counts each week 7 times. *Where it breaks down:*
+# > with a one-to-one or many-to-one join there is no table to fill, which is
+# > why the bug only appears when **two** one-to-many tables meet.
 
 # %%
 sql("""
@@ -306,6 +333,17 @@ ORDER BY week_start
 # (e.g. after 2024-04-01, which is not in the table): `ROWS` reaches back more
 # than 28 days to find four rows; `RANGE` stays within 28 days. For "sessions in
 # the last 4 weeks", `RANGE` is the correct definition.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-rows-vs-range.svg" alt="With one week missing, ROWS 3 PRECEDING reaches back five weeks to collect four rows, while RANGE 21 DAY PRECEDING stays within four weeks and collects three" width="100%">
+#
+# *What to notice:* the two frames differ only when a week is missing, which is exactly the case casual testing skips.
+#
+# > 💡 **Intuition.** `ROWS 3 PRECEDING` is "my last four diary entries";
+# > `RANGE 21 DAY PRECEDING` is "everything I wrote in the last four weeks".
+# > For someone who skips a week, the last four entries go back further.
+# > *Where it breaks down:* `RANGE` needs an ordering column you can subtract
+# > (dates, numbers); for "the previous event, however long ago", `ROWS` or
+# > `LAG` is the right tool.
 
 # %% [markdown]
 # ## 3.5 · Point-in-time features for one snapshot, step by step
@@ -341,6 +379,12 @@ sql("SELECT COUNT(*) AS accounts_active_at_T FROM population")
 
 # %% [markdown]
 # **Expected:** 2,246 accounts.
+#
+# > 💡 **Intuition.** A snapshot is a photo taken at midnight on day T. A
+# > feature may only use what is in the photo; the label is what you learn
+# > by visiting again 30 days later. *Where it breaks down:* a photo is
+# > instant, but a usage week is a 7-day film: it is only "in the photo" once
+# > it has finished, which is step 2.
 #
 # ### Step 2 · Which weeks are "before T"?
 #
@@ -519,6 +563,46 @@ print(features.shape, features["snapshot_date"].nunique(), "snapshots,",
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **Fan-out row count.** Joining two one-to-many tables $U$ and $K$ to the same key:
+#
+# $$
+# \text{rows after join} = \sum_{c} n_U(c)\, n_K(c)
+# \quad\Rightarrow\quad
+# \text{SUM}_{\text{joined}}(x) = \sum_{c} n_K(c) \sum_{u \in U_c} x_u
+# $$
+#
+# *In words:* each key contributes the product of its row counts, so every
+# value from $U$ is counted once per matching row of $K$. *Symbols:* $c$ = a
+# customer, $n_U(c)$, $n_K(c)$ = its rows in each table, $x_u$ = a value in
+# $U$. *Example:* $n_U = 41$, $n_K = 7$: $287$ rows, and 212 true sessions
+# become $7 \times 212 = 1{,}484$.
+#
+# **Completed-week rule.** A usage week starting on $w$ is usable at snapshot $T$ only if
+#
+# $$
+# w + 7\ \text{days} \le T
+# $$
+#
+# *In words:* the week must have ended by T. *Example:* T = Fri 2024-03-01,
+# $w$ = Mon 2024-02-26: $w + 7 = $ 2024-03-04 $> T$, so the week is excluded
+# (the naive $w < T$ would include 3 future days).
+#
+# **Label.** For account $i$ active at $T$:
+#
+# $$
+# y_i(T) = \mathbb{1}\left[\, T \le \text{churn\_date}_i < T + 30\ \text{days} \,\right]
+# $$
+#
+# *In words:* 1 if the account cancels in the 30 days starting at T, else 0.
+# *Example:* T = 2024-03-01, churn on 2024-03-20 → $y = 1$; churn on
+# 2024-04-02 → $y = 0$ (it counts for the April snapshot instead).
+#
+# **Positive rate.** $\hat{\pi} = \frac{1}{N}\sum_i y_i$. *Example:* 129
+# churners among 2,246 accounts: $\hat{\pi} = 129 / 2246 = 0.057$.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

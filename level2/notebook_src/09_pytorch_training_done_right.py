@@ -82,7 +82,26 @@ print(f"{len(imps):,} impressions loaded in {time.time() - t0:.0f} s | torch {to
 # %% [markdown]
 # **Expected:** about 2.45 million impressions; 10-60 s the first time (the
 # data is generated), a few seconds after that.
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Map-style dataset** | has `__len__` and `__getitem__(i)`; the sampler picks indices | `RowDataset`, `tk.TensorBatchDataset` |
+# | **IterableDataset** | only `__iter__`; it decides the order itself | `tk.ParquetDayStream` |
+# | **Collate function** | stacks individual samples into one batch | the default `collate_fn` for per-row datasets |
+# | **`num_workers`** | separate processes that load batches in parallel | 0 vs 2 on a 2-core runtime |
+# | **Logit** | the raw score before the sigmoid or softmax | the click model's single output |
+# | **`BCEWithLogitsLoss`** | binary cross-entropy that applies the sigmoid itself, stably | the click model's loss |
+# | **`train()` / `eval()`** | switch layer behaviour (dropout, batch norm) | (3) and (2) in the loop |
+# | **`no_grad()`** | stop recording the graph for backprop | (1) around validation |
+# | **Gradient clipping** | rescale the gradient when its norm exceeds a threshold | `clip_grad_norm_(…, 1.0)` |
+# | **Warmup + cosine** | ramp the learning rate up linearly, then decay it along a cosine | `tk.warmup_cosine` |
+# | **Checkpoint** | everything needed to continue a run exactly | `click_mlp.pt`: model, optimizer, scheduler, RNG |
+# | **Bitwise reproducible** | two runs give identical floats, not just close ones | `==` on the loss lists in 9.5 |
+
+# %% [markdown]
 # ## 9.1 · From a log to tensors
 #
 # The click model predicts `P(click)` for one impression from four inputs:
@@ -332,6 +351,9 @@ print(f"3 epochs in {time.time() - start:.1f} s")
 #   alive: the classic slow memory leak.
 
 # %% [markdown]
+# > 💡 **Intuition.** `model.eval()` puts the car in parking mode (it changes how the car *behaves*: dropout off, batch-norm statistics frozen); `torch.no_grad()` switches off the dashcam (nothing is *recorded* for a later replay, i.e. backprop). Validation wants both: parked, and not recording. *Where it breaks down:* a parked car cannot move, but a model in eval mode can still be trained, silently and wrongly, if you forget to switch back.
+
+# %% [markdown]
 # > **Exercise 1.** Package the loop as `train_one_epoch(model, loader, optimizer, loss_fn)`.
 # > The loader yields `(*inputs, y)` tuples; call `model(*inputs)`. Put the model in training
 # > mode, do one optimizer step per batch, and return the **mean loss per example** over the
@@ -467,6 +489,8 @@ print("epoch 1 identical:", losses_a[:n_steps] == losses_d[:n_steps],
 # step size so the last epochs refine rather than bounce. Schedules in PyTorch are
 # stepped either per epoch or per optimizer step; `tk.warmup_cosine` is per **step**.
 #
+# > 💡 **Intuition.** Warmup is not flooring the accelerator on a cold engine: Adam's running averages start empty, so its first few step sizes are guesses. Cosine decay is easing off the pedal as you approach the parking space. *Where it breaks down:* an engine warms up in minutes regardless; how many warmup steps a model needs depends on the batch size and the optimiser, so treat it as a hyper-parameter, not a constant.
+#
 # **Gradient clipping** rescales the gradient when its global norm exceeds a
 # threshold. It protects against rare huge gradients (a bad batch, a spike in
 # a sequence model) and is cheap. `clip_grad_norm_` returns the norm *before*
@@ -529,6 +553,13 @@ plt.show()
 # state (including the shuffle generator) are part of the training state.
 # The test of a checkpoint is simple: an interrupted-and-resumed run must equal an
 # uninterrupted one, bitwise.
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-training-loop-checkpoint.svg" alt="The PyTorch training step, and a full checkpoint versus a weights-only one" width="100%">
+#
+# *What to notice:* the loop at the top has state in four places (weights, optimizer moments, scheduler position, random generators). The green box saves all four; the red box saves one, which is why its curve departs below.
+#
+# > 💡 **Intuition.** A checkpoint is a saved game: you need not only where your character stands (the weights) but the inventory (Adam's moments), the quest log (the scheduler's step) and the dice (every random generator). Load only the position and the game continues, just not *your* game. *Where it breaks down:* a game reloads instantly; a checkpoint is worth saving only as often as losing the work in between would hurt.
 
 # %%
 CKPT = OUT / "click_mlp.pt"
@@ -611,6 +642,11 @@ print("weights-only == uninterrupted         :", curve_a == curve_c)
 # 3. **Gradient norms per layer.** Zero means a broken graph or a dead layer; NaN or
 #    exploding norms mean the learning rate, an unstable op, or bad inputs.
 # 4. Only then: learning rate sweep, data checks, capacity.
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-debug-flowchart.svg" alt="Debugging a model that won't learn: step-0 loss, overfit one batch, gradient norms, then tune" width="100%">
+#
+# *What to notice:* each blue check takes seconds and, when it fails, points to a different part of the code (red). Hyper-parameters come last because they cannot fix any of the red boxes.
 
 # %%
 torch.manual_seed(0)
@@ -764,6 +800,101 @@ if RUN_GPU_EXTENSION and torch.cuda.is_available():
     cat_of_item = cat_of_item.cpu()
 else:
     print("GPU extension skipped (RUN_GPU_EXTENSION=False or no CUDA device).")
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · Binary cross-entropy on a logit, and its value at initialisation.** In words: the negative log of the probability the model gave to the true label; the best constant predictor scores the label entropy.
+#
+# $$
+# \ell(z, y) = -\big[y \log \sigma(z) + (1-y) \log(1-\sigma(z))\big], \qquad \ell^{*}_\text{const} = -\big[p \log p + (1-p) \log(1-p)\big]
+# $$
+#
+# * $z$: logit; $\sigma(z) = 1/(1+e^{-z})$; $y \in \{0, 1\}$; $p$: the positive rate. *Example:* $p = 0.137$ → 0.40; random small logits give $\log 2 = 0.69$; initialise the output bias to $\log\frac{p}{1-p} = -1.84$ to start at 0.40.
+#
+# **2 · Softmax and cross-entropy.** In words: turn $C$ logits into probabilities, and pay $-\log$ of the probability of the right class.
+#
+# $$
+# \operatorname{softmax}(\mathbf{z})_c = \frac{e^{z_c}}{\sum_{k=1}^{C} e^{z_k}}, \qquad \ell = -\log \operatorname{softmax}(\mathbf{z})_y
+# $$
+#
+# * *Example:* logits (2, 0.5, −1), true class 0: probabilities 0.79, 0.18, 0.04, loss $-\log 0.79 = 0.24$. Uniform guessing over $C$ classes: $\log C$.
+#
+# **3 · The AdamW update.** In words: keep running averages of the gradient and of its square, correct their start-up bias, step by their ratio, and shrink the weights separately (decoupled weight decay).
+#
+# $$
+# \begin{aligned}
+# m_t &= \beta_1 m_{t-1} + (1-\beta_1)\, g_t, \qquad v_t = \beta_2 v_{t-1} + (1-\beta_2)\, g_t^2 \\
+# \hat m_t &= \frac{m_t}{1-\beta_1^t}, \qquad \hat v_t = \frac{v_t}{1-\beta_2^t} \\
+# \theta_t &= \theta_{t-1} - \eta \lambda\, \theta_{t-1} - \eta \frac{\hat m_t}{\sqrt{\hat v_t} + \epsilon}
+# \end{aligned}
+# $$
+#
+# * $g_t$: gradient; $\eta$: learning rate; $\lambda$: weight decay; $\beta_1 = 0.9$, $\beta_2 = 0.999$. *Example:* at $t = 1$, $\hat m_1 = g_1$ and $\hat v_1 = g_1^2$, so every parameter moves by about $\eta$ whatever the size of its gradient: that is why early steps are risky and warmup helps.
+#
+# **4 · Linear warmup, then cosine decay** (as `tk.warmup_cosine`). In words: ramp up over $T_w$ steps, then follow half a cosine down to a floor.
+#
+# $$
+# \eta_t = \eta_{\max} \cdot \begin{cases} \dfrac{t+1}{T_w} & t < T_w \\[6pt] r + (1-r)\,\dfrac{1}{2}\Big(1 + \cos\big(\pi\, \tfrac{t - T_w}{T - T_w}\big)\Big) & t \ge T_w \end{cases}
+# $$
+#
+# * $T$: total steps; $r$: the floor as a fraction of $\eta_{\max}$ (0.05 here). *Example:* $T_w = 10$, $T = 100$: step 4 → $0.5\,\eta_{\max}$; step 55 (halfway through the decay) → $0.525\,\eta_{\max}$.
+#
+# **5 · Gradient-norm clipping.** In words: if the whole gradient is longer than $c$, shrink it to length $c$; its direction does not change.
+#
+# $$
+# \mathbf{g} \leftarrow \mathbf{g} \cdot \min\!\left(1, \frac{c}{\lVert \mathbf{g} \rVert_2}\right)
+# $$
+#
+# * *Example:* $\mathbf{g} = (3, 4)$, $c = 1$: norm 5, so $\mathbf{g} \to (0.6, 0.8)$.
+#
+# The cell below checks all five against PyTorch.
+
+# %%
+# Check the five equations against PyTorch
+z, y = torch.tensor([-2.0, 0.5, 3.0]), torch.tensor([0.0, 1.0, 1.0])
+bce_hand = -(y * torch.log(torch.sigmoid(z)) + (1 - y) * torch.log(1 - torch.sigmoid(z))).mean()
+p = 0.137
+print(f"1. BCE by hand {bce_hand.item():.6f} | BCEWithLogitsLoss {nn.BCEWithLogitsLoss()(z, y).item():.6f}"
+      f" | entropy at p=0.137: {-(p * np.log(p) + (1 - p) * np.log(1 - p)):.4f}")
+
+logits_chk = torch.tensor([[2.0, 0.5, -1.0]])
+ce_hand = -torch.log(torch.softmax(logits_chk, dim=1)[0, 0])
+print(f"2. CE by hand {ce_hand.item():.6f} | CrossEntropyLoss "
+      f"{nn.CrossEntropyLoss()(logits_chk, torch.tensor([0])).item():.6f}")
+
+w0, grad = torch.tensor([1.0, -2.0]), torch.tensor([0.5, -0.1])
+lr, b1, b2, eps, wd = 0.1, 0.9, 0.999, 1e-8, 0.01
+param = nn.Parameter(w0.clone())
+opt_chk = torch.optim.AdamW([param], lr=lr, betas=(b1, b2), eps=eps, weight_decay=wd)
+param.grad = grad.clone()
+opt_chk.step()
+m_hat, v_hat = (1 - b1) * grad / (1 - b1), (1 - b2) * grad**2 / (1 - b2)
+w_hand = w0 - lr * wd * w0 - lr * m_hat / (v_hat.sqrt() + eps)
+print(f"3. AdamW by hand {w_hand.tolist()} | torch {param.data.tolist()} | equal: "
+      f"{torch.allclose(w_hand, param.data)}")
+
+dummy = nn.Parameter(torch.zeros(1))
+opt_s = torch.optim.SGD([dummy], lr=1.0)
+sched = tk.warmup_cosine(opt_s, warmup_steps=10, total_steps=100, min_ratio=0.05)
+lib_lr = []
+for _ in range(100):
+    lib_lr.append(opt_s.param_groups[0]["lr"])
+    opt_s.step()
+    sched.step()
+t = np.arange(100)
+hand_lr = np.where(t < 10, (t + 1) / 10,
+                   0.05 + 0.95 * 0.5 * (1 + np.cos(np.pi * (t - 10) / 90)))
+print(f"4. warmup-cosine max |hand - tk| = {np.abs(hand_lr - np.array(lib_lr)).max():.2e} "
+      f"| lr at steps 4, 55: {lib_lr[4]:.3f}, {lib_lr[55]:.3f}")
+
+clip_p = nn.Parameter(torch.zeros(2))
+clip_p.grad = torch.tensor([3.0, 4.0])
+norm_before = torch.nn.utils.clip_grad_norm_([clip_p], max_norm=1.0)
+print(f"5. clip: norm before {norm_before.item():.1f}, gradient after {clip_p.grad.tolist()}")
+
+# %% [markdown]
+# **Expected:** 1–2: each pair agrees to six decimals, entropy 0.3995; 3: `equal: True` (both about `[0.899, -1.898]`); 4: a maximum difference of about 1e-16, learning rates 0.500 and 0.525; 5: norm 5.0 and a gradient of about `[0.6, 0.8]`.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

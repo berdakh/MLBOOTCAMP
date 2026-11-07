@@ -111,7 +111,26 @@ print("the original data are released under CC0 (see https://huggingface.co/data
 # `toxicity` score (the fraction of ~10 crowd raters who called it toxic) and, for this subset,
 # identity scores (the fraction of raters who said the comment *mentions* that identity). As in
 # the Jigsaw competition and WILDS, we binarise both at 0.5.
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Subgroup | The comments that mention one identity | comments mentioning *muslim* |
+# | Background | All test comments that do *not* mention that identity | the comparison population for BPSN / BNSP |
+# | Subgroup AUC | Ranking quality measured only inside one subgroup | 0.78–0.80 for four groups |
+# | BPSN AUC | Toxic background vs non-toxic subgroup comments: low means benign mentions score like toxicity | 0.67–0.75 for *black*, *muslim* |
+# | BNSP AUC | Non-toxic background vs toxic subgroup comments: low means toxic posts about the group are missed | 0.91–0.95 (high) |
+# | FPR / FNR | Share of negatives flagged / share of positives missed, at a threshold | FPR 0.083 vs 0.010 at 0.5 |
+# | Distribution shift | Test data drawn from a different time or source than training | 2016 → late 2017 comments |
+# | Counterfactual swap | Replacing one identity term with another and checking the score does not move | "gay" → "straight" |
+# | PII | Personally identifiable information: names, emails, phone numbers | the regex redactor in 15.6 |
+# | Membership inference | Guessing whether a record was in the training set from the model's behaviour on it | loss-threshold attack, AUC 0.64 |
+# | Differential privacy (ε, δ) | A guarantee that one record barely changes what training outputs; smaller ε = stronger | ε ≤ 1.0 at σ = 8 |
+# | DP-SGD | SGD with per-example gradient clipping and Gaussian noise | `clip_and_noise` in Exercise 2 |
+
+# %% [markdown]
 # ## 15.1 · Data and a baseline classifier
 #
 # We keep the official WILDS `split` column (train/val/test are random splits) and sample to the
@@ -165,6 +184,17 @@ print(f"TF-IDF {X_train.shape[1]:,} features, trained in {time.perf_counter() - 
 #   false negatives.
 #
 # None of them depends on a threshold.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-bpsn-bnsp.svg" alt="Score distributions for background and subgroup comments; the subgroup's non-toxic comments are shifted towards higher scores; three boxes define subgroup AUC, BPSN and BNSP" width="100%">
+#
+# *What to notice:* a shift of the subgroup's *non-toxic* scores (the dashed bump moving right) lowers BPSN but leaves BNSP high: exactly the pattern measured below.
+#
+# > 💡 **Intuition.** Think of a smoke detector that also beeps at toast. Subgroup AUC asks "inside the
+# > kitchen, does it tell smoke from toast?"; BPSN asks "is kitchen toast scored below real smoke in
+# > the rest of the house?" If not, the *room* (the identity mention) is triggering it. BNSP asks the
+# > reverse: "is real kitchen smoke scored above harmless air elsewhere?" *Where the analogy breaks
+# > down:* identity mentions are not a fixed room; they co-occur with other words, so a low BPSN
+# > says *that* the term pushes scores up, not *why* (label bias, sampling, or the model).
 
 # %% [markdown]
 # > **Exercise 1.** Write `bpsn_bnsp_auc(y, s, subgroup)` returning the tuple `(bpsn, bnsp)` for labels
@@ -229,6 +259,12 @@ RESULTS["jigsaw_final_metric"] = round(final, 4)
 # Per-group thresholds need the identity at prediction time (often unavailable, sometimes not
 # legal to use), and equalising one error rate generally un-equalises others: when base rates differ,
 # you cannot equalise FPR, FNR and calibration at once (Kleinberg et al., 2016; Chouldechova, 2017).
+#
+# > 💡 **Intuition.** One threshold is one height bar for everyone; if one group's benign comments are
+# > systematically scored higher, the same bar catches more of them. Moving the bar per group can
+# > equalise false positives, but then the toxic comments of that group must clear a higher bar and
+# > more slip through. *Where the analogy breaks down:* with different base rates, no choice of bars
+# > makes FPR, FNR and calibration all equal at once (the impossibility results).
 
 # %%
 groups = ["muslim", "homosexual_gay_or_lesbian", "black", "christian"]
@@ -441,6 +477,17 @@ print(mi.round(3).to_string(index=False))
 # 1. **clip each example's gradient** to L2 norm ≤ `C`, so no single record can move the model much;
 # 2. **add Gaussian noise** `N(0, σ²C²)` to the *sum* of clipped gradients before averaging.
 #
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-dp-sgd.svg" alt="One DP-SGD step: per-example gradients, clip each to norm C, sum, add Gaussian noise with standard deviation sigma times C, average and step; a circle of radius C shows clipping" width="100%">
+#
+# *What to notice:* clipping bounds what any single record can contribute (at most C); the noise is scaled to that bound, so it hides any one record's contribution.
+#
+# > 💡 **Intuition.** A vote where each person's ballot can move the result by at most one unit
+# > (clipping), and the official count is then reported with random jitter of a few units (noise):
+# > looking at the result, you cannot tell whether any particular person voted. More voters (a larger
+# > batch) make the same jitter matter less. *Where the analogy breaks down:* training repeats this
+# > thousands of times on overlapping data, and the privacy loss accumulates; computing the total ε
+# > needs an accountant, not intuition.
+#
 # The privacy cost ε then follows from the noise multiplier σ, the sampling rate and the number of
 # steps, computed by a **privacy accountant** (Opacus, TensorFlow Privacy). We implement DP-SGD for
 # logistic regression on 96-dimensional SVD features of the TF-IDF matrix (per-example gradients of
@@ -533,6 +580,83 @@ print("saved", OUT / "results.json")
 
 # %% [markdown]
 # *Your answer (Exercise 3):* ...
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · AUC as a probability, and the three bias AUCs.**
+#
+# $$
+# \mathrm{AUC}(P, N) = \Pr\big(s(x^{+}) > s(x^{-})\big), \quad x^{+} \sim P,\ x^{-} \sim N \quad (\text{ties count } \tfrac12)
+# $$
+#
+# $$
+# \begin{aligned}
+# \text{Subgroup AUC} &= \mathrm{AUC}(\text{SP},\ \text{SN}) \\
+# \text{BPSN AUC} &= \mathrm{AUC}(\text{BP},\ \text{SN}) \\
+# \text{BNSP AUC} &= \mathrm{AUC}(\text{SP},\ \text{BN})
+# \end{aligned}
+# $$
+#
+# *Symbols:* S/B = subgroup / background, P/N = toxic / non-toxic (so SN = non-toxic comments that
+# mention the group). *Example:* BPSN = 0.70 means that in 30% of (toxic background, benign
+# subgroup) pairs, the benign subgroup comment scores *higher*.
+#
+# **2 · Error rates per group at threshold $t$.**
+#
+# $$
+# \mathrm{FPR}_g(t) = \Pr(s \ge t \mid y = 0, g), \qquad \mathrm{FNR}_g(t) = \Pr(s < t \mid y = 1, g)
+# $$
+#
+# *Example (15.2):* $\mathrm{FPR}_{\text{black}}(0.5) = 0.083$ vs 0.010 overall: an 8× ratio.
+#
+# **3 · Jigsaw summary (power mean, $p = -5$).** $M_p(m_1, \dots, m_G) = \big(\tfrac{1}{G} \sum_g m_g^{\,p}\big)^{1/p}$;
+# a negative $p$ pulls the mean towards the *worst* group. *Example:* $M_{-5}(0.9, 0.7) = 0.765$, while the plain mean is 0.80.
+#
+# **4 · Differential privacy.**
+#
+# $$
+# \Pr[A(D) \in S] \le e^{\varepsilon}\, \Pr[A(D') \in S] + \delta \quad \text{for all neighbouring } D, D' \text{ and all } S
+# $$
+#
+# *In words:* adding or removing one record changes the probability of any outcome by at most a factor
+# $e^{\varepsilon}$ (plus a small slack $\delta$). *Example:* $\varepsilon = 1$ means at most a factor $e \approx 2.7$.
+#
+# **5 · One DP-SGD step.**
+#
+# $$
+# \bar{g}_i = g_i \cdot \min\!\left(1, \frac{C}{\lVert g_i \rVert_2}\right), \qquad \tilde{g} = \frac{1}{n}\left( \sum_{i=1}^{n} \bar{g}_i + \mathcal{N}(0, \sigma^2 C^2 I) \right), \qquad \theta \leftarrow \theta - \eta\, \tilde{g}
+# $$
+#
+# *Symbols:* $C$ the clipping norm, $\sigma$ the noise multiplier, $n$ the batch size. The noise on the
+# mean gradient has standard deviation $\sigma C / n$ per coordinate. *Example:* $C = 1$, $\sigma = 2$,
+# $n = 256$: $2/256 \approx 0.0078$.
+#
+# The cell below checks 1, 3 and 5 numerically on this notebook's scores.
+
+# %%
+# Key equations, checked numerically (seconds on a CPU).
+y_arr, m = test.y.to_numpy(), test["muslim"].to_numpy()
+bp, sn = s_test[~m & (y_arr == 1)], s_test[m & (y_arr == 0)]
+rng_chk = np.random.default_rng(0)
+bp_s = rng_chk.choice(bp, min(2000, len(bp)), replace=False)
+pairwise = np.mean(bp_s[:, None] > sn[None, :]) + 0.5 * np.mean(bp_s[:, None] == sn[None, :])
+sk = roc_auc_score(np.r_[np.ones(len(bp_s)), np.zeros(len(sn))], np.r_[bp_s, sn])
+print(f"BPSN (muslim) as P(toxic background > benign subgroup): pairwise {pairwise:.4f} | roc_auc_score {sk:.4f}")
+print(f"power mean M_-5(0.9, 0.7) = {pm([0.9, 0.7]):.3f} | plain mean {np.mean([0.9, 0.7]):.3f}")
+
+g = rng_chk.normal(0, 3, size=(256, 20))  # 256 per-example gradients, most longer than C = 1
+norms_before = np.linalg.norm(g, axis=1)
+clipped = g * np.minimum(1.0, 1.0 / norms_before)[:, None]
+noise_only = [reference_clip_and_noise(np.zeros((256, 20)), 1.0, 2.0, rng_chk) for _ in range(2000)]
+print(f"norms before clipping: median {np.median(norms_before):.1f} | after: max {np.linalg.norm(clipped, axis=1).max():.3f}")
+print(f"std of the noise on the mean gradient: measured {np.std(noise_only):.5f} | sigma*C/n {2.0 * 1.0 / 256:.5f}")
+
+# %% [markdown]
+# **Expected:** the pairwise probability and `roc_auc_score` agree (to about three decimals, on the
+# same subsample; both close to the BPSN for *muslim* in 15.2); `M_-5 = 0.765` vs a plain mean of 0.800;
+# gradient norms around 13 before clipping and at most `1.000` after; and a measured noise standard
+# deviation within ~1% of `0.00781`.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

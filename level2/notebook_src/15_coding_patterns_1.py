@@ -69,6 +69,23 @@ from shoprank.drills import growth_table
 from shoprank.grading import nb15 as grade
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Brute force | the obvious correct solution, usually too slow, stated first as a baseline | checking every pair: O(n²) |
+# | Time / space complexity | how running time and extra memory grow with the input size | O(n) time and O(n) extra space for a dictionary |
+# | Amortised O(1) | cheap on average over many operations, even if one is occasionally slow | `list.append` when the list resizes |
+# | Invariant | a statement that stays true at every step of a loop | "`s[left:right+1]` has no repeated character" |
+# | Hash map | a dictionary: average O(1) lookup, insert and delete by key | complements in two-sum |
+# | Two pointers / sliding window | two indices that only move forward over a sequence | `min_subarray_len` in 15.4 |
+# | Heap | a tree kept partly ordered so the smallest item is always on top | `heapq`; top-k in O(n log k) |
+# | Sweep | sort events by position, then process them in one pass | merging intervals; meeting rooms |
+# | Monotonic stack | a stack kept in sorted order to answer "next greater / most recent smaller" questions | 15.7 |
+# | Prefix sum | a running total, so any range sum is one subtraction | `sum(nums[i:j]) = P[j] − P[i]` |
+# | Output-sensitive bound | a cost that depends on the size of the answer, not only the input | two-sum pairs: O(n + p) |
+
+# %% [markdown]
 # ## 15.1 · The communication protocol
 #
 # Interviewers usually score four things: **problem solving** (did you find a
@@ -93,6 +110,10 @@ from shoprank.grading import nb15 as grade
 # *"I'll trace through [2, 7, 11] to check"*, *"This is O(n) time and O(n)
 # extra space for the dictionary."* If you are stuck, say what you are
 # considering; interviewers can only give hints to someone they can follow.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-interview-protocol.svg" alt="Seven steps from clarify to complexity with suggested minutes, and a loop from test back to code" width="100%">
+#
+# *What to notice:* steps 1–4 take up to a third of the time and involve no code; the dashed loop is where verification points are earned.
 
 # %% [markdown]
 # ## 15.2 · Know your costs (and measure when unsure)
@@ -134,6 +155,23 @@ _ = growth_table(drain_deque, lambda n: (n,), [12_500, 25_000, 50_000, 100_000])
 # `deque.popleft` took ~4 ms with an exponent near 1.1. A BFS over a
 # 100,000-node graph with a list as its queue is therefore ~200× slower than it
 # needs to be, and an interviewer who sees `queue.pop(0)` will ask about it.
+#
+# > 💡 **Intuition.** `list.pop(0)` is a queue at a counter where, every time the first
+# > person is served, everyone else must take one step forward: serving n people costs
+# > about n²/2 steps. A `deque` moves the counter instead. *Where it breaks down:* the
+# > shift is a fast C `memmove`, so for a few thousand items you will not notice; the
+# > quadratic only bites at interview-sized inputs (10⁵ and up).
+
+# %% [markdown]
+# ## Which pattern?
+#
+# The sections below teach six patterns one at a time. In an interview the problem does not
+# say which one it is; these questions, asked in order, usually do. Notebook 16 covers the
+# graph and DP rows.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-pattern-chooser.svg" alt="Decision ladder: sorted input to two pointers or binary search, contiguous window to sliding window, seen-before to hash map, top-k to heap, overlapping ranges to sort and sweep, graphs to BFS, DFS or topological sort, overlapping subproblems to DP" width="100%">
+#
+# *What to notice:* each question is about the *shape* of the input or of the question, never about the topic of the story it is wrapped in.
 
 # %% [markdown]
 # ## 15.3 · Pattern: hash maps (complements and counts)
@@ -198,6 +236,12 @@ grade.ex1(two_sum_pairs)
 # loop inside a loop. **Worked example:** shortest subarray with sum ≥ target
 # (positive numbers only — the window shrinks safely because adding an element
 # never decreases the sum).
+#
+# > 💡 **Intuition.** A sliding window is a caterpillar: the head moves forward to take in
+# > more, the tail moves forward to let go, and neither ever moves back, so every element
+# > is eaten once and released once: at most 2n steps. *Where it breaks down:* the tail may
+# > only move when letting go cannot make the window valid again, which is false for
+# > negative numbers; that is the cue for prefix sums.
 
 # %%
 def min_subarray_len(target, nums):
@@ -259,6 +303,11 @@ grade.ex2(longest_unique)
 # argument that matters at scale (top items of a day's logs without holding them
 # all). Python's `heapq` is a min-heap: to keep the k *largest*, keep a min-heap
 # of size k and evict its smallest. **Worked example:** merge k sorted lists.
+#
+# > 💡 **Intuition.** A size-k min-heap is a bouncer at a club with k places who only
+# > compares each newcomer with the *weakest* person inside: beat them and you swap in.
+# > Nobody else needs comparing. *Where it breaks down:* the bouncer knows only who is
+# > weakest; the people inside are not sorted, so sort the final k before returning them.
 
 # %%
 def merge_k_sorted(lists):
@@ -549,6 +598,60 @@ for name, row in my_scores.items():
 
 # %% [markdown]
 # **Expected:** seven lines reading `not scored yet` until you fill the dict in.
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# Coding rounds have little algebra, but a few lines of arithmetic decide whether an approach can work before you write it.
+#
+# **1. Reading growth from timings**
+#
+# $$
+# k \approx \frac{\log(t_2 / t_1)}{\log(n_2 / n_1)}
+# $$
+#
+# *In words:* the local exponent that `growth_table` prints: if doubling n multiplies the time by 4, the algorithm is about O(n²); by 2, O(n).
+# *Example:* 0.2 s at n = 50,000 and 0.8 s at 100,000: $k = \log 4 / \log 2 = 2$.
+#
+# **2. Input size → the complexity you need** (rough rule: pure Python does about $10^7$ simple steps per second)
+#
+# $$
+# n \le 20 \Rightarrow O(2^n) \qquad n \le 10^3\text{–}10^4 \Rightarrow O(n^2) \qquad n \approx 10^5\text{–}10^6 \Rightarrow O(n \log n) \text{ or } O(n)
+# $$
+#
+# *Example:* n = 200,000 in Exercise 1: $n^2 = 4 \times 10^{10}$ steps is over an hour; $n \log_2 n \approx 3.5 \times 10^6$ is a fraction of a second.
+#
+# **3. Why the sliding window is O(n)**
+#
+# $$
+# \text{total steps} = \underbrace{n}_{\text{right moves}} + \underbrace{\le n}_{\text{left moves}} \le 2n
+# $$
+#
+# *In words:* count pointer moves, not loop nesting. A `while` inside a `for` is not automatically quadratic.
+#
+# **4. Heap top-k versus sorting**
+#
+# $$
+# O(n \log k) \ \text{vs}\ O(n \log n)
+# $$
+#
+# *Example:* n = 10⁶, k = 10: $\log_2 10 \approx 3.3$ versus $\log_2 10^6 \approx 20$: about 6× fewer comparisons, and O(k) memory on a stream.
+#
+# **5. Prefix sums and "subarray sum equals k"**
+#
+# $$
+# \sum_{t=i}^{j} x_t = P_{j+1} - P_i, \qquad P_0 = 0, \qquad \#\{\text{subarrays with sum } k\} = \sum_{j} \#\{\, i \le j : P_i = P_{j+1} - k \,\}
+# $$
+#
+# *Example:* `nums = [1, 1, 1]`, k = 2: P = (0, 1, 2, 3); the pairs with difference 2 are (0, 2) and (1, 3), so the answer is 2. The `{0: 1}` initial count is $P_0$.
+#
+# **6. Output-sensitive bounds**
+#
+# $$
+# O(n + p), \qquad p \le \binom{n}{2} = \frac{n(n-1)}{2}
+# $$
+#
+# *Example:* two-sum on `[0] * n` with target 0 has $p = n(n-1)/2$ pairs: any algorithm that lists them is quadratic there, and saying so is part of a strong answer.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

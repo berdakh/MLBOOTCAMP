@@ -111,7 +111,26 @@ print(f"loaded in {time.time() - t0:.0f} s | {type(bert).__name__}: {count_param
 # a few seconds once cached (the first download is ~270 MB). Recent `transformers`
 # versions print a *load report* listing `vocab_*` weights as "unexpected": those belong to
 # the masked-language-modelling head, which `AutoModel` (the bare encoder) does not use.
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Subword tokenisation | splitting text into frequent pieces: common words whole, rare words in parts | `un ##bel ##ie ##va ##bly` |
+# | WordPiece / byte-level BPE | BERT's and GPT-2's ways of learning those pieces from a corpus | 30,522 vs 50,257 tokens |
+# | Token id | the integer index of a piece in the vocabulary; what the model actually receives | `[CLS]` = 101, `[SEP]` = 102, `[PAD]` = 0 |
+# | Padding | filler tokens that make every row of a batch the same length | `padding=True` pads to the longest row |
+# | Attention mask | 1 for real tokens, 0 for padding; masked keys get −∞ before the softmax | `batch["attention_mask"]` |
+# | Truncation | cutting sequences longer than the model's limit | `max_length=16`; DistilBERT's limit is 512 |
+# | Hidden state | the contextual vector the encoder outputs for each token | `last_hidden_state`, `(batch, seq, 768)` |
+# | Pooling | turning per-token vectors into one vector per text | CLS (position 0) vs mask-aware mean |
+# | Cosine similarity | the angle-based similarity of two vectors, from −1 to 1 | 0.89 vs 0.69 for related vs unrelated pairs |
+# | Length bucketing | grouping texts of similar length into the same batch to cut padding | 59% → 17% waste in 4.5 |
+# | Safetensors | a weight format that stores only tensors, so loading cannot run code | `use_safetensors=True` |
+# | Revision pinning | loading a model at a fixed commit so files cannot change under you | `revision=BERT_REV` |
+
+# %% [markdown]
 # ## 4.1 · Subword tokenisation
 #
 # Word-level vocabularies cannot cover new words; character-level ones make
@@ -213,6 +232,20 @@ print("gpt2, left-padded attention mask:\n", left["attention_mask"])
 #   fine-tuned classifier). DistilBERT was distilled *without* that objective.
 # * **Mean pooling**: average the token vectors, **using the attention mask** so
 #   padding does not count. Sentence-transformer models are trained this way.
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-text-to-vector.svg" alt="Seven steps from text to tokens, ids, embeddings, a six-layer encoder, hidden states of shape B by T by 768, and mask-aware mean pooling to one 768-dimensional vector" width="100%">
+#
+# *What to notice:* the tokenizer and the pooling step are outside the model, and both can silently break it: a different tokenizer gives different ids, a mask-unaware mean gives a different vector.
+#
+# > 💡 **Intuition.** Subword tokenisation works like a box of Lego: a fixed set of common pieces
+# > (frequent words kept whole, rare words built from smaller bricks) can build any word. *Where
+# > it breaks down:* the piece boundaries are statistical, not linguistic (`2024` → `202`, `##4`),
+# > which is one reason models are bad at arithmetic and spelling.
+#
+# > 💡 **Intuition.** Mean pooling is a vote of every token in the room; the attention mask makes
+# > sure the empty seats (padding) do not vote. A worked example: hidden values 2 and 4 for two
+# > real tokens and 100 for a pad give a masked mean of 3 and a naive mean of 35.3.
 
 # %%
 batch = bert_tok(texts, padding=True, return_tensors="pt").to(DEVICE)
@@ -350,6 +383,11 @@ for r in grid:
 # padding (to the longest text in each batch) in the data's own order; and dynamic
 # padding after **sorting by length**, so each batch holds texts of similar length.
 
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-padding-bucketing.svg" alt="The same six texts batched three ways: padding to 128 wastes 52 percent of positions, dynamic padding in data order 41 percent, sorting by length first 25 percent" width="100%">
+#
+# *What to notice:* the model and the data are identical in all three panels; only the grouping of rows changes, and the dashed (wasted) area shrinks as similar lengths share a batch.
+
 # %%
 from scaleml.textdata import load_text_classification
 
@@ -478,6 +516,50 @@ for model_id, rev in [(BERT_ID, BERT_REV), (GPT2_ID, GPT2_REV)]:
 
 # %% [markdown]
 # *Your answer (Exercise 3):* ...
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1. Mask-aware mean pooling.**
+#
+# $$
+# \mathbf{s} = \frac{\sum_{t=1}^{T} m_t\, \mathbf{h}_t}{\sum_{t=1}^{T} m_t}
+# $$
+#
+# In words: average the hidden vectors of the real tokens only. Symbols: $\mathbf h_t$ = hidden
+# state at position $t$; $m_t \in \{0, 1\}$ = attention mask. (In code, guard the denominator
+# against 0 for an empty row.) Example: values $(2, 4, 100)$ with mask $(1, 1, 0)$ give 3; the
+# naive mean gives 35.3.
+#
+# **2. The attention mask inside attention.**
+#
+# $$
+# \text{score}_{ij} \;\leftarrow\; \text{score}_{ij} + (1 - m_j)\cdot(-\infty)
+# $$
+#
+# In words: a padded key $j$ gets $-\infty$, so after the softmax its weight is exactly 0 for
+# every query. Example: scores $(1.0, 0.5, 2.0)$ with mask $(1, 1, 0)$ → softmax over the first two
+# only: $(0.62, 0.38, 0)$.
+#
+# **3. Cosine similarity.**
+#
+# $$
+# \cos(\mathbf a, \mathbf b) = \frac{\mathbf a \cdot \mathbf b}{\lVert \mathbf a \rVert \, \lVert \mathbf b \rVert}
+# $$
+#
+# In words: the angle between two vectors, ignoring their lengths; for unit vectors it is just
+# the dot product. Example: $(1, 0)$ and $(1, 1)$: $1 / \sqrt 2 \approx 0.71$.
+#
+# **4. Padding waste.**
+#
+# $$
+# \text{waste} = 1 - \frac{\sum_i \ell_i}{\sum_{\text{batches } b} \lvert b \rvert \cdot \max_{i \in b} \ell_i}
+# $$
+#
+# In words: the share of computed positions that are padding. Symbols: $\ell_i$ = length of text
+# $i$; $\lvert b\rvert$ = rows in batch $b$. Example (the figure above): 370 real tokens in
+# $6 \times 128 = 768$ positions: waste $= 1 - 370/768 = 52\%$; sorted, $3 \cdot 45 + 3 \cdot 120 = 495$
+# positions: 25%.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

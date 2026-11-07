@@ -81,7 +81,25 @@ print(f"{len(imps):,} logged impressions | population of {len(pop):,} users, mea
 # %% [markdown]
 # **Expected:** about 2.45 million impressions and a mean base CTR of about 0.139.
 # The simulator is notebook 11's `ex.simulate_users`.
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Covariate | a quantity measured before assignment that predicts the outcome | each user's clicks in the two-week pre-period |
+# | CUPED | subtract θ × (covariate − its mean) from the metric to remove the predictable part of its variance | variance factor about 0.5 for clicks per user |
+# | Correlation ρ | how tightly two quantities move together, from −1 to 1 | ρ ≈ 0.71 between pre-period and experiment clicks |
+# | Ratio metric | a sum divided by a sum, where both vary per user | pooled CTR = Σ clicks ÷ Σ impressions |
+# | Delta method | a straight-line (first-order Taylor) approximation that gives the variance of a function of means | SE 0.00168 vs a true spread of 0.00169 |
+# | Bootstrap | resample units with replacement and recompute, to see how much the estimate moves | 500 resamples of users validate the delta method |
+# | Heterogeneous effect | a treatment effect that differs between segments | 15 country × device slices whose true lift is identical |
+# | Interleaving | merge two rankers' lists into one and credit each click to the ranker that contributed the item | about 20× fewer users than an A/B test for 80% power |
+# | Offline–online gap | offline and online evaluations disagreeing about which model is better | logging policy first offline, third online |
+# | Guardrail metric | a metric that can block a launch but never justify one | p95 latency, crash rate, purchases per user |
+# | Launch criteria | the decision rule, written before the experiment starts | `launch_criteria.md` in 12.6 |
+
+# %% [markdown]
 # ## 12.1 · CUPED: subtract what you already knew
 #
 # Much of the variance in "clicks per user during the experiment" is
@@ -94,6 +112,17 @@ print(f"{len(imps):,} logged impressions | population of {len(pop):,} users, mea
 # arm, so the adjusted metric has the same expected difference between arms
 # (no bias) and its variance is multiplied by `1 - ρ²`, where ρ = corr(x, y).
 # It is linear regression adjustment, and the same reasoning gives the same estimator.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-cuped.svg" alt="Scatter of experiment clicks against pre-period clicks with a regression line, and the narrower distribution of the CUPED-adjusted metric" width="100%">
+#
+# *What to notice:* CUPED keeps only the vertical distance from each point to the line; the adjusted metric has the same centre and a narrower spread.
+#
+# > 💡 **Intuition.** Judging a diet by weight after two weeks is hopeless when people
+# > differ by 30 kg; judging it by each person's *change* from their starting weight
+# > removes that spread. CUPED is the refined version: it subtracts θ × (starting value),
+# > with θ chosen to minimise the variance (θ = 1 is the plain change score).
+# > *Where it breaks down:* for users with no history, or a metric the past does not
+# > predict (ρ ≈ 0), there is nothing to subtract and CUPED gains nothing.
 
 # %% [markdown]
 # > **Exercise 1.** Write `cuped_adjust(y, x)`: return the CUPED-adjusted array
@@ -169,6 +198,14 @@ print(f"power at this size: raw {(cv['raw'] / cv['raw'].std() > 1.96).mean():.2f
 #
 # with means, variances and covariance of per-user clicks `c` and impressions `n`,
 # and N users in the arm.
+#
+# > 💡 **Intuition.** For small wobbles, a ratio of two averages behaves like a straight
+# > line in (mean clicks, mean impressions): a 1% rise in clicks raises CTR by about 1%,
+# > a 1% rise in impressions lowers it by about 1%. The variance of a straight-line
+# > combination is a textbook formula, and that is the delta method. The covariance term
+# > matters: users with more impressions also have more clicks, and the two partly cancel.
+# > *Where it breaks down:* with few users or very heavy tails the wobbles are not small,
+# > and the straight line is a poor fit; check with a bootstrap.
 
 # %% [markdown]
 # > **Exercise 2.** Write `delta_method_ratio_var(num, den)`: the delta-method variance of
@@ -277,6 +314,16 @@ print(seg.round(4).to_string(index=False))
 # teams in a playground. In each round, a coin decides which ranker picks
 # first; each ranker then adds its highest-ranked item not already in the
 # list, and that item is credited to its team.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-team-draft.svg" alt="Two rankings merged by team draft into one shown list, with clicks credited to the team that picked each item" width="100%">
+#
+# *What to notice:* each shown item belongs to exactly one team, and the coin flip per round keeps either ranker from always owning the top slot.
+#
+# > 💡 **Intuition.** An A/B test is two groups each tasting one cola; interleaving is
+# > every person sipping both, side by side. Differences between tasters (some love any
+# > sugar) cancel within the person. *Where it breaks down:* a sip-test cannot tell you
+# > whether people will buy more cola over a month; interleaving cannot measure session-
+# > or user-level outcomes such as revenue or retention.
 
 # %% [markdown]
 # > **Exercise 3.** Write `team_draft_interleave(list_a, list_b, rng)` for two rankings of equal length
@@ -457,6 +504,10 @@ print(gap.round(4).to_string())
 # NDCG predict the online winner?"); interleaving as a cheap online filter; and
 # finally the A/B test, which is the only thing that measures the decision you are making.
 #
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-offline-online-gap.svg" alt="Slope chart: offline NDCG on logged clicks ranks the logging policy first; online CTR ranks true relevance first and the logging policy third" width="100%">
+#
+# *What to notice:* the red line falls from first to third: logged clicks measured agreement with the old policy, not quality.
+#
 # ## 12.6 · Guardrails and launch criteria
 #
 # A launch decision should be written **before** the experiment starts, so the
@@ -515,6 +566,62 @@ print(criteria)
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1. CUPED adjustment and its variance**
+#
+# $$
+# y^{cv}_i = y_i - \theta\,(x_i - \bar x), \qquad \theta = \frac{\operatorname{cov}(x, y)}{\operatorname{var}(x)}, \qquad \operatorname{Var}(y^{cv}) = \operatorname{Var}(y)\,(1 - \rho^2)
+# $$
+#
+# *In words:* regress the metric on its pre-period value and keep the residual (plus the mean). Because $x$ is fixed before randomisation, the difference between arms is unchanged; only the noise shrinks, by the factor $1 - \rho^2$, and so does the sample size you need.
+# *Symbols:* $y$ = metric during the experiment, $x$ = the same user's pre-period value, $\rho = \operatorname{corr}(x, y)$.
+# *Example:* $x = (1, 2, 3, 4)$, $y = (2, 3, 5, 6)$: θ = 2.33 / 1.67 = 1.4, $y^{cv} = (4.1, 3.7, 4.3, 3.9)$, variance 3.33 → 0.067 $= 3.33 \cdot (1 - 0.98)$. In 12.1, ρ = 0.71 gives a factor of about 0.5: half the users.
+#
+# **2. Delta method for a ratio of means**
+#
+# $$
+# \operatorname{Var}\!\left(\frac{\bar c}{\bar n}\right) \approx \frac{1}{N}\left( \frac{\sigma_c^2}{\mu_n^2} - \frac{2\,\mu_c\,\sigma_{cn}}{\mu_n^3} + \frac{\mu_c^2\,\sigma_n^2}{\mu_n^4} \right)
+# $$
+#
+# *In words:* linearise $R = \mu_c / \mu_n$ around the means; the variance of the linear approximation is $\nabla R^\top \Sigma\, \nabla R / N$ with gradient $\nabla R = (1/\mu_n,\ -\mu_c/\mu_n^2)$.
+# *Symbols:* per-user clicks $c$ and impressions $n$ with means $\mu_c, \mu_n$, variances $\sigma_c^2, \sigma_n^2$, covariance $\sigma_{cn}$; $N$ users in the arm.
+# *Example:* $\mu_c = 1.4$, $\mu_n = 10$, $\sigma_c^2 = 4$, $\sigma_n^2 = 36$, $\sigma_{cn} = 9$, $N = 10{,}000$: $(0.04 - 0.0252 + 0.0071) / 10^4 = 2.19 \times 10^{-6}$, so SE ≈ 0.0015.
+#
+# **3. The interleaving statistic**
+#
+# $$
+# \Delta = \frac{1}{U} \sum_{u=1}^{U} \left( \text{clicks}_{A,u} - \text{clicks}_{B,u} \right), \qquad t = \frac{\Delta}{s_\Delta / \sqrt{U}}
+# $$
+#
+# *In words:* per user, credited clicks for A minus credited clicks for B; a one-sample t-test asks whether the mean difference is zero.
+# *Symbols:* $U$ users, $s_\Delta$ = the standard deviation of the per-user differences.
+# *Example:* 400 users with mean difference 0.05 and SD 0.8: t = 0.05 / (0.8 / 20) = 1.25, not significant; 1,600 users with the same numbers give t = 2.5.
+
+# %%
+# --- Check the key equations numerically -------------------------------------
+x4, y4 = np.array([1.0, 2, 3, 4]), np.array([2.0, 3, 5, 6])
+theta4 = np.cov(x4, y4)[0, 1] / np.var(x4, ddof=1)
+rho4 = np.corrcoef(x4, y4)[0, 1]
+print(f"1. theta = {theta4:.2f} | adjusted {np.round(cuped(y4, x4), 2)} | variance {np.var(y4, ddof=1):.3f} -> "
+      f"{np.var(cuped(y4, x4), ddof=1):.4f}; Var(y)(1 - rho^2) = {np.var(y4, ddof=1) * (1 - rho4**2):.4f}")
+
+mc, mn, vc, vn, cn, N = 1.4, 10.0, 4.0, 36.0, 9.0, 10_000
+print(f"2. worked example: SE = {np.sqrt((vc / mn**2 - 2 * mc * cn / mn**3 + mc**2 * vn / mn**4) / N):.5f}")
+rng = np.random.default_rng(12)                       # 5,000 synthetic users
+imp_u = (rng.poisson(10, 5_000) + 1).astype(float)
+clk_u = rng.binomial(imp_u.astype(int), rng.beta(2, 12, 5_000)).astype(float)
+idx = rng.integers(0, 5_000, (1_000, 5_000))          # resample USERS
+boot_r = clk_u[idx].sum(1) / imp_u[idx].sum(1)
+print(f"   synthetic users: delta-method SE {np.sqrt(delta_var(clk_u, imp_u)):.5f} | bootstrap SE {boot_r.std():.5f}")
+print(f"3. interleaving t: {0.05 / (0.8 / np.sqrt(400)):.2f} with 400 users, {0.05 / (0.8 / np.sqrt(1600)):.2f} with 1,600")
+
+# %% [markdown]
+# **Expected:** 1. θ = 1.40, adjusted `[4.1 3.7 4.3 3.9]`, variance 3.333 → 0.0667 both ways;
+# 2. SE = 0.00148 for the worked example, and for the synthetic users a delta-method SE of
+# about 0.0019 matching the bootstrap within a few percent; 3. t = 1.25 and 2.50.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

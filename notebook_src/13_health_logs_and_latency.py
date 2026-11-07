@@ -70,6 +70,24 @@ print(len(payloads), "request bodies from validation rows; first:", payloads[0][
 # **Expected:** `versions ['v1', 'v2'], CURRENT=v1` and 1000 request bodies.
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Liveness probe** | "is the process alive?"; failing it gets the process restarted | `GET /health` |
+# | **Readiness probe** | "should this process get traffic?"; failing it only stops routing | `GET /ready` returns 503 without a model |
+# | **Structured log** | one machine-readable record (JSON) per event | `{"request_id": ..., "status": 200, "ms": 4.1}` |
+# | **Request id** | an identifier that ties all log lines of one request together | the `x-request-id` header |
+# | **Latency** | time from sending a request to receiving the answer | milliseconds per `/predict` |
+# | **Percentile (p50, p95, p99)** | the latency below which that share of requests fall | p95 = 95% of requests are faster |
+# | **Tail latency** | the slow end of the distribution (p95 and above) | what users complain about |
+# | **Throughput** | requests completed per second | `throughput_rps` in the load test |
+# | **Batching** | sending many rows in one request so fixed costs are paid once | 1,000 rows per call |
+# | **GIL** | CPython runs Python bytecode on one thread at a time per process | why threads do not add CPU throughput |
+# | **Worker** | a separate server process with its own interpreter and model copy | `uvicorn --workers 2` |
+# | **SLO** | a target for a service metric over a window | 99.9% of requests under 200 ms over 30 days |
+
+# %% [markdown]
 # ## 13.1 · Liveness versus readiness
 #
 # An orchestrator (Kubernetes, a cloud run-time, a load balancer) asks two
@@ -119,6 +137,17 @@ for path in ("/health", "/ready"):
 # fails later the old model keeps serving (`ModelHolder.load` only swaps on
 # success). Rule of thumb: **liveness must never depend on anything outside
 # the process** (model files, databases, other services).
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-liveness-readiness.svg" alt="The liveness probe asks whether the process answers HTTP and a failure restarts it; the readiness probe asks whether a model is loaded and a failure only stops traffic" width="100%">
+#
+# *What to notice:* the two failures lead to opposite actions, so they must ask different questions; a restart cannot fix a missing model file.
+#
+# > 💡 **Intuition.** Liveness is "is the shop's owner breathing?"; readiness
+# > is "is the shop open?". You call an ambulance for the first, and simply
+# > send customers elsewhere for the second. *Where it breaks down:* a process
+# > can be alive and answering `/health` while stuck on every real request
+# > (a deadlock in the model call); the readiness check should exercise the
+# > model, not just report that a file was loaded.
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/serving.svg" alt="Serving: client, FastAPI app with health, ready and predict, model loaded from the registry" width="100%">
 
@@ -207,6 +236,16 @@ print("sensitive keys found        :", sorted(logged_keys & sensitive) or "none"
 # twenty calls hits that slow one almost every time. So latency is reported as
 # percentiles: **p50** (the typical request), **p95** and **p99** (the tail
 # that users complain about), and the number of requests they are based on.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-latency-percentiles.svg" alt="A right-skewed latency distribution with p50, mean, p95 and p99 marked; the tail lies far to the right of the typical request" width="100%">
+#
+# *What to notice:* the mean sits to the right of the median and far to the left of p95; neither average describes the requests users remember.
+#
+# > 💡 **Intuition.** Latency percentiles are queue times at a supermarket:
+# > the median shopper waits two minutes, but the one in twenty stuck behind a
+# > price check waits ten, and that is the one who writes the review. *Where
+# > it breaks down:* a p99 from 200 requests rests on the 2 slowest; report the
+# > count, and do not quote p99 from small samples.
 #
 # Before measuring, write down **the machine**. Every number below belongs to
 # it; a Colab CPU is not a production server.
@@ -477,7 +516,19 @@ grade.ex2(summarize_logs)
 # A nightly job scoring 5,000 customers can send 5,000 requests or five
 # batches of 1,000. Each request pays fixed costs (HTTP, JSON parsing,
 # validation, building a DataFrame, one `predict_proba` call); a batch pays
-# them once.
+# them once:
+#
+# $$
+# t_{\text{request}}(n) \approx t_{\text{fixed}} + n \cdot t_{\text{row}}
+# \quad\Rightarrow\quad
+# \text{per-row cost} = \frac{t_{\text{fixed}}}{n} + t_{\text{row}}
+# $$
+#
+# > 💡 **Intuition.** Batching is a bus instead of 1,000 taxis: the fare to
+# > start the journey is paid once. *Where it breaks down:* everyone on the
+# > bus arrives when the last passenger is processed, so batching raises the
+# > latency of each individual answer; it is for throughput, not for a user
+# > waiting on a page.
 
 # %%
 batch_rows = []
@@ -609,6 +660,61 @@ plt.show()
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **Percentile.** For $N$ sorted latencies $x_{(1)} \le \dots \le x_{(N)}$, the
+# $q$-th percentile is (nearest-rank form)
+#
+# $$
+# p_q = x_{(\lceil q N / 100 \rceil)}
+# $$
+#
+# *In words:* the value with $q\%$ of observations at or below it. NumPy's
+# default interpolates between neighbours, so the two differ slightly on small
+# samples. *Example:* 20 latencies, $p_{95} = x_{(19)}$: the second slowest.
+#
+# **Tail amplification.** A page that makes $k$ independent calls is slower
+# than the per-call $p_q$ whenever any call is:
+#
+# $$
+# P(\text{at least one slow call}) = 1 - (q/100)^{k}
+# $$
+#
+# *Example:* $q = 95$, $k = 20$: $1 - 0.95^{20} = 0.64$.
+#
+# **Little's law** (any stable system):
+#
+# $$
+# L = \lambda\, W
+# $$
+#
+# *In words:* average requests in flight = arrival rate × average time in the
+# system. *Symbols:* $L$ = concurrency, $\lambda$ = throughput (req/s), $W$ =
+# latency (s). *Example:* one worker that completes $\lambda = 200$ req/s with
+# 16 clients always waiting ($L = 16$) must have $W = 16/200 = 80$ ms, even if
+# one request takes only 5 ms of CPU: the rest is queueing, which is what 13.5
+# measured.
+#
+# **Single-process ceiling:** $\lambda_{\max} \approx 1 / t_{\text{CPU per request}}$.
+# *Example:* 5 ms of CPU-bound Python per request → about 200 req/s per
+# process, whatever the number of threads (the GIL).
+
+# %%
+# Check the percentile definitions, tail amplification and Little's law with numbers.
+lat_toy = np.array([3.1, 3.4, 3.6, 3.8, 4.0, 4.1, 4.3, 4.4, 4.6, 4.8,
+                    5.0, 5.3, 5.6, 6.0, 6.5, 7.1, 8.0, 9.5, 14.0, 31.0])  # ms, 20 requests
+nearest_rank = np.sort(lat_toy)[int(np.ceil(0.95 * lat_toy.size)) - 1]
+print(f"p50 {np.percentile(lat_toy, 50):.2f} ms | mean {lat_toy.mean():.2f} ms | "
+      f"p95 nearest-rank {nearest_rank:.1f} ms, numpy {np.percentile(lat_toy, 95):.2f} ms")
+print(f"P(20-call page hits a slower-than-p95 call) = {1 - 0.95 ** 20:.3f}")
+print(f"Little's law: 16 in flight at 200 req/s -> W = {16 / 200 * 1000:.0f} ms")
+
+# %% [markdown]
+# **Expected:** p50 4.90 ms, mean 6.90 ms (pulled up by one 31 ms request),
+# p95 14.0 ms by nearest rank and 14.85 ms by NumPy's interpolation; 0.642;
+# 80 ms.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

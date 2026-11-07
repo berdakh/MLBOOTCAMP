@@ -34,7 +34,6 @@ import diagrams_l2a  # noqa: E402,F401
 import diagrams_l2b  # noqa: E402,F401
 import diagrams_l3a  # noqa: E402,F401
 import diagrams_l3b  # noqa: E402,F401
-import diagrams_legacy  # noqa: E402,F401
 from svgkit import DIAGRAMS  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent

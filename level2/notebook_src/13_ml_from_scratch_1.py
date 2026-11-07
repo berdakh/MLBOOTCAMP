@@ -71,6 +71,23 @@ np.set_printoptions(precision=4, suppress=True)
 print("numpy", np.__version__)
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Vectorisation | replacing Python loops with whole-array NumPy operations | pairwise distances: hundreds of ms with loops, under 1 ms as one matrix product |
+# | Broadcasting | NumPy stretching size-1 axes so two arrays line up without copying | `A[:, None, :] - B[None, :, :]` makes an (m, n, d) array |
+# | Logit | the raw score before a sigmoid or softmax turns it into a probability | `z = X @ w + b` |
+# | Log-sum-exp trick | computing log Σ eᶻ after subtracting the largest z, so nothing overflows | softmax of `[1000, 1001, 999]` without NaN |
+# | Cross-entropy (log loss) | minus the log of the probability the model gave the true class | `logsumexp(z) - z[y]` |
+# | Gradient check | comparing a hand-derived gradient with a finite-difference estimate | relative error 1e-11 when right, 0.33 with a missing factor 2 |
+# | L2 regularisation | adding (λ/2)‖w‖² to the loss so the weights stay small | `l2` in Exercise 1; the intercept is not penalised |
+# | Inertia | the k-means objective: total squared distance from each point to its centre | Exercise 3 must be within 2% of sklearn's |
+# | k-means++ | an initialisation that picks each new centre with probability ∝ squared distance | spreads the first centres across the blobs |
+# | Rank statistic (AUC) | AUC as the chance a random positive outscores a random negative, ties counting ½ | Exercise 5 in O(n log n) |
+# | NDCG@k | discounted gain of the top k, divided by the best possible | Exercise 6 |
+
+# %% [markdown]
 # ## 13.1 · What the ML coding round actually scores
 #
 # The format varies between companies and teams, so treat this as the common
@@ -150,6 +167,13 @@ print("max |difference|:", np.abs(d_loop - d_ex).max())
 # cancellation can make a distance of zero come out as `-1e-15`, and a
 # `sqrt` of that is NaN.
 #
+# > 💡 **Intuition.** A Python loop is a cashier who scans one item, chats, then scans the
+# > next; a BLAS matrix product is a conveyor belt that moves the whole basket through
+# > hardware built for it. The expansion trick turns "distance between every pair" into
+# > exactly one such basket. *Where it breaks down:* vectorising by broadcasting can build
+# > an intermediate array far larger than memory; the fastest code is the one that never
+# > materialises it.
+#
 # **Measuring complexity.** "It's O(n log n)" is a claim; a growth table is
 # evidence. `growth_table` (in [`src/shoprank/drills.py`](../../src/shoprank/drills.py))
 # times a function at doubling sizes and prints the local exponent
@@ -201,6 +225,12 @@ with Timer("np.sort of 1M floats, timed with Timer"):
 # $$\log\sum_j e^{z_j} = m + \log\sum_j e^{z_j - m}, \qquad m = \max_j z_j,$$
 #
 # so every exponent is ≤ 0 and the largest term is exactly 1.
+#
+# > 💡 **Intuition.** Subtracting the maximum is quoting every price relative to the most
+# > expensive item: softmax only cares about ratios, which are unchanged, but no number is
+# > astronomically large any more. *Where it breaks down:* very negative entries still
+# > underflow to exactly 0 after `exp`; harmless inside softmax, fatal if you then take
+# > their log, which is why you compute log-probabilities directly.
 
 # %%
 z = np.array([[1000.0, 1001.0, 999.0], [1.0, 2.0, 3.0]])
@@ -248,6 +278,11 @@ print("stable -log(sigmoid(z)):", np.logaddexp(0, -zb))     # log(1 + e^{-z}) wi
 # with ε = 1e-5: below ~1e-7 is right; 1e-4 or above is a bug (a wrong factor
 # or a wrong transpose usually gives 0.1-1). Five lines, and interviewers notice
 # when you write them unprompted.
+#
+# > 💡 **Intuition.** A gradient check is measuring a slope with a ruler: nudge one weight
+# > a hair up and down and see how much the loss moves. If the formula and the ruler
+# > disagree, the formula is wrong. *Where it breaks down:* at a kink (ReLU at 0, `abs`,
+# > `max`) there is no single slope, and in float32 the "hair" is lost in rounding.
 
 # %%
 Xg = rng.normal(size=(20, 3))
@@ -328,6 +363,10 @@ grade.ex1(fit_logreg)
 # > 3. *Stability:* σ for very negative z: `np.exp(-z)` overflows → use a piecewise sigmoid or `scipy.special.expit`; compute the loss with `np.logaddexp(0, z) - y*z`, never `log(sigmoid)`.
 # > 4. *Complexity:* O(n·d) per epoch, O(epochs·n·d) total; memory O(n + d). At scale: mini-batch SGD, sparse X, early stopping on a validation loss.
 # > 5. *Edge cases:* perfectly separable data without L2 → weights grow forever (L2 or early stopping fixes it); all labels one class; unscaled features → lr must shrink (standardise first).
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-logreg-gd.svg" alt="Elliptical loss contours with gradient-descent steps reaching the unique minimum, beside the four lines of logistic regression" width="100%">
+#
+# *What to notice:* the whole model is the box in blue: once you know the gradient is (p − y)/n per logit, every other line is shape bookkeeping.
 
 # %% [markdown]
 # > **Exercise 2.** *(target 15 min)* Implement `softmax_grad(W, X, y)` →
@@ -382,6 +421,10 @@ grade.ex3(kmeans)
 # > 3. *Vectorise:* the (n, k) distance matrix with the expansion trick; `argmin` over axis 1.
 # > 4. *Edge cases:* an empty cluster (keep the old center, or re-seed it at the farthest point); duplicate points; k > number of distinct points; features on different scales (standardise).
 # > 5. *Complexity:* O(n·k·d) per iteration; init O(n·k·d). At scale: mini-batch k-means.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-kmeans.svg" alt="Three panels: k-means++ picks spread-out initial centres, points are assigned to the nearest centre, centres move to the mean of their points" width="100%">
+#
+# *What to notice:* assignment and update each lower the objective, so the loop must stop; where it stops depends on the first panel.
 
 # %% [markdown]
 # > **Exercise 4.** *(target 12 min)* Implement `knn_predict(X_train, y_train, X_test, k)`
@@ -473,6 +516,111 @@ grade.ex6(ndcg_at_k)
 # communication). A 9-12 is a pass for most loops; below 8, redo the exercise
 # tomorrow from a blank cell. Record the time you took against the target —
 # over 1.5× the target means the method is not yet automatic.
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1. Logistic regression: loss and gradient**
+#
+# $$
+# L(w, b) = \frac{1}{n}\sum_{i=1}^n \big[\log(1 + e^{z_i}) - y_i z_i\big] + \frac{\lambda}{2}\lVert w\rVert^2, \qquad \nabla_w L = \frac{1}{n} X^\top(p - y) + \lambda w, \quad \frac{\partial L}{\partial b} = \overline{p - y}
+# $$
+#
+# *In words:* the log loss written stably in terms of logits; its gradient is "prediction minus target", pushed back through the features.
+# *Symbols:* $z_i = x_i^\top w + b$, $p_i = \sigma(z_i) = 1/(1 + e^{-z_i})$, $y_i \in \{0, 1\}$, λ = L2 strength.
+# *Example:* one point $x = 2$, $y = 1$, $w = b = 0$: $p = 0.5$, loss $= \log 2 = 0.693$, $\partial L / \partial w = 2 \cdot (0.5 - 1) = -1$, so gradient descent increases $w$.
+#
+# **2. Softmax cross-entropy gradient**
+#
+# $$
+# p_k = \frac{e^{z_k}}{\sum_j e^{z_j}}, \qquad L = -\log p_y, \qquad \frac{\partial L}{\partial z_k} = p_k - \mathbb{1}[k = y]
+# $$
+#
+# *In words:* the gradient for each class is its predicted probability, minus 1 for the true class. Confidently wrong → large gradient; confidently right → almost zero. For a batch, $dW = X^\top (P - Y) / n$.
+# *Example:* $z = (2, 1, 0)$, $y = 0$: $p = (0.665, 0.245, 0.090)$, gradient $(-0.335, 0.245, 0.090)$.
+#
+# **3. Log-sum-exp**
+#
+# $$
+# \log \sum_j e^{z_j} = m + \log \sum_j e^{z_j - m}, \qquad m = \max_j z_j
+# $$
+#
+# *In words:* shift by the maximum before exponentiating; the answer is unchanged and nothing overflows. Cross-entropy from logits is $\operatorname{logsumexp}(z) - z_y$.
+# *Example:* $z = (1000, 1001, 999)$: $1001 + \log(e^{-1} + 1 + e^{-2}) = 1001.408$.
+#
+# **4. k-means objective (inertia)**
+#
+# $$
+# J = \sum_{i=1}^n \lVert x_i - \mu_{c(i)} \rVert^2, \qquad c(i) = \arg\min_k \lVert x_i - \mu_k \rVert, \qquad \mu_k = \operatorname{mean}\{x_i : c(i) = k\}
+# $$
+#
+# *In words:* assign each point to its nearest centre, move each centre to the mean of its points; each step can only lower $J$.
+# *Example:* points 1, 2, 10, 12 with centres 1.5 and 11: $J = 0.25 + 0.25 + 1 + 1 = 2.5$.
+#
+# **5. ROC-AUC as a rank statistic**
+#
+# $$
+# \text{AUC} = \frac{\sum_{i \in \text{pos}} r_i - n_+(n_+ + 1)/2}{n_+\, n_-}
+# $$
+#
+# *In words:* the fraction of (positive, negative) pairs ordered correctly, read off the positives' ranks (average ranks for ties).
+# *Example:* positives scored 0.9 and 0.4, negatives 0.5 and 0.1: ranks of the positives 4 and 2, so $(6 - 3) / 4 = 0.75$: three of the four pairs are in the right order.
+#
+# **6. NDCG@k**
+#
+# $$
+# \text{DCG@k} = \sum_{i=1}^{k} \frac{2^{\text{rel}_i} - 1}{\log_2(i + 1)}, \qquad \text{NDCG@k} = \frac{\text{DCG@k}}{\text{IDCG@k}}
+# $$
+#
+# *Example:* relevance in ranked order (1, 0, 1): DCG $= 1 + 0 + 0.5 = 1.5$; ideal (1, 1, 0): $1 + 0.631 = 1.631$; NDCG@3 = 0.920.
+#
+# **7. Two tools you use to verify everything else**
+#
+# $$
+# \lVert a - b \rVert^2 = \lVert a \rVert^2 - 2\,a^\top b + \lVert b \rVert^2, \qquad \frac{\partial f}{\partial w_i} \approx \frac{f(w + \varepsilon e_i) - f(w - \varepsilon e_i)}{2\varepsilon}
+# $$
+#
+# *In words:* the distance expansion turns pairwise distances into one matrix product; the central difference has error O(ε²) and is the reference for every gradient check.
+
+# %%
+# --- Check the key equations numerically -------------------------------------
+from scipy.special import expit
+from scipy.stats import rankdata
+from sklearn.metrics import log_loss, roc_auc_score
+
+from shoprank.metrics import ndcg_at_k as ndcg_reference
+
+rng = np.random.default_rng(13)
+Xc, yc, wc = rng.normal(size=(50, 3)), rng.integers(0, 2, 50), rng.normal(size=3)
+
+
+def logreg_loss(w, lam=0.1):
+    z = Xc @ w
+    return np.mean(np.logaddexp(0, z) - yc * z) + lam / 2 * w @ w
+
+
+grad_formula = Xc.T @ (expit(Xc @ wc) - yc) / len(yc) + 0.1 * wc
+print(f"1. log loss {logreg_loss(wc, 0.0):.6f} vs sklearn {log_loss(yc, expit(Xc @ wc)):.6f} | "
+      f"gradient rel. error {relative_error(grad_formula, numerical_gradient(logreg_loss, wc.copy())):.1e}")
+z3 = np.array([2.0, 1.0, 0.0])
+p3 = np.exp(log_softmax(z3[None]))[0]
+print("2. softmax", p3.round(3), "| p - onehot", (p3 - np.eye(3)[0]).round(3),
+      "| numerical", numerical_gradient(lambda z: -log_softmax(z[None])[0, 0], z3.copy()).round(3))
+zl = np.array([1000.0, 1001.0, 999.0])
+print(f"3. logsumexp {zl.max() + np.log(np.exp(zl - zl.max()).sum()):.3f}")
+pts1, centres = np.array([1.0, 2, 10, 12]), np.array([1.5, 11.0])
+nearest = np.abs(pts1[:, None] - centres[None, :]).argmin(axis=1)
+print(f"4. inertia {((pts1 - centres[nearest]) ** 2).sum():.2f}")
+y_auc, s_auc = np.array([1, 1, 0, 0]), np.array([0.9, 0.4, 0.5, 0.1])
+ranks = rankdata(s_auc)
+n_pos, n_neg = y_auc.sum(), (1 - y_auc).sum()
+print(f"5. AUC by ranks {(ranks[y_auc == 1].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg):.2f} | sklearn {roc_auc_score(y_auc, s_auc):.2f}")
+print(f"6. NDCG@3 of (1, 0, 1): {ndcg_reference([1, 0, 1], 3):.3f}")
+
+# %% [markdown]
+# **Expected:** 1. the two log losses agree to 6 decimals and the gradient's relative error is
+# about 1e-10 or smaller; 2. `[0.665 0.245 0.09 ]`, then `[-0.335  0.245  0.09 ]` twice; 3. 1001.408;
+# 4. 2.50; 5. 0.75 both ways; 6. 0.920.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

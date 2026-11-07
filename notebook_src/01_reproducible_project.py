@@ -59,6 +59,60 @@ print("artifacts:", ART)
 from churnlab.grading import nb01 as grade
 
 # %% [markdown]
+# ## 0 · The problem you will solve all week
+#
+# **Churn** is a customer leaving a subscription business: cancelling, or simply
+# not renewing. It can be **voluntary** (they decided to leave: low usage, a
+# cheaper rival, a bad support experience) or **involuntary** (a card expired, a
+# payment failed). Churn matters because it compounds: if a share $c$ of
+# customers leaves every month, the share still with you after $n$ months is
+#
+# $$
+# \text{retained after } n \text{ months} = (1 - c)^n
+# $$
+#
+# At $c = 5\%$ a month, $0.95^{12} \approx 0.54$: after a year only about **54%**
+# of today's customers are left, and the business must replace almost half its
+# base just to stand still.
+#
+# Several teams use a churn prediction (finance forecasts revenue, product looks
+# for reasons, billing prioritises payment retries); in this course the user is
+# the **retention / customer-success team**, who can only contact so many
+# accounts a month. The exact task: **on the first day of each month, for every
+# active account, estimate the probability that it cancels within the next 30
+# days, using only data from before that day.**
+#
+# The real goal is not a high AUC. It is to **keep more customers for less
+# effort** than the team could without the model. A churn model is a smoke
+# detector, not a firefighter: it tells people where to look, and the value
+# comes from what they do next.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-churn-decision-loop.svg" alt="The monthly churn loop: snapshot on the 1st, score and rank active accounts, the retention team contacts the top N, the outcome is observed 30 days later, becomes the label, and feeds retraining and monitoring" width="100%">
+#
+# *What to notice:* the model only produces the ranked list; everything that creates value (the calls, the saves) happens outside it, and the label for this month only exists 30 days later.
+#
+# Full background, for anyone new to the problem:
+# [The problem: predicting churn](https://github.com/berdakh/MLBOOTCAMP/blob/main/docs/handbook/00-the-churn-problem.md).
+
+# %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Churn** | a customer ending their subscription | a TaskFlow account cancels in March |
+# | **Churn rate** | share of customers at the start of a period who leave during it | ≈ 5.5% of active accounts per month in this data |
+# | **Snapshot date (T)** | the day a prediction is made; only data from before T may be used | the first day of each month |
+# | **Label window** | the period after T in which a cancellation counts as "churned" | [T, T + 30 days) |
+# | **Retention team** | the people who act on the predictions, with a fixed capacity | customer success calls the highest-risk accounts |
+# | **Reproducible** | someone else gets the same number from the same inputs | a colleague re-runs your run record a year later |
+# | **Pin** | record the exact version of something a result depends on | a git commit, a file checksum, a lock file, a seed |
+# | **Checksum (SHA-256)** | a short fingerprint of a file's bytes; any change gives a different one | `verify_raw` compares each raw file's hash |
+# | **Lock file** | a list of the exact package versions a result was produced with | `requirements-lock.txt` |
+# | **Seed** | the starting value of a random number generator | `random_state=0` makes a run repeatable |
+# | **Config hash / run id** | a short name derived from the configuration itself | the first 12 hex characters of the config's SHA-256 |
+# | **Run record** | a file holding everything needed to reproduce one number | `artifacts/runs/<run_id>.json` |
+
+# %% [markdown]
 # ## 1.1 · What has to be pinned
 #
 # A number reproduces only if **all four** of these are the same as when it was
@@ -75,6 +129,18 @@ from churnlab.grading import nb01 as grade
 # There is a fifth, which no tool fixes: **the decisions**. Why this split? Why
 # this threshold? Those go in writing, next to the result - you will do that on
 # Day 2 (model card) and Day 5 (README).
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-four-pins.svg" alt="Code, data, environment and randomness are pinned so the same number comes out on another machine months later; decisions are written next to the result" width="100%">
+#
+# *What to notice:* the four pins are mechanical (a hash, a file, a seed); the fifth, decisions, only exists if someone writes it down.
+#
+# > 💡 **Intuition.** A reproducible number is like a recipe that names the
+# > exact oven, flour batch and timer, not just "bake until done". Miss one and
+# > the cake still comes out, just not the same cake. *Where it breaks down:*
+# > a recipe can be followed by eye; a library default that changed between
+# > versions gives no visible sign at all.
+#
+# The whole project the pins protect, end to end:
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/architecture.svg" alt="The project: raw extract, validation, SQL features, split, pipeline, registry, service, monitoring" width="100%">
 
@@ -218,6 +284,13 @@ print("seeds 0-4:", [round(float(experiment(s)), 4) for s in range(5)])
 # > lucky split. The habit transfers directly; the vocabulary changes.
 
 # %% [markdown]
+# > 💡 **Intuition.** A seed is like filming one roll of the dice so you can
+# > replay it. Replaying the film never tells you whether the dice are loaded:
+# > for that you need many rolls (many seeds, folds or bootstrap resamples).
+# > *Where it breaks down:* in ML the "dice" include data order, initialisation
+# > and the split, so pin each one you rely on.
+
+# %% [markdown]
 # ## 1.5 · Configuration as data, and a run identity
 #
 # Every knob that changes a result belongs in **one** configuration object,
@@ -242,6 +315,15 @@ print(hashlib.sha256(json.dumps(config, sort_keys=True).encode()).hexdigest()[:1
 # %% [markdown]
 # `sort_keys=True` matters: `{"a": 1, "b": 2}` and `{"b": 2, "a": 1}` are the
 # same configuration and must get the same identity.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-run-record.svg" alt="A config dict becomes canonical JSON, is hashed with SHA-256, and the first 12 hex characters become the run id that names the run record file" width="100%">
+#
+# *What to notice:* the id is computed from the config, not assigned, so the same experiment can never be filed under two names.
+#
+# > 💡 **Intuition.** A config hash is a fingerprint of the recipe card: same
+# > card, same fingerprint, however you shuffle the lines. *Where it breaks
+# > down:* it fingerprints only what is in the config. Data and code versions
+# > need their own pins, which is why the run record stores them too.
 
 # %% [markdown]
 # > **Exercise 1.** Write `config_hash(config)` that returns the first 12
@@ -382,6 +464,33 @@ with tempfile.TemporaryDirectory() as tmp:
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **Churn compounds.** With a constant monthly churn rate $c$:
+#
+# $$
+# \text{retained}(n) = (1 - c)^n
+# $$
+#
+# *In words:* each month keeps a fraction $1 - c$ of whoever is left, so the
+# fractions multiply. *Symbols:* $c$ = monthly churn rate, $n$ = number of
+# months. *Example:* $c = 0.05$, $n = 12$: $0.95^{12} = 0.540$, so 46% of the
+# customers are gone after a year; at $c = 0.03$ it is $0.97^{12} = 0.694$.
+#
+# **Across-seed spread.** Run the same experiment with $k$ seeds and report the
+# mean and the sample standard deviation:
+#
+# $$
+# \bar{x} = \frac{1}{k}\sum_{i=1}^{k} x_i, \qquad
+# s = \sqrt{\frac{1}{k-1}\sum_{i=1}^{k} (x_i - \bar{x})^2}
+# $$
+#
+# *In words:* $s$ is the typical distance of one seed's score from the average.
+# *Symbols:* $x_i$ = the metric with seed $i$, $k$ = number of seeds.
+# *Example:* scores 0.80, 0.82, 0.81 give $\bar{x} = 0.81$ and $s = 0.01$; a
+# "gain" of 0.005 from a new feature is half a seed's worth of noise.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

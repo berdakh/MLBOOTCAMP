@@ -69,6 +69,22 @@ from churnlab.grading import nb04 as grade
 features = bootstrap.ensure_features()
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Time split** | train on earlier periods, evaluate on later ones | train to 2024-03, validate 2024-04..06 |
+# | **Embargo gap** | a buffer between periods so no training label is decided inside the next period | a 30-day gap for a 30-day label |
+# | **Group split** | every row of one entity (customer) goes to the same side | "customers we have never seen" |
+# | **Leakage** | information at training or evaluation time that would not exist at prediction time | `status` exported after the snapshot |
+# | **Validation vs test** | validation is for choosing and checking; test is touched once at the end | test = Jul-Nov 2024, notebook 15 |
+# | **PR-AUC (average precision)** | quality of the ranking at the top; random scores ≈ the positive rate | honest baseline ≈ 0.12 |
+# | **ROC-AUC** | probability a random positive is scored above a random negative; random = 0.5 | ≈ 0.72 here |
+# | **Baseline** | the simplest model a real one must beat | prior, hand rule, small logistic regression |
+# | **Prior (dummy) model** | gives every row the same score | PR-AUC = positive rate = 0.052 |
+# | **Hand rule** | an if-then rule written by a person, no fitting | zero sessions or a failed payment |
+
+# %% [markdown]
 # ## 4.1 · The time split, and why it has a gap
 #
 # The model will run on the first of each month and score the accounts active
@@ -95,6 +111,16 @@ split.summary()
 # events **inside the validation period**: the training set then "knows" part of
 # what validation is supposed to test. `time_split` therefore keeps a training
 # row only if `T + gap <= train_end`.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-embargo.svg" alt="Monthly snapshots with 30-day label windows and a train boundary on March 15; the March 1 window crosses the boundary and is dropped" width="100%">
+#
+# *What to notice:* the row that gets dropped has a perfectly valid snapshot date; it is its *label window* that reaches into the validation period.
+#
+# > 💡 **Intuition.** The embargo is the rule that an exam question cannot be
+# > graded with an answer that is only revealed during next week's exam.
+# > *Where it breaks down:* nothing is "revealed" to the model directly; the
+# > leak is that training rows and validation rows share the same future
+# > events, so validation stops being a fresh test.
 #
 # With monthly snapshots on the 1st and boundaries on the 1st, the March
 # snapshot's window [Mar 1, Mar 31) ends just before April 1, so the gap
@@ -223,6 +249,47 @@ honest
 # `days_until_last_active` (from `last_active_week`, which is in the future of
 # every snapshot). Same split, same model:
 
+# %% [markdown]
+# The two metrics on five rows you can check by hand. Scores, highest first:
+# 0.9 (churner), 0.8, 0.7, 0.6 (churner), 0.2.
+#
+# * **ROC-AUC** = share of (churner, non-churner) pairs ranked correctly. The
+#   churner at 0.9 beats all three non-churners; the one at 0.6 beats only 0.2:
+#   $(3 + 1) / (2 \times 3) = 0.667$.
+# * **Average precision** = mean of the precision at each churner's rank:
+#   rank 1 has precision $1/1$, rank 4 has $2/4$, so $(1 + 0.5) / 2 = 0.75$.
+
+# %%
+# Verify both definitions against scikit-learn on the five rows above.
+from itertools import product
+
+y_toy = np.array([1, 0, 0, 1, 0])
+s_toy = np.array([0.9, 0.8, 0.7, 0.6, 0.2])
+
+pos, neg = s_toy[y_toy == 1], s_toy[y_toy == 0]
+auc_by_hand = np.mean([(p > n) + 0.5 * (p == n) for p, n in product(pos, neg)])
+
+order = np.argsort(-s_toy)
+hits = y_toy[order]
+precision_at_hits = np.cumsum(hits)[hits == 1] / (np.flatnonzero(hits) + 1)
+ap_by_hand = precision_at_hits.mean()
+
+print(f"ROC-AUC  by hand {auc_by_hand:.4f}   sklearn {roc_auc_score(y_toy, s_toy):.4f}")
+print(f"AP       by hand {ap_by_hand:.4f}   sklearn {average_precision_score(y_toy, s_toy):.4f}")
+print(f"prior (constant score) AP = {average_precision_score(y_toy, np.full(5, 0.5)):.2f} = positive rate {y_toy.mean():.2f}")
+
+# %% [markdown]
+# **Expected:** ROC-AUC 0.6667 and AP 0.7500 both ways, and a constant score
+# giving AP 0.40, exactly the positive rate (2 of 5).
+#
+# > 💡 **Intuition.** ROC-AUC asks "pick one churner and one loyal customer at
+# > random: who is ranked higher?" With 95% loyal customers, most of those
+# > pairs are easy, so the number looks good. PR-AUC asks "as I walk down the
+# > list from the top, how many of my calls reach a churner?", which is the
+# > retention team's question. *Where it breaks down:* PR-AUC depends on the
+# > positive rate, so it is not comparable across periods or slices with
+# > different rates; ROC-AUC is.
+
 # %%
 from churnlab.features import build_features
 
@@ -299,6 +366,12 @@ comparison
 #
 # Neither is "more correct" in general. Choose the one that matches the
 # deployment, and **name the split next to every number you report**.
+#
+# All the leaks measured so far, side by side:
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-leakage-types.svg" alt="Four kinds of leakage with their measured effect on this project: target, temporal, group and preprocessing leaks, and their defences" width="100%">
+#
+# *What to notice:* the leaks that live in the **features** (target, temporal) are enormous and invisible to any split check; the ones that live in the **procedure** (random split, preprocessing fitted on everything) are small on this data. Notebook 05 measures the target and preprocessing leaks.
 #
 # > 🧠 **Research bridge.** You already know this from EEG/BCI: within-subject
 # > vs cross-subject evaluation answer different questions, and a
@@ -401,6 +474,46 @@ grade.ex3(rule_scores)
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **Embargo condition.** A row with snapshot $T$ and label horizon $h$ may train a
+# model validated from $t_v$ only if
+#
+# $$
+# T + h \le t_v
+# $$
+#
+# *In words:* the label must be settled before the evaluation period starts.
+# *Example:* $h = 30$ d, $t_v$ = 2024-03-15: the 2024-03-01 snapshot ends its
+# window on 2024-03-31 $> t_v$, so it is dropped (2,246 rows).
+#
+# **ROC-AUC as a probability.**
+#
+# $$
+# \text{ROC-AUC} = P\left(s^{+} > s^{-}\right) + \tfrac{1}{2} P\left(s^{+} = s^{-}\right)
+# $$
+#
+# *In words:* the chance that a random positive outscores a random negative.
+# *Symbols:* $s^{+}$, $s^{-}$ = scores of a random positive and negative row.
+# *Example:* 4 of 6 pairs ordered correctly → 0.667 (the cell above).
+#
+# **Average precision (PR-AUC).**
+#
+# $$
+# \text{AP} = \sum_{n} (R_n - R_{n-1})\, P_n = \frac{1}{N_{+}} \sum_{k:\ y_{(k)} = 1} \text{precision@}k
+# $$
+#
+# *In words:* average the precision at the rank of every positive. *Symbols:*
+# $P_n$, $R_n$ = precision and recall at the $n$-th threshold, $N_{+}$ =
+# number of positives, $y_{(k)}$ = label of the $k$-th highest score.
+# *Example:* positives at ranks 1 and 4: $(1 + 2/4) / 2 = 0.75$.
+#
+# **The floor.** A constant score has $\text{AP} = \pi$ (the positive rate) and
+# ROC-AUC $= 0.5$. *Example:* validation $\pi = 0.052$, so a PR-AUC of 0.12 is
+# about $2.3\times$ the floor, while a ROC-AUC of 0.72 is not directly
+# comparable to it.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

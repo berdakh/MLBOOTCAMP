@@ -89,6 +89,22 @@ print(f"threshold {threshold:.3f} | " + ", ".join(f"{k} {v:.3f}" for k, v in rep
 # the base rate).
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Slice** | a subset of rows sharing a value | `plan = basic`, `tenure 0-30d` |
+# | **Lift** | how many times the base rate a group churns at | lift@10% ≈ 3.2 |
+# | **Irreducible error** | mistakes no model can fix with the available features | healthy-looking customers who leave anyway |
+# | **Model bundle** | a folder with the model file and the metadata needed to trust it | `model.joblib` + `metadata.json` |
+# | **Fingerprint** | a hash of a table's values, identifying the exact training data | 16 hex characters |
+# | **Pickle / joblib** | Python's way to save objects; loading one can execute code | why the hash is checked first |
+# | **Registry** | a store of immutable model versions plus a pointer to the live one | `v1/`, `v2/`, `CURRENT` |
+# | **Promote / roll back** | point `CURRENT` at a new version / at the previous one | `registry.promote("v1")` |
+# | **Audit log** | an append-only record of who changed what and why | `history.jsonl` |
+# | **Model card** | a short document of intended use, evidence and limits | `artifacts/model_card.md` |
+
+# %% [markdown]
 # ## 8.1 · Slices: where is the model weak?
 #
 # `evaluation.slice_report` computes per-slice metrics and **flags** slices
@@ -141,6 +157,12 @@ print(f"  overall      {pt_all:.3f}  95% customer CI [{lo_all:.3f}, {hi_all:.3f}
 # calling a slice "badly served". The defensible statement is usually
 # *"we see no slice where the model is clearly worse, at this sample size"*,
 # not a story about why one region is hard.
+#
+# > 💡 **Intuition.** A slice with 40 churners is a poll with 40 respondents:
+# > its PR-AUC can swing several hundredths on who happened to answer. Read
+# > the `positives` column before the metric. *Where it breaks down:* a
+# > consistent gap across many months *is* evidence, even if each month's
+# > slice is small; pooling over time is the fix.
 
 # %% [markdown]
 # > **Exercise 1.** Write `tenure_bucket(tenure_days)` that maps a Series of
@@ -244,6 +266,12 @@ print(f"churn rate among all healthy-looking rows: {v.loc[healthy, LABEL].mean()
 # any deployed model: trained on what (fingerprint, rows, period), which
 # features in which order, which library versions, what threshold, which
 # validation metrics, and the SHA-256 of the model file.
+#
+# > 💡 **Intuition.** A bundle is a medicine bottle, not a loose pill: the
+# > label says what is inside, the batch, the dose (threshold), the expiry
+# > (library versions) and carries a seal (the hash). *Where it breaks down:*
+# > a seal stored next to the bottle can be re-made by anyone who can open
+# > it; real tamper-proofing needs signatures or access control.
 
 # %%
 from churnlab.artifacts import ArtifactError, ModelMetadata, dataframe_fingerprint, load_bundle, save_bundle
@@ -326,6 +354,16 @@ with tempfile.TemporaryDirectory() as tmp:
 # `v2/`, ...), a `CURRENT` file naming the live version, and an append-only
 # `history.jsonl`. Deploying is writing a version into `CURRENT`; rolling back
 # is writing the previous one (notebook 14 does that under pressure).
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-bundle-registry.svg" alt="A registry with immutable version folders v1, v2 and v3, a CURRENT file pointing at the live version, an append-only history log, and rollback as rewriting CURRENT" width="100%">
+#
+# *What to notice:* nothing in the version folders ever changes; the only mutable thing is one tiny file, which is why rollback takes seconds.
+#
+# > 💡 **Intuition.** The registry is a library shelf of numbered editions and
+# > `CURRENT` is the bookmark saying which one the service reads. Rolling back
+# > moves the bookmark; it does not reprint a book. *Where it breaks down:* a
+# > rollback restores the model, not the world: if the input data changed,
+# > the old model may be wrong too.
 #
 # Register the linear model (v1) and the boosted trees (v2), then promote the
 # one with the better validation PR-AUC. The cell is idempotent: re-running it
@@ -480,6 +518,31 @@ print(f"notebook compute time: {time.time() - T0:.0f} s")
 
 # %% [markdown]
 # **Expected:** well under a minute.
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **Lift at the top $q$ of scores:**
+#
+# $$
+# \text{lift@}q = \frac{\text{churn rate among the top } q \text{ of scores}}{\pi}
+# $$
+#
+# *In words:* how many times more often the flagged group churns than average.
+# *Symbols:* $q$ = share flagged (10%), $\pi$ = base rate. *Example:* top 10%
+# of 6,956 rows = 696 accounts, of which ≈ 116 churn: $116/696 = 0.167$, and
+# $0.167 / 0.052 = 3.2$.
+#
+# **Lift-normalised slice PR-AUC.** Because a random ranking has PR-AUC
+# $= \pi_s$ (the slice's positive rate), compare slices with
+# $\text{PR-AUC}_s / \pi_s$ or with ROC-AUC. *Example (illustrative):* a
+# slice with PR-AUC 0.113 at $\pi_s = 0.04$ is $2.8\times$ its floor, against
+# $0.163 / 0.052 = 3.1\times$ overall: most of the apparent gap between 0.113
+# and 0.163 is the lower base rate, not worse ranking.
+#
+# **How wide is a slice's interval?** Roughly $\propto 1/\sqrt{N_{+}}$ (number of
+# positives). *Example:* going from 360 positives (overall CI width ≈ 0.06)
+# to 40 positives multiplies the width by $\sqrt{360/40} = 3$, to ≈ 0.18.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

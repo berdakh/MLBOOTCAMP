@@ -69,6 +69,23 @@ valid = split.valid  # validation rows only; the test period waits for notebook 
 # **Expected:** `versions ['v1', 'v2'], CURRENT=v1`.
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Client** | the code that calls a service and handles its answers and failures | `ChurnClient` |
+# | **Timeout** | the longest a client waits before giving up on a call | 5 s by default |
+# | **Retry** | sending the same request again after a failure that might not repeat | a 503 while the model loads |
+# | **Exponential backoff** | waiting longer before each retry: $b, 2b, 4b, \dots$ | 0.2 s, 0.4 s, 0.8 s |
+# | **Jitter** | a random fraction added to the wait so clients do not retry in lockstep | `delay × uniform(0.5, 1.5)` |
+# | **Idempotent** | doing it twice has the same effect as doing it once | a prediction; not a payment |
+# | **Chunking** | splitting a big job into requests below the service's limit | 2,500 rows as 1,000 + 1,000 + 500 |
+# | **Fixture** | reusable setup that pytest passes into tests | a temporary registry |
+# | **Contract test** | checks the API accepts and rejects exactly what it promised | unknown field → 422 |
+# | **Mutation testing** | deliberately breaking the code to check that some test fails | a mutant that ignores the threshold |
+# | **Killed / surviving mutant** | a test caught the change / no test noticed it | a survivor points at a missing test |
+
+# %% [markdown]
 # ## 11.1 · A real server, on your own machine only
 #
 # `TestClient` (notebooks 09-10) skips the network. A client library has to
@@ -243,10 +260,21 @@ except httpx.ConnectError as exc:
 # | 500 Internal Server Error | a bug: usually fails the same way again | no (or at most once) |
 # | 400 / 404 / 413 / 422 | *your* request is wrong | **never**: it will fail identically |
 #
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-retry-policy.svg" alt="A client call is classified: success returns; 429, 502, 503, 504, timeouts and connection errors back off exponentially and retry up to three times; 400, 404, 413 and 422 are raised at once" width="100%">
+#
+# *What to notice:* the decision depends only on *what kind* of failure happened, never on how much you want the answer; the dashed loop is bounded.
+#
 # **Exponential backoff** (`backoff × 2^attempt`) spaces retries out, so a
 # struggling server is not hammered by every client retrying at once.
 # Production clients add **jitter** (a random fraction of the delay) so that
 # clients that failed together do not retry together.
+#
+# > 💡 **Intuition.** Retrying is redialling a busy phone line: worth it
+# > when the line is busy (503, 429), pointless when the number does not exist
+# > (404) or you are speaking the wrong language (422). Waiting a little longer
+# > between each redial stops a whole office from jamming the switchboard.
+# > *Where it breaks down:* a phone call has no side effects until someone
+# > answers; an HTTP request may have been processed even though you timed out.
 #
 # **Idempotency**: a prediction has no side effects, so sending it twice is
 # harmless. Retrying a `POST /orders` after a timeout could charge a customer
@@ -565,6 +593,11 @@ grade.ex2(test_rejects_negative_sessions)
 # ## 11.6 · Do the tests catch bugs? Mutation testing
 #
 # A test suite that passes tells you nothing until you know it can **fail**.
+#
+# > 💡 **Intuition.** Mutation testing is a fire drill for your tests: start a
+# > small, controlled fire and check that an alarm goes off. *Where it breaks
+# > down:* a drill only covers the fires you thought to start; a suite that
+# > kills every hand-made mutant can still miss a bug nobody imagined.
 # Mutation testing checks that: make a small, realistic change to the code
 # (a *mutant*), run the suite, and see whether some test fails (the mutant is
 # *killed*) or everything still passes (the mutant *survived*: no test checks
@@ -683,6 +716,40 @@ except httpx.ConnectError:
 # %% [markdown]
 # **Expected:** both servers report `stopped: True`, and the last request
 # fails with a connection error.
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **Exponential backoff.** The wait before retry $n$ ($n = 0, 1, \dots$):
+#
+# $$
+# d_n = b \cdot 2^{n} \quad (\times\ \text{a random factor, with jitter})
+# $$
+#
+# *Symbols:* $b$ = base delay. *Example:* $b = 0.2$ s, 3 retries: waits of
+# 0.2, 0.4 and 0.8 s, 1.4 s in total.
+#
+# **Worst-case time of one logical call** with timeout $\tau$ and $R$ retries:
+#
+# $$
+# T_{\max} = (R + 1)\,\tau + \sum_{n=0}^{R-1} b\, 2^{n} = (R + 1)\,\tau + b\,(2^{R} - 1)
+# $$
+#
+# *In words:* every attempt may hang until the timeout, plus all the waits.
+# *Example:* $\tau = 5$ s, $R = 3$, $b = 0.2$: $4 \times 5 + 0.2 \times 7 = 21.4$ s.
+# A caller with a 2-second budget cannot afford this client configuration.
+#
+# **Why retries help with transient failures.** If each attempt fails
+# independently with probability $q$, all $R + 1$ attempts fail with
+#
+# $$
+# P(\text{give up}) = q^{\,R + 1}
+# $$
+#
+# *Example:* $q = 0.05$, $R = 3$: $0.05^4 = 6 \times 10^{-6}$. *Where it breaks
+# down:* failures during an outage are not independent (if the server is down,
+# every attempt fails), which is why retries must be bounded and backed off.
+# For a 422, $q = 1$: retrying changes nothing.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

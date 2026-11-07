@@ -72,6 +72,22 @@ print(split.summary().drop(columns=["positive_rate"]))
 # even its base rate.
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Held-out test set** | data used exactly once, after every decision is fixed | Jul-Nov 2024 |
+# | **Pre-registration** | writing the analysis plan, with its decision rule, before seeing the data | `test_plan.json` and its hash |
+# | **Garden of forking paths** | many small, reasonable choices made after looking, which add up to optimism | changing a threshold after seeing test |
+# | **Exploratory result** | anything decided after looking; reported, but labelled as such | test-period slices in 15.7 |
+# | **Paired bootstrap difference** | the interval for model B minus model A, on the same resampled customers | ≈ +0.07 PR-AUC vs the 3-feature baseline |
+# | **Operating point** | the threshold or top-k rule actually used to act | the validation threshold, applied to test |
+# | **Precision@k** | share of the k flagged accounts that churn | per month, at the team's capacity |
+# | **Validation-test gap** | how much the score changes on the untouched period | 0.163 on validation vs ≈ 0.197 on test |
+# | **Model card** | intended use, evidence, limits, in one page | updated with test numbers |
+# | **Elevator pitch** | the project in 60 seconds: problem, approach, result with uncertainty, limit | section 15.10 |
+
+# %% [markdown]
 # ## 15.1 · Why "once"
 #
 # Every time you look at test results and then change something (a feature, a
@@ -79,6 +95,13 @@ print(split.summary().drop(columns=["positive_rate"]))
 # validation set, and its number a little more optimistic. Nobody intends to
 # cheat; it happens through many small, reasonable decisions (statisticians
 # call it the *garden of forking paths*).
+#
+# > 💡 **Intuition.** The test set is a sealed envelope with the exam answers.
+# > Open it once, at the end, in front of witnesses (the pre-registered plan).
+# > Peek and re-seal it, and every later "grade" is partly self-marked.
+# > *Where it breaks down:* even an honest single look is one sample of one
+# > period: it says how the model did on those months, not on every future
+# > month, which is what monitoring is for.
 #
 # The defence is the one clinical trials use: **write down the analysis before
 # seeing the data**, then do exactly that analysis and report it whatever it
@@ -748,6 +771,32 @@ print(f"{len(numbers)} decimal numbers in the README; not traceable to final_rep
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **Pre-registered decision rule.** With a paired customer bootstrap of
+# $\Delta = \text{PR-AUC}_{\text{CURRENT}} - \text{PR-AUC}_{\text{baseline}}$:
+#
+# $$
+# \text{report "better"} \iff Q_{0.025}\big(\Delta^{*}_{1..B}\big) > 0
+# $$
+#
+# *In words:* the whole 95% interval of the difference must sit above zero.
+# *Example:* $\Delta \approx +0.07$ with an interval clear of zero → "better
+# than the 3-feature baseline on this test period".
+#
+# **Precision at the team's capacity, per month $m$:**
+#
+# $$
+# \text{precision@}k_m = \frac{\#\{\text{churners among the top } k \text{ scores in month } m\}}{k}
+# $$
+#
+# *Example:* 11 churners among 40 calls → 0.275; lift = $0.275 / \pi_m$.
+#
+# **Interval width from sample size.** A bootstrap interval narrows roughly as
+# $1 / \sqrt{n_{\text{customers}}}$. *Example:* ±0.03 on ≈ 2,500 customers
+# means about ±0.06 on 625, and you would need ≈ 10,000 customers for ±0.015.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

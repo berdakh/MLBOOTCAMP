@@ -101,6 +101,24 @@ N_TEST = {"gpu": 400_000, "cpu": 100_000, "smoke": 20_000}[BUDGET.name]
 print(f"train impressions: {N_TRAIN:,} | test impressions: {N_TEST:,}")
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | CTR / pCTR | Click-through rate: clicks ÷ impressions; pCTR is a model's predicted click probability | base CTR ≈ 3% |
+# | Impression | One showing of an ad (one row of the log) | 500,000 training impressions |
+# | Cardinality | How many distinct values a categorical field can take | 4 to 1,000,000 per field |
+# | Log loss | Average negative log-probability the model gave to what actually happened | the training objective |
+# | Normalised entropy (NE) | Log loss divided by the log loss of always predicting the average CTR; lower is better | constant model NE = 1.00 |
+# | Calibration (pred/obs) | Whether predicted probabilities match observed rates on average | pred/obs ≈ 1.00 per test day |
+# | Hashing trick | Mapping each (field, value) to a bucket with a hash, instead of a vocabulary | `hash(field, value) mod n` |
+# | Collision | Two different keys landing in the same hash bucket and sharing a weight | 1,024 buckets: every key collides |
+# | Embedding table | A learned vector per id (row), looked up by index | 2^18 rows × 8 dims |
+# | Cross feature | A feature that fires for a *combination* of values (this ad on this site) | what DCN cross layers learn |
+# | Negative downsampling | Keeping all clicks but only a fraction `w` of non-clicks for training | `w = 0.1` in 13.7 |
+# | Delayed feedback | Labels (conversions) that arrive long after the event | exponential delays, mean 2 days |
+
+# %% [markdown]
 # ## 13.1 · A Criteo-like log with a known truth
 #
 # The public [Criteo display-ads](https://ailab.criteo.com/ressources/) logs have 13 integer
@@ -160,6 +178,13 @@ print(f"distinct (field, value) pairs in train: {card.distinct_in_train.sum():,}
 #   does not change).
 # * **Calibration**: mean predicted / observed ratio, overall and per prediction bucket.
 #   Auctions multiply pCTR by the bid (13.6), so a model can win on AUC and still lose money.
+#
+# > 💡 **Intuition.** NE answers "how much better than a weather forecaster who always says the
+# > average?". Log loss alone is hard to compare across products: predicting a 3% CTR is easier than
+# > predicting a 30% one, so raw log losses differ even for equally good models. Dividing by the
+# > "always the average" loss puts both on one scale. *Where the analogy breaks down:* NE still mixes
+# > ranking and calibration; a lower NE can come from better calibration alone, so read it with AUC
+# > and pred/obs.
 
 # %% [markdown]
 # > **Exercise 1.** Write `normalized_entropy(y, p)`: the mean log loss of predictions `p` (clip them
@@ -210,6 +235,16 @@ print(pd.DataFrame(table).round(4).to_string(index=False))
 #   (MurmurHash, xxHash, CityHash, or `hashlib` in a pinch).
 # * Include the **field** in the key, so that value `123` in `C1` and in `C2` are different features
 #   that can share one big table.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-hashing-trick.svg" alt="Four field-value keys go through a stable hash into eight buckets; two unrelated keys share bucket 5" width="100%">
+#
+# *What to notice:* putting the field in the key keeps `C1 = nike` and `C2 = nike` apart; the collision is unavoidable but its rate is predictable.
+#
+# > 💡 **Intuition.** A cloakroom with a fixed number of hooks and a rule "hook = a function of your
+# > name": no registration desk (vocabulary) is needed, and newcomers just work, but now and then two
+# > strangers share a hook. *Where the analogy breaks down:* in a model the shared hook (weight) is
+# > learned from both keys' clicks, and if one of them is frequent and the other rare, the rare one
+# > mostly inherits the frequent one's weight, which is often harmless.
 
 # %% [markdown]
 # > **Exercise 3.** Write `hash_feature(field, value, n_buckets)` returning an `int` in `[0, n_buckets)`
@@ -339,7 +374,20 @@ print("T4 memory: 16 GB. A 1e9 x 64 fp32 table alone is 16x that.")
 # learn pairwise crosses as dot products of embeddings; **DCN-v2** (Wang et al., 2021) learns them
 # with *cross layers*: `x_{l+1} = x0 ⊙ (W_l x_l + b_l) + x_l`. Each layer raises the polynomial
 # degree of the interactions by one, and the residual keeps lower-order terms. An MLP runs in
-# parallel for implicit interactions. Here is the whole model:
+# parallel for implicit interactions.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-ctr-dcn.svg" alt="Sparse ids are hashed and embedded, dense counts are log-transformed, both are concatenated into x0, which feeds cross layers and a deep MLP in parallel, then a sigmoid" width="100%">
+#
+# *What to notice:* the embedding table holds almost all parameters; the cross layers multiply by `x0` at every layer, which is how they build explicit feature crosses.
+#
+# > 💡 **Intuition.** Logistic regression can learn "sports sites get clicks" and "this sneaker ad gets
+# > clicks" but not "this sneaker ad *on sports sites* gets clicks": it can only add effects. A cross
+# > layer multiplies the current representation by the original features `x0`, so after one layer it
+# > holds pairwise products, after two triple products, like expanding a polynomial one degree at a
+# > time. *Where the analogy breaks down:* the crosses are low-rank and learned, not enumerated, so
+# > rare combinations are still learned poorly.
+#
+# Here is the whole model in code:
 
 # %%
 print(inspect.getsource(ctr.DCNv2))
@@ -454,6 +502,16 @@ print(ctr.calibration_table(y_test, p_dcn_cal, n_bins=5).round(4).to_string(inde
 # the odds are inflated by exactly `1/w`, so the fix is exact:
 #
 # `q = p / (p + (1 − p) / w)`  (He et al., 2014).
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-negative-downsampling.svg" alt="The full log is 3% clicks; after keeping 10% of non-clicks it is 24% clicks; the raw model over-predicts and the recalibration formula restores calibrated probabilities" width="100%">
+#
+# *What to notice:* downsampling changes the *odds* by exactly 1/w, so the fix is exact, and the ranking (AUC) is never affected.
+#
+# > 💡 **Intuition.** If you photograph a crowd but delete 9 out of every 10 people who did *not*
+# > click, the clickers look 10× more common in the photo than in the crowd. Knowing it was exactly
+# > 1 in 10 lets you undo it: multiply the odds back by `w`. *Where the analogy breaks down:* the
+# > correction is only exact if the deletion was random with a known, logged `w`; any other filtering
+# > (by time, by user) needs its own correction.
 
 # %% [markdown]
 # > **Exercise 2.** Write `recalibrate_downsampled(p, w)` that maps predictions `p` (numpy array) of a
@@ -537,6 +595,10 @@ print(pd.DataFrame([report(f"LR downsampled w={W}, recalibrated + Platt", y_test
 #   `P(y_obs = 1 | x, elapsed e) = pCVR(x) · F(e)`, where `F` is the delay CDF estimated from an
 #   older, fully matured batch of clicks, and maximise that likelihood. The model predicts `pCVR(x)`
 #   itself; recent clicks count as "probably not yet" rather than "no".
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-delayed-feedback.svg" alt="A timeline of clicks and conversions around a training cutoff; a conversion after the cutoff makes its click look negative" width="100%">
+#
+# *What to notice:* the clicks closest to the cutoff are the most likely to be mislabelled, so the bias is worst on the freshest data.
 
 # %%
 N_CLICKS = {"gpu": 60_000, "cpu": 40_000, "smoke": 4_000}[BUDGET.name]
@@ -630,6 +692,89 @@ print("saved", OUT / "results.json")
 
 # %% [markdown]
 # *Your answer (Exercise 4):* ...
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · Logistic CTR model and log loss.**
+#
+# $$
+# p = \sigma(z) = \frac{1}{1 + e^{-z}}, \qquad \mathrm{LL} = -\frac{1}{N} \sum_{i=1}^{N} \big[\, y_i \log p_i + (1 - y_i) \log (1 - p_i) \,\big]
+# $$
+#
+# *In words:* the model outputs a logit $z$ (a weighted sum of features, or a DCN's output), the
+# sigmoid turns it into a probability, and log loss charges $-\log p$ for each click and
+# $-\log(1-p)$ for each non-click. *Example:* predicting 0.03 costs $-\ln 0.03 = 3.51$ on a click and
+# $-\ln 0.97 = 0.030$ on a non-click.
+#
+# **2 · Normalised entropy.**
+#
+# $$
+# \mathrm{NE} = \frac{\mathrm{LL}}{H(\bar{p})}, \qquad H(\bar{p}) = -\big[\, \bar{p} \log \bar{p} + (1 - \bar{p}) \log (1 - \bar{p}) \,\big]
+# $$
+#
+# *Symbols:* $\bar{p}$ the base rate (mean of $y$). *Example:* $\bar{p} = 0.03$ gives
+# $H = 0.03 \cdot 3.507 + 0.97 \cdot 0.0305 = 0.1347$; a model with $\mathrm{LL} = 0.115$ has
+# $\mathrm{NE} = 0.854$ (about the DCN in 13.5).
+#
+# **3 · Hash collisions.**
+#
+# $$
+# P(\text{a key shares its bucket}) = 1 - \left(1 - \tfrac{1}{n}\right)^{k - 1} \approx 1 - e^{-k/n}
+# $$
+#
+# *Symbols:* $k$ distinct keys, $n$ buckets. *Example:* $k = 425{,}677$, $n = 2^{19}$: $1 - e^{-0.81} = 0.56$.
+#
+# **4 · Embedding memory.** $\text{bytes} = \text{rows} \times \text{dim} \times \text{bytes per value} \times (1 + \text{optimiser slots})$.
+# *Example:* $10^9 \times 64 \times 4$ B = 256 GB; with Adam's two slots, 768 GB.
+#
+# **5 · Re-calibration after negative downsampling.**
+#
+# $$
+# \frac{q}{1 - q} = \frac{1}{w} \cdot \frac{p}{1 - p} \quad\Longrightarrow\quad p = \frac{q}{q + (1 - q)/w}
+# $$
+#
+# *In words:* keeping a random fraction $w$ of negatives divides their count by $1/w$, so the odds the
+# model learns are $1/w$ times the true odds; multiply them back by $w$. *Symbols:* $q$ the
+# downsampled model's prediction, $p$ the calibrated probability. *Example:* $q = 0.236$, $w = 0.1$:
+# $p = 0.236 / (0.236 + 7.64) = 0.030$.
+#
+# **6 · Delayed feedback.**
+#
+# $$
+# P(y_{\text{obs}} = 1 \mid x, e) = \mathrm{pCVR}(x) \cdot F(e), \qquad F(e) = 1 - e^{-e/\tau}\ \ \text{(exponential delays)}
+# $$
+#
+# *Symbols:* $e$ time elapsed since the click, $F$ the delay CDF, $\tau$ the mean delay. *Example:*
+# $e = 12$ h, $\tau = 48$ h: $F = 1 - e^{-0.25} = 0.22$, so only 22% of that click's eventual conversions are visible.
+#
+# The cell below checks 1, 2, 3 and 5 numerically against `sklearn` and `scaleml.ctr`.
+
+# %%
+# Key equations, checked numerically (seconds on a CPU).
+from sklearn.metrics import log_loss as sk_log_loss
+
+ll_by_hand = -np.mean(y_test * np.log(p_dcn) + (1 - y_test) * np.log(1 - p_dcn))
+b = y_test.mean()
+H = -(b * np.log(b) + (1 - b) * np.log(1 - b))
+print(f"log loss by hand {ll_by_hand:.5f} | sklearn {sk_log_loss(y_test, p_dcn):.5f}")
+print(f"NE by hand {ll_by_hand / H:.4f} | ctr.normalized_entropy {ctr.normalized_entropy(y_test, p_dcn):.4f}")
+print(f"H(0.03) = {-(0.03 * np.log(0.03) + 0.97 * np.log(0.97)):.4f}")
+
+k, n = 425_677, 2**19
+keys = np.random.default_rng(0).integers(0, n, k)  # a uniform hash = uniform random buckets
+counts = np.bincount(keys, minlength=n)
+print(f"collision rate: simulated {np.mean(counts[keys] > 1):.3f} | 1 - exp(-k/n) {1 - np.exp(-k / n):.3f}")
+
+q_, w_ = np.array([0.236, 0.5, 0.9]), 0.1
+p_ = q_ / (q_ + (1 - q_) / w_)
+print(f"recalibrated {p_.round(4)} | ctr.recalibrate_downsampled {ctr.recalibrate_downsampled(q_, w_).round(4)} "
+      f"| odds ratio q:p = {((q_ / (1 - q_)) / (p_ / (1 - p_))).round(3)} (= 1/w)")
+
+# %% [markdown]
+# **Expected:** the hand-written log loss equals `sklearn`'s, NE equals the library's (≈ 0.854 for the
+# DCN), `H(0.03) = 0.1347`; simulated and theoretical collision rates both ≈ 0.556; the three
+# re-calibrated values `[0.03, 0.0909, 0.4737]` from both implementations, and an odds ratio of 10 for each.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

@@ -105,7 +105,25 @@ print(f"{len(text):,} characters, vocab {tok.vocab_size}")
 
 # %% [markdown]
 # **Expected:** 1,115,394 characters, vocab 65 (the same corpus as notebook 03).
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Depth round | An interview round that drills one topic with "why?" until the edge of your knowledge | 19.0 |
+# | Warmup | Starting with a small learning rate and raising it linearly over the first steps | 100 warmup steps in 19.2 |
+# | Cosine decay | Lowering the learning rate along half a cosine to a minimum | `warmup_cosine_lr` (Exercise 1) |
+# | Linear scaling rule | Multiplying the learning rate by k when the batch grows k times | batch 32 → 512, LR 0.01 → 0.16 |
+# | Critical batch size | The batch beyond which larger batches stop buying proportionally faster progress | linear scaling breaks at 2,048 |
+# | Memorisation | Fitting training labels that carry no signal (e.g. flipped ones) exactly | 100% train accuracy at 40% noise |
+# | Early stopping | Keeping the checkpoint with the best validation score instead of the last | keeps ~0.93 at 20% noise |
+# | Interpolation threshold | The model size at which it can just fit every training point (p ≈ n) | p = 100 for 100 points |
+# | Double descent | Test error that falls, peaks at the interpolation threshold, then falls again | 0.51 → ~190 → 0.30 |
+# | Minimum-norm solution | Among all weight vectors that fit the data exactly, the one with the smallest length | `pinv(X) @ y` |
+# | Data leakage | Test information reaching training (split, preprocessing or tuning) | flaws A, B, E in the abstract |
+
+# %% [markdown]
 # ## 19.0 · How a depth round works
 #
 # The interviewer picks a topic you claimed (your CV is the syllabus) and
@@ -225,6 +243,13 @@ RESULTS["warmup"] = warm_rows
 # the 0.3–0.5 gaps at high LR are not.) Runtime ~1 minute on 2 idle CPU threads
 # (up to ~6 minutes when our build machine was heavily shared).
 #
+# > 💡 **Intuition.** Adam divides each step by a running estimate of the gradient's size. In the
+# > first few steps that estimate is built from a handful of gradients, so it can be badly wrong and
+# > the effective step erratic, while the freshly initialised network is at its most fragile. Warmup
+# > is driving slowly out of the car park until the instruments have warmed up. *Where the analogy
+# > breaks down:* warmup also helps plain SGD with large batches and post-LayerNorm transformers for
+# > reasons unrelated to Adam's estimates; "why" depends on the setting.
+#
 # Production schedules combine warmup with a decay. `scaleml.train.linear_warmup_cosine`
 # (used by `train()`) is one; write it yourself as a function of the step:
 #
@@ -320,6 +345,12 @@ RESULTS["batch_scaling"] = bs_rows
 # Training ImageNet in 1 Hour"* (Goyal et al., 2017); what you measured is a
 # toy version of its argument and of its limits.
 #
+# > 💡 **Intuition.** A batch k times larger gives a gradient estimate with about k times less
+# > variance, so you can afford k times bigger steps, but you also take k times fewer of them in a
+# > fixed number of epochs. Linear scaling keeps the distance travelled per epoch the same. *Where the
+# > analogy breaks down:* once the gradient noise is already small (past the critical batch size),
+# > bigger steps overshoot curvature rather than average out noise, and the rule fails, as at 2,048.
+#
 # ## 19.4 · Experiment: noisy labels and memorisation
 #
 # A wide MLP (2 × 384 hidden units, ~160k parameters) on 2,000 training
@@ -380,6 +411,12 @@ RESULTS["label_noise"] = noise_rows
 # usefully, though they understate true accuracy. For EEG, where labels
 # come from cues the subject may not have followed, this is directly relevant.
 #
+# > 💡 **Intuition.** A student cramming an answer key with 20% typos first learns the subject
+# > (patterns shared by many questions), then memorises the typos one by one. Stop them early and
+# > you get the subject without the typos. *Where the analogy breaks down:* "early" is chosen on a
+# > validation set that has the same typos, so it ranks checkpoints correctly but understates their
+# > true accuracy.
+#
 # ## 19.5 · Experiment: double descent with random features
 #
 # Regression with 100 training points, 20 inputs and a non-linear target.
@@ -430,6 +467,10 @@ RESULTS["double_descent"] = dd_rows
 # removes the peak. Published references: *"Reconciling modern machine
 # learning practice and the bias-variance trade-off"* (Belkin et al., 2019)
 # and *"Deep Double Descent"* (Nakkiran et al., 2019).
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-double-descent.svg" alt="Test error against model size on a log scale: the minimum-norm fit falls, spikes at p = n, then falls again below its earlier minimum; the ridge fit has no peak" width="100%">
+#
+# *What to notice:* the peak is at p = n exactly, not at 'large p'; past it, more features *help* because the minimum-norm interpolant gets smoother, and ridge removes the peak altogether.
 #
 # **A fifth depth question, by arithmetic: attention memory.** The attention
 # score matrix is T × T per head per layer. For a 12-layer, 12-head model at
@@ -570,6 +611,79 @@ grade.ex2(critique_flags)
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · Warmup + cosine schedule** (Exercise 1).
+#
+# $$
+# \eta(t) = \begin{cases} \eta_{\max} \dfrac{t + 1}{t_w} & t < t_w \\[2ex] \eta_{\min} + \tfrac12 (\eta_{\max} - \eta_{\min}) \big(1 + \cos(\pi\, \pi_t)\big) & t \ge t_w \end{cases}, \qquad \pi_t = \min\!\left(1, \frac{t - t_w}{t_{\text{total}} - t_w}\right)
+# $$
+#
+# *Symbols:* $t$ the step, $t_w$ warmup steps, $\pi_t$ the decay progress in $[0, 1]$. *Example:*
+# $\eta_{\max} = 10^{-3}$, $t_w = 100$, $t_{\text{total}} = 1{,}000$, $\eta_{\min} = 0$: $\eta(49) = 5 \times 10^{-4}$,
+# $\eta(550) = 5 \times 10^{-4}$ (halfway down the cosine), $\eta(1{,}000) = 0$.
+#
+# **2 · Learning rate vs batch size.**
+#
+# $$
+# \eta(kB) = k\, \eta(B) \ \ \text{(linear, SGD)}, \qquad \eta(kB) = \sqrt{k}\, \eta(B) \ \ \text{(square-root, more conservative)}
+# $$
+#
+# *Example:* batch 32 at 0.01 → batch 2,048 ($k = 64$): linear 0.64 (unstable in 19.3), √k 0.08 (stable).
+#
+# **3 · Minimum-norm least squares and ridge.**
+#
+# $$
+# \hat{w}_{\text{min-norm}} = X^{+} y = \arg\min_w \lVert w \rVert_2 \ \text{ s.t. } Xw = y \ \ (p > n), \qquad \hat{w}_{\text{ridge}} = (X^\top X + \lambda I)^{-1} X^\top y
+# $$
+#
+# *In words:* when there are more features than points, infinitely many $w$ fit exactly; the
+# pseudo-inverse picks the shortest. Near $p = n$ the smallest singular value $\sigma_{\min}$ of $X$ is
+# tiny and $\lVert \hat{w} \rVert$ scales like $1/\sigma_{\min}$: the peak. Ridge's $\lambda$ keeps
+# $1/(\sigma^2 + \lambda)$ bounded. *Example:* in 19.5, p = 100 = n gives test MSE ~190.
+#
+# **4 · Self-attention cost.** Compute $O(T^2 d)$ per layer; materialised score memory
+# $= L \cdot H \cdot T^2 \cdot b$ bytes per sequence. *Example:* $12 \cdot 12 \cdot 2{,}048^2 \cdot 2 = 1.2$ GB.
+#
+# The cell below checks 1, 3 and 4 numerically.
+
+# %%
+# Key equations, checked numerically (instant).
+from scaleml.train import linear_warmup_cosine
+
+
+def schedule_by_formula(t, peak=1e-3, tw=100, total=1_000):
+    if t < tw:
+        return peak * (t + 1) / tw
+    return 0.5 * peak * (1 + math.cos(math.pi * min(1.0, (t - tw) / (total - tw))))
+
+
+opt = torch.optim.SGD([torch.nn.Parameter(torch.zeros(1))], lr=1e-3)
+sched = linear_warmup_cosine(opt, 100, 1_000)
+lib = {}
+for t in range(1_001):
+    lib[t] = opt.param_groups[0]["lr"]
+    opt.step()
+    sched.step()
+print("lr at steps 0, 49, 99, 550, 1000:", [f"{lib[t]:.2e}" for t in (0, 49, 99, 550, 1_000)],
+      "| max |formula - library|", f"{max(abs(lib[t] - schedule_by_formula(t)) for t in lib):.1e}")
+
+rng_chk = np.random.default_rng(0)
+Xw, yw = rng_chk.normal(size=(20, 50)), rng_chk.normal(size=20)  # 20 points, 50 features
+w_mn = np.linalg.pinv(Xw) @ yw
+null = np.linalg.svd(Xw)[2][-1]  # a direction X cannot see: adding it keeps the fit exact
+w_other = w_mn + 0.5 * null
+print(f"min-norm fit residual {np.abs(Xw @ w_mn - yw).max():.1e}, ||w|| = {np.linalg.norm(w_mn):.3f} | "
+      f"another exact fit: residual {np.abs(Xw @ w_other - yw).max():.1e}, ||w|| = {np.linalg.norm(w_other):.3f}")
+print(f"attention scores at T = 2,048: {12 * 12 * 2048**2 * 2 / 1e9:.2f} GB")
+
+# %% [markdown]
+# **Expected:** learning rates `1.00e-05, 5.00e-04, 1.00e-03, 5.00e-04, 0.00e+00` and a formula–library
+# difference of 0 (to rounding, ~1e-19); both fits have a residual near 1e-15, but the other exact fit
+# is longer (`||w||` 0.780 vs 0.598, i.e. √(0.598² + 0.5²): the added direction is orthogonal to the
+# minimum-norm solution); `1.21` GB.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

@@ -69,6 +69,24 @@ split = bootstrap.ensure_split()
 # regression, which won on validation PR-AUC in notebook 06).
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Endpoint** | an HTTP method plus a path the service answers | `POST /predict` |
+# | **FastAPI** | a Python web framework that builds request handling and docs from type hints | `@app.post("/predict")` |
+# | **Pydantic model** | a class that declares field types and limits and validates data against them | `CustomerFeatures` |
+# | **Contract** | request and response schemas plus the meaning of every status code | 422 = your request is wrong |
+# | **422 Unprocessable Content** | the body parsed but broke the schema | `tenure_days = -5` |
+# | **413 Content Too Large** | the request is bigger than the service accepts | a batch of 2,500 rows |
+# | **503 Service Unavailable** | the service cannot answer right now | no model loaded yet |
+# | **`extra="forbid"`** | reject fields the schema does not declare | a typo such as `sesions_4w` |
+# | **`response_model`** | the schema the response is filtered and validated against | internal fields never leak out |
+# | **App factory** | a function that builds a fresh, configured app | `create_app(settings)` |
+# | **`TestClient`** | calls the app in-process with real HTTP semantics, no server | `client.post("/predict", json=body)` |
+# | **OpenAPI** | the machine-readable description of the contract | `/openapi.json` |
+
+# %% [markdown]
 # ## 9.1 · What a prediction service is
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/serving.svg" alt="Serving: a request is validated against the schema, scored by the pipeline loaded from the registry, and returned with the model version" width="100%">
@@ -87,6 +105,20 @@ split = bootstrap.ensure_split()
 # | **Endpoint** | a method + path, e.g. `POST /predict` |
 # | **Contract** | the request and response schemas plus the meaning of each status code |
 # | **In-process testing** | calling the app as a Python object (`TestClient`): real HTTP semantics, no socket, no server |
+#
+# Each request takes one path through the service, and every rejection
+# happens before any model code runs:
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-request-lifecycle.svg" alt="A prediction request is validated (422 on failure), checked for batch size (413), checked for a loaded model (503), then scored and answered with 200 and the model version" width="100%">
+#
+# *What to notice:* the three exits are ordered from "your fault" to "our fault, try later"; only the last one is worth retrying (notebook 11).
+#
+# > 💡 **Intuition.** The schema is a bouncer with a guest list at the door:
+# > a wrong name never reaches the bar (the model), and the bouncer tells you
+# > exactly what was wrong with your ticket. *Where it breaks down:* the
+# > bouncer checks the form, not the truth: a well-formed request with
+# > plausible but wrong values (last month's data) walks straight in; that is
+# > monitoring's job (notebook 14).
 
 # %% [markdown]
 # ## 9.2 · A minimal FastAPI app, from scratch
@@ -197,6 +229,12 @@ print(r.status_code, r.text)
 # | Can the caller fix it? | yes: `loc` says which field | no information |
 # | Should a client retry? | **never** - it will fail identically | maybe, which multiplies load |
 # | Does it page the on-call engineer? | no (it is a 4xx) | often yes (5xx rate alerts) |
+#
+# > 💡 **Intuition.** A 422 is a returned letter stamped "street name
+# > missing"; a 500 is a letter that vanished in the sorting office. The first
+# > tells the sender what to fix; the second makes everyone investigate the
+# > post office. *Where it breaks down:* a 4xx can still be the service's
+# > fault, if the contract changed without telling the callers (section 9.9).
 #
 # A 500 for bad input is a bug in the service even when the input is wrong.
 
@@ -317,6 +355,12 @@ print("with response_model:   ", sorted(leaky_client.post("/predict", json=body)
 #
 # The fix is an **app factory**: a function that takes configuration and
 # returns a fresh app. Everything the app needs is created *inside* it.
+#
+# > 💡 **Intuition.** A module-level app is a restaurant that cooks its one
+# > dish the moment you walk past the building; a factory is a kitchen that
+# > cooks when you order, to your order. *Where it breaks down:* in
+# > production there is usually exactly one app per process, so the factory's
+# > benefit shows up mostly in tests and in start-up error handling.
 
 # %%
 def make_toy_app(threshold: float = 0.3) -> FastAPI:

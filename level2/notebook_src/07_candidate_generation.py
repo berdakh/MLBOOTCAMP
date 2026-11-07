@@ -81,6 +81,24 @@ print(f"{len(clicks):,} clicks | train {len(train_clicks):,} | valid {len(valid_
 # ignored at this stage.
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Candidate generation** | picking a few hundred items out of the catalogue, cheaply | retrieve 100 of 4,000 |
+# | **Recall@K** | share of a user's relevant items found among K candidates | 0.34 for ALS at K = 100 |
+# | **Coverage** | share of the catalogue that appears in anyone's candidates | 0.025 for global popularity |
+# | **Exposure bias** | clicks exist only for items the old system chose to show | next-week clicks vs true top-20 |
+# | **Co-visitation** | how often two items are clicked in the same session | "people who clicked X also clicked Y" |
+# | **Session** | a group of one user's events close in time | one user's clicks on one day |
+# | **Matrix factorisation** | approximating the user × item matrix by user vectors times item vectors | `rt.implicit_als` |
+# | **Confidence weight** | how much a cell of the matrix counts in implicit ALS | c_ui = 1 + α·r_ui |
+# | **ALS** | alternating least squares: fix items, solve users; fix users, solve items | a few seconds here |
+# | **Cold start** | a user or item with no interaction history | about 270 cold users, 170 new items |
+# | **Blending with quotas** | merging generators with a fixed number of slots each | 70 ALS + 30 category popularity |
+# | **Popularity bias** | a generator's tendency to return already-popular items | the mean log-popularity column |
+
+# %% [markdown]
 # ## 7.1 · Why two stages
 #
 # ```
@@ -103,6 +121,13 @@ print(f"{len(clicks):,} clicks | train {len(train_clicks):,} | valid {len(valid_
 #
 # Our catalogue has 4,000 items, so "retrieve 100" is a 40× cut. The ratios
 # and the lessons carry over; the latency problem is notebook 08's.
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-retrieval-cascade.svg" alt="Catalogue, retrieval, candidates, ranking, rules, shown: the two-stage cascade" width="100%">
+#
+# *What to notice:* each stage cuts the item count by one or more orders of magnitude, so each can afford a more expensive model per item. Retrieval is judged by recall@K because the ranker can only reorder what it is given.
+#
+# > 💡 **Intuition.** Hiring: a recruiter skims 10,000 CVs for keywords and keeps 100 (retrieval, judged by "did we keep the good people?"), then a panel interviews those 100 carefully and ranks them (ranking, judged by "is the best person on top?"). *Where it breaks down:* recruiters read every CV; real retrieval never scores every item exactly; it relies on precomputed lists and approximate search.
 
 # %% [markdown]
 # ## 7.2 · What counts as a hit
@@ -221,6 +246,8 @@ evaluate("category popularity", cands_catpop)
 # their neighbours merged. It is the generator behind most "related items"
 # carousels: cheap, fresh (recomputed hourly), and explainable.
 #
+# > 💡 **Intuition.** Co-visitation is reading supermarket receipts: if crisps and salsa appear on the same receipt again and again, show salsa to whoever just picked up crisps. *Where it breaks down:* milk is on almost every receipt, so it "co-occurs" with everything; that is why production tables down-weight very popular items.
+#
 # > **Exercise 1.** Write `covisitation(pairs_df, top_n)`. `pairs_df` has one
 # > row per click with columns `session_id` and `item_id`. Return a dict
 # > item → list of its `top_n` co-visited items: two items co-visit **once
@@ -286,6 +313,13 @@ evaluate("co-visitation", cands_covis)
 # non-zero only on the user's clicked items. Read `rt.implicit_als`: about
 # 25 lines of NumPy. (BPR, a pairwise alternative trained by SGD, is the
 # other classic; the two-tower model of notebook 08 generalises both.)
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-matrix-factorization.svg" alt="Matrix factorisation: the click matrix approximated by user vectors times item vectors" width="100%">
+#
+# *What to notice:* the blank cells in R are not zeros you know; they are mostly items the user never saw. Implicit ALS still fits them (with low confidence), which is what makes the problem a cheap weighted least squares.
+#
+# > 💡 **Intuition.** ALS is fitting a lock and key by alternating: hold the key still and file the lock to fit it, then hold the lock still and file the key. Each step is easy (a closed-form least-squares solve); together they converge. *Where it breaks down:* a lock and key converge to one fit; ALS converges to *a* good solution, and many rotations of the vectors fit equally well, so individual dimensions mean nothing on their own.
 
 # %%
 t0 = time.time()
@@ -444,6 +478,49 @@ print("saved:", sorted(p.name for p in (ART / "level2").glob("*") if p.suffix in
 
 # %% [markdown]
 # *Your answer:*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · Recall@K.** In words: of the items that were relevant for a user, what share did the K candidates contain?
+#
+# $$
+# \operatorname{Recall@}K(u) = \frac{\lvert \text{top}_K(u) \cap T_u \rvert}{\lvert T_u \rvert}
+# $$
+#
+# * $T_u$: user $u$'s relevant items (next-week clicks, or the true top-20); averaged over users with $T_u \neq \emptyset$. *Example:* 5 next-week clicks, 2 of them among the 100 candidates → 0.4. Order inside the K does not matter.
+#
+# **2 · Catalogue coverage.** In words: the share of the catalogue that appears in at least one user's list.
+#
+# $$
+# \operatorname{Coverage} = \frac{\left\lvert \bigcup_{u} \text{top}_K(u) \right\rvert}{\lvert \mathcal{I} \rvert}
+# $$
+#
+# * *Example:* global popularity gives every user the same 100 items: $100 / 4{,}000 = 0.025$.
+#
+# **3 · Co-visitation counts.** In words: count the sessions in which both items appear (once per session).
+#
+# $$
+# C(a, b) = \sum_{s} \mathbf{1}[a \in s]\, \mathbf{1}[b \in s], \quad a \neq b
+# $$
+#
+# * *Example:* sessions {1, 2, 3}, {2, 3}, {3, 4} → $C(2, 3) = 2$, $C(1, 3) = C(3, 4) = 1$. A session of length $L$ produces $L(L-1)/2$ pairs: cap $L$.
+#
+# **4 · Implicit ALS objective and its closed-form step.** In words: weighted least squares on every cell, with weight $c_{ui}$; with item vectors fixed, each user vector is a small linear solve.
+#
+# $$
+# \min_{X, Y} \sum_{u,i} c_{ui}\,(p_{ui} - x_u^\top y_i)^2 + \lambda\Big(\sum_u \lVert x_u \rVert^2 + \sum_i \lVert y_i \rVert^2\Big), \qquad x_u = (Y^\top C_u Y + \lambda I)^{-1} Y^\top C_u\, p_u
+# $$
+#
+# * $p_{ui} = 1$ if $u$ clicked $i$, else 0; $c_{ui} = 1 + \alpha r_{ui}$ with $r_{ui}$ the click count; $C_u$: the diagonal matrix of $u$'s confidences. *Example:* $\alpha = 20$: a cell with 2 clicks has confidence 41, an unclicked cell 1.
+#
+# **5 · BPR, the pairwise alternative.** In words: for a clicked item $i$ and a sampled unclicked item $j$, make the user score $i$ above $j$.
+#
+# $$
+# L_\text{BPR} = -\sum_{(u, i, j)} \log \sigma\!\left(x_u^\top y_i - x_u^\top y_j\right) + \lambda \lVert \Theta \rVert^2
+# $$
+#
+# * $\sigma$: the logistic function; $\Theta$: all parameters. *Example:* scores 2.0 (clicked) and 0.5 (sampled): $-\log \sigma(1.5) = 0.20$; reversed (0.5 vs 2.0): $-\log \sigma(-1.5) = 1.70$. It is RankNet (notebook 06) applied to (clicked, unclicked) pairs.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

@@ -62,6 +62,23 @@ split = bootstrap.ensure_split()
 print(f"train rows: {len(split.train):,}")
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **ML system design interview** | a 35-45 minute spoken design of an ML product, end to end | "churn prediction for 10M accounts" |
+# | **Offline / online metric** | measured on historical data / measured on live users, usually by experiment | PR-AUC / retained revenue |
+# | **Guardrail metric** | something that must not get worse while you optimise the main metric | latency, complaint rate |
+# | **QPS** | queries (requests) per second the system must handle | ≈ 520 at peak for an in-app badge |
+# | **Peak factor** | how much busier the busiest hour is than the average | ×3 |
+# | **Replica** | one copy of the service behind a load balancer | 18 replicas at 50 QPS each, 60% utilised |
+# | **Latency budget** | an end-to-end time target split among the steps of a request | 200 ms: feature lookup, model, network |
+# | **Batch vs online scoring** | precompute scores on a schedule vs compute per request | daily list vs live badge |
+# | **Feature store** | a shared system that serves the same features for training and serving | point-in-time joins offline, low-latency reads online |
+# | **Feedback loop** | the model's actions change the data it is later trained on | saved customers stop looking like churners |
+# | **STAR** | Situation, Task, Action, Result: a structure for behavioural answers | most of the time on Action |
+
+# %% [markdown]
 # ## 17.1 · The framework
 #
 # Use the same nine headings every time, in this order. Interviewers forgive a
@@ -84,6 +101,16 @@ print(f"train rows: {len(split.train):,}")
 # accounts, 2% churn a month") and **name the trade-off** every time you choose
 # ("batch is cheaper and simpler; we lose freshness, which matters for X but not Y").
 #
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-design-framework.svg" alt="Nine steps of an ML system design answer: clarify, metrics, data, features, model, serving, evaluation, monitoring, risks" width="100%">
+#
+# *What to notice:* the model is step 5 of 9; more than half the answer is about the problem, the data and what happens after deployment.
+#
+# > 💡 **Intuition.** The framework is an architect's checklist for a house:
+# > who lives there and what they need comes before the choice of bricks.
+# > *Where it breaks down:* a real interviewer will interrupt and steer; the
+# > order is a default, not a script. Follow them, then come back to the
+# > heading you skipped.
+#
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/serving.svg" alt="Serving: batch scoring and online prediction paths sharing one model bundle" width="100%">
 
 # %% [markdown]
@@ -91,6 +118,12 @@ print(f"train rows: {len(split.train):,}")
 #
 # Capacity arithmetic should take you 30 seconds and be done out loud. These
 # helpers exist so you can check your mental arithmetic, not replace it.
+#
+# > 💡 **Intuition.** A day has 86,400 seconds; call it $10^5$. Then "requests
+# > per day ÷ $10^5$" is the average QPS in your head, and a peak factor of 2-4
+# > covers the busy hour. *Where it breaks down:* traffic can be spikier than
+# > any daily average suggests (a push notification sends everyone at once);
+# > ask about bursts before sizing for averages.
 
 # %%
 import math
@@ -507,6 +540,10 @@ progress
 # often under-sell themselves by describing the field instead of their
 # decisions. Use **STAR**, with most of the time on **A**:
 #
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-star.svg" alt="STAR answer structure as a bar: Situation 10%, Task 10%, Action 60%, Result 20%" width="100%">
+#
+# *What to notice:* the context (S and T) together get a fifth of the time; a research story that spends two minutes on the field before reaching "I decided" has run out of time.
+#
 # | | What | Share of the answer |
 # |---|---|---|
 # | **S**ituation | the context in one or two sentences | 10% |
@@ -539,6 +576,42 @@ progress
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **Capacity.**
+#
+# $$
+# \text{QPS}_{\text{avg}} = \frac{\text{DAU} \times r}{86{,}400},
+# \qquad
+# \text{QPS}_{\text{peak}} = f \cdot \text{QPS}_{\text{avg}},
+# \qquad
+# \text{replicas} = \left\lceil \frac{\text{QPS}_{\text{peak}}}{u \cdot \text{QPS}_{\text{replica}}} \right\rceil
+# $$
+#
+# *Symbols:* DAU = daily active users, $r$ = requests per user per day, $f$ =
+# peak factor, $u$ = target utilisation (0.6), $\text{QPS}_{\text{replica}}$ =
+# measured throughput of one replica. *Example:* 3M DAU × 5 requests:
+# $1.5 \times 10^7 / 86{,}400 = 174$ QPS average, $\times 3 = 521$ at peak,
+# $\lceil 521 / (0.6 \times 50) \rceil = 18$ replicas.
+#
+# **Little's law** for concurrency: $L = \lambda W$. *Example:* 521 QPS at
+# 100 ms each keeps about 52 requests in flight, so the service must allow at
+# least that many concurrent requests across replicas.
+#
+# **Latency budget:**
+#
+# $$
+# \text{headroom} = T_{\text{total}} - \sum_{s} t_s
+# $$
+#
+# *Example:* 200 ms total, 95 ms of components → 105 ms of headroom. Budget with
+# p95s, and remember p95s do not add exactly: the slowest dependency's tail
+# dominates.
+#
+# **Batch-scoring time:** $t = N / \text{rows per second}$. *Example:* 10M
+# accounts at 50,000 rows/s is 200 s: a nightly batch job, not an online service.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

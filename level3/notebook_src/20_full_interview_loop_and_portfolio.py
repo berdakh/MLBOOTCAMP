@@ -97,7 +97,26 @@ print(f"{len(ds.read_jsonl(PROGRESS))} round(s) already logged in {PROGRESS.name
 # **Expected:** `0 round(s) already logged in progress.jsonl` on a fresh
 # runtime. With `USE_DRIVE = True`, your history survives between sessions;
 # that matters here, because the log is meant to grow over weeks.
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Loop | The full set of interview rounds for one candidate | phone screen + six onsite rounds |
+# | Phone screen | A first, shorter round that gates the onsite | 45 minutes of coding |
+# | Signal | One quality interviewers score, which recurs across rounds | `verification`, `communication` |
+# | Rubric anchor | A short description of what a score or level sounds like | "designs the verification strategy" (staff) |
+# | Mid / senior / staff | Generic levels of scope and independence, not any company's ladder | 20.3 |
+# | STAR | Situation, Task, Action, Result: a structure for behavioural stories | 4–5 stories in the behavioural round |
+# | Weighted overall | A weighted mean of per-round means | 2.77 for the EXAMPLE attempt |
+# | Weakest signal | The signal with the lowest mean across the rounds that score it | `verification` (2.0) |
+# | JSON Lines log | A text file with one JSON record per line, appended and never rewritten | `progress.jsonl` |
+# | Project brief | A one-page summary of a project with every number tied to its split | `brief_*.md` |
+# | Split | Which data a number was measured on (held-out users, last 2 weeks, 5 seeds…) | "name the split" |
+# | Readiness | Whether you can do a skill unaided, from a blank file, in interview time | `ready: 0/20` on a fresh run |
+
+# %% [markdown]
 # ## 20.1 · The loop
 #
 # | Round | Minutes | Format | Course material |
@@ -114,6 +133,10 @@ print(f"{len(ds.read_jsonl(PROGRESS))} round(s) already logged in {PROGRESS.name
 # loops swap one coding round for a second design round at senior and staff
 # levels; some merge depth into the design round; some add a "project deep
 # dive" or a presentation. Practise the components; the arrangement varies.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-interview-loop.svg" alt="The interview loop: phone screen, two coding rounds, ML coding, ML system design, ML depth, behavioural, then a debrief, each with the signals it mainly scores" width="100%">
+#
+# *What to notice:* the same signal names recur across rounds, so the debrief can see a *pattern* (e.g. weak verification in every coding round), which matters more than any one score.
 #
 # ## 20.2 · Interviewer scripts and the draw
 #
@@ -395,6 +418,12 @@ pd.DataFrame(rows).set_index("attempt")
 # **verification** (2.0 in all four coding rounds), so next week's plan
 # writes itself: test before you are asked, in every coding round.
 #
+# > 💡 **Intuition.** A loop is scored like a decathlon judged event by event, not like a single
+# > stopwatch: the committee reads each round's write-up, then looks across rounds for a recurring
+# > weakness. The weighted overall is your summary of that, not the decision rule. *Where the analogy
+# > breaks down:* in a decathlon points add up; in hiring one very weak round (or a "no hire" on a
+# > core signal) can outweigh a high average.
+#
 # ## 20.6 · Packaging the portfolio
 #
 # A hiring manager spends minutes, not hours, on a portfolio. Each project
@@ -457,6 +486,12 @@ print(README_TEMPLATE[:400], "...")
 # and turns them into structured project dicts. It quotes numbers only from
 # files it finds; anything else stays **TBD**, and every number it finds is
 # marked "name the split" until you do.
+#
+# > 💡 **Intuition.** A number without its split is a nutrition label without the serving size:
+# > "94% accuracy" means nothing until you know whether it was per trial on seen subjects or per new
+# > user on a held-out month. *Where the analogy breaks down:* a serving size is a convention, while a
+# > split encodes the *claim* (new users? new time?); choosing the wrong one changes the number and
+# > what it proves.
 
 # %%
 def numeric_leaves(obj, prefix="", limit=6):
@@ -643,6 +678,55 @@ _ = (PORTFOLIO / "readiness.json").write_text(json.dumps(
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · Scoring a loop** (Exercise 1).
+#
+# $$
+# m_r = \frac{1}{\lvert S_r \rvert} \sum_{s \in S_r} x_{r,s}, \qquad \text{overall} = \frac{\sum_r w_r\, m_r}{\sum_r w_r}, \qquad \bar{x}_s = \frac{1}{\lvert R_s \rvert} \sum_{r \in R_s} x_{r,s}
+# $$
+#
+# *Symbols:* $x_{r,s} \in \{1, 2, 3, 4\}$ the score of signal $s$ in round $r$, $S_r$ the signals scored in round
+# $r$, $R_s$ the rounds that score signal $s$, $w_r$ round weights. *Example (the EXAMPLE attempt):*
+# $(0.5 \cdot 2.75 + 2.5 + 2.25 + 2.75 + 1.5 \cdot 2.8 + 3.33 + 3.0) / 7 = 19.41 / 7 = 2.77$.
+#
+# **2 · "What would it cost to serve at 1,000 QPS?"** (Checkpoint 6), with the fleet formula from notebook 18.
+#
+# $$
+# n = \max\!\left(2, \left\lceil \frac{\text{QPS}_{\text{peak}}}{\text{QPS}_{\text{replica}}\,(1 - h)} \right\rceil\right), \qquad \text{cost}_{1k} = \frac{n \cdot p \cdot 730}{\overline{\text{QPS}} \cdot 3600 \cdot 730 / 1000}
+# $$
+#
+# *Example (assumptions, say them aloud):* peak 1,000 QPS, 100 QPS per replica measured, $h = 0.3$:
+# $n = \lceil 14.3 \rceil = 15$; at \$0.50/hour that is \$5,475 a month; at an average of 500 QPS
+# (1.31 billion requests a month) it is about \$0.0042 per 1,000 requests.
+#
+# **3 · Readiness.** $\text{readiness} = \#\{\text{skills done unaided}\} / \#\{\text{skills}\}$; track it weekly, not once.
+#
+# The cell below recomputes 1 and 2 by hand and with `scaleml.design`.
+
+# %%
+# Key equations, recomputed (instant). The EXAMPLE scores are copied from 20.5.
+import math
+
+example_scores = {"phone_coding": [3, 3, 2, 3], "coding_1": [3, 2, 2, 3], "coding_2": [2, 3, 2, 2],
+                  "ml_coding": [3, 3, 2, 3], "ml_design": [3, 3, 3, 3, 2], "ml_depth": [4, 3, 3],
+                  "behavioural": [3, 3, 3]}
+means = {r: sum(v) / len(v) for r, v in example_scores.items()}
+overall = sum(WEIGHTS[r] * m for r, m in means.items()) / sum(WEIGHTS[r] for r in means)
+print("round means:", {r: round(m, 2) for r, m in means.items()}, f"| weighted overall {overall:.2f}")
+
+n_rep = max(2, math.ceil(1_000 / (100 * (1 - 0.3))))
+monthly = n_rep * 0.50 * 730
+print(f"replicas: by hand {n_rep} | ds.replicas_needed {ds.replicas_needed(1_000, 100, target_utilisation=0.7)}")
+print(f"monthly {monthly:,.0f} | per 1k requests: by hand {monthly / (500 * 3600 * 730) * 1000:.4f} | "
+      f"ds.cost_per_1k_requests {ds.cost_per_1k_requests(ds.monthly_fleet_cost(n_rep, 0.50), 500):.4f}")
+
+# %% [markdown]
+# **Expected:** round means 2.75, 2.5, 2.25, 2.75, 2.8, 3.33 and 3.0, a weighted overall of `2.77` (the
+# value Exercise 1's reference solution gives in 20.5); `15` replicas both ways; a monthly cost of
+# 5,475 and `0.0042` per 1,000 requests both ways.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

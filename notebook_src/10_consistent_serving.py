@@ -68,6 +68,22 @@ print(f"train {len(train):,} rows | valid {len(valid):,} rows")
 # **Expected:** `CURRENT=v1`, then `train 25,278 rows | valid 6,956 rows`.
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Training/serving skew** | the served model computes features differently from the one that was evaluated | a forgotten `log1p` in the service |
+# | **Re-implementation** | writing the same transform a second time, from a description | the backend's version of the notebook function |
+# | **Fitted statistics** | numbers learned from training data that the transform depends on | medians, means, standard deviations |
+# | **Column order** | the position of each feature in the array the model receives | swapping two columns silently swaps two coefficients |
+# | **Decision flip** | a row whose call/no-call decision changes between two implementations | several hundred flips out of 6,956 |
+# | **Parity test** | scores the same rows offline and through the running API and requires them to match | max difference ≈ 5e-7 |
+# | **Tolerance** | the largest difference a test accepts as "equal" | 1e-6, because the API rounds to 6 decimals |
+# | **Unseen category** | a categorical value not present in training | a new region; one-hot gives all zeros |
+# | **Request id** | an identifier carried through logs so one call can be traced | the `x-request-id` header |
+# | **Model version header** | the response names which model answered | `v1` |
+
+# %% [markdown]
 # ## 10.1 · Skew, made visible
 #
 # Imagine the model was trained *without* a pipeline: a data scientist wrote
@@ -162,6 +178,16 @@ print("offline vs served:", skew(p_offline, p_served))
 # %% [markdown]
 # **Expected:** a maximum difference around 0.7 and several hundred flipped
 # decisions out of 6,956, with no error raised anywhere.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-serving-skew.svg" alt="Wrong: preprocessing written once in a notebook and again in the service, with one step forgotten, gives different scores from the same coefficients. Right: one fitted pipeline is saved and served" width="100%">
+#
+# *What to notice:* the coefficients are identical in both rows of the top half; the damage is done entirely before the model sees the numbers.
+#
+# > 💡 **Intuition.** Skew is two translators working from the same novel
+# > without comparing notes: each chapter reads fine, and the two books tell
+# > different stories. *Where it breaks down:* translators make random
+# > mistakes; skew bugs are systematic (a whole column scaled wrongly), which
+# > is why a single parity test on real rows catches them.
 #
 # Which bug did how much damage? Apply each one alone to the correct transform:
 
@@ -282,6 +308,12 @@ print(f"ids in order        : {[p['customer_id'] for p in resp['predictions']] =
 # %% [markdown]
 # **Expected:** a maximum difference of about **5e-7** (not 1e-15); zero
 # after rounding; zero decision flips; ids in order.
+#
+# > 💡 **Intuition.** A parity test is weighing the same parcel on the
+# > warehouse scale and the shop scale. They need not agree to the microgram
+# > (the API rounds), but a gap bigger than the rounding means one scale is
+# > broken. *Where it breaks down:* it only tests the rows you send; pick rows
+# > with missing values and rare categories, not just typical ones.
 #
 # Why not exactly zero? Read `_score` in `api.py`:
 # `churn_probability=round(float(s), 6)`. The API **rounds to six decimals**
@@ -540,6 +572,37 @@ grade.ex2(fixed_serve_preprocess)
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **How a skewed feature moves a score.** For logistic regression the log-odds
+# are $\eta = \beta_0 + \sum_j \beta_j z_j$. If serving computes feature $j$ as
+# $z_j + \delta_j$ instead of $z_j$:
+#
+# $$
+# \Delta \eta = \beta_j\, \delta_j,
+# \qquad
+# p_{\text{served}} = \sigma\big(\eta + \beta_j \delta_j\big)
+# $$
+#
+# *In words:* the error in the feature, times its coefficient, is added
+# straight to the log-odds. *Symbols:* $\beta_j$ = coefficient,
+# $\delta_j$ = feature error after scaling, $\sigma$ = sigmoid. *Example:*
+# forgetting `log1p` on `sessions_4w` turns a standardised value of 0.5 into,
+# say, 4.0 ($\delta = 3.5$); with $\beta = -0.6$ the log-odds fall by 2.1, and
+# a 0.20 probability becomes $\sigma(\ln(0.25) - 2.1) = 0.03$: a call
+# silently dropped.
+#
+# **Parity criterion.** For the same rows $i$:
+#
+# $$
+# \max_i \left\lvert p^{\text{offline}}_i - p^{\text{API}}_i \right\rvert \le \varepsilon,
+# \qquad \varepsilon = 10^{-6}
+# $$
+#
+# *In words:* the largest disagreement must be below what rounding to six
+# decimals can explain ($0.5 \times 10^{-6}$), with a little slack.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

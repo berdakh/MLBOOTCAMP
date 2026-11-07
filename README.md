@@ -160,6 +160,7 @@ A repository template for each capstone is in [capstones/template/](capstones/te
 | [Troubleshooting](docs/guides/troubleshooting.md) | When it breaks |
 | [Interview question bank](docs/guides/interview-questions.md) | By topic, with what a strong answer contains |
 | [Cheat sheet](docs/guides/cheatsheet.md) · [Glossary](docs/guides/glossary.md) | Reference |
+| [Equation sheet](docs/guides/equations.md) | Every key equation in Levels 1–3, by topic, in words, with where it is taught |
 | [Verification](docs/guides/verification.md) | Exactly what was executed, where, and what was not |
 | [Solutions](solutions/README.md) | Exercise and checkpoint answers, kept separate from the notebooks |
 

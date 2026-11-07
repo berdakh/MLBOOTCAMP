@@ -78,6 +78,23 @@ print(f"{len(imps):,} impressions (days 0-48) | fitted eta {eta_hat:.3f} | {time
 # (notebook 05 explains both). `true_p` is used only to grade rankings.
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Group (query)** | the set of items ranked together; scores are compared only inside it | one request of 10 items |
+# | **Pointwise loss** | scores each item on its own, like a classifier | log loss on `clicked` |
+# | **Pairwise loss** | penalises each mis-ordered pair inside a group | RankNet |
+# | **Listwise loss** | optimises a list metric (smoothly) | LambdaRank / LambdaMART |
+# | **RankNet** | logistic loss on the score difference of a pair | log(1 + e^−(s_i − s_j)) |
+# | **LambdaMART** | RankNet gradients weighted by |ΔNDCG|, fitted with boosted trees | `LGBMRanker(objective="lambdarank")` |
+# | **NDCG@k** | discounted gain of the top k, divided by the best possible | 0.81 for the logged order (truth) |
+# | **MRR** | mean of 1 / rank of the first relevant item | 0.73 for the logged order (clicks) |
+# | **Pairwise accuracy** | share of differently-labelled pairs ordered correctly | 0.53 logged vs 0.85 learned |
+# | **Group sizes** | how LightGBM learns which rows form a group: counts of contiguous rows | `[10, 10, 10, …]` |
+# | **Gain importance** | total loss reduction from splits on a feature | `u_cat_clicks` leads LambdaMART |
+
+# %% [markdown]
 # ## 6.1 · The problem: rank within a request
 #
 # In search, the group is a **query**: rank documents for "red shoes". In a
@@ -86,6 +103,8 @@ print(f"{len(imps):,} impressions (days 0-48) | fitted eta {eta_hat:.3f} | {time
 # s(u, i) such that, *within each group*, more relevant items score higher.
 # Scores are never compared across groups, so a model may be badly
 # calibrated and still rank perfectly.
+#
+# > 💡 **Intuition.** A ranker is a judge at a swimming gala who only places swimmers *within their heat*. Whether heat 3 was faster than heat 7 does not matter, so a score of 0.9 in one request and 0.2 in another can both mean "first place". *Where it breaks down:* some systems do compare across groups (an ads auction mixes candidates from several models, a threshold decides whether to show anything); then calibration matters again.
 #
 # Each logged request here has exactly 10 shown items and binary click
 # labels. Many requests have no click at all:
@@ -187,6 +206,12 @@ print(f"features of day {cut} unchanged when later days are removed: {same}")
 #   so the model optimises (a smooth stand-in for) NDCG. LambdaMART is
 #   LambdaRank with gradient-boosted trees, the industry workhorse for
 #   feature-based ranking (LightGBM `objective="lambdarank"`).
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-ltr-objectives.svg" alt="Pointwise versus pairwise (RankNet) versus listwise (LambdaMART), and why LambdaRank weights pairs by the change in NDCG" width="100%">
+#
+# *What to notice:* the three columns differ in *what is compared* (one item, a pair, a pair weighted by the list metric). The numbers under the rule are the whole idea of LambdaRank: the same mistake costs 30× more at the top.
+#
+# > 💡 **Intuition.** Grading a ranked shortlist of job candidates: swapping your 1st and 2nd choice changes who gets the offer; swapping 9th and 10th changes nothing anyone acts on. RankNet charges both swaps the same; LambdaRank charges each by how much the *metric* would change. *Where it breaks down:* NDCG's discount is a modelling choice, not a law; if users scroll deep (a long product grid), the bottom matters more than the metric says.
 #
 # The quantity RankNet optimises is easy to state and is a good diagnostic.
 #
@@ -466,6 +491,76 @@ print("saved:", sorted(p.name for p in (ART / "level2").glob("ltr_*")))
 
 # %% [markdown]
 # *Your answer:*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · DCG and NDCG.** In words: add up each item's gain, discounted by the log of its rank, and divide by the best possible order's value.
+#
+# $$
+# \operatorname{DCG@}k = \sum_{i=1}^{k} \frac{2^{\,\text{rel}_i} - 1}{\log_2(i + 1)}, \qquad \operatorname{NDCG@}k = \frac{\operatorname{DCG@}k}{\operatorname{IDCG@}k}
+# $$
+#
+# * $\text{rel}_i$: relevance of the item at rank $i$ (1 = top); IDCG: the DCG of the ideal order. *Example:* clicks at ranks 2 and 5: $\text{DCG} = 1/\log_2 3 + 1/\log_2 6 = 0.631 + 0.387 = 1.018$; ideal (ranks 1, 2): $1 + 0.631 = 1.631$; NDCG = 0.624.
+#
+# **2 · MRR.** In words: the average, over requests, of one over the rank of the first relevant item.
+#
+# $$
+# \operatorname{MRR} = \frac{1}{\lvert Q \rvert} \sum_{q \in Q} \frac{1}{\text{rank}_q}
+# $$
+#
+# * *Example:* first clicks at ranks 1, 2 and 4 in three requests: $(1 + 0.5 + 0.25) / 3 = 0.583$.
+#
+# **3 · RankNet's pairwise loss and its gradient.** In words: a logistic loss on the score difference of a pair where $i$ should beat $j$.
+#
+# $$
+# L_{ij} = \log\!\left(1 + e^{-\sigma (s_i - s_j)}\right), \qquad \lambda_{ij} = \frac{\partial L_{ij}}{\partial s_i} = \frac{-\sigma}{1 + e^{\sigma (s_i - s_j)}}
+# $$
+#
+# * $s_i, s_j$: model scores; $\sigma$: a scale (1 here). *Example:* $s_i = 0.2$, $s_j = 0.5$ (wrong order): $L = \log(1 + e^{0.3}) = 0.854$, $\lambda = -0.574$: push $s_i$ up.
+#
+# **4 · LambdaRank.** In words: use RankNet's gradient, scaled by how much NDCG would change if $i$ and $j$ swapped places.
+#
+# $$
+# \lambda^{\text{LR}}_{ij} = \lambda_{ij} \cdot \left\lvert \Delta \operatorname{NDCG}_{ij} \right\rvert
+# $$
+#
+# * *Example:* one relevant item at rank 2 vs rank 1: $\lvert\Delta\rvert = 1 - 1/\log_2 3 = 0.369$; at rank 10 vs 9: $1/\log_2 10 - 1/\log_2 11 = 0.012$. LambdaMART fits boosted trees to these $\lambda$ "gradients"; there is no explicit loss whose gradient they are, and it works anyway.
+#
+# The cell below checks 1, 3 and 4 numerically.
+
+# %%
+# Check NDCG, RankNet's gradient and the LambdaRank weight numerically
+from sklearn.metrics import ndcg_score
+
+from shoprank.metrics import ndcg_at_k
+
+
+def dcg(rels, k=10):
+    rels = np.asarray(rels, dtype=float)[:k]
+    return ((2 ** rels - 1) / np.log2(np.arange(2, rels.size + 2))).sum()
+
+
+labels = np.array([0, 1, 0, 0, 1, 0, 0, 0, 0, 0])  # clicks, in the model's rank order
+scores = np.linspace(1, 0, 10)                      # scores that produce that order
+print(f"1. NDCG@10 by hand {dcg(labels) / dcg(np.sort(labels)[::-1]):.4f} | "
+      f"sklearn {ndcg_score([labels], [scores], k=10):.4f} | shoprank {ndcg_at_k(labels, 10):.4f}")
+
+s_i, s_j, eps = 0.2, 0.5, 1e-6
+
+
+def ranknet(si, sj):
+    return np.log1p(np.exp(-(si - sj)))
+
+
+lam = -1 / (1 + np.exp(s_i - s_j))
+finite_diff = (ranknet(s_i + eps, s_j) - ranknet(s_i - eps, s_j)) / (2 * eps)
+print(f"3. RankNet loss {ranknet(s_i, s_j):.4f} | dL/ds_i {lam:.4f} vs finite difference {finite_diff:.4f}")
+swap = lambda a, b: abs(1 / np.log2(a + 1) - 1 / np.log2(b + 1))  # noqa: E731
+print(f"4. |dNDCG| rank 2 vs 1: {swap(2, 1):.3f} | rank 10 vs 9: {swap(10, 9):.3f}")
+
+# %% [markdown]
+# **Expected:** NDCG@10 = 0.6241 three times (sklearn uses linear gain, identical for 0/1 labels); RankNet loss 0.8544 and a gradient of −0.5744 both ways; |ΔNDCG| 0.369 vs 0.012.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

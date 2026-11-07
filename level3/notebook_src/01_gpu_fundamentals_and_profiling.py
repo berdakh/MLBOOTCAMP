@@ -93,6 +93,24 @@ IS_CUDA = DEVICE.type == "cuda"
 print(f"torch {torch.__version__} | device {DEVICE} | CPU threads {torch.get_num_threads()}")
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Kernel | one function the GPU runs on thousands of threads; every PyTorch op launches at least one | `a @ b` launches one matrix-multiply (GEMM) kernel |
+# | Asynchronous launch | the CPU puts a kernel in a queue and carries on without waiting for the result | the "without sync" time in 1.2 is only the launch |
+# | Synchronize | make the CPU wait until every queued GPU kernel has finished | `torch.cuda.synchronize()`, inside `timer` and `prof.benchmark` |
+# | FLOP/s | floating-point operations (multiplies, adds) per second: the speed of arithmetic | a T4 peaks near 8 TFLOP/s in fp32, 65 in fp16 |
+# | Memory bandwidth | how many bytes per second can move between GPU memory and its cores | ~320 GB/s on a T4 |
+# | Arithmetic intensity | FLOPs done per byte moved to or from memory | `x + y`: 1/12; a 1024 × 1024 matmul: ~170 |
+# | Memory-bound / compute-bound | limited by moving bytes / limited by doing arithmetic | elementwise add / large matmul |
+# | Roofline | the plot of attainable FLOP/s against arithmetic intensity | ridge point ≈ 25 FLOP/byte for a T4 in fp32 |
+# | Tensor Core | a unit that multiplies small fp16 matrices many times faster than ordinary cores | why fp16 autocast speeds up a T4 (1.5) |
+# | Profiler | a tool that records which operations took the time | the `torch.profiler` table in 1.6 |
+# | Pinned memory | page-locked host RAM the GPU can copy from directly, in the background | `pin_memory=True` + `non_blocking=True` |
+# | Worker / prefetch | a background process that prepares the next batches while the model trains | `num_workers=2` in 1.7 |
+
+# %% [markdown]
 # ## 1.1 · How a GPU executes your code
 #
 # A CPU has a few (2 on Colab, 8–64 on a workstation) powerful cores, each
@@ -186,6 +204,17 @@ print(f"{n}x{n} matmul on {DEVICE}: without sync {naive * 1e3:.3f} ms | with syn
 # and the **median** (robust to a background hiccup).
 
 # %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-async-launch.svg" alt="CPU launches kernels A, B, C instantly while the GPU runs them later; a timer read without synchronize measures only the launches" width="100%">
+#
+# *What to notice:* the red bracket ends long before the GPU has done any of the work; only a `synchronize` before the second clock read makes the green bracket cover the kernels.
+#
+# > 💡 **Intuition.** Launching a kernel is like a waiter handing an order to the kitchen: the
+# > waiter (the CPU) is back at your table in seconds, the food (the result) arrives later.
+# > Timing the waiter tells you nothing about the cooking; `synchronize` is waiting at the pass
+# > until every order is out. *Where it breaks down:* a CUDA stream cooks strictly in order, one
+# > kernel after another, which a real kitchen does not.
+
+# %% [markdown]
 # > **Exercise 1.** Write `time_fn(fn, device, warmup, iters)`: call `fn()` `warmup` times
 # > without timing, then time `iters` calls one by one (synchronising `device` before and after
 # > each call; `scaleml.device.sync` does the right thing on any device), and return the
@@ -257,6 +286,17 @@ for r in mm_rows:
 #   write 4) → intensity 1/12. Hopelessly memory-bound on any hardware.
 # * `n × n` matmul in fp32: 2n³ FLOPs, at least 3n² × 4 bytes → n/6. Compute-bound
 #   once n/6 exceeds the ridge point (n ≳ 150 on a T4 in fp32).
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-roofline.svg" alt="Log-log roofline for a T4: a sloped memory roof up to the ridge at 25 FLOP per byte, then a flat compute roof at 8.1 TFLOP/s; x + y and LayerNorm sit on the slope, a large matmul on the flat part" width="100%">
+#
+# *What to notice:* an operation's position on the x-axis is fixed by its maths, before you run anything; everything left of the dashed ridge line cannot go faster than bandwidth allows, however many FLOPs the chip has.
+#
+# > 💡 **Intuition.** A factory with a fast assembly line (compute) fed by a narrow conveyor belt
+# > (memory). If each part needs one screw (`x + y`), the line waits for the belt; if each part
+# > needs hundreds of operations (a big matmul), the belt keeps up and the line is the limit.
+# > *Where it breaks down:* caches let a kernel reuse bytes for free, so the intensity a kernel
+# > achieves depends on how it is written, not only on the maths (that is what fusion exploits).
 
 # %% [markdown]
 # > **Exercise 3.** Write `arithmetic_intensity(flops, bytes)`: FLOPs per byte, as a float.
@@ -448,6 +488,16 @@ print(PROFILE_TABLE)
 # Below, `SlowDataset.__getitem__` sleeps 3 ms per example (standing in for JPEG
 # decoding or tokenisation) and we simulate a 50 ms model step per batch.
 
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-dataloader-overlap.svg" alt="Two timelines: with num_workers=0 the loop alternates loading and training and finishes 4 steps; with two prefetching workers it finishes 6 steps in the same time" width="100%">
+#
+# *What to notice:* nothing about the model changed; the second timeline wins only because loading happens *while* the GPU trains, so the train loop never waits.
+#
+# > 💡 **Intuition.** With `num_workers=0` the chef chops the vegetables, then cooks, then chops
+# > again. Workers are kitchen assistants chopping the next order while the chef cooks. Adding
+# > assistants helps until chopping keeps pace with cooking, and not after. *Where it breaks
+# > down:* each assistant needs its own copy of the dataset object and time to start up.
+
 # %%
 from torch.utils.data import DataLoader
 
@@ -490,6 +540,80 @@ for workers in (0, 1, 2):
 # On a T4 the same experiment matters more: a GPU step for a small model can
 # be a few milliseconds, so a loader that needs 100 ms per batch leaves the GPU idle
 # over 95% of the time (an arithmetic consequence of the numbers above, not a measurement).
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# A revision sheet for this notebook. Each formula: the maths, what it says in words, and a
+# tiny worked example.
+#
+# **1. FLOPs of a matrix multiply.**
+#
+# $$
+# \text{FLOPs}\big(A_{m \times k}\,B_{k \times n}\big) = 2\,m\,n\,k
+# $$
+#
+# In words: each of the $m n$ outputs is a dot product of length $k$, i.e. $k$ multiplies and
+# $k$ adds. Symbols: $m, k$ = rows and columns of $A$; $n$ = columns of $B$.
+# Example: a 1024 × 1024 square matmul is $2 \cdot 1024^3 \approx 2.15 \times 10^9$ FLOPs; at
+# 13 ms that is $2.15\times10^9 / 0.013 \approx 0.17$ TFLOP/s, the CPU number in 1.3.
+#
+# **2. Arithmetic intensity.**
+#
+# $$
+# I = \frac{\text{FLOPs performed}}{\text{bytes moved to and from memory}}
+# $$
+#
+# In words: how much arithmetic you get for every byte you read or write.
+# Example: fp32 `x + y` does 1 FLOP per element and moves 4 + 4 + 4 = 12 bytes, so $I = 1/12$;
+# an $n \times n$ fp32 matmul does $2n^3$ FLOPs on at least $3 \cdot 4 n^2$ bytes, so $I = n/6$
+# (≈ 171 for $n = 1024$).
+#
+# **3. The roofline.**
+#
+# $$
+# P_{\text{attainable}} = \min\big(P_{\text{peak}},\; I \cdot B_{\text{mem}}\big), \qquad I^{\star} = \frac{P_{\text{peak}}}{B_{\text{mem}}}
+# $$
+#
+# In words: you cannot beat the chip's peak, and you cannot compute faster than memory can feed
+# you. Symbols: $P_{\text{peak}}$ = peak FLOP/s, $B_{\text{mem}}$ = memory bandwidth (bytes/s),
+# $I^{\star}$ = ridge point. Example (T4, fp32): $I^{\star} = 8.1\times10^{12} / 320\times10^{9} \approx 25$
+# FLOP/byte; `x + y` can reach at most $320\times10^9 / 12 \approx 27$ GFLOP/s, 0.3% of peak.
+#
+# **4. Epoch time of an input pipeline.**
+#
+# $$
+# T_{\text{epoch}} \approx n_{\text{batches}} \big(t_{\text{load}} + t_{\text{step}}\big) \;\;(\text{no workers}), \qquad
+# T_{\text{epoch}} \approx n_{\text{batches}} \max\!\Big(\frac{t_{\text{load}}}{k},\; t_{\text{step}}\Big) \;\;(k \text{ workers})
+# $$
+#
+# In words: without workers, loading and compute add up; with $k$ workers they overlap and the
+# slower of the two sets the pace. Example (1.7): $12 \times (96 + 50)$ ms ≈ 1.75 s with no
+# workers; with 2 workers $12 \times \max(48, 50)$ ms = 0.6 s, plus worker start-up (we measured
+# 0.8 s).
+#
+# The next cell checks 1 and 3 numerically: PyTorch's FLOP counter against $2mnk$, and the
+# roofline for the three operations in the figure above.
+
+# %%
+from torch.utils.flop_counter import FlopCounterMode
+
+m_, k_, n_ = 64, 48, 32
+with FlopCounterMode(display=False) as counter:
+    torch.randn(m_, k_) @ torch.randn(k_, n_)
+print(f"FLOP counter: {counter.get_total_flops():,} | formula 2mnk: {2 * m_ * n_ * k_:,}")
+
+PEAK, BW = 8.1e12, 320e9  # T4 fp32 spec sheet: FLOP/s and bytes/s
+print(f"ridge point: {PEAK / BW:.1f} FLOP/byte")
+for name, intensity in [("x + y (fp32)", 1 / 12), ("LayerNorm (~1)", 1.0), ("matmul n=1024", 1024 / 6)]:
+    attainable = min(PEAK, intensity * BW)
+    bound = "compute" if attainable == PEAK else "memory"
+    print(f"{name:15} I = {intensity:7.2f} FLOP/byte -> at most {attainable / 1e12:6.3f} TFLOP/s ({bound}-bound)")
+
+# %% [markdown]
+# **Expected:** the FLOP counter and the formula agree exactly (196,608); ridge point 25.3
+# FLOP/byte; `x + y` at most 0.027 TFLOP/s and LayerNorm 0.32 (memory-bound), the matmul capped
+# at the 8.1 TFLOP/s peak (compute-bound).
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

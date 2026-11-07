@@ -111,7 +111,25 @@ print(f"served model: {n_params / 1e6:.1f}M parameters ({n_params * 4 / 1e6:.0f}
 
 # %% [markdown]
 # **Expected:** `served model: 33.9M parameters (135 MB fp32)`.
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Throughput | Requests (or tokens) completed per second | ~310 req/s with dynamic batching |
+# | Latency percentile (p50, p95, p99) | The time below which 50% / 95% / 99% of requests finish | p95 at 16 concurrent clients |
+# | Memory-bound | Speed limited by reading data from memory, not by arithmetic | a batch-1 matrix-vector product |
+# | Dynamic batching | Grouping requests that arrive close together into one model call | `max_batch_size=32, max_wait_ms=2` |
+# | SLO | Service-level objective: the latency (or availability) target you promise | "p95 ≤ 60 ms" |
+# | Closed-loop load test | Each simulated client sends its next request only after the previous answer | the 1 / 4 / 16 / 32 client runs |
+# | KV cache | Stored attention keys and values of earlier tokens, so each new token is computed once | GPT-2 with `use_cache=True` |
+# | Prefill vs decode | Processing the whole prompt in one pass vs generating one token per step | 12.5 |
+# | Continuous batching | Re-forming the generation batch at every decode step | vLLM, TGI, the simulation in 12.6 |
+# | Paged attention | Storing the KV cache in fixed-size blocks found through a block table | 16-token blocks in 12.7 |
+# | Utilisation `u` | Fraction of paid hours the server is actually busy | 40% in the cost table |
+
+# %% [markdown]
 # ## 12.1 · Why batching helps: latency vs batch size
 #
 # One request through a Linear layer is a matrix-**vector** product: every weight is read
@@ -119,6 +137,12 @@ print(f"served model: {n_params / 1e6:.1f}M parameters ({n_params * 4 / 1e6:.0f}
 # bytes (fp32). The processor waits on memory, not on arithmetic. A batch of B requests
 # reuses each weight B times for the same memory traffic, so until the batch is large
 # enough to become compute-bound, **a bigger batch costs almost no extra time**.
+#
+# > 💡 **Intuition.** A bus that leaves with 1 passenger or with 32 costs almost the same to drive:
+# > the fuel (reading every weight from memory) is paid per trip, not per passenger. Batching fills
+# > the bus. *Where the analogy breaks down:* past a certain size the "engine" (arithmetic) becomes
+# > the bottleneck and each extra passenger does cost time; on a T4 that happens at batches of
+# > hundreds, on this CPU much earlier.
 
 # %%
 rows = []
@@ -161,6 +185,10 @@ BATCH_CURVE = rows
 # latency a request can suffer while waiting for company. Under heavy load batches fill
 # instantly and the wait never triggers; under light load the wait is pure added latency.
 # Triton Inference Server, TorchServe and Ray Serve all implement this.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-dynamic-batching.svg" alt="Clients put requests on a queue; the batcher closes a batch at 32 items or 2 ms after the first, calls the model once and splits the results back to each caller" width="100%">
+#
+# *What to notice:* the two knobs bound different things: `max_batch_size` bounds the cost of one call, `max_wait_ms` bounds the extra wait of the first request in a batch.
 
 # %% [markdown]
 # > **Exercise 1.** Complete `DynamicBatcher`. `submit(item)` must enqueue the item with a fresh
@@ -317,6 +345,16 @@ print(f"({time.time() - t0:.0f} s)")
 # load, and batching moves the curve right (more requests per second at the same latency).
 # Capacity planning picks the highest load whose p95 (or p99) still meets the SLO.
 #
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-throughput-latency.svg" alt="Two throughput-latency curves, flat then rising steeply; the dynamic-batching curve sits to the right; a dashed SLO line marks each one's capacity" width="100%">
+#
+# *What to notice:* capacity is where a curve crosses the SLO line, well before the vertical asymptote; Little's law links the load, the latency and how many requests are in flight.
+#
+# > 💡 **Intuition (Little's law).** A café with 15 customers inside, each staying 3 minutes, must be
+# > serving 5 customers a minute: in-flight = rate × time. In a closed-loop test the number of clients
+# > *is* the number in flight, so throughput × mean latency ≈ concurrency; adding clients beyond the
+# > server's capacity can only raise latency. *Where the analogy breaks down:* it holds for averages
+# > over a stable period, not for percentiles or for a burst.
+#
 # **The `max_wait_ms` knob.** At low load, waiting cannot fill a batch; it only adds latency.
 # At 4 concurrent clients:
 
@@ -421,6 +459,16 @@ _ = (OUT / "generation.json").write_text(json.dumps({"device": str(DEVICE), "new
 # request takes its slot immediately. Output lengths vary a lot in practice (a "yes" vs a
 # 500-token essay), which is exactly when static batching wastes most.
 #
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-continuous-batching.svg" alt="Gantt charts of four slots: static batching leaves idle padding cells until the longest sequence ends; continuous batching refills a slot as soon as it frees" width="100%">
+#
+# *What to notice:* the red cells are paid-for decode steps that produce nothing; continuous batching finishes the same eight requests in 10 steps instead of 14.
+#
+# > 💡 **Intuition.** Static batching is a restaurant that seats a table of four together and will not
+# > seat anyone else until the slowest diner finishes dessert. Continuous batching gives each freed
+# > chair to the next person in the queue straight away. *Where the analogy breaks down:* a new
+# > request first needs a prefill pass over its prompt, which costs more than one decode step, so
+# > real engines schedule prefills and decodes carefully (e.g. chunked prefill).
+#
 # A simulation on 512 requests with skewed output lengths (lognormal, median ~60 tokens,
 # capped at 1,024), batch size 16, counting decode steps:
 
@@ -486,6 +534,15 @@ print(f"64 sequences: tokens actually stored {sum(used):,} | reserved contiguous
 # Not installed here (it needs a CUDA GPU); explained, not measured. Grouped-query attention
 # (fewer KV heads) and KV-cache quantisation shrink the per-token cost itself.
 #
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-paged-kv-cache.svg" alt="Left: contiguous reservations of maximum length leave most memory unused. Right: a block table maps each sequence to 16-token blocks scattered in GPU memory" width="100%">
+#
+# *What to notice:* paging removes the reserved-but-unused tail of every sequence, so more sequences fit and batches grow; the formula at the bottom is the per-token cost being paged.
+#
+# > 💡 **Intuition.** Contiguous allocation is booking a 1,024-seat row for every party "in case
+# > everyone comes"; paging hands out tables of 16 seats as people actually arrive, wherever there is
+# > room, and keeps a seating chart (the block table). *Where the analogy breaks down:* the attention
+# > kernel must follow the seating chart on every step, so paging needs special kernels; it is not free.
+#
 # ## 12.8 · Cost per 1,000 requests
 #
 # A server that handles `r` requests/s when busy, rented at `p` dollars/hour, but busy only
@@ -540,6 +597,75 @@ for name, rps, price in cases:
 
 # %% [markdown]
 # *Your answer (Exercise 3):* ...
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · Batching throughput.**
+#
+# $$
+# \text{throughput}(B) = \frac{B}{t(B)}, \qquad \text{latency} \approx t_{\text{wait}} + t(B)
+# $$
+#
+# *In words:* a batch of $B$ requests finishes together, so throughput rises as long as the call time
+# $t(B)$ grows more slowly than $B$. *Example (12.1, our CPU):* $1 / 3\ \text{ms} = 333$/s at $B = 1$;
+# $32 / 15\ \text{ms} = 2{,}133$/s at $B = 32$.
+#
+# **2 · Arithmetic intensity of a Linear layer.**
+#
+# $$
+# I(B) \approx \frac{2\,B\,d_{\text{in}}\,d_{\text{out}}}{b\,d_{\text{in}}\,d_{\text{out}}} = \frac{2B}{b}\ \ \text{FLOPs per byte}
+# $$
+#
+# *In words:* each weight read ($b$ bytes) is used for one multiply-add per request in the batch.
+# It becomes compute-bound when $I(B)$ exceeds the hardware's peak FLOP/s ÷ memory bandwidth.
+# *Example:* T4 in fp16 ($b = 2$): $65 \times 10^{12} / 320 \times 10^{9} \approx 200$ FLOPs/byte, so $B \approx 200$.
+#
+# **3 · Little's law.**
+#
+# $$
+# L = \lambda\, W
+# $$
+#
+# *In words:* average requests in the system = arrival rate × average time each spends there.
+# *Symbols:* $L$ in flight, $\lambda$ requests/s, $W$ seconds. *Example:* 300 req/s at 50 ms means
+# 15 requests in flight; with 16 closed-loop clients and 310 req/s, the mean latency must be about
+# $16 / 310 = 52$ ms.
+#
+# **4 · Cost per 1,000 requests.**
+#
+# $$
+# \text{cost}_{1k} = \frac{1000 \cdot p}{3600 \cdot r \cdot u}
+# $$
+#
+# *Symbols:* $p$ dollars per hour, $r$ requests/s when busy, $u$ average utilisation. *Example:*
+# $p = 0.20$, $r = 308$, $u = 0.4$: $200 / 443{,}520 = \$0.00045$ per 1,000 requests.
+#
+# **5 · KV-cache bytes per token.**
+#
+# $$
+# \text{KV bytes/token} = 2 \cdot n_{\text{layers}} \cdot n_{\text{kv heads}} \cdot d_{\text{head}} \cdot b
+# $$
+#
+# *Example:* GPT-2 small in fp16, $2 \cdot 12 \cdot 12 \cdot 64 \cdot 2 = 36{,}864$ bytes; × 2,048 tokens = 75 MB per sequence.
+#
+# The cell below checks 1, 3, 4 and 5 against this notebook's own measurements and helpers.
+
+# %%
+# Key equations, checked against this notebook's numbers (no new measurements).
+for r in BATCH_CURVE[:1] + BATCH_CURVE[5:6]:
+    print(f"batch {r['batch']:3d}: B / t(B) = {r['batch'] / (r['ms'] / 1e3):8,.0f} examples/s")
+for r in LOAD:
+    implied = r["throughput_rps"] * r["p50_ms"] / 1e3  # Little's law with p50 standing in for the mean
+    print(f"max_batch {r['max_batch']:2d} | {r['concurrency']:2d} clients | throughput x p50 = {implied:5.1f} in flight")
+print(f"cost per 1k: formula {1000 * 0.20 / (308 * 3600 * 0.4):.5f} | S.cost_per_1k {S.cost_per_1k(308, 0.20, 0.4):.5f}")
+print(f"KV bytes per token, GPT-2 fp16: formula {2 * 12 * 12 * 64 * 2:,} | S.kv_cache_bytes "
+      f"{S.kv_cache_bytes(12, 12, 64, tokens=1):,}")
+
+# %% [markdown]
+# **Expected:** the two batch throughputs as printed in 12.1; for each load-test row an "in flight"
+# number close to its number of clients (somewhat below it, because p50 is smaller than the mean
+# latency, which a few slow requests pull up); `0.00045` twice; `36,864` twice.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

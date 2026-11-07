@@ -79,6 +79,24 @@ print(f"day 42: {len(day):,} impressions, {day.clicked.sum():,} clicks, {day.req
 # 42 (the first validation day).
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Event time** | when the event happened, on the device | `event_ts`; features are defined on it |
+# | **Processing time** | when the event reached the stream processor | `arrival_ts`, median 2 s later |
+# | **Out-of-order event** | arrives after an event that happened later | about 65% of events here |
+# | **Tumbling window** | fixed-size, non-overlapping time buckets | clicks per category per 15 min |
+# | **Sliding window** | fixed size, advancing by a smaller hop; windows overlap | 1 hour, every 15 min |
+# | **Session window** | per key, events closer than a gap belong together | a user's burst of activity |
+# | **Watermark** | the processor's claim: events up to time W have (almost) all arrived | max event time − allowed lateness |
+# | **Allowed lateness** | how long to wait for stragglers before closing a window | 0, 10 min, 1 hour in 4.4 |
+# | **Late event** | arrives for a window that is already closed | about 2.5% with no lateness |
+# | **Side output** | late events kept aside for a batch job to reconcile | `sideOutputLateData` in Flink |
+# | **Idempotent update** | applying it twice has the same effect as once | dedup by `event_id` |
+# | **Parity test** | the batch and streaming versions of a feature, compared row by row | `parity_report` in Exercise 2 |
+
+# %% [markdown]
 # ## 4.1 · Event time vs processing time
 #
 # * **Event time**: when the thing happened (the impression was rendered on the
@@ -101,6 +119,8 @@ print(f"events older than an event already received: {behind.mean():.0%}; "
 stream[["event_id", "category", "clicked", "event_ts", "arrival_ts"]].head(4)
 
 # %% [markdown]
+# > 💡 **Intuition.** Event time is the postmark; processing time is the day the letter lands in your mailbox. Sorting letters by delivery day puts a card posted on Monday but delayed by a strike next to Thursday's post. *Where it breaks down:* postmarks are stamped by the post office; event timestamps come from phones whose clocks can be wrong, so real pipelines also sanity-check event times.
+#
 # **Expected:** median delay about 2 s, p90 about 5 s, p99 in the tens of
 # minutes; about 65% of events arrive after a later-timestamped event (a
 # little disorder is the normal state) but only about 3% are more than a
@@ -158,6 +178,11 @@ print(f"processing-time windows that differ from the event-time truth: {(m.value
 # every 15 minutes) that contain it. With no completeness question yet (we
 # process the whole stream, then read the state), the result must equal the
 # batch definition exactly.
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-stream-windows.svg" alt="Tumbling, sliding (hopping) and session windows over the same events" width="100%">
+#
+# *What to notice:* tumbling windows partition time; sliding windows overlap, so every event is counted twice here (size 8 / hop 4); session windows have no fixed length at all, they grow while events keep coming.
 
 # %%
 SIZE, HOP = 3600, 900
@@ -238,6 +263,13 @@ print(f"sessions: streaming {n_stream:,} | batch {int(new_session.sum()):,}")
 #
 # The allowed lateness is a trade-off: larger lateness → fewer late events
 # but results emitted later and more open windows held in memory.
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-event-time-watermark.svg" alt="Event time vs processing time, the watermark staircase, and a late event below it" width="100%">
+#
+# *What to notice:* every dot is below the no-delay line (events always arrive after they happen). The watermark trails the latest event time by the allowed lateness; the red event happened early but arrived after the watermark passed it.
+#
+# > 💡 **Intuition.** A watermark is the teacher's "pencils down, I'm collecting the papers" for each window: after it, a late paper is either refused (drop), set aside for regrading (side output) or accepted with a corrected grade sent out later (update). *Where it breaks down:* a teacher knows how many students are in the room; a stream processor never knows how many events are still on their way, so the watermark is a heuristic promise, not a fact.
 
 # %% [markdown]
 # > **Exercise 1.** Implement `TumblingWindowCounter(window_seconds,
@@ -348,6 +380,8 @@ print(f"update:      {corrections:,} corrected results emitted after the first |
 #   happen atomically (Flink checkpoints with transactional sinks; Kafka
 #   transactions; Spark checkpoints with idempotent sinks). It is about the
 #   *effect* on state and sinks, not about the network delivering once.
+#
+# > 💡 **Intuition.** "Add 1 to the counter" is a toggle switch: press it twice and you are somewhere else. "Mark event 8812 as counted" is a light switch labelled ON: press it twice and the light is still just on. Deduplicating by event id turns the first kind of update into the second. *Where it breaks down:* the switch needs a stable label; an id minted by the processor differs between the original and the retry.
 #
 # The cheapest robust defence works under at-least-once: make the update
 # **idempotent** by deduplicating on the event id. Re-deliver 5% of the
@@ -468,6 +502,41 @@ grade.ex2(parity_report)
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · Which tumbling window an event belongs to.** In words: round the event time down to a multiple of the window size.
+#
+# $$
+# \text{start}(t) = \left\lfloor \frac{t}{w} \right\rfloor w
+# $$
+#
+# * $t$: event time in seconds since an aligned epoch; $w$: window size. *Example:* $w = 900$ s (15 min), $t = 2{,}000$ s → start 1,800 s, window $[1800, 2700)$. Align on UTC epoch seconds, or two systems disagree on every boundary.
+#
+# **2 · Sliding windows: how many contain one event.** In words: with size $S$ and hop $h$, each event falls in $S/h$ windows, so the state does $S/h$ times the updates.
+#
+# $$
+# \{\, s = \lfloor t/h \rfloor h - j h \;:\; j = 0, \dots, S/h - 1 \,\}
+# $$
+#
+# * *Example:* $S = 3600$ s, $h = 900$ s, $t = 2{,}000$ s → window starts 1,800, 900, 0, −900: four windows, each 1 hour long, each containing $t$.
+#
+# **3 · Watermark, closing and lateness.** In words: the watermark trails the largest event time seen; a window is emitted once the watermark passes its end; an event whose window has already closed is late.
+#
+# $$
+# W = \max_{\text{seen}} t - L, \qquad \text{close } [s, s+w) \text{ when } W \ge s + w, \qquad \text{late if } s + w \le W_\text{before}
+# $$
+#
+# * $L$: allowed lateness. *Example:* $L = 60$ s, latest event time seen 1,000 s → $W = 940$ s; window $[0, 900)$ is closed; an event arriving now with $t = 850$ is late, one with $t = 920$ is counted.
+#
+# **4 · Session windows.** In words: an event joins (and can bridge) every session within the gap $g$.
+#
+# $$
+# t \text{ joins } [a, b] \iff a - g \le t \le b + g
+# $$
+#
+# * *Example:* $g = 30$ min, sessions $[10{:}00, 10{:}20]$ and $[10{:}55, 11{:}05]$; a late event at 10:40 is within 30 min of both, so all three merge into $[10{:}00, 11{:}05]$. That is the "bridging" case from 4.2.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

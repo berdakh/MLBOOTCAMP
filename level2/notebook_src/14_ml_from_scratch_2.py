@@ -70,6 +70,24 @@ np.set_printoptions(precision=4, suppress=True)
 rng = np.random.default_rng(0)
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | SSE | sum of squared differences from the mean: how spread out a group is | `S₂ − S₁²/m` in 14.1 |
+# | Prefix sum | a running total; the sum of any prefix is one lookup | `np.cumsum(y)` and `np.cumsum(y**2)` |
+# | Regression stump | a depth-1 tree: one threshold, two leaf values | `best_split` in Exercise 1 |
+# | Residual (pseudo-residual) | target minus current prediction; for squared loss, the negative gradient | `y − F` in Exercise 2 |
+# | Shrinkage (learning rate) | the fraction of each new tree's prediction that is added | `lr = 0.1` |
+# | Backprop | the chain rule applied from the loss back to every parameter, reusing stored forward values | `mlp_grads` in Exercise 3 |
+# | Upstream gradient | the gradient of the loss with respect to a layer's output | `dout` in the 14.2 table |
+# | Scaled dot-product attention | softmax(QKᵀ/√d)V: a weighted average of values, weighted by query–key match | Exercise 4 |
+# | Mask | a boolean saying which keys each query may use | causal and padding masks; True = may attend |
+# | Running statistics | moving averages of mean and variance that batch norm uses at inference | `momentum = 0.1` in Exercise 5 |
+# | Inverted dropout | zero units with probability p in training and scale the rest by 1/(1−p) | Exercise 6; identity at inference |
+# | Biased vs unbiased variance | dividing by n vs n − 1 | the forward pass uses n, the running variance n − 1 |
+
+# %% [markdown]
 # ## 14.1 · Prefix sums: the trick behind fast tree splits
 #
 # A regression tree chooses the split that minimises the summed squared error
@@ -103,6 +121,16 @@ print("max |fast - slow|:", np.abs(fast - slow).max())
 # `S₂ − S₁²/m` subtracts two large numbers: with big `y` values it loses
 # precision (catastrophic cancellation). Libraries centre `y` first or use
 # Welford-style updates; say so if asked about robustness.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-tree-split.svg" alt="Eight sorted points with candidate thresholds between them, the best threshold, and the summed child SSE at every candidate" width="100%">
+#
+# *What to notice:* the best split separates the low group from the high group, where the summed SSE has its minimum; prefix sums make every point on the lower curve one subtraction.
+#
+# > 💡 **Intuition.** Prefix sums are a car's odometer: the distance between two towns is
+# > the difference of two readings, not a fresh drive. Sorting once and reading the
+# > odometer at every gap prices all n − 1 splits at once. *Where it breaks down:* odometer
+# > readings that are huge and close together lose digits when subtracted (catastrophic
+# > cancellation); centre `y` first.
 
 # %% [markdown]
 # ## 14.2 · Backprop: shapes, local gradients, and the chain rule
@@ -119,6 +147,10 @@ print("max |fast - slow|:", np.abs(fast - slow).max())
 # | `out = sigmoid(z)` | `dz = dout * out * (1 - out)` |
 # | `L = mean CE(softmax(z), y)` | `dz = (softmax(z) - onehot(y)) / n` |
 # | `out = x * mask / (1-p)` (dropout) | `dx = dout * mask / (1-p)` |
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-mlp-backprop.svg" alt="Forward pass of a two-layer MLP on top and the backward pass in reverse below, each box with its local gradient rule" width="100%">
+#
+# *What to notice:* each backward box needs only its own forward input and the gradient arriving from its right; that locality is why backprop costs about twice the forward pass.
 #
 # A one-layer check, using the helpers from notebook 13:
 
@@ -155,6 +187,16 @@ print(f"relative error vs numerical gradient: {relative_error(dW, numerical_grad
 # scores to `-inf` gives `exp(-inf - (-inf)) = exp(nan)` and the NaN then flows
 # into every gradient. It happens with left-padded batches, empty histories
 # (a cold-start user in notebook 10) and some cross-attention layouts.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-attention-lookup.svg" alt="One query scored against four keys; the scores become softmax weights 0.63, 0.23, 0.14 and 0 for a masked key, which mix the values" width="100%">
+#
+# *What to notice:* the weights always sum to 1 over the allowed keys, so a row with no allowed key has nothing to sum to; that is the NaN.
+#
+# > 💡 **Intuition.** A Python dict returns the one value whose key matches exactly;
+# > attention returns a *blend* of all values, weighted by how well each key matches the
+# > query. *Where it breaks down:* the weights sum to 1 even when no key matches well, so
+# > attention always returns *something*; a fully masked row is the case where there is
+# > nothing to blend, and you must choose the answer yourself.
 
 # %%
 scores = np.array([[2.0, 1.0, 0.5], [0.3, 0.2, 0.1]])
@@ -206,6 +248,15 @@ print("row 0 normalised within batch B:", bn_other[0])
 # `[1.4692 -0.3189 0.0834]` and `[0.8546 0.2136 0.0057]`). With
 # running statistics (eval mode) the row would map to the same output in any
 # batch. In PyTorch, that is the whole job of `model.eval()` (notebook 09).
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-batchnorm-modes.svg" alt="Two-by-two grid: batch norm and dropout in training mode and in inference mode" width="100%">
+#
+# *What to notice:* everything in the left column depends on randomness or on the rest of the batch; the right column is deterministic, which is what serving needs.
+#
+# > 💡 **Intuition.** Training-mode batch norm grades on a curve: your score depends on who
+# > else sat the exam that day. Eval mode grades against a fixed scale learned over the
+# > whole term. *Where it breaks down:* the fixed scale goes stale if serving traffic drifts
+# > away from training traffic; the running statistics are only as current as the training data.
 
 # %% [markdown]
 # ## 14.5 · Exercises
@@ -285,6 +336,15 @@ grade.ex2(gbm_fit, gbm_predict)
 # > 3. *Learning rate (shrinkage):* smaller lr needs more trees and generalises better; tune `n_estimators` with early stopping on a validation set.
 # > 4. *Complexity:* O(M · d · n log n) for M rounds (re-sorting each round; pre-sorting once per feature gives O(M·d·n)); prediction O(M) per row.
 # > 5. *Beyond squared loss:* other losses change the pseudo-residuals and the leaf values (a Newton step: Σg / Σh, which is what XGBoost/LightGBM use; LambdaMART plugs in ranking gradients — notebook 06).
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-gradient-boosting.svg" alt="Gradient boosting as a chain: mean, residuals, a stump fitted to them, a shrunken update, new residuals, repeated for M rounds" width="100%">
+#
+# *What to notice:* each stump only ever sees what is still wrong (the residuals), and ν keeps any one stump from fixing too much at once.
+#
+# > 💡 **Intuition.** Boosting is golf: each stroke aims from where the ball is now, not
+# > from the tee, and shrinkage is choosing to putt gently. Many small corrections overshoot
+# > less than a few big ones. *Where it breaks down:* in golf you stop at the hole; boosting
+# > keeps chasing noise in the training residuals unless you stop on a validation set.
 
 # %% [markdown]
 # > **Exercise 3.** *(target 20 min)* Implement `mlp_grads(params, X, y)` →
@@ -409,6 +469,115 @@ grade.ex6(inverted_dropout)
 # most often go wrong in practice interviews are 3 (a transposed gradient) and
 # 4 (the mask): if those took over 1.5× their target, redo them tomorrow from
 # a blank cell before moving on.
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1. SSE from sums, and the split gain**
+#
+# $$
+# \text{SSE} = \sum (y - \bar y)^2 = S_2 - \frac{S_1^2}{m}, \qquad \text{gain} = \text{SSE}_{\text{parent}} - \text{SSE}_{\text{left}} - \text{SSE}_{\text{right}}
+# $$
+#
+# *In words:* a group's spread needs only its count, sum and sum of squares; the best split is the one that removes the most spread (variance reduction).
+# *Symbols:* $S_1 = \sum y$, $S_2 = \sum y^2$, $m$ = group size.
+# *Example:* the figure's $y = (1.0, 1.2, 0.8, 1.1, 3.0, 3.2, 2.9, 3.1)$: parent SSE $= 41.55 - 16.3^2/8 = 8.34$; split after the fourth point: $0.0875 + 0.05 = 0.1375$; gain 8.20.
+#
+# **2. Gradient boosting update**
+#
+# $$
+# r_i^{(m)} = -\frac{\partial L(y_i, F)}{\partial F}\Big|_{F = F_{m-1}(x_i)}, \qquad F_m(x) = F_{m-1}(x) + \nu\, h_m(x), \qquad F_0 = \arg\min_c \sum_i L(y_i, c)
+# $$
+#
+# *In words:* fit a small tree $h_m$ to the negative gradient (for $L = \tfrac12 (y-F)^2$, the residual $y - F$) and add a shrunken copy.
+# *Example:* $y = (1, 3)$, $F_0 = 2$, residuals $(-1, 1)$; a stump that fits them exactly with ν = 0.1 gives $F_1 = (1.9, 2.1)$; the residuals shrink by a factor 0.9 per round: $(-0.729, 0.729)$ after three.
+#
+# **3. Backprop through a two-layer MLP**
+#
+# $$
+# \begin{aligned}
+# dZ_2 &= (P - Y)/n, & dW_2 &= H^\top dZ_2, & db_2 &= \textstyle\sum_i dZ_2 \\
+# dH &= dZ_2 W_2^\top, & dZ_1 &= dH \odot \mathbb{1}[Z_1 > 0], & dW_1 &= X^\top dZ_1
+# \end{aligned}
+# $$
+#
+# *In words:* start from "prediction minus target" and walk the graph backwards; every gradient has the shape of its variable.
+# *Example (shapes):* $X$ (5, 4), $W_1$ (4, 6), $W_2$ (6, 3): $dZ_2$ (5, 3) → $dW_2$ (6, 5)(5, 3) = (6, 3) → $dH$ (5, 3)(3, 6) = (5, 6) → $dW_1$ (4, 5)(5, 6) = (4, 6).
+#
+# **4. Scaled dot-product attention**
+#
+# $$
+# \operatorname{Attention}(Q, K, V) = \operatorname{softmax}\!\left(\frac{QK^\top}{\sqrt{d}}\right) V
+# $$
+#
+# *In words:* score each key against the query, scale so the scores have variance about 1, softmax over keys, average the values with those weights.
+# *Example:* scores (2.0, 1.0, 0.5, masked) → weights (0.63, 0.23, 0.14, 0).
+#
+# **5. Batch norm**
+#
+# $$
+# \hat x = \frac{x - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}, \qquad y = \gamma \hat x + \beta, \qquad \text{running} \leftarrow (1 - m)\cdot\text{running} + m \cdot \text{batch statistic}
+# $$
+#
+# *In words:* standardise each feature with the batch's mean and (biased) variance during training, with the running averages at inference.
+# *Example:* $x = (1, 2, 4)$: $\mu_B = 2.33$, $\sigma_B^2 = 1.56$, $\hat x = (-1.07, -0.27, 1.34)$; with momentum 0.1 from (0, 1), the running mean becomes 0.233 and the running variance $0.9 + 0.1 \cdot 2.33 = 1.133$ (unbiased).
+#
+# **6. Inverted dropout**
+#
+# $$
+# y = \frac{x \odot m}{1 - p}, \quad m_j \sim \operatorname{Bernoulli}(1 - p), \qquad \mathbb{E}[y] = x
+# $$
+#
+# *Example:* $p = 0.5$, $x = 2$: the output is 0 or 4, each half the time, with mean 2. At inference $y = x$.
+
+# %%
+# --- Check the key equations numerically (PyTorch autograd as the reference) --
+import torch
+from torch.nn import functional as F_torch
+
+ys = np.array([1.0, 1.2, 0.8, 1.1, 3.0, 3.2, 2.9, 3.1])
+sse = lambda v: ((v - v.mean()) ** 2).sum()  # noqa: E731
+print(f"1. parent SSE {sse(ys):.4f} = S2 - S1^2/m {(ys**2).sum() - ys.sum()**2 / len(ys):.4f} | "
+      f"children {sse(ys[:4]) + sse(ys[4:]):.4f} | gain {sse(ys) - sse(ys[:4]) - sse(ys[4:]):.4f}")
+F_b, y_b = np.full(2, 2.0), np.array([1.0, 3.0])
+for _ in range(3):
+    F_b = F_b + 0.1 * (y_b - F_b)        # a stump that fits the residuals exactly
+print("2. residuals after 3 rounds:", (y_b - F_b).round(4))
+
+rng = np.random.default_rng(14)
+Xm, ym = rng.normal(size=(5, 4)), rng.integers(0, 3, 5)
+W1, b1, W2, b2 = rng.normal(size=(4, 6)), rng.normal(size=6), rng.normal(size=(6, 3)), rng.normal(size=3)
+z1 = Xm @ W1 + b1
+hm = np.maximum(z1, 0)
+z2 = hm @ W2 + b2
+Pm = np.exp(z2 - z2.max(1, keepdims=True))
+Pm /= Pm.sum(1, keepdims=True)
+dz2 = (Pm - np.eye(3)[ym]) / len(ym)
+dW2, dz1 = hm.T @ dz2, (dz2 @ W2.T) * (z1 > 0)
+dW1 = Xm.T @ dz1
+tW1, tW2 = torch.tensor(W1, requires_grad=True), torch.tensor(W2, requires_grad=True)
+F_torch.cross_entropy(torch.relu(torch.tensor(Xm) @ tW1 + torch.tensor(b1)) @ tW2 + torch.tensor(b2),
+                      torch.tensor(ym)).backward()
+print(f"3. chain rule vs autograd, max |diff|: dW1 {np.abs(dW1 - tW1.grad.numpy()).max():.1e}, "
+      f"dW2 {np.abs(dW2 - tW2.grad.numpy()).max():.1e}")
+Q, Kt, V = rng.normal(size=(3, 4)), rng.normal(size=(5, 4)), rng.normal(size=(5, 2))
+S = Q @ Kt.T / np.sqrt(4)
+Wt = np.exp(S - S.max(1, keepdims=True))
+Wt /= Wt.sum(1, keepdims=True)
+ref = F_torch.scaled_dot_product_attention(*(torch.tensor(a)[None] for a in (Q, Kt, V)))[0].numpy()
+print(f"4. attention vs torch SDPA, max |diff|: {np.abs(Wt @ V - ref).max():.1e}")
+xb = np.array([[1.0], [2.0], [4.0]])
+bn = torch.nn.BatchNorm1d(1, affine=False).double().train()
+out_bn = bn(torch.tensor(xb)).detach().numpy().ravel()
+print("5. x_hat", ((xb - xb.mean()) / np.sqrt(xb.var() + 1e-5)).ravel().round(3), "| torch", out_bn.round(3),
+      f"| running mean {bn.running_mean.item():.3f}, running var {bn.running_var.item():.3f}")
+draws = np.where(rng.random(1_000_000) >= 0.5, 2.0 / (1 - 0.5), 0.0)
+print(f"6. inverted dropout, p = 0.5, x = 2: mean output {draws.mean():.3f}")
+
+# %% [markdown]
+# **Expected:** 1. 8.3388 twice, children 0.1375, gain 8.2012; 2. `[-0.729  0.729]`;
+# 3. and 4. differences around 1e-16 (float64 rounding); 5. `[-1.069 -0.267  1.336]` twice, running mean 0.233 and
+# running variance 1.133; 6. a mean output of 2.00 (±0.003).
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

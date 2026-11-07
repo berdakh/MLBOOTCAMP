@@ -162,7 +162,25 @@ print(f"(embedding the corpus took {embed_s:.0f} s: paid again after every train
 # paper: not leakage of test *labels*, but a reason why in-domain training transfers). On the
 # 1,200-document sub-corpus: BM25 nDCG@10 0.770 / Recall@100 0.937, base MiniLM 0.760 / 0.980;
 # embedding the sub-corpus took ~21 s.
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Contrastive learning | training by pulling matching pairs together and pushing other pairs apart | (claim, abstract) pairs in 8.2 |
+# | Positive pair | a query and a document known to be relevant to it | every judged pair in the train qrels |
+# | In-batch negatives | the other queries' positives in the same batch, used as negatives for free | 15 negatives per query at batch 16 |
+# | Hard negative | a document a retriever ranks high that is not labelled relevant | BM25's top unlabelled hit, after `SKIP_TOP` |
+# | False negative | a 'negative' that is actually relevant but was never judged | 15% of mined negatives are another claim's positive |
+# | InfoNCE | the contrastive loss: cross-entropy over similarity scores, target = the true pair | Exercise 1 |
+# | Temperature τ | divides the cosine similarities before the softmax; small τ = sharp | τ = 0.05 (scale 20) |
+# | Cross-encoder | one transformer reads query and document together and outputs a score | `ms-marco-MiniLM-L-6-v2` in 8.4 |
+# | Re-ranking depth | how many first-stage candidates the re-ranker scores | top 50 |
+# | Bootstrap CI | a confidence interval from re-sampling the test queries many times | the 95% intervals in 8.3 |
+# | Distillation | training a cheap model to imitate an expensive one's scores | cross-encoder → bi-encoder (8.5) |
+
+# %% [markdown]
 # ## 8.1 · Contrastive learning with in-batch negatives
 #
 # A bi-encoder is trained so that a query's embedding is closer to its relevant document than
@@ -178,6 +196,23 @@ print(f"(embedding the corpus took {embed_s:.0f} s: paid again after every train
 # the hardest negatives. Extra **hard negatives** are simply appended as rows $B+1 \ldots N$
 # of the document matrix. Larger batches give more negatives, which is why contrastive
 # training at scale uses batches of thousands (and tricks like GradCache).
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-infonce.svg" alt="A similarity matrix with four query rows and seven document columns: the diagonal of the first four columns holds the positives, the rest of them are in-batch negatives, and three extra columns hold hard negatives" width="100%">
+#
+# *What to notice:* every row is its own classification problem with one green target; the batch size sets how many grey distractors you get for free, the hard-negative columns make the distractors harder.
+#
+# > 💡 **Intuition.** InfoNCE is a multiple-choice test: for each claim, pick its abstract from all
+# > the abstracts in the batch. A bigger batch means more options, a harder test and more to
+# > learn from each step. *Where it breaks down:* when two options are both correct (a false
+# > negative), the test marks the right answer wrong, and the model learns to push away a
+# > relevant document.
+#
+# > 💡 **The temperature, in numbers.** Two candidates with cosines 0.8 (positive) and 0.3
+# > (negative). At $\tau = 1$ the logits are 0.8 and 0.3 and the loss is
+# > $\ln(1 + e^{-0.5}) = 0.47$: the model is still being pushed. At $\tau = 0.05$ the logits are
+# > 16 and 6 and the loss is $\ln(1 + e^{-10}) \approx 5 \times 10^{-5}$: this pair is "solved",
+# > and the gradient goes to the rows where the negatives are close.
 
 # %% [markdown]
 # > **Exercise 1.** Write `info_nce_loss(q, d, temperature)`: `q` is `(B, dim)`, `d` is `(N, dim)` with
@@ -383,6 +418,15 @@ for name, m in metrics.items():
 # First stage here: RRF fusion of BM25 and the hard-negative bi-encoder (chosen in advance,
 # not by looking at test scores). We re-rank its top 50.
 
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-bi-vs-cross-encoder.svg" alt="Left: a bi-encoder encodes query and document separately, documents offline once, and compares vectors by cosine; right: a cross-encoder reads the query and document together in one pass and outputs a score" width="100%">
+#
+# *What to notice:* the two arrows into the cosine box come from independent encoders, so the document side can be precomputed; the cross-encoder has a single input, so every (query, document) pair costs a full forward pass.
+#
+# > 💡 **Intuition.** A bi-encoder compares two CVs that were written separately; a cross-encoder
+# > interviews the two candidates together, so it can notice how their answers relate. The
+# > interview is better, but you cannot interview a million candidates per query.
+
 # %%
 ce_tok = AutoTokenizer.from_pretrained(R.CROSS_ENCODER_ID, revision=R.CROSS_ENCODER_REV)
 ce = AutoModelForSequenceClassification.from_pretrained(R.CROSS_ENCODER_ID, revision=R.CROSS_ENCODER_REV,
@@ -498,6 +542,49 @@ print("wrote", OUT / "two_stage_results.json")
 
 # %% [markdown]
 # *Your answer (Exercise 3):* ...
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1. InfoNCE with in-batch and hard negatives.**
+#
+# $$
+# \mathcal{L} = -\frac{1}{B} \sum_{i=1}^{B} \log \frac{\exp(\mathbf q_i \cdot \mathbf d_i / \tau)}{\sum_{j=1}^{N} \exp(\mathbf q_i \cdot \mathbf d_j / \tau)}
+# $$
+#
+# In words: for every query, a softmax over all $N$ documents in the batch (its positive, the
+# other $B - 1$ positives and $N - B$ hard negatives) and the cross-entropy of picking its own.
+# Symbols: unit vectors $\mathbf q_i, \mathbf d_j$; $\tau$ temperature. Example: cosines 0.8
+# (positive) and 0.3 (one negative): loss 0.47 at $\tau = 1$, $5 \times 10^{-5}$ at $\tau = 0.05$.
+#
+# **2. A random-guess baseline for the loss.**
+#
+# $$
+# \mathcal{L}_{\text{uniform}} = \ln N
+# $$
+#
+# Example: batch 16 with 16 hard negatives ($N = 32$): $\ln 32 = 3.47$. Our logged losses of
+# 0.2–0.9 show the base model already separates most pairs.
+#
+# **3. Bootstrap confidence interval for a metric difference.**
+#
+# $$
+# \Delta^{\star(b)} = \frac{1}{n} \sum_{i \in \text{sample } b} \big(m_A(i) - m_B(i)\big), \qquad
+# \text{CI}_{95\%} = \big[\, \text{2.5th},\; \text{97.5th percentile of } \Delta^{\star} \big]
+# $$
+#
+# In words: resample the $n$ test queries with replacement many times, recompute the paired
+# difference each time, and read off the middle 95%. If the interval contains 0, the change is
+# not established. Example: 2,000 resamples of 300 queries in 8.3.
+#
+# **4. Re-ranking cost.**
+#
+# $$
+# \text{latency} \approx \text{depth} \times t_{\text{pair}} / \text{parallelism}, \qquad \text{pair inferences/s} = \text{QPS} \times \text{depth}
+# $$
+#
+# Example: depth 50, 1,000 QPS: 50,000 cross-encoder passes per second, whatever the ANN index
+# costs.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

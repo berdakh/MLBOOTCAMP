@@ -143,6 +143,29 @@ print("random scores     :", {k: round(v, 3) for k, v in quality(lambda X: rng.r
 # popularity: retrieval does real work).
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | ONNX | a portable file format for a model's computation graph | `mlp.onnx`, with a dynamic batch dimension |
+# | ONNX Runtime (ORT) | a C++ engine that executes ONNX graphs without Python in the loop | about 0.006 ms per call at batch 1 |
+# | Eager-mode overhead | the fixed Python cost PyTorch pays per operation, dominant for small inputs | PyTorch is 4–6× slower than ORT at batch 1 |
+# | Parity check | comparing two implementations' outputs element by element within a tolerance | max difference 1.2e-6 after export |
+# | Tolerance (atol) | the largest absolute difference still counted as equal | about 1e-5 for lossless steps |
+# | Dynamic int8 quantisation | weights stored as 8-bit integers ahead of time, activations quantised per batch | `DynamicQuantizedLinear` layers |
+# | Scale and zero-point | the two numbers that map floats to integers and back | see the figure in 18.3 |
+# | Spearman correlation | the correlation of ranks: do two models order items the same way? | 0.997 between ORT int8 and fp32 |
+# | Knowledge distillation | training a small student to match a large teacher's probabilities | a 193-parameter student taught by LightGBM |
+# | Soft labels | the teacher's probabilities used as training targets instead of 0/1 clicks | `teacher_probs` |
+# | Temperature T | a divisor on logits that softens probabilities so near-misses carry signal | `T = 2.0` |
+#
+# The notebook on one page:
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-inference-optimization.svg" alt="Lossless path: PyTorch to ONNX to ONNX Runtime with an exact parity test; lossy path: LightGBM teacher to distilled student to int8 with ranking-quality checks" width="100%">
+#
+# *What to notice:* the two rows need different tests: exact parity cannot pass for a lossy step, and ranking checks are too weak to catch a broken export.
+
+# %% [markdown]
 # ## 18.1 · A PyTorch scoring model
 #
 # The model to optimise: a small MLP over the same 10 features
@@ -179,6 +202,12 @@ print("MLP 128-64:", {k: round(v, 3) for k, v in q_mlp.items()})
 #
 # We export with a *dynamic* batch dimension so one file serves batch 1 and
 # batch 1,024.
+#
+# > 💡 **Intuition.** PyTorch eager is a chef reading the cookbook aloud at every step:
+# > negligible for a banquet (batch 1,024), most of the time for one sandwich (batch 1).
+# > ONNX export prints the recipe as a card that any kitchen can follow without the
+# > narration. *Where it breaks down:* the card records only the path taken while tracing;
+# > Python `if`s that depend on the data are frozen at export time.
 
 # %%
 onnx_path = opt.export_onnx(mlp, OUT / "mlp.onnx", n_features=X_train.shape[1])
@@ -252,6 +281,16 @@ print("torch int8:", {k: round(v, 3) for k, v in q_torch8.items()})
 # top-k overlap) and the offline metric, with thresholds agreed in advance.
 # Keep exact parity (`atol` ~1e-5) for *lossless* steps such as the ONNX
 # export itself.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-quantization.svg" alt="A float number line from -1.2 to 2.3 mapped onto int8 values from -128 to 127, with the scale and zero-point formulas and a worked example" width="100%">
+#
+# *What to notice:* zero maps to an integer exactly, and every other value moves by at most half a step (s/2 ≈ 0.007 here).
+#
+# > 💡 **Intuition.** Quantisation is measuring every weight with a ruler that has 256 marks
+# > instead of an almost continuous one: individual readings move (here the logits moved by
+# > up to 0.47), but which item is longer than which mostly does not (Spearman 0.997).
+# > *Where it breaks down:* one huge outlier stretches the ruler, so all the ordinary
+# > values crowd onto a few marks; per-channel scales and outlier handling exist for that.
 
 # %% [markdown]
 # ## 18.4 · Distillation: a small student taught by a big teacher
@@ -272,6 +311,12 @@ print("torch int8:", {k: round(v, 3) for k, v in q_torch8.items()})
 # logits and $y$ the clicks. $T > 1$ softens both sides so the student also
 # learns the teacher's ordering among low-probability items; $T^2$ keeps the
 # gradient scale comparable across temperatures.
+#
+# > 💡 **Intuition.** A teacher who marks only right or wrong teaches less than one who says
+# > "this answer is 70% right, and that wrong one was a reasonable guess". Soft labels are
+# > the second teacher; temperature makes the teacher talk more about the near-misses.
+# > *Where it breaks down:* the student can only learn what its own inputs can express; a
+# > teacher that sees more features passes on more than one that sees the same ten.
 #
 # > **Exercise 2.** Write `distillation_loss(student_logits, teacher_probs, labels, alpha, T)`
 # > (all tensors of shape `(n,)`) that returns the scalar mean loss above. Use
@@ -447,6 +492,87 @@ if RUN_GPU_EXTENSION and torch.cuda.is_available():
     print("GPU torch fp16:", opt.bench(gpu_torch, X_logged, (1, 64, 1024, 65536)))
 else:
     print("GPU extension skipped (RUN_GPU_EXTENSION = False or no CUDA device)")
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1. Affine (asymmetric) int8 quantisation**
+#
+# $$
+# s = \frac{x_{\max} - x_{\min}}{255}, \qquad z = \operatorname{round}\!\left(-128 - \frac{x_{\min}}{s}\right), \qquad q = \operatorname{clip}\!\left(\operatorname{round}(x/s) + z,\ -128,\ 127\right), \qquad \hat x = s\,(q - z)
+# $$
+#
+# *In words:* a scale turns float units into integer steps, a zero-point shifts so that 0.0 lands exactly on an integer; the rounding error per value is at most $s/2$.
+# *Example:* range [−1.2, 2.3]: $s = 0.0137$, $z = -41$; $1.0 \to 73 - 41 = 32 \to 0.0137 \times 73 = 1.002$.
+#
+# **2. Distillation loss with temperature**
+#
+# $$
+# \mathcal{L} = \alpha\, T^2\, \operatorname{BCE}\big(\sigma(z_s/T),\ \sigma(z_t/T)\big) + (1 - \alpha)\, \operatorname{BCE}\big(\sigma(z_s),\ y\big)
+# $$
+#
+# *In words:* match the teacher's softened probabilities and the real labels. The soft term's gradient with respect to $z_s$ is $(\sigma(z_s/T) - \sigma(z_t/T))/T$, which shrinks roughly like $1/T^2$ for large $T$; multiplying by $T^2$ keeps the two terms' balance independent of the temperature.
+# *Example:* $z_s = 1$, $z_t = 2$: the soft-term gradient is −0.150 at T = 1, −0.054 at T = 2, −0.015 at T = 4; times $T^2$: −0.150, −0.217, −0.241 (tending to $\sigma'(0)(z_s - z_t) = -0.25$).
+#
+# **3. Parity check**
+#
+# $$
+# \max_i \lvert a_i - b_i \rvert \le \text{atol} \quad (\text{and } \lvert a_i - b_i \rvert \le \text{atol} + \text{rtol}\,\lvert b_i \rvert \text{ in } \texttt{np.allclose})
+# $$
+#
+# *In words:* exact-within-tolerance agreement; right for lossless steps (export), wrong for lossy ones (int8, distillation), which are judged by ranking agreement instead.
+#
+# **4. Spearman rank correlation** (no ties)
+#
+# $$
+# \rho_s = 1 - \frac{6 \sum_i d_i^2}{n(n^2 - 1)}
+# $$
+#
+# *In words:* the Pearson correlation of the ranks; 1 means both models order every item identically.
+# *Symbols:* $d_i$ = the difference between item $i$'s two ranks.
+# *Example:* ranks (1, 2, 3, 4) vs (1, 3, 2, 4): $\sum d^2 = 2$, $\rho_s = 1 - 12/60 = 0.8$.
+#
+# **5. Amdahl's law: what a speed-up is worth end to end**
+#
+# $$
+# \text{overall speed-up} = \frac{1}{(1 - f) + f / k}
+# $$
+#
+# *Symbols:* $f$ = the share of latency in the stage you optimise, $k$ = that stage's speed-up.
+# *Example:* the ranker is 30% of a 60 ms p99 and becomes 2× faster: $1 / (0.7 + 0.15) = 1.18$×, i.e. 9 ms saved, as in 18.6. Made infinitely fast, the best you get is $1/0.7 = 1.43$×.
+#
+# **6. Model size**
+#
+# $$
+# \text{bytes} \approx \text{parameters} \times \text{bytes per parameter}
+# $$
+#
+# *Example:* 9,729 parameters × 4 B = 38.9 KB in fp32 (the file is about 40 KB); int8 weights need about a quarter of that, but biases, buffers and graph metadata stay, so the int8 file is about 15 KB.
+
+# %%
+# --- Check the key equations numerically -------------------------------------
+lo, hi = -1.2, 2.3
+s_q = (hi - lo) / 255
+z_q = int(np.round(-128 - lo / s_q))
+x_q = np.array([-1.2, 0.0, 1.0, 2.3])
+q_q = np.clip(np.round(x_q / s_q) + z_q, -128, 127)
+x_hat = s_q * (q_q - z_q)
+print(f"1. s = {s_q:.4f}, z = {z_q} | q = {q_q.astype(int)} | x_hat = {x_hat.round(4)} | "
+      f"max error {np.abs(x_hat - x_q).max():.4f} <= s/2 = {s_q / 2:.4f}")
+torch_q = torch.quantize_per_tensor(torch.tensor(x_q, dtype=torch.float32), s_q, z_q, torch.qint8)
+print("   torch.quantize_per_tensor gives q =", torch_q.int_repr().numpy())
+for T in (1.0, 2.0, 4.0):
+    z_s = torch.tensor([1.0], requires_grad=True)
+    F.binary_cross_entropy_with_logits(z_s / T, torch.sigmoid(torch.tensor([2.0]) / T)).backward()
+    print(f"2. T = {T:.0f}: soft-term gradient {z_s.grad.item():+.3f} | times T^2 {z_s.grad.item() * T**2:+.3f}")
+print(f"4. Spearman (1,2,3,4) vs (1,3,2,4): {pd.Series([1, 2, 3, 4]).corr(pd.Series([1, 3, 2, 4]), method='spearman'):.2f}")
+print(f"5. Amdahl: {1 / (0.7 + 0.3 / 2):.2f}x overall, {60 * (1 - (0.7 + 0.3 / 2)):.0f} ms saved of 60; ceiling {1 / 0.7:.2f}x")
+print(f"6. fp32 MLP weights: {opt.n_params(mlp) * 4 / 1000:.1f} KB")
+
+# %% [markdown]
+# **Expected:** 1. s = 0.0137, z = −41, q = `[-128  -41   32  127]` both by hand and from PyTorch, a
+# maximum error of about 0.006 (below s/2 = 0.0069); 2. gradients −0.150, −0.054, −0.015, which
+# times T² are −0.150, −0.217, −0.241; 4. 0.80; 5. 1.18×, 9 ms, ceiling 1.43×; 6. 38.9 KB.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

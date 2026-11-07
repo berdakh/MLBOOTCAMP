@@ -69,6 +69,24 @@ for name, df in tables.items():
 # `"NA"` kept as North America.
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# Vocabulary only: the drills themselves are yours to solve.
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Time complexity (Big-O)** | how the work grows with input size $n$ | a loop inside a loop over $n$ is $O(n^2)$ |
+# | **Amortised cost** | average cost per step over a whole run, even if some steps are expensive | each item pushed and popped at most once |
+# | **Deque** | a list you can add to or remove from at both ends in $O(1)$ | `collections.deque` |
+# | **Stable tie-break** | a rule that decides equal keys the same way every time | "the later record wins" |
+# | **Context manager** | an object used with `with` that runs setup and cleanup code | the drill timer |
+# | **Precision@k** | share of the k highest-scored rows that are positive | "of 40 calls, how many reach churners?" |
+# | **Stratified split** | a split that keeps each class's share in both parts | 5% churners in train and test |
+# | **Running total** | a cumulative sum ordered by time | `SUM(...) OVER (ORDER BY month)` |
+# | **Cohort** | the customers who share a start period | everyone who signed up in March 2023 |
+# | **Retention at month +k** | share of a cohort still active k months after its start | `ret_m1`, `ret_m2`, `ret_m3` |
+
+# %% [markdown]
 # ## 16.1 · How to use this notebook
 #
 # Each drill has a **target time**. Treat it like the real thing:
@@ -78,6 +96,12 @@ for name, df in tables.items():
 # 2. Start the timer cell, write the function, run the check.
 # 3. If you go over the target by more than 50%, stop, read the hint in the
 #    grader message, and **put the drill on your repeat list** (section 16.4).
+#
+# > 💡 **Intuition.** Saying the complexity before coding is reading the map
+# > before driving: an interviewer cares more that you know the route is
+# > $O(n \log n)$ than that you reach the end. *Where it breaks down:* Big-O
+# > hides constants; for $n$ = 100, a "slow" $O(n^2)$ loop can beat a clever
+# > structure, so state the input size too.
 #
 # Being slower than target today is normal and is the point: you are measuring
 # where you start. The hints are deliberately one line; the full worked
@@ -445,6 +469,29 @@ print("\npassed:", int((board["status"] == "pass").sum()), "of", len(board), "->
 #
 # Track the trend, not single days: the goal is that a drill that took 15
 # minutes in week 1 takes 5 in week 4.
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **Precision at k:**
+#
+# $$
+# \text{precision@}k = \frac{1}{k} \sum_{i \in \text{top-}k} y_i
+# $$
+#
+# *Example:* scores ranked, labels of the top 4 are 1, 0, 1, 0: precision@4 = 0.5.
+#
+# **Cohort retention at month $+k$:**
+#
+# $$
+# \text{ret}_k(c) = \frac{\lvert\{\text{customers of cohort } c \text{ active in month } c + k\}\rvert}{\lvert \text{cohort } c \rvert}
+# $$
+#
+# *Example:* 120 sign-ups in March, 96 with any usage in April: $\text{ret}_1 = 0.80$.
+#
+# **Why $O(nk)$ fails the sliding-window drill:** $n = 200{,}000$,
+# $k = 5{,}000$ gives $10^9$ comparisons (minutes in Python), against
+# $\approx 2n = 4 \times 10^5$ operations for an $O(n)$ method.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

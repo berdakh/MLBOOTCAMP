@@ -131,7 +131,26 @@ print("relevant abstract:", corpus[next(iter(test_qrels[q0]))][:200], "...")
 # different wording ("aspirin" vs "acetylsalicylic acid"), which is what makes this hard for
 # purely lexical matching, and specialised vocabulary is what makes it hard for a general
 # embedding model.
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Corpus / qrels | the documents to search / the judged (query, relevant document) pairs | 5,183 abstracts; ~1.1 relevant per test query |
+# | Lexical retrieval | matching the exact words of the query | BM25 |
+# | idf | inverse document frequency: rare terms count more than common ones | "prion" vs "protein" |
+# | BM25 | a word-matching score with saturating term counts and length normalisation | nDCG@10 0.667 on SciFact |
+# | Dense retrieval / bi-encoder | embed queries and documents separately into vectors, search by similarity | `all-MiniLM-L6-v2`, 384 dimensions |
+# | L2 normalisation | scaling each vector to length 1, so dot product = cosine | all norms 1.0000 in 7.3 |
+# | ANN | approximate nearest-neighbour search: trade a little recall for much less latency | HNSW, recall@10 0.975 at efSearch 64 |
+# | HNSW | a layered graph of vectors that a query walks greedily toward its neighbours | `IndexHNSWFlat`, `M`, `efSearch` |
+# | nDCG@10 | how well the top 10 is ordered, 1.0 = every relevant document on top | BEIR's headline metric |
+# | Recall@100 | the share of relevant documents found anywhere in the top 100 | what a re-ranker can at best recover |
+# | RRF | reciprocal rank fusion: combine rankings by summing 1 / (k + rank) | the hybrid in 7.6 |
+# | Hybrid retrieval | combining lexical and dense results | best on both metrics here |
+
+# %% [markdown]
 # ## 7.1 · Retrieval metrics
 #
 # For each query, a system returns a ranked list; the **qrels** say which documents are
@@ -427,6 +446,21 @@ print("wrote", OUT / "retrieval_results.json")
 # **cross-encoder re-ranker** on top.
 
 # %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-two-stage-retrieval.svg" alt="A pipeline: corpus embedded offline, stage 1 BM25 plus dense fused by RRF returning the top 50, stage 2 a cross-encoder re-ranking to the top 5 for the user or an LLM" width="100%">
+#
+# *What to notice:* this notebook built the blue box; notebook 08 adds the yellow one. Stage 1 is optimised for recall because anything it misses is gone for good.
+#
+# > 💡 **Intuition.** BM25 matches *spelling*, a dense model matches *meaning*. "PrP" in a claim and
+# > "PrP" in an abstract is a sure hit for BM25 and just another token for a general embedding
+# > model; "methionine restriction may activate miRNAs" vs "microRNAs in stress responses" is the
+# > reverse. A hybrid asks both and lets agreement win.
+#
+# > 💡 **Intuition.** HNSW is like asking for directions in an unfamiliar country: first take
+# > the motorway to the right region (the sparse top layer), then main roads, then side streets
+# > (the dense bottom layer). `efSearch` is how many alternative routes you keep in mind; more
+# > routes, better answer, slower trip.
+
+# %% [markdown]
 # > **Exercise 3.** You are asked to replace the BM25 search over 50 million product
 # > descriptions with "semantic search". Using this notebook's measurements, write a short plan:
 # > what you would evaluate offline (metrics, query sets, which slices: head vs tail queries,
@@ -436,6 +470,59 @@ print("wrote", OUT / "retrieval_results.json")
 
 # %% [markdown]
 # *Your answer (Exercise 3):* ...
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1. BM25.**
+#
+# $$
+# \operatorname{BM25}(q, d) = \sum_{t \in q} \operatorname{idf}(t)\, \frac{f(t,d)\,(k_1 + 1)}{f(t,d) + k_1 \big(1 - b + b\, \lvert d \rvert / \text{avgdl}\big)}, \qquad
+# \operatorname{idf}(t) = \ln\!\Big(1 + \frac{N - n_t + 0.5}{n_t + 0.5}\Big)
+# $$
+#
+# In words: rare query terms (high idf) that appear in the document count most; repeated
+# occurrences saturate ($k_1$); long documents are penalised ($b$). Example: $N = 1000$ documents,
+# the term is in $n_t = 10$, appears $f = 3$ times in a document of average length, $k_1 = 1.2$:
+# $\operatorname{idf} = \ln(1 + 990.5/10.5) = 4.56$ and the term contributes
+# $4.56 \times 3 \cdot 2.2 / (3 + 1.2) = 7.16$. Ten times as many occurrences ($f = 30$) give
+# $4.56 \times 2.12 = 9.64$: only 35% more (saturation; the ceiling is $\operatorname{idf} \cdot (k_1 + 1) = 10.0$).
+#
+# **2. Cosine similarity (unit vectors).**
+#
+# $$
+# \operatorname{sim}(\mathbf q, \mathbf d) = \frac{\mathbf q \cdot \mathbf d}{\lVert \mathbf q \rVert\, \lVert \mathbf d \rVert} = \mathbf q \cdot \mathbf d \quad \text{if } \lVert \mathbf q \rVert = \lVert \mathbf d \rVert = 1
+# $$
+#
+# Example: exact search over $N = 50{,}000$ vectors of $d = 384$ costs $N d \approx 1.9 \times 10^7$
+# multiply-adds per query, which is why it grows linearly with the corpus.
+#
+# **3. nDCG@k.**
+#
+# $$
+# \operatorname{DCG@}k = \sum_{i=1}^{k} \frac{rel_i}{\log_2(i + 1)}, \qquad \operatorname{nDCG@}k = \frac{\operatorname{DCG@}k}{\operatorname{IDCG@}k}
+# $$
+#
+# In words: gains discounted by position, divided by the best possible ordering. Example: one
+# relevant document, found at rank 3: $1/\log_2 4 = 0.5$, ideal is $1$, so nDCG@10 = 0.5; at rank
+# 1 it would be 1.0.
+#
+# **4. Recall@k.**
+#
+# $$
+# \operatorname{Recall@}k = \frac{\lvert \text{relevant} \cap \text{top-}k \rvert}{\lvert \text{relevant} \rvert}
+# $$
+#
+# Example: 2 relevant documents, 1 of them in the top 100: Recall@100 = 0.5.
+#
+# **5. Reciprocal rank fusion.**
+#
+# $$
+# \operatorname{RRF}(d) = \sum_{s} \frac{1}{k + \operatorname{rank}_s(d)}, \qquad k = 60
+# $$
+#
+# Example: ranks 1 and 3 give $1/61 + 1/63 = 0.03227$; ranks 2 and 2 give $2/62 = 0.03226$:
+# nearly a tie, so consistent agreement is worth as much as one first place.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

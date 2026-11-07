@@ -127,7 +127,25 @@ print(f"labels: {LABELS} | labelled {len(lab_df)}, unlabelled transfer {len(tran
 # **Expected:** the two card links, labels `['World', 'Sports', 'Business', 'Sci/Tech']`,
 # 1,500 labelled + 1,000 transfer + 500 evaluation examples on the CPU budget (20,000 /
 # 20,000 / 4,000 on a T4). The first run downloads AG News (~30 MB) and the tokenizer.
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Quantisation | Storing (and computing with) numbers in fewer bits, e.g. 8-bit integers instead of 32-bit floats | DistilBERT's Linear layers converted to int8 |
+# | Scale `s` | The real-valued size of one integer step; `x ≈ q × s` | `max(abs(W[row])) / 127` for one weight row |
+# | Per-tensor vs per-channel | One scale for a whole matrix vs one scale per output row | per-channel cuts the weight error 2.4× in 11.3 |
+# | Dynamic quantisation | Weights stored as int8 once; activations quantised on the fly at run time, no calibration data | `quantize_dynamic(model, {nn.Linear})` |
+# | Weight-only quantisation | Only the weights are low-bit; the arithmetic still runs in floating point | the int8/int4 simulation in 11.3 |
+# | Group-wise scales | One scale per small block of weights (e.g. 128), needed for int4 | GPTQ / AWQ 4-bit LLM loaders |
+# | Knowledge distillation | Training a small *student* to imitate a large *teacher*'s outputs | DistilBERT teacher → TF-IDF + MLP student |
+# | Temperature `T` | Divides the logits before the softmax; `T > 1` flattens the distribution | `T = 4` in the student runs |
+# | Soft targets | The teacher's full probability vector, not just its top answer | "Sci/Tech 15%" for a Business article |
+# | Transfer set | Unlabelled text the teacher labels so the student sees more examples | the 1,000 extra AG News texts |
+# | Agreement | Share of examples where two models give the same prediction | int8 vs fp32 agree on ~96% |
+
+# %% [markdown]
 # ## 11.1 · The teacher: fine-tune DistilBERT
 #
 # A sequence-classification head (`AutoModelForSequenceClassification`, 4 labels) on
@@ -215,6 +233,12 @@ print(f"teacher accuracy on {len(eval_y)} eval examples: {ACC_TEACHER:.3f}")
 # `torch.ao.quantization` is deprecated in recent PyTorch (scheduled for removal in 2.10
 # in favour of the `torchao` library); the cell suppresses the warning and reports cleanly
 # if the API is missing.
+#
+# > 💡 **Intuition.** Dynamic quantisation is like a shop that keeps its price list (the weights)
+# > in whole cents, but converts each customer's foreign currency (the activations) at today's rate
+# > as they arrive. Nothing needs to be prepared in advance, at the cost of a conversion per request.
+# > *Where the analogy breaks down:* only `nn.Linear` layers are converted; the embeddings (a third of
+# > this model) stay fp32, which is why the file only halves.
 
 # %%
 teacher_cpu = copy.deepcopy(teacher).to(CPU).float().eval()
@@ -295,6 +319,17 @@ if "int8" in LAT:
 # **Per-channel**: one scale per output row, adapting to each row's range. Int4 uses
 # `[-7, 7]` and needs per-channel or finer *group-wise* scales (e.g. one per 128 weights,
 # as in GPTQ/AWQ) to work at all.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-int8-quantization.svg" alt="Float values snapping to a 255-level integer grid, and per-tensor vs per-channel scales on three rows of different range" width="100%">
+#
+# *What to notice:* with one per-tensor scale the small-range rows get only one or two integer levels; per-channel scales give every row the whole grid.
+#
+# > 💡 **Intuition.** Quantising is measuring every weight with a ruler that has only 255 tick
+# > marks. A per-tensor scale sizes the ruler for the *longest* object in the matrix, so short rows
+# > are measured in very coarse steps; per-channel gives each row a ruler cut to its own length.
+# > *Where the analogy breaks down:* a layer's output is a sum of many products, and independent
+# > rounding errors partly cancel in that sum, so the output error is smaller than "ruler
+# > precision" suggests (11.3 measures exactly this).
 
 # %% [markdown]
 # > **Exercise 1.** Write `quantize_per_channel_int8(W)` for a 2-D float tensor `W` (rows = output
@@ -426,6 +461,17 @@ else:
 # The `T²` keeps the soft term's gradient scale independent of T. Distillation's other
 # big advantage is data: the teacher can label **unlabelled** text (the *transfer set*), so
 # the student can learn from far more examples than were ever annotated.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-distillation.svg" alt="Teacher and student both read the input; a KL term compares their softened probabilities and a cross-entropy term compares the student with the true label" width="100%">
+#
+# *What to notice:* the student gets two signals, the teacher's soft targets (weighted α·T²) and the true label (weighted 1 − α); without a label only the KL term remains.
+#
+# > 💡 **Intuition.** A hard label says "this is Business". The teacher's soft targets say "Business,
+# > but it reads a bit like Sci/Tech and nothing like Sports", which tells the student *which*
+# > mistakes are reasonable. Raising `T` is like turning up the contrast on those faint marks:
+# > `softmax([4, 1, 0])` is `[0.94, 0.05, 0.02]` at `T = 1` but `[0.54, 0.26, 0.20]` at `T = 4`.
+# > *Where the analogy breaks down:* too high a `T` flattens everything towards uniform and the
+# > signal disappears; `T` between 2 and 8 is the usual range.
 
 # %% [markdown]
 # > **Exercise 2.** Write `kd_loss(student_logits, teacher_logits, labels, T, alpha)` returning the
@@ -594,6 +640,71 @@ print("wrote", OUT / "compression_table.json")
 
 # %% [markdown]
 # *Your answer (Exercise 3):* ...
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · Symmetric int8 quantisation.**
+#
+# $$
+# q = \operatorname{clamp}\!\big(\operatorname{round}(x / s),\,-127,\,127\big), \qquad s = \frac{\max_i \lvert x_i \rvert}{127}, \qquad \hat{x} = q\,s
+# $$
+#
+# *In words:* divide by the step size, round to the nearest integer, and multiply back. *Symbols:*
+# $x$ a real weight, $s$ the scale (one per tensor, per row, or per group), $q$ the stored int8,
+# $\hat{x}$ the dequantised value. *Example:* $x = 0.21$, $\max\lvert x\rvert = 0.35$ gives
+# $s = 0.35/127 = 0.00276$, $x/s = 76.2$, $q = 76$, $\hat{x} = 0.2094$.
+#
+# **2 · Rounding error bound.**
+#
+# $$
+# \lvert x - \hat{x} \rvert \le \frac{s}{2}
+# $$
+#
+# *In words:* rounding moves a value by at most half a step. *Example:* above, the error is
+# $0.0006 \le s/2 = 0.0014$. Per-channel helps because each row's $s_r = \max_j \lvert W_{rj}\rvert / 127$
+# is smaller than the global $s$; int4 uses 7 instead of 127, so its step is $127/7 \approx 18\times$ coarser.
+#
+# **3 · Memory.** $\text{bytes} = \text{parameters} \times \text{bits} / 8$ (+ one fp32 scale per row or group).
+# *Example:* the $3072 \times 768$ FFN matrix has 2.36M weights: 9.4 MB in fp32, 2.4 MB in int8, 1.2 MB in int4.
+#
+# **4 · Distillation loss** (as in Exercise 2; some papers put $\alpha$ on the CE term instead, so always say which).
+#
+# $$
+# \mathcal{L} = \alpha\, T^2\, \mathrm{KL}\!\left(p_t^{(T)} \,\Vert\, p_s^{(T)}\right) + (1 - \alpha)\, \mathrm{CE}(z_s, y), \qquad p^{(T)} = \operatorname{softmax}(z / T)
+# $$
+#
+# *In words:* match the teacher's softened distribution (weight $\alpha$) and the true label (weight
+# $1 - \alpha$). *Symbols:* $z_t, z_s$ teacher and student logits, $T$ the temperature, $\alpha \in [0, 1]$,
+# $y$ the label. The $T^2$ undoes the $1/T^2$ shrinkage of the soft term's gradient, so changing $T$
+# does not silently change its weight. *Example:* with $\alpha = 0$ this is ordinary cross-entropy
+# (variants A and C of 11.4).
+#
+# The cell below checks all four numerically.
+
+# %%
+# Key equations, checked numerically (CPU, instant).
+x = torch.tensor([0.21, -0.35, 0.05, 0.349])
+s = x.abs().max() / 127
+q = torch.round(x / s).clamp(-127, 127)
+err = (x - q * s).abs().max()
+print(f"s = {s:.5f} | q = {q.int().tolist()} | max error {err:.5f} <= s/2 = {s / 2:.5f}: {bool(err <= s / 2)}")
+print(f"3072 x 768 matrix: fp32 {3072 * 768 * 4 / 1e6:.1f} MB | int8 {3072 * 768 / 1e6:.1f} MB "
+      f"| int4 {3072 * 768 / 2e6:.1f} MB")
+
+zt = torch.tensor([[4.0, 1.0, 0.0]])
+for T_ in (1.0, 4.0):
+    print(f"T = {T_}: softmax(z_t / T) = {F.softmax(zt / T_, -1).squeeze().numpy().round(3)}")
+zs, y_, T_, a_ = torch.tensor([[2.0, 1.5, 0.0]]), torch.tensor([0]), 4.0, 0.7
+pt, log_ps = F.softmax(zt / T_, -1), F.log_softmax(zs / T_, -1)
+by_hand = a_ * T_**2 * (pt * (pt.log() - log_ps)).sum() + (1 - a_) * F.cross_entropy(zs, y_)
+print(f"distillation loss by hand {by_hand.item():.4f} | scaleml.serving.kd_loss "
+      f"{S.kd_loss(zs, zt, y_, T_, a_).item():.4f}")
+
+# %% [markdown]
+# **Expected:** `s = 0.00276`, `q = [76, -127, 18, 127]`, an error below `s/2` (`True`); 9.4 / 2.4 /
+# 1.2 MB; the two softmax vectors quoted above; and the same loss computed by hand and by the
+# library (`0.6325` both).
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

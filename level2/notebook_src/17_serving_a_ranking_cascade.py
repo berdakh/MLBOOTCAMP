@@ -80,6 +80,24 @@ print("train days", store.TRAIN_DAYS, "| valid days", store.VALID_DAYS, "| test 
 # 10–40 s the first time, while the data is generated; a second or two after).
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Cascade | a chain of stages, each cheaper per item than the next, that shrinks the candidate set | 4,000 items → ~300 candidates → top 10 |
+# | Retrieval (candidate generation) | cheaply finding a few hundred plausible items from the whole catalogue | FAISS nearest neighbours + co-visitation + popularity |
+# | Point-in-time | using only data from before the moment being served or predicted | state from days 0–41 serves days 42–48 |
+# | Online feature store | a low-latency key–value lookup of features at request time | `OnlineStore`, 1 ms simulated per call |
+# | Retrieval recall | the share of the truly best items that made it into the candidates | about 0.85 of the true top 10 |
+# | Catalogue NDCG@10 | the shown top 10 scored against the user's true best 10 in the whole catalogue | cascade 0.875 without the category cap |
+# | LRU cache | keeps the most recently used entries and evicts the least recently used when full | the user-feature cache in 17.4 |
+# | Hit rate | the share of lookups the cache answers without a round trip | at most 0.29 for one day of requests |
+# | TTL | time to live: how long a cached value may be served before it must be refreshed | seconds for session features, hours for favourite categories |
+# | Graceful degradation | answering worse but sensibly when a dependency fails | ranker timeout → popularity order |
+# | p50 / p99 | the latency that 50% / 99% of requests beat | client p99 about 13 ms at concurrency 1 |
+# | SLO | the service-level objective: the target the service promises | p99 ≤ 100 ms end to end |
+
+# %% [markdown]
 # ## 17.1 · The pieces, built point-in-time
 #
 # A cascade for one request:
@@ -90,6 +108,16 @@ print("train days", store.TRAIN_DAYS, "| valid days", store.VALID_DAYS, "| test 
 # | Feature fetch | 300 ids → 300 × F matrix | online feature store lookups (network!) | 20–30 % |
 # | Ranker | 300 rows → 300 scores | GBDT or a neural net | 30–40 % |
 # | Rules | 300 → 10 | filter, dedupe, diversity, boosts | < 5 % |
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-ranking-cascade.svg" alt="Five stages from catalogue to top 10 above a stacked bar splitting a 100 ms p99 budget across retrieval, features, ranking, rules and the unmeasured remainder" width="100%">
+#
+# *What to notice:* a quarter of the budget is reserved for work outside the four stages; 17.7 shows why that slice is not optional.
+#
+# > 💡 **Intuition.** A cascade is a hiring funnel: a seconds-long CV screen for
+# > everyone, phone screens for a few hundred, onsite interviews for ten. Nobody can
+# > afford onsites for every applicant. *Where it breaks down:* a funnel never rescues a
+# > candidate rejected at the CV screen, and neither does a ranker: retrieval sets the
+# > ceiling for everything after it (the oracle row in 17.3).
 #
 # Everything the service knows must come from data **before** the day it
 # serves. We do it twice, exactly as a production pipeline would:
@@ -322,6 +350,15 @@ print("hit rate by capacity:", hit_rates)
 # is as old as its fill time. Production caches add a TTL (time to live)
 # matched to how fast the feature changes — seconds for "items viewed in this
 # session", hours or days for "favourite categories".
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-lru-cache.svg" alt="A dictionary mapping keys to nodes of a doubly linked list ordered from most recent to least recent" width="100%">
+#
+# *What to notice:* both operations touch only the dictionary entry and the two ends of the list, which is why each is O(1).
+#
+# > 💡 **Intuition.** A cache is keeping the tools you used today on your desk instead of
+# > in the shed: the desk is small, so the tool you have not touched longest goes back.
+# > *Where it breaks down:* a hammer on the desk is still a hammer, but a cached feature
+# > can be stale; the TTL is how long you trust it.
 
 # %% [markdown]
 # ## 17.5 · Business rules
@@ -378,6 +415,10 @@ for cap in (2, 3, 5, 10):
 # | Ranker errors or exceeds its timeout | candidates in popularity order | relevance |
 # | User row missing (new user, store down) | default features, popularity + co-visitation retrieval | personalisation |
 # | Retrieval fails | cached popular list | everything but availability |
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-graceful-degradation.svg" alt="Four failure rows: ranker error and timeout fall back to popularity order, a feature-store outage uses default features, a retrieval failure serves a cached popular list" width="100%">
+#
+# *What to notice:* every fallback keeps the service up at a measured quality cost, and each one must be counted, or it becomes an invisible outage.
 #
 # The mechanism is a call with a timeout and a fallback.
 #
@@ -586,6 +627,11 @@ budget.round(1)
 # * Spend the budget where it buys quality: the ranker, usually. Retrieval
 #   and features should be boring and fast.
 #
+# > 💡 **Intuition.** Fan-out is waiting for ten friends before dinner starts: dinner is as
+# > late as the latest friend, and with ten friends someone is usually late. *Where it
+# > breaks down:* friends' delays are independent; shard delays often are not (a shared
+# > overloaded network makes them all slow together), which can be better or much worse.
+#
 # > **Exercise 4 (written).** Your team's home-feed service has a **200 ms
 # > p99** SLO measured at the client. The ranker is a deep model on a GPU
 # > pool behind its own RPC; features come from a remote feature store; ANN
@@ -599,6 +645,63 @@ budget.round(1)
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1. Little's law**
+#
+# $$
+# L = \lambda\, W
+# $$
+#
+# *In words:* the average number of requests in the system equals the arrival rate times the average time each spends there. It needs no assumptions about distributions.
+# *Symbols:* $L$ = requests in flight (here, the number of busy client threads), $\lambda$ = throughput (requests/s), $W$ = mean latency (s).
+# *Example:* concurrency 16 at about 210 requests/s gives $W = 16 / 210 \approx 76$ ms, between the measured p50 (60–66 ms) and p99 (100–125 ms); at concurrency 1 and 140 requests/s, $W \approx 7$ ms against a p50 of 6.5 ms.
+#
+# **2. Why latency explodes near saturation** (a single queue with random arrivals, M/M/1)
+#
+# $$
+# W = \frac{S}{1 - \rho}, \qquad \rho = \lambda S
+# $$
+#
+# *In words:* as utilisation ρ approaches 1, waiting time grows without bound, which is why capacity plans target 50–70% utilisation.
+# *Symbols:* $S$ = service time per request, ρ = utilisation.
+# *Example:* $S$ = 5 ms: 10 ms at ρ = 0.5, 50 ms at ρ = 0.9, 500 ms at ρ = 0.99.
+#
+# **3. Fan-out and tail latency**
+#
+# $$
+# P(\text{request waits for a slow shard}) = 1 - (1 - q)^N
+# $$
+#
+# *In words:* with N parallel calls, each slow with probability q, the request is slow if any one is.
+# *Example:* N = 10 shards, q = 0.01 (each shard's p99): $1 - 0.99^{10} = 0.096$, so about 10% of requests see a shard's p99.
+#
+# **4. Cache hit rate and its effect on latency**
+#
+# $$
+# h \le 1 - \frac{\text{distinct keys}}{\text{requests}}, \qquad \mathbb{E}[t] = h\, t_{\text{hit}} + (1 - h)\, t_{\text{miss}}
+# $$
+#
+# *Example:* $1 - 3{,}177 / 4{,}483 = 0.29$ for one validation day; with $t_{\text{hit}} \approx 0$ and $t_{\text{miss}} = 1$ ms the expected feature-fetch time falls from 1 ms to 0.71 ms.
+#
+# **5. The latency budget**
+#
+# $$
+# \sum_{\text{stages}} b_s + b_{\text{outside}} \le \text{SLO}, \qquad p_{99}\Big(\sum_s t_s\Big) \le \sum_s p_{99}(t_s)
+# $$
+#
+# *In words:* stage budgets plus slack must fit the SLO; because tail latencies rarely coincide, the p99 of the sum is below the sum of p99s, which makes per-stage budgets conservative.
+# *Example:* 20 + 20 + 30 + 5 + 25 = 100 ms in 17.8.
+#
+# **6. Retrieval recall@K**
+#
+# $$
+# \text{recall@K} = \frac{\lvert \text{relevant} \cap \text{top-K candidates} \rvert}{\lvert \text{relevant} \rvert}
+# $$
+#
+# *Example:* if 17 of a user's 20 truly best items are among the ~320 candidates, recall = 0.85; no ranker can recover the other 3.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting
