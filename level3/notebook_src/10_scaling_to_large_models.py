@@ -99,6 +99,25 @@ RESULTS = {}
 GB = 1e9
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Ψ (psi) | the number of model parameters, in memory formulas | 7B: Ψ = 7 × 10⁹ |
+# | Model state | weights + gradients + optimizer state (not activations) | 16Ψ bytes for mixed-precision Adam |
+# | ZeRO stage 1/2/3 | shard optimizer state / + gradients / + parameters across data-parallel GPUs | 7B on 8 GPUs: 38.5 / 26.2 / 14.0 GB |
+# | FSDP | PyTorch's fully sharded data parallel: ZeRO-3, gathering each layer just in time | `fully_shard` in the 10.1 demo |
+# | Tensor parallelism | splitting the matrices of one layer across GPUs | column- then row-parallel MLP in 10.2 |
+# | Pipeline parallelism | putting consecutive groups of layers on different GPUs | 4 stages in 10.3 |
+# | Micro-batch / bubble | a slice of the batch fed through the pipeline / the idle time while it fills and drains | 3/7 idle at p = m = 4 |
+# | 3D parallelism | tensor × pipeline × data parallelism combined | TP inside a node, PP across nodes, DP across replicas |
+# | MFU | model FLOPs utilisation: useful FLOP/s divided by the hardware peak | ~40% for well-tuned large runs |
+# | Compute-optimal (Chinchilla) | the model size and token count that minimise loss for a fixed FLOP budget | ≈ 20 tokens per parameter |
+# | MTBF | mean time between failures | 128 nodes at 50 days each → 9.4 h for the job |
+# | Loss scaling | multiplying the loss so small fp16 gradients do not round to zero | `GradScaler`, S = 2¹⁶ to start |
+# | bf16 | a 16-bit format with fp32's exponent range and less precision | A100/H100 training; no scaler needed |
+
+# %% [markdown]
 # ## 10.1 · Memory per GPU: DDP vs ZeRO-1/2/3 (FSDP)
 #
 # The standard accounting (ZeRO paper, Rajbhandari et al. 2020) for **mixed-precision
@@ -128,6 +147,17 @@ GB = 1e9
 #
 # PyTorch's `FullyShardedDataParallel` (FSDP, and FSDP2's `fully_shard`) implements stage 3
 # (and, with `SHARD_GRAD_OP`, stage 2); DeepSpeed implements all three.
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-zero-stages.svg" alt="Stacked bars of model-state bytes per parameter on each of 4 GPUs: DDP 16, ZeRO-1 7, ZeRO-2 5.5, ZeRO-3 4" width="100%">
+#
+# *What to notice:* each stage shards one more colour; the green optimizer block is the biggest, which is why stage 1 alone already saves most of the memory.
+#
+# > 💡 **Intuition.** With DDP every member of a study group carries the full encyclopedia.
+# > ZeRO-1 splits the bulky index volumes (optimizer state), ZeRO-2 also the notes (gradients),
+# > ZeRO-3 the encyclopedia itself: each person carries a few volumes and borrows the page they
+# > need right before reading it. *Where it breaks down:* borrowing takes network time, twice per
+# > step (forward and backward), and a slow network makes it the bottleneck.
 
 # %% [markdown]
 # > **Exercise 1.** Write `zero_memory_per_gpu(n_params, world_size, stage)` returning the model-state
@@ -303,6 +333,11 @@ if fsdp_report:
 # block, whose heads are split across devices). We check this on CPU with two simulated
 # "devices" (two halves of the weight matrices).
 
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-tensor-parallel-mlp.svg" alt="The input is replicated on two GPUs; each multiplies by half the columns of the first weight, applies GELU, multiplies by the matching half of the second weight's rows, and one all-reduce sums the two partial outputs" width="100%">
+#
+# *What to notice:* the GELU sits between the halves without any communication, because it acts on each feature separately; the only exchange is the final sum.
+
 # %%
 torch.manual_seed(0)
 h, B_T = 64, 10  # hidden size, batch x sequence positions
@@ -358,6 +393,17 @@ print(f"per device: {fc.weight.numel() // 2 + proj.weight.numel() // 2:,} MLP we
 # pipelines work *across* nodes. The cost is the bubble and the need for many
 # micro-batches. Let us simulate a GPipe schedule (all forwards, then all backwards;
 # backward takes 2 time units, forward 1) and count idle slots.
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-pipeline-bubble.svg" alt="A GPipe schedule for 4 stages and 4 micro-batches: forward passes form a staircase, backward passes a reversed staircase, and the empty triangles are idle time, 3/7 of the step" width="100%">
+#
+# *What to notice:* the idle triangles have the same size whatever m is; more micro-batches make the busy part longer, so the bubble's *share* shrinks.
+#
+# > 💡 **Intuition.** A car-wash with four stations: the first car needs four steps to reach the
+# > end, and the last stations stand idle while the line fills (and the first ones while it
+# > drains). Washing 16 cars per batch instead of 4 makes the fill-and-drain a small part of the
+# > day. *Where it breaks down:* every car in flight must have its activations stored until its
+# > backward pass, so more micro-batches also cost memory (1F1B schedules limit this).
 
 # %%
 def gpipe_schedule(p, m, fwd=1, bwd=2):
@@ -495,6 +541,16 @@ for name, n, d, gpu, tf, mfu, g, src in examples:
 #
 # Combining C = 6·N·D with D = 20·N gives N = √(C / 120):
 
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-scaling-frontier.svg" alt="Three U-shaped loss curves against model size for budgets C, 10C and 100C, with the minima joined by a dashed compute-optimal frontier; beside them C = 6ND, D = 20N and N = sqrt(C/120)" width="100%">
+#
+# *What to notice:* for a fixed budget, a model that is too big sees too few tokens and one that is too small cannot use them; the optimum moves right (bigger) as compute grows, but only as √C.
+#
+# > 💡 **Intuition: where 6 comes from.** Every training token visits every weight three times: in
+# > the forward pass (activation × weight), in backward to get the activation gradient, and in
+# > backward to get the weight gradient. Each visit is a multiply and an add: $3 	imes 2 = 6$
+# > FLOPs per parameter per token.
+
 # %%
 print(f"{'compute (FLOPs)':>16} | {'params':>10} | {'tokens':>10}")
 for c in (1e19, 1e21, 1e23, 5.9e23, 1e25):
@@ -623,6 +679,11 @@ print("bf16(256 + 1)      ->", (torch.tensor(256.0).bfloat16() + 1).item(), "  (
 # appears, double S after 2,000 clean steps. We simulate the fp16 backward on CPU by casting
 # the real fp32 gradients of a small TinyGPT (after scaling) to fp16.
 
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-mixed-precision.svg" alt="A log-scale number line of gradient magnitudes with fp16's underflow, subnormal, normal and overflow zones; raw gradients centred near 1e-6 straddle the underflow zones, and multiplying by 2 to the 16 moves them into the normal range" width="100%">
+#
+# *What to notice:* multiplying by S is a pure shift on a log scale: the shape of the gradient distribution is unchanged, it just moves out of the red and yellow zones.
+
 # %%
 torch.manual_seed(0)
 small = tg.TinyGPT(tg.GPTConfig(vocab_size=256, block_size=32, n_embd=64, n_head=4, n_layer=2))
@@ -678,6 +739,98 @@ print("wrote", OUT / "budget.json")
 
 # %% [markdown]
 # *Your answer (Exercise 4):* ...
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1. Model-state memory per GPU (mixed-precision Adam, $N$ data-parallel GPUs).**
+#
+# $$
+# M_{\text{DDP}} = 16\Psi, \quad M_{\text{Z1}} = 4\Psi + \frac{12\Psi}{N}, \quad M_{\text{Z2}} = 2\Psi + \frac{14\Psi}{N}, \quad M_{\text{Z3}} = \frac{16\Psi}{N}
+# $$
+#
+# In words: each stage shards one more of optimizer state (12 bytes), gradients (2) and
+# parameters (2). Example: 7B on 8 GPUs: 112, 38.5, 26.25 and 14.0 GB.
+#
+# **2. Training compute and time.**
+#
+# $$
+# C \approx 6\,N D, \qquad t \approx \frac{C}{n_{\text{GPU}} \cdot P_{\text{peak}} \cdot \text{MFU}}
+# $$
+#
+# In words: 6 FLOPs per parameter per token; time is that divided by the FLOP/s you actually get.
+# Symbols: $N$ parameters, $D$ training tokens. Example: 7B on 1T tokens: $4.2 \times 10^{22}$
+# FLOPs; on 256 A100s (312 TFLOP/s) at 40% MFU, $4.2\times10^{22} / (256 \cdot 312\times10^{12} \cdot 0.4) = 1.3 \times 10^6$ s ≈ 15 days.
+#
+# **3. Chinchilla compute-optimal sizing.**
+#
+# $$
+# D^{\star} \approx 20\, N^{\star} \;\;\Rightarrow\;\; C = 6 N^{\star} (20 N^{\star}) \;\;\Rightarrow\;\; N^{\star} = \sqrt{C / 120}
+# $$
+#
+# Example: $C = 5.9 \times 10^{23}$: $N^{\star} \approx 70$B parameters, $D^{\star} \approx 1.4$T tokens.
+#
+# **4. Pipeline bubble.**
+#
+# $$
+# \text{bubble} = \frac{p - 1}{m + p - 1}
+# $$
+#
+# In words: $p - 1$ slots of fill and drain out of $m + p - 1$. Example: $p = 4$: 0.43 at $m = 4$,
+# 0.16 at $m = 16$.
+#
+# **5. Tensor parallelism of $y = xW^\top$.**
+#
+# $$
+# \text{column: } y = \big[\, x W_1^\top,\; x W_2^\top \,\big] \;(\text{all-gather}), \qquad
+# \text{row: } y = x_1 W_1^\top + x_2 W_2^\top \;(\text{all-reduce})
+# $$
+#
+# Example: an MLP $4C$ wide on 2 GPUs: each holds a $C \times 2C$ half of both matrices and
+# exchanges one $B \times T \times C$ sum.
+#
+# **6. Optimal checkpoint interval (Young 1974; Daly 2006).**
+#
+# $$
+# \text{waste}(\tau) \approx \frac{C}{\tau} + \frac{\tau/2 + R}{M}, \qquad \tau^{\star} = \sqrt{2\,C\,M} \;\;(\text{Daly: } \approx \sqrt{2CM} - C)
+# $$
+#
+# In words: checkpoint cost per interval plus, per failure, half an interval of lost work and a
+# restart. Symbols: $C$ checkpoint write time, $M$ job MTBF ($= M_{\text{node}} / n_{\text{nodes}}$),
+# $R$ restart time. Example: $C = 5$ min, $M = 9.4$ h: $\tau^{\star} = \sqrt{2 \cdot 300 \cdot 33{,}840}$ s ≈ 75 min.
+#
+# **7. Loss scaling.**
+#
+# $$
+# \nabla_\theta (S \cdot \mathcal L) = S \cdot \nabla_\theta \mathcal L, \qquad \text{fp16 normal range} \approx [6.1 \times 10^{-5},\; 65{,}504]
+# $$
+#
+# In words: scale the loss up so gradients are representable in fp16, then divide by $S$ in fp32
+# before the update. Example: a gradient of $10^{-8}$ becomes 0 in fp16, but $10^{-8} \cdot 2^{16} \approx 6.6 \times 10^{-4}$
+# is a normal fp16 number.
+#
+# The next cell checks 1, 3, 4 and 6 against the course's `scaleml.distributed` helpers.
+
+# %%
+psi, n_gpu = 7e9, 8
+formula = {0: 16 * psi, 1: 4 * psi + 12 * psi / n_gpu, 2: 2 * psi + 14 * psi / n_gpu, 3: 16 * psi / n_gpu}
+for stage, value in formula.items():
+    print(f"ZeRO-{stage}: formula {value / 1e9:6.2f} GB | D.zero_memory_per_gpu "
+          f"{D.zero_memory_per_gpu(psi, n_gpu, stage) / 1e9:6.2f} GB")
+
+budget_flops = 5.9e23
+n_opt, d_opt = D.chinchilla_optimal(budget_flops)
+print(f"Chinchilla: sqrt(C/120) = {math.sqrt(budget_flops / 120) / 1e9:.1f}B | helper {n_opt / 1e9:.1f}B params, "
+      f"{d_opt / 1e12:.2f}T tokens, 6ND = {6 * n_opt * d_opt:.2e}")
+print(f"bubble p=4, m=16: formula {(4 - 1) / (16 + 4 - 1):.3f} | helper {D.pipeline_bubble_fraction(4, 16):.3f}")
+mtbf = D.cluster_mtbf(50 * 86400, 128)
+print(f"Young: sqrt(2 * 300 s * {mtbf / 3600:.1f} h) = {math.sqrt(2 * 300 * mtbf) / 60:.0f} min | "
+      f"helper {D.young_interval(300, mtbf) / 60:.0f} min")
+
+# %% [markdown]
+# **Expected:** formula and helper agree for every line: 112.00 / 38.50 / 26.25 / 14.00 GB;
+# 70.1B parameters on 1.40T tokens (6ND = 5.9e23); bubble 0.158; Young's interval 75 min for a
+# 9.4-hour job MTBF.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

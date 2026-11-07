@@ -61,6 +61,8 @@ accounts will cancel in the next 30 days.
 Each day page links to its notebooks on GitHub
 (to read) and in Colab (to run).
 
+Reference for all three levels: the [glossary](guides/glossary.md) (every term, with analogies), the [equation sheet](guides/equations.md) (every key formula, in words) and the [diagram index](guides/diagrams.md) (every figure).
+
 ## Five days is a start, not a finish
 
 Five days gives you a working, tested, documented end-to-end project, the

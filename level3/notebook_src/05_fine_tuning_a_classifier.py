@@ -122,7 +122,26 @@ print("example:", train_df.loc[0, "text"][:120], "->", LABELS[train_df.loc[0, "l
 # the number. Those decisions use **validation**, carved from the training data. The test split
 # is read once, at the end, for the numbers you report. Choosing the epoch by test accuracy
 # is the most common way a fine-tuning result is quietly inflated.
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | TF-IDF | word counts re-weighted so that words frequent in one text but rare overall count most | the 8k uni- and bigram baseline in 5.1 |
+# | Linear probe | a linear classifier trained on frozen embeddings; tests what the encoder already knows | 0.858 test accuracy in 5.2 |
+# | Fine-tuning | continuing to train a pretrained model, usually all of it, on your task | 40 AdamW steps at lr 5e-5 in 5.3 |
+# | Catastrophic forgetting | a too-large learning rate overwrites what pre-training learned | why 5e-5, not 1e-3 |
+# | Warmup | starting the learning rate near 0 and raising it over the first steps | 10% of steps, then cosine decay |
+# | Early stopping | keeping the weights from the best validation epoch and stopping when it stops improving | `EarlyStopping(patience=...)` |
+# | Validation vs test | data you make decisions with vs data you read once to report | temperature fitted on validation only |
+# | Calibration | whether predicted probabilities match how often the model is right | confidence 0.83 → accuracy 0.98 here: under-confident |
+# | ECE | expected calibration error: average gap between confidence and accuracy over bins | 0.124 → 0.034 after temperature scaling |
+# | Temperature scaling | dividing all logits by one fitted number T before the softmax | T = 0.59 on the CPU budget |
+# | NLL | negative log-likelihood: the cross-entropy of the true class | 0.487 → 0.427 on test |
+# | Confusion matrix | a table of true class vs predicted class counts | Business → Sci/Tech is the largest error |
+
+# %% [markdown]
 # ## 5.1 · Baseline 1: TF-IDF + logistic regression
 #
 # Word and bigram counts, re-weighted by inverse document frequency, into a linear
@@ -350,6 +369,22 @@ print(pd.DataFrame(ft.reliability_table(probs["finetuned"]["test"], y_test, N_BI
 # $T < 1$ sharpens under-confident ones; the argmax, and therefore accuracy, never changes.
 
 # %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-calibration.svg" alt="A reliability diagram with the diagonal as perfect calibration, an under-confident curve above it and an over-confident curve below it; beside it how temperature scaling with T below or above 1 moves each toward the diagonal" width="100%">
+#
+# *What to notice:* temperature scaling only slides the curve toward the diagonal; it cannot reorder predictions, so accuracy stays exactly the same.
+#
+# > 💡 **Intuition.** A weather forecaster is calibrated if it rains on about 70% of the days
+# > they say "70%". Accuracy asks "did you call it right?"; calibration asks "can I trust your
+# > number?". *Where it breaks down:* a model that always predicts the base rate (25% for each of
+# > four balanced classes) is perfectly calibrated and useless; calibration complements accuracy,
+# > it does not replace it.
+#
+# > 💡 **Intuition.** The temperature is a single volume knob on the model's confidence: it
+# > scales every logit by the same factor, so the order of the classes, and therefore the
+# > argmax, never changes. Worked example: logits $(2, 0)$ give $p = 0.88$ at $T = 1$, $0.73$ at
+# > $T = 2$ and $0.98$ at $T = 0.5$.
+
+# %% [markdown]
 # > **Exercise 2.** Write `fit_temperature(logits, labels)`: return the temperature `T > 0`
 # > (a Python float) that minimises the mean NLL (cross-entropy) of `softmax(logits / T)`.
 # > Hint: optimise `log T` with `torch.optim.LBFGS` (or any 1-D search); the grader compares
@@ -435,6 +470,60 @@ print("wrote", OUT / "metrics.json")
 
 # %% [markdown]
 # *Your answer (Exercise 3):* ...
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1. Softmax cross-entropy (NLL).**
+#
+# $$
+# \operatorname{NLL} = -\frac{1}{n} \sum_{i=1}^{n} \log \operatorname{softmax}(\mathbf z_i)_{y_i}, \qquad
+# \operatorname{softmax}(\mathbf z)_c = \frac{e^{z_c}}{\sum_{c'} e^{z_{c'}}}
+# $$
+#
+# In words: the average surprise at the true class. Symbols: $\mathbf z_i$ = logits of example
+# $i$, $y_i$ = its true class. Example: probability 0.8 on the true class costs $-\ln 0.8 = 0.223$;
+# 0.2 costs 1.61. Confident mistakes dominate the average.
+#
+# **2. Temperature scaling.**
+#
+# $$
+# \mathbf p = \operatorname{softmax}(\mathbf z / T), \qquad T^{\star} = \arg\min_{T > 0} \operatorname{NLL}_{\text{val}}(T)
+# $$
+#
+# In words: divide every logit by one scalar $T$ chosen on validation data. $T > 1$ softens,
+# $T < 1$ sharpens, the argmax never moves. Example: logits $(2, 0)$: top probability 0.881 at
+# $T = 1$, 0.731 at $T = 2$, 0.982 at $T = 0.5$.
+#
+# **3. Expected calibration error.**
+#
+# $$
+# \operatorname{ECE} = \sum_{b=1}^{B} \frac{\lvert S_b \rvert}{n} \, \big\lvert \operatorname{acc}(S_b) - \operatorname{conf}(S_b) \big\rvert
+# $$
+#
+# In words: bin predictions by confidence, and average the gap between accuracy and confidence,
+# weighted by how many predictions fall in each bin. Example: 100 predictions at confidence 0.9
+# with accuracy 0.8, and 100 at 0.6 with accuracy 0.65: $\tfrac{1}{2}(0.1) + \tfrac{1}{2}(0.05) = 0.075$.
+#
+# **4. Standard error of an accuracy.**
+#
+# $$
+# \operatorname{SE} = \sqrt{\frac{\hat p\,(1 - \hat p)}{n}}
+# $$
+#
+# In words: how much an accuracy measured on $n$ examples wobbles from sample to sample.
+# Example: $\hat p = 0.872$ on $n = 500$ gives $\sqrt{0.872 \cdot 0.128 / 500} \approx 0.015$, so the
+# 0.014 gap between fine-tuning and the probe is about one standard error: not evidence. (For
+# two models on the *same* examples a paired test is sharper.)
+#
+# **5. F1 and macro-F1.**
+#
+# $$
+# F_1 = \frac{2PR}{P + R}, \qquad \text{macro-}F_1 = \frac{1}{C} \sum_{c=1}^{C} F_{1,c}
+# $$
+#
+# In words: the harmonic mean of precision $P$ and recall $R$, averaged over classes with equal
+# weight. Example: $P = 0.9$, $R = 0.8$ give $F_1 = 0.847$.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

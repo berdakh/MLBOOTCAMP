@@ -36,6 +36,10 @@ to useless: predicting "nobody churns" scores very high.
 Report a ranking metric (PR-AUC), a decision metric at the chosen threshold
 (precision, recall, alert volume), and a probability metric (Brier) together.
 
+<img src="../assets/diagrams/hb-which-metric.svg" alt="Decision tree: a fixed number of actions leads to precision at k, a cost-based action per case to calibrated probabilities and a threshold, ranking without an action to PR-AUC" width="100%">
+
+*What to notice:* the tree starts from the action, not from the model. Two teams with the same model and different capacity should report different headline metrics.
+
 ## Uncertainty: confidence intervals
 
 Every metric is an estimate from a finite sample. With a few hundred positives
@@ -104,6 +108,10 @@ Three things follow:
    week and 600 customers clear the threshold, rank and take the top 200. The
    relevant metric is then precision@200.
 
+<img src="../assets/diagrams/hb-threshold-value.svg" alt="Expected value against threshold: negative when almost everyone is called, peaking at the break-even probability one sixth, falling to zero when almost nobody is called" width="100%">
+
+*What to notice:* the peak sits exactly at the break-even probability, but only if the scores are calibrated; and a capacity limit can move you to the right of it.
+
 ## Calibration
 
 A model is calibrated if, among customers given 0.2, about 20% churn. Check it
@@ -141,6 +149,59 @@ invites the question, and in an interview the question is the test.
 The **test period is touched once**, after all choices are fixed on
 validation. If it disagrees with validation, report both and explain; do not
 re-tune.
+
+## Key equations
+
+The handful of formulas this chapter rests on. Each is taught, with a worked
+example and a code check, in the notebook named; all of them are collected in
+the [equation sheet](../guides/equations.md).
+
+**Precision, recall and the PR-AUC floor** (notebooks 04 and 07):
+
+$$
+P = \frac{TP}{TP + FP}, \qquad R = \frac{TP}{TP + FN}, \qquad \text{PR-AUC}_{\text{constant score}} = \pi
+$$
+
+*In words:* how pure the flagged set is, how much of the target it reaches; a
+model that knows nothing scores the positive rate $\pi$ on PR-AUC, not 0.5.
+
+**Precision at capacity and lift** (notebooks 07 and 15):
+
+$$
+\operatorname{precision@}k = \frac{1}{k} \sum_{i \in \text{top-}k} y_i, \qquad \operatorname{lift@}k = \frac{\operatorname{precision@}k}{\pi}
+$$
+
+*In words:* of the $k$ customers the team can call, the share who would churn,
+and how many times better that is than calling at random.
+
+**Break-even probability** (notebook 07):
+
+$$
+\text{call} \iff p\,V > (1 - p)\,C \iff p > p^{*} = \frac{C}{V + C} = \frac{30}{150 + 30} = \frac{1}{6}
+$$
+
+*In words:* act when the expected gain beats the expected cost. Valid only for
+calibrated $p$.
+
+**Probability quality** (notebook 07):
+
+$$
+\text{Brier} = \frac{1}{N}\sum_{i=1}^{N} (p_i - y_i)^2, \qquad \text{LogLoss} = -\frac{1}{N}\sum_{i=1}^{N}\Big[y_i \ln p_i + (1 - y_i)\ln(1 - p_i)\Big]
+$$
+
+*In words:* the squared and the logarithmic penalty for the gap between the
+predicted probability and what happened. The base-rate constant has Brier
+$\pi(1 - \pi)$.
+
+**Bootstrap interval and paired difference** (notebook 06):
+
+$$
+\text{CI}_{95\%} = \Big[\, Q_{0.025}(\hat\theta^{*}_{b}),\; Q_{0.975}(\hat\theta^{*}_{b}) \,\Big], \qquad \Delta^{*}_{b} = m_B(\text{resample}_b) - m_A(\text{resample}_b)
+$$
+
+*In words:* recompute the metric on many resamples of customers (not rows) and
+take the middle 95%; to compare two models, take the interval of their
+difference on the *same* resamples. "B is better" needs that interval above 0.
 
 ## Interview angle
 

@@ -42,6 +42,10 @@ as you start it so the interviewer can follow, and redirect you.
 Leave a couple of minutes for questions. If the interviewer pushes deeper on
 one step, follow them; the framework is a map, not a script.
 
+<img src="../assets/diagrams/hb-design-framework.svg" alt="Eight interview steps as a bar sized by minutes, grouped into framing, building and operating" width="100%">
+
+*What to notice:* framing (steps 1-3) gets about a third of the time before any model is named, and operating (7-8) is not optional: it is where many candidates run out of time.
+
 ## Habits that score well
 
 - **Ask before assuming, then state the assumption.** "I'll assume about a

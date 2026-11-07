@@ -74,6 +74,22 @@ registry = bootstrap.ensure_registry()
 # first time, loaded instantly after that).
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **`pyproject.toml`** | the file that makes a folder an installable Python package | name, version, dependencies of `churnlab` |
+# | **Dependency range** | the versions a package claims to work with | `pandas>=2.1` |
+# | **Lock file** | the exact versions one environment was built and verified with | `requirements-lock.txt` |
+# | **Environment variable** | a named setting the operating system passes to a process | `CHURN_LOG_LEVEL=DEBUG` |
+# | **Twelve-factor config** | anything that differs between deployments comes from the environment, not the code | same image in dev and production |
+# | **Fail fast** | refuse to start on bad configuration instead of running wrongly | `ValueError` naming the variable |
+# | **Secret** | a credential injected at run time, never stored in code or images | a database password |
+# | **Container image** | a packaged file system plus a start command, built from a Dockerfile | `python:3.11-slim` + `churnlab` |
+# | **Layer cache** | Docker reuses unchanged build steps, so their order matters | install dependencies before copying code |
+# | **CI** | automated checks on every push | `ci-example.yml` runs the tests |
+
+# %% [markdown]
 # ## 12.1 · `pyproject.toml`: what makes `churnlab` installable
 #
 # Until now the notebooks put `src/` on `sys.path` by hand. A service cannot rely
@@ -126,6 +142,12 @@ except metadata.PackageNotFoundError:
 # **exact** versions one environment was built and verified with. Libraries
 # publish ranges; deployable services and reproducible results need a lock.
 #
+# > 💡 **Intuition.** A range is "any 2-litre pot will do" in a recipe; a lock
+# > file is the exact pot, model number and all, that the recipe was tested
+# > in. Cookbooks print ranges; a restaurant that must serve the same dish
+# > every night uses the lock. *Where it breaks down:* a lock freezes security
+# > fixes out too; it has to be refreshed deliberately, with the tests re-run.
+#
 # How far is this runtime from the lock?
 
 # %%
@@ -168,6 +190,16 @@ print(f"\n{lock_table['matches'].sum()} of {len(lock_table)} packages match the 
 # variables** at start-up. Code and image stay identical across dev, staging and
 # production; only the environment changes. `churnlab.settings.Settings` reads
 # `CHURN_*` variables once into a frozen object:
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-config-env.svg" alt="One container image runs in dev, staging and production; each sets CHURN_ variables, Settings.from_env validates them once, and the service either starts or refuses to start naming the bad variable" width="100%">
+#
+# *What to notice:* the three environments share everything except a few variables, and the only two outcomes are "start with typed, frozen settings" or "do not start at all".
+#
+# > 💡 **Intuition.** The image is a rental car; environment variables are the
+# > seat and mirror settings each driver adjusts. Same car, same engine, no
+# > welding. *Where it breaks down:* a wrong mirror setting is visible at
+# > once; a wrong threshold is not, which is why the settings must be
+# > validated before the first request.
 
 # %%
 import inspect
@@ -313,6 +345,13 @@ print(f"{len(DOCKERFILE.splitlines())} lines")
 # only the worker that received it. On Kubernetes the usual pattern is one
 # worker per container and more replicas; on a single VM, roughly one worker
 # per CPU core.
+#
+# > 💡 **Intuition.** Baking the model in is printing the map into the car's
+# > manual; loading from the registry is a satnav that downloads the current
+# > map at start-up. The manual never fails to load but is out of date the
+# > day a road changes. *Where it breaks down:* a satnav that cannot reach its
+# > server must still have *something* to show, so a registry-loading service
+# > needs a clear "not ready" state (notebook 13).
 #
 # **Bake the model in, or load it from the registry?** The Dockerfile above
 # mounts the registry at run time. The alternative bakes one bundle into the

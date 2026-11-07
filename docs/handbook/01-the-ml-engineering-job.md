@@ -26,6 +26,10 @@ to evaluate a model without fooling yourself, and to explain a decision to a
 non-specialist. This course concentrates on exactly that overlap, plus the
 production skills that the ML Engineer role adds.
 
+<img src="../assets/diagrams/hb-job-map.svg" alt="ML Engineer, Applied Scientist and Algorithm Engineer, each with its core question and interview focus, pointing to a shared core of runnable code, honest evaluation and explained decisions" width="100%">
+
+*What to notice:* the three arrows land on the same box. Whichever title you apply for, the shared core is examined; the role decides what is added on top.
+
 ## What a researcher already brings
 
 These transfer directly, and you should say so in interviews, with examples:
@@ -40,6 +44,10 @@ These transfer directly, and you should say so in interviews, with examples:
 | Building a baseline before a deep model | Honest baselines |
 | Reading the literature before building | Knowing prior art; not reinventing a solved problem |
 | Explaining results to reviewers who want to reject the paper | Defending decisions under questioning |
+
+<img src="../assets/diagrams/hb-research-to-production.svg" alt="Research habits mapped to engineering names: leave-one-subject-out to group split, untouched session to locked test set, CIs across seeds to bootstrap intervals, train-only filters to pipeline discipline" width="100%">
+
+*What to notice:* nothing on the right is new to a careful researcher. The interview skill is naming the engineering version and then telling the research story as evidence.
 
 If you did EEG/BCI work, your cross-subject evaluation story is one of the
 strongest leakage stories you can tell. It is concrete, it has a measurable

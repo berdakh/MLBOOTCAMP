@@ -119,7 +119,26 @@ print(f"{N_PARAMS:,} parameters | batch {B} x seq {T}")
 # **Expected (CPU budget):** `n_embd=128, n_layer=4`, 929,536 parameters,
 # batch 32 × 64 tokens. On a T4 the GPU budget gives 512 wide, 8 layers (about 26M
 # parameters), batch 64 × 128.
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Parameter (Ψ) | one trainable number in the model; Ψ is the usual symbol for how many there are | 929,536 on the CPU budget |
+# | Gradient | the slope of the loss for one parameter, computed by backward; same size as the weights | `p.grad`, 4 bytes per parameter in fp32 |
+# | Optimizer state | extra numbers the optimizer keeps per parameter between steps | AdamW's two moments m and v: 8 bytes per parameter |
+# | Activations | intermediate tensors from the forward pass that backward needs, kept until it uses them | 82 MB for one batch here, 5.8× the model state |
+# | Mixed precision (autocast) | running matmuls in fp16/bf16 while keeping sensitive values in fp32 | `torch.autocast`; halves activations, not model state |
+# | Micro-batch | one of the small pieces a large batch is split into | 4 micro-batches of 8 in 2.3 |
+# | Gradient accumulation | adding the gradients of several micro-batches before one optimizer step | `TrainConfig(grad_accum_steps=k)` |
+# | Activation checkpointing | keeping only some activations and recomputing the rest during backward | 82 MB → 14 MB in 2.4, for ~+30% time |
+# | Peak vs leak | a single step that needs too much memory vs memory that grows every step | accumulating `loss` instead of `loss.item()` (2.6) |
+# | Caching allocator | PyTorch keeps freed GPU memory reserved for reuse instead of returning it | `memory_reserved` > `memory_allocated` |
+# | Kernel fusion | merging several elementwise ops into one kernel so the data is read once | what `torch.compile` does (2.5) |
+# | OOM | out of memory: an allocation larger than what is free on the device | `torch.OutOfMemoryError` |
+
+# %% [markdown]
 # ## 2.1 · What fills memory during training
 #
 # During a training step, four things live in device memory:
@@ -152,6 +171,17 @@ print(f"{N_PARAMS:,} parameters | batch {B} x seq {T}")
 # So fine-tuning a 7B-parameter model with AdamW needs ~112 GB *before*
 # activations. That arithmetic is why parameter-efficient fine-tuning (notebook 06)
 # and sharded optimizers (ZeRO/FSDP, notebook 10) exist.
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-training-memory.svg" alt="Stacked bars of bytes per parameter: fp32 AdamW 4 + 4 + 8 = 16; autocast adds a 2-byte fp16 copy for 18; ZeRO accounting 2 + 2 + 12 = 16; activations come on top" width="100%">
+#
+# *What to notice:* the Adam moments alone are as big as weights and gradients together, and switching to mixed precision moves bytes between the boxes without shrinking the total.
+#
+# > 💡 **Intuition.** Every parameter carries a backpack: its value (4 bytes), its gradient
+# > (4 bytes) and Adam's two running averages (8 bytes). That is 16 bytes before any data goes
+# > through the model. Activations are the scratch paper of the forward pass, kept until backward
+# > reads them. *Where it breaks down:* the backpack is fixed per parameter, but the scratch paper
+# > grows with batch size and sequence length, which is why activations usually dominate.
 
 # %% [markdown]
 # > **Exercise 1.** Write `training_memory_bytes(n_params, optimizer, mixed_precision)` that
@@ -291,6 +321,16 @@ print("wrote", OUT / "memory_report.json")
 # is that of one micro-batch; the price is k sequential passes instead of one
 # parallel one.
 
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-grad-accumulation.svg" alt="Four micro-batches each run forward and backward, their weighted gradients add up in .grad, then one optimizer step" width="100%">
+#
+# *What to notice:* there is exactly one `optimizer.step()` and one `zero_grad()` per big batch; the weights `nᵢ / N` are what make the sum equal the big-batch gradient.
+#
+# > 💡 **Intuition.** Totalling a big bill from the receipts of several shopping trips: the sum is
+# > the same as one big trip, as long as each receipt is counted with the right weight. *Where it
+# > breaks down:* BatchNorm only ever sees one trip at a time, so its statistics differ from a
+# > real big batch.
+
 # %%
 model = new_model()
 xb, yb = random_batch(batch=4 * 8, seed=1)
@@ -344,6 +384,16 @@ grade.ex2(accumulated_step)
 # "all internal activations of every layer" to "one input per layer + one layer's
 # internals at a time"; compute rises by roughly one extra forward (~+30% of a
 # training step, since backward ≈ 2× forward). Gradients are unchanged.
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-activation-checkpointing.svg" alt="Two rows of four blocks: standard training keeps all internal activations of every block; checkpointing keeps only each block's input and recomputes the inside during backward" width="100%">
+#
+# *What to notice:* the red boxes disappear but the compute does not: every dashed 'recompute' box is a second forward pass through that block during backward.
+#
+# > 💡 **Intuition.** Instead of photocopying every page of your working, you keep the first page
+# > of each chapter and redo a chapter when you need its details again. Worked numbers: a step
+# > costs about 1 forward + 2 forwards' worth of backward = 3 units; recomputing adds 1, so
+# > 4/3 ≈ +33% time, for memory that falls from "all layers" to "one input per layer + one layer".
 
 # %%
 def forward_checkpointed(model, idx, targets):
@@ -526,6 +576,98 @@ for keep in (False, True):
 
 # %% [markdown]
 # *Your answer (Exercise 3):* ...
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1. Model-state memory.**
+#
+# $$
+# M_{\text{state}} = \Psi \,\big(b_{w} + b_{g} + b_{\text{opt}}\big)
+# $$
+#
+# In words: every parameter pays for its weight, its gradient and its optimizer state.
+# Symbols: $\Psi$ = number of parameters; $b_w, b_g, b_{\text{opt}}$ = bytes per parameter for
+# each. AdamW in fp32: $4 + 4 + 8 = 16$; mixed-precision Adam (ZeRO accounting): $2 + 2 + 12 = 16$;
+# PyTorch autocast: $16 + 2 = 18$. Example: $7\times10^9 \times 16$ B = 112 GB; the CPU budget's
+# 929,536 parameters × 16 B = 14.9 MB.
+#
+# **2. Activation memory of a transformer** (Korthikanti et al. 2022, fp16, no checkpointing).
+#
+# $$
+# M_{\text{act}} \approx L \cdot B \cdot T \cdot \big(34\,h + 5\,a\,T\big) \;\text{bytes}
+# $$
+#
+# In words: linear in layers, batch and hidden size, and **quadratic in sequence length**
+# through the attention probabilities. Symbols: $L$ layers, $B$ batch, $T$ sequence length,
+# $h$ hidden size, $a$ attention heads. Example: $L=12, h=768, a=12, T=1024, B=8$: per token per
+# layer $34 \cdot 768 + 5 \cdot 12 \cdot 1024 = 87{,}552$ bytes, × 8,192 tokens × 12 layers ≈ 8.6 GB,
+# 70% of it from the $T$-squared term.
+#
+# **3. Gradient accumulation.**
+#
+# $$
+# g = \sum_{i=1}^{k} \frac{n_i}{N}\, \nabla_\theta \bar{\ell}_i, \qquad N = \sum_{i=1}^{k} n_i
+# $$
+#
+# In words: weight each micro-batch's mean-loss gradient by its share of the examples. Symbols:
+# $\bar\ell_i$ = mean loss of micro-batch $i$, $n_i$ its size. Example: micro-batches of 8 and 24
+# get weights 0.25 and 0.75; dividing both by $k = 2$ (0.5 and 0.5) gives the wrong gradient.
+#
+# **4. Adam / AdamW with bias correction.**
+#
+# $$
+# \begin{aligned}
+# m_t &= \beta_1 m_{t-1} + (1-\beta_1)\, g_t, \qquad v_t = \beta_2 v_{t-1} + (1-\beta_2)\, g_t^2 \\
+# \hat m_t &= \frac{m_t}{1-\beta_1^{\,t}}, \qquad \hat v_t = \frac{v_t}{1-\beta_2^{\,t}} \\
+# \theta_t &= \theta_{t-1} - \eta \Big( \frac{\hat m_t}{\sqrt{\hat v_t} + \epsilon} + \lambda\, \theta_{t-1} \Big)
+# \end{aligned}
+# $$
+#
+# In words: $m$ is a running average of the gradient (momentum), $v$ of its square (scale); the
+# step is momentum divided by the typical gradient size, so every parameter moves at a similar
+# rate. The bias correction undoes the zero initialisation of $m$ and $v$. AdamW applies the
+# weight decay $\lambda\theta$ directly ("decoupled"), not through the gradient. Symbols:
+# $\eta$ learning rate, $\beta_1 = 0.9$, $\beta_2 = 0.999$, $\epsilon \approx 10^{-8}$.
+# Example: at $t = 1$, $m_1 = 0.1\,g$ and $\hat m_1 = 0.1\,g / (1 - 0.9) = g$, likewise
+# $\hat v_1 = g^2$, so the first update is $\eta \cdot \operatorname{sign}(g)$: **every weight moves by
+# the full learning rate, whatever its gradient**, which is one reason for warm-up.
+#
+# **5. Activation checkpointing cost.**
+#
+# $$
+# \text{step time} \approx F + 2F \;\longrightarrow\; F + 2F + F = \tfrac{4}{3} \times \text{(no checkpointing)}
+# $$
+#
+# In words: backward costs about two forwards; recomputing adds one more. Example: +33% in
+# theory; we measured +23% to +40% in 2.4, for 83% less saved activation memory.
+#
+# The next cell checks equation 4 against `torch.optim.AdamW` for three steps on a toy problem.
+
+# %%
+torch.manual_seed(0)
+w = torch.randn(5, requires_grad=True)
+lr, b1, b2, eps, wd = 0.1, 0.9, 0.999, 1e-8, 0.01
+adamw = torch.optim.AdamW([w], lr=lr, betas=(b1, b2), eps=eps, weight_decay=wd)
+theta, m, v = w.detach().clone(), torch.zeros(5), torch.zeros(5)
+for t in range(1, 4):
+    adamw.zero_grad()
+    (w ** 2).sum().backward()          # loss = sum(w^2), so g = 2w
+    adamw.step()
+    g = 2 * theta                       # the same gradient, by hand
+    m = b1 * m + (1 - b1) * g
+    v = b2 * v + (1 - b2) * g ** 2
+    m_hat, v_hat = m / (1 - b1 ** t), v / (1 - b2 ** t)
+    step = lr * (m_hat / (v_hat.sqrt() + eps) + wd * theta)
+    if t == 1:
+        print("first-step |update| per weight:", step.abs().round(decimals=4).tolist())
+    theta = theta - step
+print("max |manual - torch.optim.AdamW| after 3 steps:", (theta - w.detach()).abs().max().item())
+
+# %% [markdown]
+# **Expected:** the first update is ~0.10 (the learning rate) for every weight, plus a tiny
+# weight-decay term (our run: 0.1003–0.1022), whatever the size of its gradient; the manual and
+# PyTorch weights agree to float32 rounding (our run: 2.4e-07).
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

@@ -88,6 +88,22 @@ print(f"train {len(train):,} rows, {int(train[LABEL].sum())} positives | "
 # a few hundred positive rows.
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Candidate** | one model configuration being compared | `dummy`, `logreg`, `hgb`, `hgb_deeper` |
+# | **Bootstrap** | resample the evaluation rows with replacement many times and recompute the metric | 500 resamples of the validation set |
+# | **Confidence interval (CI)** | a range that would contain the true value in about 95% of repeated experiments | PR-AUC 0.163, CI ≈ [0.137, 0.197] |
+# | **Resampling unit** | what the bootstrap draws: rows, or whole groups (customers) | customers are the default here |
+# | **Cluster bootstrap** | draws whole groups with all their rows | `groups=customer_id` |
+# | **Paired comparison** | both models scored on the same resample, then the difference is taken | `paired_bootstrap_diff` |
+# | **Hyperparameter** | a setting chosen before fitting, not learned from data | `C`, `max_leaf_nodes` |
+# | **Search budget** | the number of configurations you allow yourself, fixed in advance | 8 per model family |
+# | **Plateau** | a region where many settings score the same within noise | logreg for `C` from 0.003 to 10 |
+# | **Selection memo** | the written decision, with the evidence that supports it | `artifacts/selection.json` |
+
+# %% [markdown]
 # ## 6.1 · Four candidates, two estimates each
 #
 # * `dummy`: predicts the base rate for everyone. Its PR-AUC *is* the positive
@@ -141,6 +157,16 @@ comparison
 # * **rows**: treats the 6,956 rows as independent;
 # * **customers** (`groups=customer_id`): resamples whole customers with all
 #   their rows. If a customer's rows are correlated, this is the honest unit.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-bootstrap-units.svg" alt="Row bootstrap draws individual rows and mixes customers; cluster bootstrap draws whole customers with all their rows" width="100%">
+#
+# *What to notice:* in the customer bootstrap a resample can contain customer A twice and B not at all, exactly as a new sample of customers would; in the row bootstrap, A's three near-identical rows count as three independent pieces of evidence.
+#
+# > 💡 **Intuition.** The bootstrap asks "if I had collected a different
+# > validation set of the same size from the same world, how much would my
+# > number move?", and answers by pretending the sample *is* the world.
+# > *Where it breaks down:* it only sees variation that is in the sample. It
+# > cannot tell you how the score moves next quarter, when the world changes.
 
 # %%
 y = valid[LABEL].to_numpy()
@@ -224,7 +250,14 @@ plt.show()
 #
 # The two intervals above overlap. That does **not** mean "no difference":
 # both models are scored on the *same* rows, so most of the sampling noise is
-# shared and cancels in the difference. `paired_bootstrap_diff` computes
+# shared and cancels in the difference.
+#
+# > 💡 **Intuition.** Two students sit the same exam. Whether the exam was easy
+# > moves both their marks; the *difference* between them barely depends on
+# > it. Comparing their marks on the same paper is the paired question;
+# > comparing their two separate "how good is this student" ranges is not.
+# > *Where it breaks down:* pairing removes shared noise only; if both models
+# > share a bias (e.g. the same leaky feature), the paired test cannot see it. `paired_bootstrap_diff` computes
 # `metric(B) - metric(A)` on each resample and gives an interval for the
 # difference itself.
 
@@ -328,7 +361,13 @@ best.round(4)
 
 # %% [markdown]
 # Note the `cv_std` column: the spread across folds (≈ 0.02) is larger than the
-# differences between most configurations. Picking the single top trial is
+# differences between most configurations.
+#
+# > 💡 **Intuition.** The best of 16 noisy scores is like the best of 16 dice
+# > rolls: it is high partly because you rolled 16 times. Expect the winner
+# > to score a little lower on fresh data. *Where it breaks down:* if one
+# > configuration really is better by more than the noise, it will still win
+# > on fresh data; the optimism shrinks the gap, it does not invent it. Picking the single top trial is
 # fine; *claiming* it is better than its neighbours is not.
 
 # %% [markdown]
@@ -487,6 +526,60 @@ print(f"notebook compute time: {time.time() - T0:.0f} s")
 
 # %% [markdown]
 # **Expected:** about a minute on a laptop; up to two on a free Colab CPU.
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **Bootstrap percentile interval.** Draw $B$ resamples (of rows or of whole
+# customers) with replacement, recompute the metric $\hat\theta^{*}_b$ on each:
+#
+# $$
+# \text{CI}_{95\%} = \left[\, Q_{0.025}\big(\hat\theta^{*}_{1..B}\big),\; Q_{0.975}\big(\hat\theta^{*}_{1..B}\big) \,\right]
+# $$
+#
+# *In words:* the middle 95% of the metric across resamples. *Symbols:* $Q_q$ =
+# the $q$-quantile, $B$ = number of resamples (500 here). *Example:* if the
+# sorted 500 resampled PR-AUCs have 0.137 at position 13 and 0.197 at
+# position 488, the interval is [0.137, 0.197].
+#
+# **Paired difference.** On each resample $b$ compute
+# $\Delta^{*}_b = \text{PR-AUC}_B - \text{PR-AUC}_A$ on the *same* rows, then
+# take its percentile interval. *Example:* logreg − hgb ≈ +0.028 with
+# interval [+0.004, +0.052]: excludes 0, so "logreg ranks better", narrowly.
+#
+# **Standard error of a proportion** (precision, a churn rate):
+#
+# $$
+# \operatorname{SE}(\hat p) = \sqrt{\frac{\hat p\,(1 - \hat p)}{n}},
+# \qquad
+# n \approx \frac{1.96^2\, p\,(1-p)}{m^2}
+# $$
+#
+# *In words:* the noise in a rate shrinks with $\sqrt{n}$; the second formula
+# is the sample size for a 95% margin of $\pm m$. *Symbols:* $\hat p$ =
+# observed rate, $n$ = number of trials (calls, rows), $m$ = target margin.
+# *Example:* precision 0.27 over $n = 192$ calls: $\text{SE} = 0.032$, so
+# roughly $0.27 \pm 0.063$. To pin a 5% churn rate to $\pm 0.02$ you need
+# $n \approx 3.84 \times 0.0475 / 0.0004 \approx 456$ rows.
+#
+# **Why copies do not help.** Repeating every row $k$ times divides the
+# row-bootstrap SE by $\sqrt{k}$ (a fake gain) and leaves the customer-bootstrap
+# SE unchanged. *Example:* $k = 3$: the row interval shrinks by
+# $\sqrt{3} = 1.73$, from ≈ 0.06 to ≈ 0.035-0.04.
+
+# %%
+# The SE formula vs a bootstrap of the same 192 calls, and a percentile CI by hand.
+rng_toy = np.random.default_rng(0)
+calls = (rng_toy.random(192) < 0.27).astype(int)          # one sample of 192 call outcomes
+p_hat = calls.mean()
+boot = np.array([rng_toy.choice(calls, size=calls.size, replace=True).mean() for _ in range(4000)])
+print(f"p_hat {p_hat:.3f} | SE formula {np.sqrt(p_hat * (1 - p_hat) / calls.size):.4f} | bootstrap sd {boot.std():.4f}")
+print("95% percentile CI:", np.round(np.percentile(boot, [2.5, 97.5]), 3))
+print(f"rows for +/-0.02 on a 5% rate: {1.96**2 * 0.05 * 0.95 / 0.02**2:.0f}")
+
+# %% [markdown]
+# **Expected:** a bootstrap standard deviation within a few thousandths of the
+# formula (both ≈ 0.03), an interval about ±0.06 wide around $\hat p$, and 456 rows.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

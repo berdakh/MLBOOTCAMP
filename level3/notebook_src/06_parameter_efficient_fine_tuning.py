@@ -124,7 +124,25 @@ def new_classifier():
 # %% [markdown]
 # **Expected:** `train 640 | test 300 | max_len 64` on the CPU budget (10,000 / 4,000 / 128
 # with the `gpu` budget).
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | PEFT | parameter-efficient fine-tuning: train a small number of new or selected parameters | LoRA, adapters, prefix tuning |
+# | Frozen parameter | a weight that is used in the forward pass but never updated | all 66M DistilBERT weights under LoRA |
+# | LoRA | learn a low-rank correction B·A next to a frozen weight matrix | `LoRALinear` in 6.2 |
+# | Rank r | the inner size of B and A; how many independent directions the update can use | r = 8 |
+# | α (alpha) | a scale for the update, applied as α / r so changing r does not change its size | α = 16, so α / r = 2 |
+# | Target modules | which Linear layers receive adapters | `q_lin`, `v_lin` |
+# | Adapter | the small set of trained weights that turns a base model into a task model | the 2.83 MB safetensors file in 6.6 |
+# | Merge | folding B·A into W after training so serving is as fast as the base model | `merge_and_unload()` |
+# | QLoRA | LoRA on a base model stored in 4 bits | a 7B base in ~3.5 GB |
+# | modules_to_save | layers `peft` trains fully alongside the adapters | the new classification head |
+# | Multi-adapter serving | one base model in memory, a different adapter per request or tenant | S-LoRA, vLLM multi-LoRA |
+
+# %% [markdown]
 # ## 6.1 · Where fine-tuning memory goes
 #
 # Training memory = weights + gradients + optimiser state + activations (notebook 02).
@@ -168,6 +186,18 @@ print(f"\na 7B model in fp32 + AdamW, full fine-tuning: {prof.human_bytes(16 * n
 #   the rank without re-tuning the learning rate much.
 # * Trainable parameters per layer: $r(d_{in} + d_{out})$ instead of $d_{in} d_{out}$:
 #   for a 768 × 768 projection and $r = 8$, 12,288 instead of 589,824 (2 %).
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-lora.svg" alt="LoRA: the input goes through the frozen weight W and in parallel through a trainable r by k matrix A and a d by r matrix B that starts at zero; the scaled adapter output is added to W x" width="100%">
+#
+# *What to notice:* the adapter path is a thin detour (k → r → d) around a big frozen block; because B starts at zero the detour adds nothing at first, so training starts exactly at the pretrained model.
+#
+# > 💡 **Intuition.** Instead of repainting a 768 × 768 mural (590k pixels) you paint on a
+# > transparent overlay described by 8 "brush strokes" in each direction (12k numbers). Fine-tuning
+# > changes turn out to be simple enough for such an overlay, and $B = 0$ means the overlay starts
+# > fully transparent. *Where it breaks down:* when the task needs genuinely new knowledge (a new
+# > language, a new domain's vocabulary), a low-rank overlay can be too little, and full
+# > fine-tuning or a higher rank wins.
 
 # %% [markdown]
 # > **Exercise 1.** Complete `LoRALinear`: wrap a pretrained `nn.Linear` called `base`, freeze its
@@ -238,6 +268,15 @@ del reference
 # counter, so we *estimate*: parameter, gradient and AdamW-state bytes by arithmetic
 # (`scaleml.profiling.memory_breakdown`) plus activation bytes **measured** for one training
 # batch with `scaleml.profiling.SavedActivations` (what autograd saves for backward).
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-finetune-ladder.svg" alt="Three rising steps: linear probe with about 3,000 trained parameters, LoRA with 741 thousand and 263 MB of state, full fine-tuning with 67 million and about 1 GB of state" width="100%">
+#
+# *What to notice:* each step up multiplies what you train and store; the question this section answers is whether the accuracy climbs with it on this budget.
+#
+# > 💡 **Intuition.** One base model is a shared engine; adapters are small plug-in cartridges, one
+# > per task or customer. You can swap a cartridge in milliseconds and keep a thousand of them on
+# > disk for the price of a few copies of the engine (6.6).
 
 # %%
 from sklearn.linear_model import LogisticRegression
@@ -513,6 +552,49 @@ print(f"1,000 customer-specific models: full copies {1000 * full_bytes / 2**30:.
 
 # %% [markdown]
 # *Your answer (Exercise 3):* ...
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1. The LoRA layer.**
+#
+# $$
+# h = W_0 x + \Delta W x = W_0 x + \frac{\alpha}{r} B A x, \qquad A \in \mathbb{R}^{r \times k},\; B \in \mathbb{R}^{d \times r}
+# $$
+#
+# In words: the frozen weight's output plus a low-rank correction, scaled by $\alpha / r$.
+# Symbols: $W_0 \in \mathbb R^{d \times k}$ frozen; $r \ll \min(d, k)$; $B$ starts at 0 so
+# $\Delta W = 0$ at initialisation. Example: $\alpha = 16, r = 8$: the update is $2\,BAx$.
+#
+# **2. Trainable parameters.**
+#
+# $$
+# \underbrace{r\,(d + k)}_{\text{LoRA}} \quad \text{vs} \quad \underbrace{d\,k}_{\text{full}}
+# $$
+#
+# Example: one $768 \times 768$ projection at $r = 8$: $8 \cdot 1536 = 12{,}288$ vs $589{,}824$ (2.1%);
+# 12 adapted layers: 147,456, the number printed in 6.2.
+#
+# **3. Training memory with a frozen base.**
+#
+# $$
+# M \approx b_w\, \Psi_{\text{total}} + 16\, \Psi_{\text{trained}} + M_{\text{act}}
+# $$
+#
+# In words: every weight must be stored ($b_w$ bytes each), but only trained weights need
+# gradients and AdamW state (16 bytes each in fp32). Example: 67.1M weights × 4 B = 256 MiB plus
+# 0.74M trained × 16 B = 11 MiB, vs $67.1\text{M} \times 16$ B = 1,024 MiB for full fine-tuning.
+# For 7B in 4 bits (QLoRA) the first term is ~3.5 GB.
+#
+# **4. Merging.**
+#
+# $$
+# W' = W_0 + \frac{\alpha}{r} B A
+# $$
+#
+# In words: after training, fold the update into a weight of the original shape: zero extra
+# latency, but one task per merged copy. Example: two extra matmuls per adapted layer disappear;
+# in 6.5 the merged logits match to ~1e-6.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

@@ -85,6 +85,24 @@ print("sandbox registry:", ops.root, "| versions", ops.versions(), "| CURRENT", 
 # **Expected:** `versions ['v1', 'v2'] | CURRENT v1`.
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Monitoring** | measuring a live system continuously so someone can act | service health, drift, performance |
+# | **Data (input) drift** | the distribution of a feature changes | sessions fall by a fifth |
+# | **Prediction drift** | the distribution of scores changes | mean score ratio above 1.5 |
+# | **Concept drift** | the relation between features and churn changes | the same usage now means a different risk |
+# | **PSI** | Population Stability Index: one number for how far a distribution moved from a reference | 0.1-0.25 = moderate |
+# | **Label delay** | outcomes arrive only after the label window closes | 30 days |
+# | **Matured cohort** | snapshots whose labels are all known | the latest month older than 30 days |
+# | **Alert severity** | *page* wakes someone now; *warn* opens a ticket | error rate → page; drift → warn |
+# | **Shadow / canary / blue-green** | ways to expose a new model gradually or switch back fast | canary = 1-10% of traffic |
+# | **Rollback** | point `CURRENT` back at the previous version | seconds, no retraining |
+# | **Holdout** | a random group deliberately not acted on, so the model stays measurable | customers who are never called |
+# | **Postmortem** | a blameless write-up of an incident and how to prevent it | Exercise 3 |
+
+# %% [markdown]
 # ## 14.1 · Three layers, three clocks
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/monitoring.svg" alt="Monitoring layers: service health is available immediately, drift is available immediately, performance arrives after the 30-day label delay" width="100%">
@@ -163,7 +181,19 @@ by_month
 # The **Population Stability Index** compares a current sample with a
 # reference over bins cut at the reference's deciles:
 # PSI = Σ (cur% − ref%) · ln(cur% / ref%). Common bands (conventions, not laws):
-# below 0.1 stable, 0.1-0.25 moderate, above 0.25 large. Compute it for every
+# below 0.1 stable, 0.1-0.25 moderate, above 0.25 large.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-psi-bins.svg" alt="Reference and current shares in five quintile bins; each bin contributes (a - e) ln(a / e) and the terms sum to a PSI of 0.135, a moderate shift" width="100%">
+#
+# *What to notice:* every bin's term is positive (both factors have the same sign), and the outer bins, where the share moved most in relative terms, contribute most.
+#
+# > 💡 **Intuition.** PSI is a census that compares how many people live in
+# > each neighbourhood this year versus the reference year. Big relative moves
+# > in any neighbourhood raise it. *Where it breaks down:* it only sees the
+# > bins it was given: a feature that changes *within* a bin (or is mostly one
+# > value, like `failed_payments_90d`) can shift a lot with a PSI near 0.
+#
+# Compute it for every
 # feature, for the shifted production data **and** for the control world, and
 # for the validation period as a third comparison that has no shift at all:
 
@@ -444,6 +474,17 @@ alerts
 # %% [markdown]
 # ## 14.7 · A bad deploy, caught and rolled back
 #
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-canary-rollback.svg" alt="A retrained model is registered, gated against the current model, run in shadow or canary mode, compared on PR-AUC, error rate and p95 latency, then promoted or rolled back by moving CURRENT" width="100%">
+#
+# *What to notice:* in this section the gate was switched off, so the bad model reaches CURRENT; the canary comparison and the pointer rollback are what still save the day.
+#
+# > 💡 **Intuition.** A canary is a taste test on one table before the dish
+# > goes to the whole restaurant; rollback is taking the dish off the menu,
+# > not re-cooking it. *Where it breaks down:* with 30-day label delay the
+# > "taste" of ranking quality is only available on old, matured data, so a
+# > canary on live traffic can only catch crashes, latency and distribution
+# > collapse.
+#
 # Monthly retraining is automated. This month the training job had a bug: a
 # join misaligned rows and labels, which here we imitate by **shuffling the
 # label column** of the training data. The job registers the model and, because
@@ -637,6 +678,49 @@ grade.ex2(should_rollback)
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **Population Stability Index.** Cut the reference into bins (deciles here),
+# then compare the shares:
+#
+# $$
+# \operatorname{PSI} = \sum_{b=1}^{B} (a_b - e_b)\, \ln\frac{a_b}{e_b}
+# $$
+#
+# *In words:* for each bin, the change in share times the log of the ratio of
+# shares; both factors have the same sign, so every term is $\ge 0$.
+# *Symbols:* $e_b$ = reference share in bin $b$, $a_b$ = current share, $B$ =
+# number of bins (a tiny $\varepsilon$ replaces empty shares). *Example
+# (figure above):* $e = 0.2$ in each of 5 bins, $a = (0.30, 0.25, 0.20, 0.15,
+# 0.10)$: terms $0.041 + 0.011 + 0 + 0.014 + 0.069 = 0.135$, "moderate".
+#
+# **Score-mean ratio** (prediction drift): $r = \bar{s}_{\text{current}} / \bar{s}_{\text{reference}}$.
+# *Example:* reference mean 0.055, current 0.090 → $r = 1.64 > 1.5$: warn.
+#
+# **Calibration on a matured cohort:** $\bar{s} / \bar{y}$ (mean predicted over
+# observed rate). *Example:* 0.055 predicted vs 0.060 observed → 0.92, inside
+# a [0.8, 1.25] band.
+#
+# **Rollback rule** (Exercise 2): roll back if
+# $\text{PR-AUC}_{\text{cand}} < (1 - \delta)\,\text{PR-AUC}_{\text{base}}$,
+# or the error rate or p95 exceeds its limit. *Example:* $\delta = 0.1$,
+# baseline 0.163: a candidate below 0.147 is rolled back; exactly 0.147 is not.
+
+# %%
+# The PSI worked example, by hand and with churnlab.monitoring.psi on samples with those shares.
+e = np.full(5, 0.2)
+a = np.array([0.30, 0.25, 0.20, 0.15, 0.10])
+terms = (a - e) * np.log(a / e)
+print("terms by hand:", np.round(terms, 4), "| PSI", round(float(terms.sum()), 4))
+
+reference_toy = np.arange(1000) + 0.5                                   # uniform: quintiles hold 20% each
+current_toy = np.repeat([100.0, 300.0, 500.0, 700.0, 900.0], [300, 250, 200, 150, 100])
+print("churnlab psi :", round(psi(reference_toy, current_toy, bins=5), 4))
+
+# %% [markdown]
+# **Expected:** terms 0.0405, 0.0112, 0, 0.0144, 0.0693, and PSI 0.1354 both ways.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

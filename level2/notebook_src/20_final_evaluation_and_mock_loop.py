@@ -84,6 +84,23 @@ print(f"{len(imps):,} impressions loaded, ranker trained ({time.time() - t0:.0f}
 # **Expected:** `2,446,900 impressions loaded, ranker trained` after 15–60 s.
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Validation vs test set | data you may use to choose, versus data opened once for the final claim | days 42–48 versus days 49–55 |
+# | Pre-registration | a written, saved plan of exactly what will be measured and what counts as success, made before the results exist | `preregistration.json` |
+# | Hash | a short fingerprint of a file; changing one byte changes it | the 16-character SHA-256 prefix stored with the results |
+# | Propensity (examination probability) | the chance a user even looks at a given position | a power law with η ≈ 0.88 |
+# | Exploration (randomised) traffic | requests shown in random order so that position effects can be measured | 5% of ShopStream's requests |
+# | IPS | inverse propensity scoring: weight each click by 1 / (chance its position was examined) | IPS-DCG reverses the raw-click verdict |
+# | Grouped bootstrap | resampling whole users rather than rows, so a user's correlated requests move together | 1,000 replicates by user |
+# | Paired difference | comparing two systems on the same requests, so shared noise cancels | ranker − policy: +0.29 IPS-DCG |
+# | Percentile interval | the 2.5th to 97.5th percentiles of the bootstrap replicates | cascade 0.715 [0.709, 0.721] |
+# | Mock loop | a timed rehearsal of the interview rounds, scored against a rubric | four rounds, 165 minutes |
+# | Rubric anchors | short descriptions of what each score means, so scores are comparable over time | 1 = missing or wrong … 4 = strong |
+
+# %% [markdown]
 # ## 20.1 · Choose on validation, not on test
 #
 # Everything that involves *choosing* happens on the validation week: which
@@ -149,6 +166,15 @@ pd.DataFrame(valid_results)
 #   retrieval recall@100.
 # * **Uncertainty:** 95 % percentile intervals from a bootstrap that resamples
 #   **users** (1,000 replicates, seed 0).
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-preregistration.svg" alt="Five steps: choose on validation, pre-register and hash the plan, open the test week once, bootstrap by user, report with the plan's hash; a dashed forbidden path leads from the test back to choosing" width="100%">
+#
+# *What to notice:* the dashed path is the one thing the procedure forbids; everything else exists to make it detectable.
+#
+# > 💡 **Intuition.** Pre-registration is calling your shot in pool: "eight ball, corner
+# > pocket" before you hit. Sinking a ball you did not call does not count, however good
+# > it looked. *Where it breaks down:* a plan cannot anticipate everything; when you must
+# > deviate, write a new, dated plan with the reason, and report both.
 
 # %%
 prereg = {
@@ -194,6 +220,12 @@ print("sha256:", prereg_sha)
 # by position is proportional to examination. The estimator is two lines,
 # implemented here rather than imported. Using *train-day* random traffic
 # keeps the test week untouched.
+#
+# > 💡 **Intuition.** IPS is a survey where people near the door are asked far more often
+# > than people at the back: to estimate the whole room, weight each answer by 1 / (the
+# > chance that person was asked). A click at a rarely examined position speaks for many
+# > unseen ones. *Where it breaks down:* a tiny propensity means a huge weight, so one
+# > lucky click can dominate; clip the weights and report that you did.
 
 # %%
 rnd = imps[(imps["day"] <= store.TRAIN_DAYS[-1]) & imps["is_random"]]
@@ -329,6 +361,11 @@ pd.DataFrame({name: {lens: np.nanmean(v) for lens, v in d.items()} for name, d i
 # unit of resampling is the **user**. A row-level bootstrap would give
 # intervals that are too narrow.
 #
+# > 💡 **Intuition.** Five answers from one household are mostly one household's opinion.
+# > Resample households (users), not answers (requests), or the interval pretends you asked
+# > five times as many people. *Where it breaks down:* if users interact (a marketplace, a
+# > social graph), even users are not independent, and the cluster must be bigger still.
+#
 # > **Exercise 1.** Write `bootstrap_ci_grouped(values, groups, n_boot, seed)`
 # > returning `(mean, lo, hi)`: `mean` is the mean of all `values`; `lo`/`hi`
 # > the 2.5th/97.5th percentiles of `n_boot` bootstrap replicates, where each
@@ -408,6 +445,10 @@ results.round(3)
 # Rules that make a mock useful: a real timer, no notes, a partner or a
 # recording, and **scores written down within 10 minutes** of finishing, in the
 # log below. The prompts are drawn at random each time you run the next cell.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-mock-loop.svg" alt="Four timed rounds in a row, then score within ten minutes, log, practise the lowest column and run the next mock, looping back" width="100%">
+#
+# *What to notice:* the loop around the rounds is the point: a mock that is not scored and logged cannot tell you what to practise next.
 
 # %%
 import random
@@ -570,6 +611,46 @@ progress
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1. Position-based click model and propensities**
+#
+# $$
+# P(\text{click} \mid \text{item}, k) = \theta_k \cdot P(\text{relevant} \mid \text{item}), \qquad \theta_k = (1 + k)^{-\eta}
+# $$
+#
+# *In words:* a click needs both an examination (which depends only on the position $k$) and relevance (which depends only on the item). In randomised traffic relevance is the same on average at every position, so CTR by position estimates $\theta_k$ up to a constant.
+# *Example:* η = 0.9: $\theta_0 = 1$, $\theta_4 = 5^{-0.9} = 0.235$: position 5 (index 4) is examined about a quarter as often as the top.
+#
+# **2. Inverse propensity scoring**
+#
+# $$
+# \widehat{\text{DCG}}_{\text{IPS}} = \sum_{i \,\in\, \text{clicked}} \frac{1}{\theta_{k_i^{\text{logged}}}} \cdot \frac{1}{\log_2(1 + r_i^{\text{new}})}, \qquad \mathbb{E}\!\left[\frac{c_i}{\theta_{k_i}}\right] = P(\text{relevant}_i)
+# $$
+#
+# *In words:* each click is up-weighted by how unlikely it was to be seen where it was logged, then discounted by where the new ranker would put it. On average the weighting undoes position bias.
+# *Example:* a click logged at index 4 ($\theta = 0.235$) counts as $1/0.235 = 4.26$ clicks; if the new ranker puts that item first ($r = 1$), it adds 4.26 to the DCG.
+#
+# **3. Grouped bootstrap and the design effect**
+#
+# $$
+# \operatorname{Var}_{\text{grouped}} \approx \operatorname{Var}_{\text{iid}} \cdot \big(1 + (m - 1)\,\rho_{\text{ICC}}\big)
+# $$
+#
+# *In words:* with $m$ correlated rows per user, a row-level bootstrap underestimates the variance by this design effect; resampling users gets it right automatically.
+# *Symbols:* $m$ = rows per user, $\rho_{\text{ICC}}$ = the correlation between two rows of the same user.
+# *Example:* 4 requests per user with ICC 0.2: variance × 1.6, so the honest interval is $\sqrt{1.6} = 1.26$× wider than the row-level one.
+#
+# **4. Paired differences**
+#
+# $$
+# \operatorname{Var}(A - B) = \operatorname{Var}(A) + \operatorname{Var}(B) - 2\operatorname{Cov}(A, B)
+# $$
+#
+# *In words:* scoring two systems on the same requests makes their errors correlated, and the covariance term removes the shared part.
+# *Example:* unit variances with correlation 0.9: $1 + 1 - 1.8 = 0.2$ instead of 2, an interval $\sqrt{10} \approx 3.2$× narrower than comparing two separate intervals.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

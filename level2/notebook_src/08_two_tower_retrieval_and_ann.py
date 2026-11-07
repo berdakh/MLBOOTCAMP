@@ -97,6 +97,24 @@ print(f"train clicks {len(train_clicks):,} | eval users {len(eval_users):,} (col
 # notebook does not depend on 07 having run.
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Two-tower model** | two networks embed users and items separately; the score is a dot product | `TwoTower` in 8.1 |
+# | **Embedding** | a learned vector for an id or category | 32 numbers per user id |
+# | **Temperature τ** | divides the scores before the softmax; small τ sharpens it | τ = 0.05 |
+# | **In-batch negatives** | the other items in the batch serve as negatives for each user | a 1024 × 1024 logit matrix |
+# | **Sampling probability q_i** | how likely item i is to appear in a batch | proportional to its clicks |
+# | **logQ correction** | subtract log q_i from item i's logit during training only | recall 0.24 → 0.41 |
+# | **Accidental hit** | the user's own positive appearing again as a negative | masked in `rt.in_batch_softmax_loss` |
+# | **ANN search** | approximate nearest-neighbour search: fast, slightly incomplete | FAISS |
+# | **IVF** | k-means cells; search only the `nprobe` closest cells | `IndexIVFFlat` |
+# | **HNSW** | a layered neighbour graph searched greedily with a beam of `efSearch` | `IndexHNSWFlat` |
+# | **Product quantisation** | compressing vectors into a few bytes of codebook ids | IVF-PQ, 32 floats → 16 bytes |
+# | **Recall vs exact** | share of the exact top-k that the approximate search returns | 0.92 at `nprobe = 4` |
+
+# %% [markdown]
 # ## 8.1 · The model
 #
 # ```
@@ -196,6 +214,12 @@ print(f"parameters: {sum(p.numel() for p in TwoTower().parameters()):,}")
 # (Yi et al., 2019, "Sampling-bias-corrected neural modeling") subtracts
 # log q_i from each logit during training (only during training), which
 # turns the estimate back into p(i | u) (up to a constant).
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-two-tower-in-batch.svg" alt="Two-tower model and the in-batch softmax: diagonal positives, off-diagonal free negatives, logQ correction" width="100%">
+#
+# *What to notice:* only the dot product connects the two towers, so item vectors can be computed once and indexed. Every off-diagonal cell is a negative that costs nothing extra, and a popular item fills many of those cells.
+#
+# > 💡 **Intuition.** In-batch training is a speed-dating evening: each person must pick their date out of everyone who happens to be in the room. A celebrity turns up at every event, so they are "not picked" by almost everyone and the model learns that celebrities are unattractive. Subtracting $\log q_i$ is telling the model "this person was in the room 50 times more often than average; discount the rejections accordingly". *Where it breaks down:* $q_i$ is estimated from click counts, so a brand-new item has a noisy $q_i$, and its correction is noisy too.
 #
 # > **Exercise 1.** Write `in_batch_softmax_loss(user_emb, item_emb, log_q=None)`:
 # > tensors of shape [B, d] and [B, d] (row b of each is a positive pair),
@@ -344,6 +368,12 @@ print("saved two_tower_item_emb.npy", ie_logq.shape)
 # noise, re-normalised (so its structure resembles the real one), and query
 # with 2,000 real user embeddings. Timings are from this machine; on Colab's
 # CPU expect the same *ratios* but different absolute numbers.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-ann-tradeoff.svg" alt="ANN recall against latency for IVF (nprobe) and HNSW (efSearch), and exact search" width="100%">
+#
+# *What to notice:* every index is a curve, not a point: the knob (`nprobe`, `efSearch`) moves you along it. The shape matches the table you are about to compute; read your own numbers off the cell below.
+#
+# > 💡 **Intuition.** IVF is a library with sections: walk to the 4 sections whose signs best match your topic and search only those shelves (`nprobe = 4`). HNSW is asking for directions: take the motorway to roughly the right town, then smaller and smaller streets (`efSearch` is how many routes you keep open). *Where it breaks down:* a good book can sit in a neighbouring section that you did not visit; that missing share is exactly the "recall vs exact" you will measure.
 #
 # > **Exercise 2.** Write `recall_vs_exact(approx_ids, exact_ids)`: two
 # > integer arrays of shape [n_queries, k] (FAISS output, where −1 means "no
@@ -494,6 +524,61 @@ print("saved ann_benchmark.csv")
 
 # %% [markdown]
 # *Your answer:*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · The two-tower score.** In words: the cosine similarity of the two normalised vectors, divided by a temperature.
+#
+# $$
+# s(u, i) = \frac{\mathbf{u}^\top \mathbf{v}_i}{\tau}, \qquad \lVert \mathbf{u} \rVert = \lVert \mathbf{v}_i \rVert = 1
+# $$
+#
+# * *Example:* cosine 0.6 with $\tau = 0.05$ gives a logit of 12; cosine 0.5 gives 10, so the softmax prefers the first by $e^{2} \approx 7.4\times$.
+#
+# **2 · In-batch softmax (InfoNCE) with the logQ correction.** In words: for each user in the batch, cross-entropy of picking their own item out of the batch's items, with every item's logit lowered by the log of how often it is sampled.
+#
+# $$
+# L = -\frac{1}{B} \sum_{b=1}^{B} \log \frac{\exp\!\big(s(u_b, i_b) - \log q_{i_b}\big)}{\sum_{j=1}^{B} \exp\!\big(s(u_b, i_j) - \log q_{i_j}\big)}
+# $$
+#
+# * $B$: batch size; $q_i$: item $i$'s sampling probability (its share of training clicks). Without the correction, in-batch softmax learns $\log \frac{p(i \mid u)}{q_i}$ + const, which penalises popular items; at serving, use $s(u, i)$ alone. *Example:* $B = 1024$ and a model that knows nothing: $L = \log 1024 = 6.93$.
+#
+# **3 · Recall of an approximate index.** In words: the share of the exact top-$k$ that the approximate search also returned.
+#
+# $$
+# \operatorname{Recall@}k = \frac{1}{\lvert Q \rvert} \sum_{q \in Q} \frac{\lvert \text{ANN}_k(q) \cap \text{Exact}_k(q) \rvert}{k}
+# $$
+#
+# * *Example:* IVF returns 92 of the exact top 100 → 0.92 for that query.
+#
+# **4 · Cost of exact search.** In words: one dot product per item per query.
+#
+# $$
+# \text{cost} = N \cdot d \ \text{multiply-adds per query}
+# $$
+#
+# * *Example:* $N = 10^8$ items, $d = 32$: $3.2 \times 10^9$ per request, far beyond a 5 ms budget; IVF with $n_\text{list} = 4{,}096$ cells and $n_\text{probe} = 16$ scans about $16/4096 = 0.4\%$ of them.
+#
+# The cell below checks equation 2 against `F.cross_entropy`.
+
+# %%
+# In-batch softmax with logQ written out, checked against F.cross_entropy
+import torch.nn.functional as F
+
+g = torch.Generator().manual_seed(0)
+B, d, tau = 6, 8, 0.05
+u = F.normalize(torch.randn(B, d, generator=g), dim=1)
+v = F.normalize(torch.randn(B, d, generator=g), dim=1)
+log_q = torch.log(torch.tensor([0.30, 0.20, 0.20, 0.15, 0.10, 0.05]))
+logits = u @ v.T / tau - log_q  # column j shifted by -log q_j
+by_hand = -(logits.diag() - torch.logsumexp(logits, dim=1)).mean()
+library = F.cross_entropy(logits, torch.arange(B))
+print(f"by hand {by_hand.item():.5f} | F.cross_entropy {library.item():.5f}")
+print(f"a model that knows nothing, batch 1024: log(1024) = {np.log(1024):.3f}")
+
+# %% [markdown]
+# **Expected:** the two losses agree to five decimals, and `log(1024) = 6.931`, the ceiling the training loss in 8.2 started just below.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

@@ -88,6 +88,23 @@ print(f"train {len(train):,} rows | valid {len(valid):,} rows (test week untouch
 # one clearly labelled "oracle" in 5.6).
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Implicit feedback** | behaviour (clicks, purchases) used as a label instead of explicit ratings | `clicked` |
+# | **Examination hypothesis** | a click needs the item to be examined *and* found relevant | $P(\text{click}) = P(\text{exam}) \cdot P(\text{rel})$ |
+# | **Position-based model (PBM)** | examination depends only on the position | θ_p = (1 + p)^−0.9 in ShopStream |
+# | **Propensity θ_p** | the probability that position p is examined | θ_0 = 1, θ_9 ≈ 0.13 |
+# | **Exploration traffic** | requests shown in random order, so relevance is flat over positions | `is_random`, 5% of requests |
+# | **Inverse propensity scoring (IPS)** | weight each click by 1/θ_p to undo examination | a click at position 9 counts about 8 |
+# | **Clipping** | capping IPS weights at M: less variance, more bias | cap 4, 6 or none in 5.5 |
+# | **Self-normalised IPS** | divide the IPS sum by the sum of the weights | a standard variance reducer |
+# | **Off-policy evaluation** | estimating a new policy's value from another policy's logs | IPS value of a re-ranking |
+# | **Support problem** | items the old policy never showed cannot be evaluated | no clicks to re-weight |
+# | **Oracle** | the simulation's ground truth, used only to grade | `true_p` |
+
+# %% [markdown]
 # ## 5.1 · Clicks are not relevance
 #
 # The **examination hypothesis**: a user clicks an item only if they examine
@@ -124,6 +141,13 @@ by_pos.round(3)
 # factor of about 8. That drop is pure **examination**. On policy traffic the
 # drop is examination *and* relevance, mixed, and from clicks alone you
 # cannot tell how much is which. That is the whole problem.
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-position-bias-ips.svg" alt="Examination probability by position, and the inverse-propensity weights that correct it" width="100%">
+#
+# *What to notice:* the left panel is the drop you just measured on random traffic (pure examination); the right panel is its mirror image, the weight IPS gives a click at each position. The dashed tops are what a clip at 4 throws away.
+#
+# > 💡 **Intuition.** A shop window: items at eye level get looked at, items near the floor rarely do. Counting sales per shelf tells you mostly *where* things were, not how good they are. *Tiny example:* an item with relevance 0.4 at position 0 gets clicked 40% of the time; the same item at position 9 ($\theta_9 = 0.13$) only $0.13 \times 0.4 = 5\%$. *Where it breaks down:* real shoppers also stop after finding what they wanted (a cascade), so examination of position 5 depends on what was at positions 0–4, which the PBM ignores.
 
 # %% [markdown]
 # ## 5.2 · The paradox: the old ranker wins on logged clicks
@@ -165,6 +189,8 @@ paradox.round(3)
 # either if you compare against the logged order (try it: logged order still
 # wins there, because clicks still concentrate at the top). Two practical
 # rules follow:
+#
+# > 💡 **Intuition.** Judging a new seating plan for a concert by the applause recorded under the old plan: the people who clapped loudest sat in the front rows, so any plan that moves them back "loses applause", however good it is. *Where it breaks down:* applause has no exact correction; clicks do, if you know how much each seat (position) is examined, which is what the rest of this notebook estimates.
 #
 # * never compare a new ranker against the logging policy on that policy's clicks;
 # * NDCG on clicks is only (roughly) fair between two *new* rankers, and only
@@ -293,6 +319,8 @@ print("wrote", out_path.relative_to(ART))
 # Its price: the rare clicks at low positions get large weights (here up to
 # 1/0.126 ≈ 8), which adds variance. **Clipping** the weight at some cap M
 # reduces variance and adds bias (towards under-counting low-position clicks).
+#
+# > 💡 **Intuition.** A survey where young people answer only 1 time in 8 and older people every time: weight each young answer by 8 and the totals describe everyone again. IPS does the same with "examined 1 time in 8". *Where it breaks down:* if a group answers 1 time in 1,000, one answer carries a weight of 1,000 and a single respondent swings the result; that is the variance clipping trades away.
 #
 # > **Exercise 2.** Write `ips_ctr_estimate(clicks, positions, propensities, clip)`:
 # > the mean over impressions of `click * min(1 / propensities[position], clip)`
@@ -521,6 +549,57 @@ pd.DataFrame(coefs).T
 
 # %% [markdown]
 # *Your answer:*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · The position-based click model.** In words: a click happens only if the position is examined *and* the item is relevant, and the two are independent.
+#
+# $$
+# P(c = 1 \mid u, i, p) = \underbrace{\theta_p}_{P(\text{exam} \mid p)} \cdot \underbrace{r_{u,i}}_{P(\text{rel} \mid u, i)}
+# $$
+#
+# * $c$: click; $p$: position (0 = top); $\theta_p$: examination propensity; $r_{u,i}$: relevance. *Example:* $r = 0.4$, $\theta_0 = 1$ → 0.40; $\theta_9 = 10^{-0.9} = 0.126$ → 0.05.
+#
+# **2 · Propensities from random traffic.** In words: with random order, mean relevance is the same at every position, so CTR ratios are examination ratios.
+#
+# $$
+# \frac{\theta_p}{\theta_0} = \frac{\text{CTR}_\text{rand}(p)}{\text{CTR}_\text{rand}(0)}
+# $$
+#
+# * *Example:* random-traffic CTR 0.19 at position 0 and 0.024 at position 9 → $\theta_9 / \theta_0 \approx 0.126$.
+#
+# **3 · The IPS click-rate estimator, and clipping.** In words: divide each click by the chance that its position was examined; optionally cap the weight at $M$.
+#
+# $$
+# \hat r_\text{IPS} = \frac{1}{n} \sum_{j=1}^{n} \frac{c_j}{\theta_{p_j}}, \qquad \hat r_\text{clip} = \frac{1}{n} \sum_{j=1}^{n} c_j \min\!\left(\frac{1}{\theta_{p_j}}, M\right)
+# $$
+#
+# * Unbiased under the PBM, because $\mathbb{E}[c / \theta_p] = \theta_p r / \theta_p = r$. Clipping lowers variance and biases the estimate down where $1/\theta_p > M$. *Example:* 5 clicks in 100 impressions at position 9: raw CTR 0.05, IPS $0.05 / 0.126 = 0.40$, clipped at 4: $0.05 \times 4 = 0.20$.
+#
+# **4 · Off-policy value of a re-ranking.** In words: a click observed at logged position $p$ that the new ranking moves to position $q$ counts $\theta_q / \theta_p$ clicks.
+#
+# $$
+# \hat V(\text{new}) = \sum_{i \in \text{request}} \frac{\theta_{q_i}}{\theta_{p_i}}\, c_i
+# $$
+#
+# * *Example:* a click at logged position 3 ($\theta = 0.287$) moved to position 0 counts $1 / 0.287 = 3.5$ clicks; moved to position 9 it counts $0.126 / 0.287 = 0.44$. Items never shown have no $c_i$: IPS cannot evaluate them.
+#
+# The cell below simulates the PBM for one item and checks equation 3: the raw click rate depends on where the item was shown, IPS does not.
+
+# %%
+# Simulate the PBM: one item with relevance r = 0.3 shown at random positions
+rng_pbm = np.random.default_rng(0)
+theta_true = (1.0 + np.arange(10)) ** -0.9
+pos = rng_pbm.integers(0, 10, size=200_000)
+clicks_sim = rng_pbm.random(pos.size) < theta_true[pos] * 0.3
+w = 1 / theta_true[pos]
+print(f"raw CTR            {clicks_sim.mean():.3f}   (true relevance 0.300)")
+print(f"IPS                {(clicks_sim * w).mean():.3f}")
+print(f"IPS clipped at 4   {(clicks_sim * np.minimum(w, 4)).mean():.3f}")
+
+# %% [markdown]
+# **Expected:** raw CTR about 0.097 (the mean of θ_p is 0.32, so examination hides two thirds of the relevance), IPS about 0.300, clipped about 0.24 (biased down). With 200,000 impressions the IPS estimate is within about ±0.005 of the truth; rerun with 2,000 and watch its spread grow.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

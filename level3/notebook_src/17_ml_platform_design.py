@@ -88,7 +88,26 @@ print("calculators:", ", ".join(n for n, f in vars(ds).items()
 # **Expected:** the artifact path and a list of calculator names from
 # [`src/scaleml/design.py`](../../src/scaleml/design.py). Read that file: it is
 # about 250 lines of arithmetic, and every function says what it assumes.
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | ML platform | Shared infrastructure many teams use to build, ship and watch models | "fifty teams" in the prompt |
+# | Feature store | A system that defines features once and serves them for training (offline) and serving (online) | offline columnar + online key-value |
+# | Point-in-time correctness | Training rows only use feature values known *at* the label's time | as-of joins on `(entity, label_time)` |
+# | Backfill | Computing a new feature's history over past data with the same code | a new feature over the training window |
+# | MFU | Model FLOPs utilisation: achieved useful FLOP/s ÷ the hardware's peak | 0.30 assumed |
+# | Gang scheduling | Starting all workers of a multi-GPU job together, or none | distributed training jobs |
+# | Showback / chargeback | Showing each team its cost / actually billing it | per-team GPU spend |
+# | Model registry | A database of model versions with signature, data snapshot, evaluation and approval | the step before deployment |
+# | CI / CD / CT | Continuous integration / delivery / training: automated tests, rollout and retraining | 17.3 |
+# | Shadow / canary | New model scores live traffic without effect / serves a small share of real traffic | 1% canary |
+# | Label maturity | Fraction of eventual labels already observed | 30% after 7 days (20-day mean delay) |
+# | ADR | Architecture decision record: one decision, its options, consequences and revisit triggers | `adr-001-online-feature-store.md` |
+
+# %% [markdown]
 # ## 17.0 · From "design a model" to "design a platform"
 #
 # A platform question changes who your user is. In a product design the user
@@ -110,15 +129,9 @@ print("calculators:", ", ".join(n for n, f in vars(ds).items()
 # A one-screen picture of the components you will walk through (draw something
 # like it in the first ten minutes, then *stop drawing* and go deep):
 #
-# ```
-#                    ┌──────────────────────── metadata, lineage, access control ────────────────────────┐
-#  event streams ─►  │ FEATURE PLATFORM          TRAINING PLATFORM          REGISTRY + DEPLOYMENT          │
-#  databases     ─►  │  definitions (code)   ─►   versioned datasets   ─►    model + signature + card  ─► │─► online serving
-#  batch tables  ─►  │  offline store (cols)      scheduler, GPU quota       CI/CD/CT, shadow, canary      │─► batch scoring
-#                    │  online store (KV)         experiment tracking        rollback                      │
-#                    │  streaming aggregates      reproducible runs                                        │
-#                    └──────────────── MONITORING: data quality · drift · delayed-label performance · cost ┘
-# ```
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-ml-platform.svg" alt="Sources feed a feature platform, a training platform, a registry with deployment and serving; a metadata layer spans them and a monitoring platform underneath can trigger retraining" width="100%">
+#
+# *What to notice:* every arrow is a contract between teams (feature definitions, data snapshots, model signatures); draw this once in the interview, then go deep on two boxes.
 #
 # **What a staff answer adds over a senior one** (generic signals interviewers
 # commonly look for, not any company's ladder): a senior answer designs each
@@ -152,6 +165,13 @@ print("calculators:", ", ".join(n for n, f in vars(ds).items()
 # | **Backfill** | New feature → compute its history over the training window from raw logs, with the *same* code; versioned, never overwrite in place | Backfills compete with production jobs for compute; schedule and cap them; a backfill that uses today's dimension tables leaks |
 # | **Ownership** | Every feature group has an owning team, an on-call, a freshness SLO, a deprecation path; consumers are tracked (lineage) | Without owners, a 5,000-feature store becomes unmaintainable and nobody dares delete anything |
 # | **Privacy and deletion** | Entity-keyed storage makes "delete user X" a keyed delete; offline history must honour it too | Retention is a cost lever *and* a compliance requirement |
+#
+# > 💡 **Intuition.** A feature store is one recipe cooked in two kitchens: a slow, large batch kitchen
+# > that prepares every past meal for training, and a fast counter that serves today's meal in
+# > milliseconds. Training/serving skew is the two kitchens following slightly different recipes.
+# > *Where the analogy breaks down:* streaming features are computed *as events arrive*, so even with
+# > one recipe the two kitchens can differ in timing (late events, windows), which is why
+# > point-in-time joins and backfills matter.
 #
 # **Sizing.** The online store is usually the expensive one, because it lives in
 # memory or on fast SSD and is replicated. A worked estimate:
@@ -365,6 +385,12 @@ for rel in (0.5, 1.0):
 # catches *crashes and large* regressions, and small effects are left to the
 # A/B test. Say this out loud: it shows you know what each stage can and cannot catch.
 #
+# > 💡 **Intuition.** A 1% canary is a smoke alarm, not a thermometer: it reliably notices a fire (a
+# > crash, a doubling of errors within minutes) but cannot tell whether the room got one degree
+# > warmer (a +2% effect needs far more traffic and time). *Where the analogy breaks down:* the
+# > required sample grows with $1/\Delta^2$, so halving the effect you want to see quadruples the
+# > canary's duration; there is no fixed "canary length".
+#
 # ## 17.4 · The monitoring platform
 #
 # Level 1 notebook 14 built drift checks (PSI) and a rollback for one model.
@@ -395,6 +421,12 @@ print("labels visible:       ", "  ".join(f"{ds.label_maturity(k, mean_delay):>4
 # in recall but is not); (2) use **leading indicators** while labels mature:
 # input drift, score drift, early proxy labels (a disputed transaction before
 # the chargeback), and a small labelled sample from human review.
+#
+# > 💡 **Intuition.** Grading an exam while students are still handing in papers: yesterday's batch
+# > always looks like it has fewer correct answers, simply because fewer papers are in. Compare two
+# > models only on papers that have had the same time to arrive. *Where the analogy breaks down:*
+# > label delay can depend on the case itself (big frauds are reported faster), so "same maturity"
+# > is necessary but not always sufficient.
 #
 # ## 17.5 · Organisational trade-offs
 #
@@ -544,6 +576,73 @@ print(adr)
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · Online feature-store size.**
+#
+# $$
+# \text{GB} = \frac{E \cdot (k + F \cdot b) \cdot o \cdot r}{10^9}
+# $$
+#
+# *Symbols:* $E$ entities, $k$ key bytes, $F$ features, $b$ bytes per value, $o$ store overhead, $r$
+# replicas. *Example (17.1):* $2 \times 10^8 \cdot (16 + 400 \cdot 4) \cdot 1.5 \cdot 3 / 10^9 = 1{,}454$ GB.
+#
+# **2 · Training compute and GPU-hours.**
+#
+# $$
+# \text{FLOPs} \approx 6\, N\, D, \qquad \text{GPU-hours} = \frac{6 N D}{\text{peak FLOP/s} \cdot \mathrm{MFU} \cdot 3600}
+# $$
+#
+# *Symbols:* $N$ parameters, $D$ training tokens (6 = 2 forward + 4 backward FLOPs per parameter per
+# token). *Example:* $N = 10^9$, $D = 2 \times 10^9$: $1.2 \times 10^{19}$ FLOPs; at 65 TFLOP/s and MFU 0.3,
+# $1.2 \times 10^{19} / (1.95 \times 10^{13} \cdot 3600) = 171$ GPU-hours.
+#
+# **3 · The price of idle capacity.** $\text{cost per useful GPU-hour} = \text{price} / u$. *Example:* a \$2 card used 20%
+# of the time costs \$10 per useful hour.
+#
+# **4 · Canary sample size** (two proportions, two-sided $\alpha$, power $1 - \beta$).
+#
+# $$
+# n = \frac{\left( z_{1-\alpha/2} \sqrt{2 \bar{p} (1 - \bar{p})} + z_{1-\beta} \sqrt{p_1 (1 - p_1) + p_2 (1 - p_2)} \right)^2}{(p_2 - p_1)^2}, \qquad \bar{p} = \frac{p_1 + p_2}{2}
+# $$
+#
+# *Example:* error rate $p_1 = 0.005 \to p_2 = 0.006$ (+20%), $z = 1.96$ and $0.84$: $n \approx 85{,}900$ per arm,
+# i.e. 72 minutes at 20 QPS (1% of 2,000). Doubling the effect to $p_2 = 0.010$ needs only ~4,700.
+#
+# **5 · Label maturity** (exponential delay with mean $\tau$).
+#
+# $$
+# F(t) = 1 - e^{-t/\tau}
+# $$
+#
+# *Example:* $\tau = 20$ days: $F(7) = 1 - e^{-0.35} = 30\%$ of eventual labels are visible after a week.
+#
+# **6 · Risk score.** $\text{risk} = \text{likelihood} \times \text{impact}$, each on 1–5 (HIGH ≥ 15, MEDIUM ≥ 8).
+# *Example:* likely (4) × major (4) = 16, HIGH.
+#
+# The cell below recomputes 1, 2, 4 and 5 by hand and compares them with `scaleml.design`.
+
+# %%
+# Key equations, recomputed by hand and compared with the calculators (instant).
+import math
+from statistics import NormalDist
+
+by_hand_gb = 200e6 * (16 + 400 * 4) * 1.5 * 3 / 1e9
+print(f"online store: by hand {by_hand_gb:,.0f} GB | ds.online_store_gb {ds.online_store_gb(200e6, 400, 4):,.0f} GB")
+gpu_hours = 6 * 1e9 * 2e9 / (65e12 * 0.30 * 3600)
+print(f"GPU-hours: by hand {gpu_hours:,.0f} | ds {ds.gpu_hours_from_flops(ds.train_flops(1e9, 2e9), 65e12, 0.30):,.0f}")
+p1, p2 = 0.005, 0.006
+za, zb = NormalDist().inv_cdf(0.975), NormalDist().inv_cdf(0.80)
+pbar = (p1 + p2) / 2
+n_hand = (za * math.sqrt(2 * pbar * (1 - pbar)) + zb * math.sqrt(p1 * (1 - p1) + p2 * (1 - p2))) ** 2 / (p2 - p1) ** 2
+print(f"canary n per arm: by hand {math.ceil(n_hand):,} | ds.two_proportion_n {ds.two_proportion_n(p1, 0.20):,}")
+print(f"label maturity after 7 days (mean delay 20): by hand {1 - math.exp(-7 / 20):.3f} | ds {ds.label_maturity(7, 20):.3f}")
+
+# %% [markdown]
+# **Expected:** each pair agrees: `1,454` GB, `171` GPU-hours, the same canary size (≈ 85,900; the
+# number printed in 17.3), and `0.295`.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

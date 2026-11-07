@@ -82,7 +82,31 @@ print(pop[["activity", "base_ctr"]].describe().round(3).T[["mean", "std", "min",
 # **Expected:** mean activity about 1.4 (heavy-tailed, max above 10) and mean
 # base CTR about 0.14 (spread 0.04–0.3), close to the CTR of the logging policy in
 # ShopStream's logs.
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Randomisation unit | the thing one coin flip assigns to an arm | the user: all of a user's requests see the same ranker |
+# | A/A test | an experiment where both arms get the identical treatment, so every "win" is a false positive | 400 simulated A/A runs measure each test's false-positive rate |
+# | Exposed (triggered) user | an assigned user who actually reached the tested surface | about 5% of assigned users never make a request |
+# | Pooled vs per-user CTR | total clicks ÷ total impressions, versus the average of each user's own click rate | both about 0.145 per arm in 11.2 |
+# | Standard error (SE) | the typical size of an estimate's random error across repeated experiments | naive SE 0.0006 vs a true spread of 0.0017 |
+# | Significance level α | the false-positive rate you accept when there is no effect | α = 0.05 |
+# | Power (1 − β) | the chance the test detects an effect that is really there | 80% power for 10% → 11% at 14,749 users per arm |
+# | MDE | minimum detectable effect: the smallest true effect the test is sized to catch | +1 percentage point of conversion |
+# | Sample-ratio mismatch (SRM) | arm sizes too unequal to be chance, which means broken assignment or logging | 0.505 of users in control, SRM p ≈ 3e-6 |
+# | Peeking | checking repeatedly and stopping at the first significant result | 14 daily looks give a false-positive rate of about 0.2 |
+# | FWER / FDR | the chance of at least one false positive / the expected share of false ones among discoveries | Bonferroni controls FWER, Benjamini–Hochberg controls FDR |
+#
+# The whole notebook on one page: each section below measures what goes wrong when one of these steps is skipped.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-ab-test-lifecycle.svg" alt="Six steps of an A/B test: hypothesis, power, randomise, SRM check, analyse, decide, each with the failure caused by skipping it" width="100%">
+#
+# *What to notice:* steps 1–4 all happen before any metric is visible; that ordering, not the formula, is what protects the result.
+
+# %% [markdown]
 # ## 11.1 · The simulator
 #
 # `ex.simulate_users(pop, n, rng, lift)` draws `n` users from this
@@ -205,6 +229,17 @@ print(f"pooled-CTR difference, request-randomised: true SD across experiments {a
 # Rule: randomise at the level of the unit whose behaviour the treatment
 # changes (usually the user), and compute variance **at that unit**: a
 # per-user metric with a t-test, or a pooled ratio with the delta method (notebook 12).
+#
+# > 💡 **Intuition.** Treating 1,000 impressions from 50 users as 1,000 independent
+# > data points is like polling 50 people 20 times each and reporting 1,000 opinions:
+# > a person's answers largely repeat, so the honest sample size is much closer to 50.
+# > *Where it breaks down:* repeated impressions are not exact copies, so the effective
+# > sample size lies somewhere between users and impressions; the delta method
+# > (notebook 12) computes exactly where.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-randomization-unit.svg" alt="Request, user and cluster randomisation compared on variance and interference risk" width="100%">
+#
+# *What to notice:* moving right (request → user → cluster) trades variance for protection against interference; the analysis unit must move with it.
 
 # %%
 fpr.rename("false_positive_rate").to_frame().to_csv(OUT / "aa_tests.csv")
@@ -221,6 +256,16 @@ fpr.rename("false_positive_rate").to_frame().to_csv(OUT / "aa_tests.csv")
 # Read it as an interview answer: halving the effect **quadruples** the sample
 # size; the `z` terms are about 2.8 for α = 0.05 and 80% power; and the
 # variance term is largest for proportions near 0.5.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-power.svg" alt="Two bell curves of the test statistic under no effect and under the true effect, with alpha, beta and power shaded" width="100%">
+#
+# *What to notice:* power is the green area of the right curve beyond the line; it grows when δ moves the curves apart or when more users make both curves narrower.
+#
+# > 💡 **Intuition.** Detecting a lift is hearing a whisper in a noisy room. The
+# > whisper is δ; the noise is the standard error, which falls only like 1/√n. A whisper
+# > half as loud needs four times the listeners. *Where it breaks down:* the "noise"
+# > also depends on the metric (σ), which is why CUPED (notebook 12) can lower it without
+# > adding users.
 
 # %% [markdown]
 # > **Exercise 1.** Write `sample_size_per_arm(p0, mde_abs, alpha=0.05, power=0.8)` using the
@@ -330,6 +375,12 @@ print(f"bootstrap 95% CI [{lo:+.5f}, {hi:+.5f}] ({time.time() - start:.1f} s for
 # chance, something between assignment and logging is broken, and **any**
 # metric difference is suspect, because the missing users are rarely missing at random.
 #
+# > 💡 **Intuition.** An SRM is a survey where, in one arm only, unhappy customers hang
+# > up before answering. The answers you do get look happier, and no amount of
+# > statistics on the answers can tell you that. *Where it breaks down:* a mismatch can
+# > also be harmless (a bot filter applied evenly but noisily); you only know after
+# > finding the cause, which is why you investigate rather than reweight.
+#
 # A planted bug, modelled on real ones: the new ranker's client code logs
 # the exposure event lazily, on the user's first interaction. Users who never
 # click are logged only half the time in treatment. The ranker itself is
@@ -419,6 +470,15 @@ plt.show()
 # alpha early) or always-valid p-values (mSPRT). Most experimentation platforms
 # offer one. Otherwise: fix the duration from the power calculation, look only for
 # guardrail breakages (crashes, latency), and read the primary metric once.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-peeking.svg" alt="A z-statistic random walk in an A/A test crosses 1.96 on day 5 and ends near zero on day 14; a sequential boundary starts high and narrows" width="100%">
+#
+# *What to notice:* the day-5 crossing is pure noise; a sequential boundary demands much stronger evidence early, so the same walk would never have stopped.
+#
+# > 💡 **Intuition.** Peeking is rolling a die every morning and stopping the first time
+# > it shows a six: run long enough and you always "find" one. *Where it breaks down:*
+# > successive looks are correlated (day 6 contains day 5's data), so the inflation grows
+# > more slowly than for independent rolls: about 0.2 after 14 looks, not 1 − 0.95¹⁴ ≈ 0.51.
 
 # %% [markdown]
 # > **Exercise 3.** Write `aa_false_positive_rate(n_experiments, n_users_per_arm, n_looks, alpha=0.05, p=0.1, seed=0)`.
@@ -481,6 +541,87 @@ print(pd.DataFrame(summary).T.round(3).to_string())
 # **one** pre-registered primary metric decides the launch; a handful of
 # **guardrails** (latency, crashes, revenue) can only block it; everything else is
 # exploratory and labelled as such. Notebook 12 turns that into launch criteria.
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# A revision sheet: the formulas behind this notebook, each with a tiny worked example. The code cell after it checks every example numerically.
+#
+# **1. Two-proportion z-test** (pooled; valid only if the n trials are independent units)
+#
+# $$
+# z = \frac{\hat p_B - \hat p_A}{\sqrt{\hat p\,(1-\hat p)\left(\frac{1}{n_A} + \frac{1}{n_B}\right)}}, \qquad \hat p = \frac{x_A + x_B}{n_A + n_B}
+# $$
+#
+# *In words:* the observed difference in rates, measured in standard errors computed as if both arms shared one rate (the null hypothesis).
+# *Symbols:* $x$ = conversions, $n$ = units, $\hat p_A = x_A / n_A$, $\hat p$ = the pooled rate.
+# *Example:* 1,000 / 10,000 vs 1,100 / 10,000 → $\hat p = 0.105$, SE = 0.00434, z = 2.31, p = 0.021.
+#
+# **2. Standard error of a difference, and its confidence interval**
+#
+# $$
+# \operatorname{SE}(\bar y_B - \bar y_A) = \sqrt{\frac{\sigma_A^2}{n_A} + \frac{\sigma_B^2}{n_B}}, \qquad \text{95\% CI} = (\bar y_B - \bar y_A) \pm 1.96\,\operatorname{SE}
+# $$
+#
+# *In words:* variances of independent estimates add, so the SE of a difference is the root of the summed squared SEs.
+# *Symbols:* $\sigma^2$ = per-unit variance in each arm ($p(1-p)$ for a proportion), $n$ = units per arm.
+# *Example:* $\sqrt{0.1 \cdot 0.9/10^4 + 0.11 \cdot 0.89/10^4} = 0.00433$, so the CI for +0.01 is [+0.0015, +0.0185].
+#
+# **3. Sample size per arm**
+#
+# $$
+# n \approx \frac{2\,(z_{1-\alpha/2} + z_{1-\beta})^2\, p(1-p)}{\delta^2}
+# $$
+#
+# *In words:* (how many standard errors of separation you need)² × (noise per unit) ÷ (effect)². The 2 is there because both arms are noisy.
+# *Symbols:* $z_{1-\alpha/2} = 1.96$ for α = 0.05, $z_{1-\beta} = 0.84$ for 80% power, $p$ = baseline rate, $\delta$ = absolute MDE. For a continuous metric replace $p(1-p)$ with $\sigma^2$.
+# *Example:* $p = 0.10$, $\delta = 0.01$: $2 \cdot 2.80^2 \cdot 0.09 / 0.0001 \approx 14{,}128$; the exact two-variance form used in 11.4 gives 14,749. Halve δ and n quadruples.
+#
+# **4. Sample-ratio mismatch: chi-square goodness of fit**
+#
+# $$
+# \chi^2 = \sum_{\text{arms}} \frac{(O - E)^2}{E}, \qquad \text{1 degree of freedom for two arms}
+# $$
+#
+# *In words:* how far the observed arm counts are from the planned split, scaled by the expected counts.
+# *Symbols:* $O$ = observed users in an arm, $E$ = total × planned share.
+# *Example:* 50,600 vs 49,400 users on a 50/50 split: $\chi^2 = 2 \cdot 600^2 / 50{,}000 = 14.4$, p ≈ 1.5e-4, below the usual 0.001 alarm.
+#
+# **5. Multiple testing: Bonferroni and Benjamini–Hochberg**
+#
+# $$
+# \text{Bonferroni: reject } H_i \text{ if } p_i \le \frac{\alpha}{m}; \qquad \text{BH: } k = \max\Big\{ i : p_{(i)} \le \frac{i}{m}\,q \Big\}, \text{ reject } p_{(1)}, \dots, p_{(k)}
+# $$
+#
+# *In words:* Bonferroni splits α evenly over m tests (controls the chance of **any** false positive); BH sorts the p-values and compares each with a rising threshold (controls the **share** of false discoveries). With m independent null tests, $P(\text{any false positive}) = 1 - (1-\alpha)^m$.
+# *Symbols:* $m$ = number of tests, $p_{(i)}$ = the i-th smallest p-value, $q$ = target false-discovery rate.
+# *Example:* p = (0.001, 0.008, 0.012, 0.041, 0.30), α = q = 0.05: Bonferroni's threshold 0.01 rejects 2; BH's thresholds (0.01, 0.02, 0.03, 0.04, 0.05) reject 3. And $1 - 0.95^{17} = 0.58$ for 17 independent null metrics.
+
+# %%
+# --- Check the key equations numerically -------------------------------------
+xa, na, xb, nb_ = 1_000, 10_000, 1_100, 10_000
+p_pool = (xa + xb) / (na + nb_)
+se_pool = np.sqrt(p_pool * (1 - p_pool) * (1 / na + 1 / nb_))
+z_hand = (xb / nb_ - xa / na) / se_pool
+print(f"1. z = {z_hand:.3f}, p = {2 * stats.norm.sf(abs(z_hand)):.4f} by hand | "
+      f"ex.two_proportion_ztest p = {ex.two_proportion_ztest(xa, na, xb, nb_)['p']:.4f}")
+se_diff = np.sqrt(0.1 * 0.9 / na + 0.11 * 0.89 / nb_)
+print(f"2. SE of the difference {se_diff:.5f}, 95% CI [{0.01 - 1.96 * se_diff:+.4f}, {0.01 + 1.96 * se_diff:+.4f}]")
+zsum = stats.norm.ppf(0.975) + stats.norm.ppf(0.8)
+print(f"3. n per arm: simplified {np.ceil(2 * zsum**2 * 0.1 * 0.9 / 0.01**2):,.0f} | "
+      f"two-variance form {np.ceil(zsum**2 * (0.1 * 0.9 + 0.11 * 0.89) / 0.01**2):,.0f} | n_formula {n_formula(0.10, 0.01):,}")
+counts = np.array([50_600, 49_400])
+chi2 = ((counts - counts.sum() / 2) ** 2 / (counts.sum() / 2)).sum()
+print(f"4. SRM chi-square {chi2:.1f}, p = {stats.chi2.sf(chi2, df=1):.1e} | scipy.stats.chisquare p = {stats.chisquare(counts).pvalue:.1e}")
+p_demo = np.array([0.001, 0.008, 0.012, 0.041, 0.30])
+print("5. Bonferroni rejects", (p_demo <= 0.05 / len(p_demo)).astype(int),
+      "| BH rejects", ex.benjamini_hochberg(p_demo, 0.05).astype(int),
+      f"| 1 - 0.95^17 = {1 - 0.95**17:.2f}")
+
+# %% [markdown]
+# **Expected:** 1. z = 2.307 and p = 0.0211 both ways; 2. SE 0.00433 and CI [+0.0015, +0.0185];
+# 3. 14,128 (simplified) and 14,749 twice; 4. chi-square 14.4 with p = 1.5e-04 from both;
+# 5. Bonferroni `[1 1 0 0 0]`, BH `[1 1 1 0 0]`, and 0.58.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

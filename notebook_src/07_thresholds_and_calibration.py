@@ -103,11 +103,43 @@ print(f"validation: {len(y):,} rows, {y.sum()} churners, PR-AUC {average_precisi
 # churners among 6,956 rows (three monthly snapshots).
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Threshold** | the score above which an account is flagged for a call | 0.19 |
+# | **TP / FP / FN / TN** | flagged churner / flagged non-churner / missed churner / correctly ignored | 64 calls a month, ≈ 27% of them TPs |
+# | **Precision** | share of flagged accounts that were going to churn | ≈ 0.27 at the cost threshold |
+# | **Recall** | share of all churners that were flagged | ≈ 0.14 at the cost threshold |
+# | **Expected value (EV)** | money gained by a rule under stated costs: TP × value − FP × cost | ≈ $3,400 over three months |
+# | **Break-even probability $p^{*}$** | the probability above which a call pays for itself | $30 / (150 + 30) = 1/6$ |
+# | **Capacity / top-k** | a fixed number of calls per period, filled with the highest scores | 40 calls a month |
+# | **Calibrated** | among accounts scored $p$, a share $p$ actually churns | plain logreg is, balanced logreg is not |
+# | **Reliability diagram** | plot of mean predicted vs observed rate, per score bin | the diagonal is perfect calibration |
+# | **Brier score** | mean squared error of the probabilities; lower is better | 0.0467 vs 0.0494 for the base rate |
+# | **Log loss** | average surprise of the true labels under the predicted probabilities | what logistic regression minimises |
+# | **Recalibration** | a monotone map from score to probability, learned on held-out later rows | sigmoid (Platt) or isotonic |
+
+# %% [markdown]
 # ## 7.1 · The precision-recall curve is a menu
 #
 # Each point on the curve is a threshold: flag everyone above it, and you get
 # that precision (share of calls that reach a would-be churner) and that
-# recall (share of churners you reach).
+# recall (share of churners you reach):
+#
+# $$
+# \text{precision} = \frac{TP}{TP + FP}, \qquad \text{recall} = \frac{TP}{TP + FN}
+# $$
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-pr-vs-roc.svg" alt="ROC curve with a random diagonal at 0.5 next to a precision-recall curve whose random baseline is the positive rate, 0.05" width="100%">
+#
+# *What to notice:* the ROC plot looks healthy (0.73) while the PR plot shows that precision drops towards the 5% floor quickly; the PR view is the one that matches "how many of our calls are useful".
+#
+# > 💡 **Intuition.** The PR curve is a restaurant menu: every dish (threshold)
+# > comes with a price (calls made) and a portion (churners reached). You do
+# > not pick the "best" dish, you pick the one your budget and appetite fit.
+# > *Where it breaks down:* a menu has fixed prices; here the precision of a
+# > given threshold drifts from month to month.
 
 # %%
 from sklearn.metrics import precision_recall_curve
@@ -153,7 +185,17 @@ table.round(3)
 # * a missed churner costs nothing *extra* relative to today (no call, no save).
 #
 # For a **calibrated** probability p, calling is worth it when
-# p × 150 > (1 − p) × 30, i.e. **p > 30 / (150 + 30) = 1/6 ≈ 0.167**. That is
+# p × 150 > (1 − p) × 30, i.e. **p > 30 / (150 + 30) = 1/6 ≈ 0.167**.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-threshold-value.svg" alt="Expected value against threshold: negative when too many low-probability accounts are called, a broad maximum near the break-even probability 1/6, falling towards zero at high thresholds" width="100%">
+#
+# *What to notice:* the curve is flat near its top, so the exact threshold matters less than the ratio of costs that put the top there.
+#
+# > 💡 **Intuition.** Each call is a $30 lottery ticket that pays $150 with
+# > probability p. Buy the ticket when its expected payout beats its price:
+# > $150p > 30(1 - p)$. *Where it breaks down:* "p" must be a real
+# > probability (calibrated, section 7.6), and the $150 hides a save rate
+# > nobody has measured yet (section 7.3). That is
 # the theory. `best_threshold_by_value` finds the empirical optimum on
 # validation:
 
@@ -247,6 +289,12 @@ sensitivity
 #   overflow the team;
 # * **top-k per snapshot**: each month, call the 40 highest scores. Volume is
 #   exact by construction. This is the usual production rule.
+#
+# > 💡 **Intuition.** A threshold is "everyone taller than 1.90 m makes the
+# > team"; top-k is "the 40 tallest make it". With a fixed squad size only the
+# > second fills it every season. *Where it breaks down:* top-k always fills
+# > the quota, even in a month where nobody is really at risk; pair it with a
+# > minimum score if a wasted call is expensive.
 
 # %%
 CAPACITY = 40
@@ -362,6 +410,17 @@ print(json.dumps(policy, indent=2))
 # The 1/6 rule assumed **calibrated** scores: among accounts scored 0.2, about
 # 20% churn. Check it: sort the validation rows into ten equal-sized score
 # bins and compare the mean score with the observed churn rate in each bin.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-calibration.svg" alt="Reliability diagram: a calibrated model follows the diagonal; a class-weighted model sits far below it, predicting several times the true churn rate, with almost the same ranking" width="100%">
+#
+# *What to notice:* the two models rank almost identically (PR-AUC 0.163 vs 0.161), yet only one of them can be used with the 1/6 rule.
+#
+# > 💡 **Intuition.** Calibration is a weather forecaster's honesty: on the
+# > days they say "20% rain", it should rain on about one in five. Ranking is
+# > their skill at telling wetter days from drier ones. A forecaster can be
+# > skilled and dishonest (always doubling the number). *Where it breaks
+# > down:* calibration is checked per bin on average; a model can be
+# > calibrated overall and badly off for one slice of customers.
 
 # %%
 cal = calibration_table(y, scores, n_bins=10)
@@ -505,6 +564,92 @@ print(f"notebook compute time: {time.time() - T0:.0f} s")
 
 # %% [markdown]
 # **Expected:** under a minute.
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **Precision, recall, F1** at a threshold:
+#
+# $$
+# P = \frac{TP}{TP + FP}, \qquad R = \frac{TP}{TP + FN}, \qquad F_1 = \frac{2PR}{P + R}
+# $$
+#
+# *In words:* how pure the flagged set is, how much of the target it covers,
+# and their harmonic mean. *Example:* 3 months, 192 calls, 52 reach churners,
+# 362 churners in total: $P = 52/192 = 0.27$, $R = 52/362 = 0.14$,
+# $F_1 = 0.19$. (F1 weighs a missed churner and a wasted call equally, which
+# is rarely the business's view; that is why this notebook uses costs.)
+#
+# **Expected value of a threshold and the break-even probability:**
+#
+# $$
+# \text{EV}(t) = TP(t)\cdot V - FP(t)\cdot C,
+# \qquad
+# p^{*} = \frac{C}{V + C}
+# $$
+#
+# *In words:* calling an account with probability $p$ is worth
+# $pV - (1-p)C$, positive exactly when $p > p^{*}$. *Symbols:* $V$ = value of
+# reaching a churner (\$150), $C$ = cost of a call (\$30). *Example:*
+# $p^{*} = 30/180 = 0.167$; halving the save rate makes $V = 75$ and
+# $p^{*} = 30/105 = 0.286$, the same as doubling $C$ to \$60
+# ($60/210 = 0.286$).
+#
+# **Lift at k:** $\text{lift@}k = \text{precision@}k \,/\, \pi$. *Example:*
+# top-40 precision 0.275 at a base rate $\pi = 0.052$ gives lift ≈ 5.3.
+#
+# **Log loss (binary cross-entropy):**
+#
+# $$
+# \text{LogLoss} = -\frac{1}{N}\sum_{i=1}^{N}\Big[y_i \ln p_i + (1 - y_i)\ln(1 - p_i)\Big]
+# $$
+#
+# *In words:* the average surprise of the true labels; a confident wrong
+# answer is punished hard. It is what logistic regression minimises, which is
+# why it tends to come out calibrated.
+#
+# **Brier score:**
+#
+# $$
+# \text{Brier} = \frac{1}{N}\sum_{i=1}^{N} (p_i - y_i)^2
+# $$
+#
+# *In words:* mean squared error of the probabilities; the base-rate
+# constant scores $\pi(1-\pi)$. *Example:* $\pi = 0.052$:
+# $0.052 \times 0.948 = 0.0493$, the "constant-base-rate Brier" in 7.6.
+#
+# *Worked example for both* (five accounts): $y = (1, 0, 1, 0, 0)$,
+# $p = (0.8, 0.6, 0.4, 0.2, 0.1)$.
+# Log loss $= -\tfrac{1}{5}[\ln 0.8 + \ln 0.4 + \ln 0.4 + \ln 0.8 + \ln 0.9] = 2.384/5 = 0.477$.
+# Brier $= (0.04 + 0.36 + 0.36 + 0.04 + 0.01)/5 = 0.162$.
+# At $t = 0.5$: TP = 1, FP = 1, FN = 1, so $P = R = F_1 = 0.5$ and
+# $\text{EV} = 150 - 30 = \$120$.
+
+# %%
+# Check every formula above against scikit-learn on the five accounts.
+from sklearn.metrics import f1_score, log_loss, precision_score, recall_score
+
+y5 = np.array([1, 0, 1, 0, 0])
+p5 = np.array([0.8, 0.6, 0.4, 0.2, 0.1])
+flag = p5 >= 0.5
+tp, fp, fn = int((flag & (y5 == 1)).sum()), int((flag & (y5 == 0)).sum()), int((~flag & (y5 == 1)).sum())
+P, R = tp / (tp + fp), tp / (tp + fn)
+by_hand = {
+    "precision": P, "recall": R, "f1": 2 * P * R / (P + R),
+    "log_loss": -np.mean(y5 * np.log(p5) + (1 - y5) * np.log(1 - p5)),
+    "brier": np.mean((p5 - y5) ** 2),
+}
+library = {
+    "precision": precision_score(y5, flag), "recall": recall_score(y5, flag), "f1": f1_score(y5, flag),
+    "log_loss": log_loss(y5, p5), "brier": brier_score_loss(y5, p5),
+}
+for k in by_hand:
+    print(f"{k:<10} by hand {by_hand[k]:.4f}   sklearn {library[k]:.4f}")
+print(f"EV at t=0.5: ${tp * VALUE_TP - fp * COST_FP:.0f};  p* = {COST_FP / (VALUE_TP + COST_FP):.4f}")
+
+# %% [markdown]
+# **Expected:** precision, recall and F1 all 0.5000, log loss 0.4768, Brier
+# 0.1620, identical both ways; EV \$120 and $p^{*} = 0.1667$.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

@@ -80,7 +80,25 @@ print(f"{len(imps):,} impressions | {N_ITEMS:,} items | {len(users):,} users")
 
 # %% [markdown]
 # **Expected:** about 2.45 million impressions, 4,000 items, 10,000 users.
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Next-item prediction** | given a user's past events in order, predict the next one | the last validation click |
+# | **Left padding** | fill short sequences with 0s at the *start* | `[0, 0, 18, 5, 10]` |
+# | **Padding token** | the id that means "no item here" | 0, so item ids are shifted by +1 |
+# | **Causal mask** | blocks attention from position i to any later position j > i | `causal_mask(n)`, Exercise 2 |
+# | **Padding mask** | blocks attention to padding positions | `padding_mask(lengths, n)`, Exercise 3 |
+# | **Self-attention** | each position builds its output as a weighted mix of the others | 2 blocks in `sr.SASRec` |
+# | **SASRec** | a causal transformer over item ids for next-item recommendation | Kang & McAuley, 2018 |
+# | **Tied embeddings** | the same item table embeds inputs and scores outputs | hidden state · item embedding |
+# | **Leave-last-out** | hold out each user's last event as the test target | here inside the validation week only |
+# | **HR@10** | share of users whose target is in the top 10 | about 0.07 for SASRec |
+# | **Sampled metric** | rank the target against a sample of negatives, not the whole catalogue | 100 uniform negatives in 10.6 |
+
+# %% [markdown]
 # ## 10.1 · From impressions to sequences
 #
 # A sequence model sees each user's **clicks**, in time order. Three
@@ -94,6 +112,9 @@ print(f"{len(imps):,} impressions | {N_ITEMS:,} items | {len(users):,} users")
 #   events, shift item ids by +1 so that **0 can mean padding**, and pad on
 #   the **left**, so the most recent item is always in the last column,
 #   whatever the history length.
+
+# %% [markdown]
+# > 💡 **Intuition.** Left padding right-aligns every history like the end of a receipt: the most recent purchase is always on the last line, whether the receipt is 3 lines or 30 long, so "predict from the last column" works for everyone. *Where it breaks down:* receipts have no blank lines at the top that a reader might try to read; a model does, and must be told (masked) not to.
 
 # %%
 train_clicks = sr.click_events(imps, store.TRAIN_DAYS)
@@ -226,6 +247,13 @@ print("co-visitation:", evaluate_scores("co-visitation", covis_scores))
 # mask**. And padding positions must not be attended to as if they were
 # items: a **padding mask**. We follow PyTorch's convention for boolean
 # attention masks: **`True` means blocked**.
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-causal-padding-mask.svg" alt="Causal plus padding attention mask for a left-padded sequence, with the unblocked diagonal that avoids NaN" width="100%">
+#
+# *What to notice:* the green triangle is everything a real position may read (itself and the past). The amber diagonal in the PAD rows is the fix you are about to see: without it those rows are entirely blocked and the softmax returns NaN.
+#
+# > 💡 **Intuition.** A causal mask is reading a mystery novel with a card held under the current line: each prediction may use everything above the card and nothing below it. Training slides the card down every line at once, which is why one forward pass trains every position. *Where it breaks down:* a reader can peek; a model without the mask peeks *always*, and its training loss looks wonderful.
 
 # %% [markdown]
 # > **Exercise 2.** Write `causal_mask(n)`: a `torch.bool` tensor of shape `(n, n)` where entry
@@ -417,6 +445,8 @@ print(table.round(4).to_string())
 #   the popular items that crowd a real top-10, and those are rarely among 100 uniform
 #   negatives, so the sampled metric cannot see the benefit, only the cost.
 #
+# > 💡 **Intuition.** A sampled metric is a race against 100 people pulled off the street instead of against the actual field: almost anyone trained beats them, so every runner looks good and the gaps between runners shrink. *Where it breaks down:* a race against the street can still rank two runners correctly; it just is not *guaranteed* to, and the full field is cheap to run here.
+#
 # This is a known result, not an artefact of our data: Krichene & Rendle
 # (KDD 2020, "On Sampled Metrics for Item Recommendation") show that sampled
 # HR/NDCG are not guaranteed to preserve the ordering of models under the
@@ -462,6 +492,62 @@ print(f"SASRec full HR@10: original order {results['SASRec']['full HR@10']:.4f} 
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · Scaled dot-product attention with a mask.** In words: each query position takes a weighted average of the values, with weights from a softmax over query–key similarities; blocked pairs get $-\infty$, so weight 0.
+#
+# $$
+# \operatorname{Attention}(Q, K, V) = \operatorname{softmax}\!\left(\frac{Q K^\top}{\sqrt{d}} + M\right) V, \qquad M_{ij} = \begin{cases} 0 & \text{allowed} \\ -\infty & \text{blocked } (j > i \text{ or key } j \text{ is padding}) \end{cases}
+# $$
+#
+# * $Q, K, V$: $n \times d$ query, key and value matrices; $d$: head dimension. *Example:* query 2 with scores $(1, 2, 5)$ over keys 0–2 and key 3 blocked: weights $\operatorname{softmax}(1, 2, 5) = (0.02, 0.05, 0.94)$, 0 on key 3. A row with *every* entry blocked is $0/0$ = NaN.
+#
+# **2 · Next-item loss over the catalogue.** In words: at every non-padding position $t$, softmax cross-entropy of the next item over all $N$ items, scored by the dot product with the (tied) item embeddings.
+#
+# $$
+# L = -\frac{1}{\lvert \mathcal{T} \rvert} \sum_{t \in \mathcal{T}} \log \frac{\exp(\mathbf{h}_t^\top \mathbf{e}_{y_{t+1}})}{\sum_{j=1}^{N} \exp(\mathbf{h}_t^\top \mathbf{e}_j)}
+# $$
+#
+# * $\mathbf{h}_t$: the hidden state at position $t$; $\mathbf{e}_j$: item $j$'s embedding; $\mathcal{T}$: non-padding positions. *Example:* uniform guessing over $N = 4{,}000$ items: $\log 4000 = 8.29$, the ceiling the training loss starts under.
+#
+# **3 · HR@10 and NDCG@10 with one target.** In words: a hit if the target ranks in the top 10; NDCG gives a hit at rank $r$ (0 = top) the discount $1/\log_2(r + 2)$.
+#
+# $$
+# \operatorname{HR@}10 = \frac{1}{\lvert U \rvert} \sum_{u} \mathbf{1}[r_u < 10], \qquad \operatorname{NDCG@}10 = \frac{1}{\lvert U \rvert} \sum_{u} \frac{\mathbf{1}[r_u < 10]}{\log_2(r_u + 2)}
+# $$
+#
+# * *Example:* three users with target ranks 0, 3 and 12: HR@10 = 2/3; NDCG@10 = $(1 + 0.431 + 0)/3 = 0.477$.
+#
+# The cell below checks equation 1 against PyTorch's built-in attention, and that the causal mask really hides the future.
+
+# %%
+# Hand-written causal attention vs torch's scaled_dot_product_attention
+import numpy as np
+import torch
+import torch.nn.functional as tnf
+
+g = torch.Generator().manual_seed(0)
+n, d = 5, 8
+q, k, v = (torch.randn(1, n, d, generator=g) for _ in range(3))
+blocked = torch.triu(torch.ones(n, n, dtype=torch.bool), diagonal=1)  # True = blocked (j > i)
+weights = torch.softmax((q @ k.transpose(-2, -1) / d**0.5).masked_fill(blocked, float("-inf")), dim=-1)
+out_hand = weights @ v
+out_lib = tnf.scaled_dot_product_attention(q, k, v, is_causal=True)
+print(f"max |hand - library| = {(out_hand - out_lib).abs().max().item():.1e}")
+
+k2, v2 = k.clone(), v.clone()
+k2[0, -1] += 10.0  # change only the LAST position's key and value
+v2[0, -1] += 10.0
+out_changed = tnf.scaled_dot_product_attention(q, k2, v2, is_causal=True)
+print("earlier positions unchanged:", torch.allclose(out_lib[0, :-1], out_changed[0, :-1]))
+ranks = np.array([0, 3, 12])
+print(f"HR@10 {np.mean(ranks < 10):.3f} | NDCG@10 {np.where(ranks < 10, 1 / np.log2(ranks + 2), 0).mean():.3f}"
+      f" | log 4000 = {np.log(4000):.2f}")
+
+# %% [markdown]
+# **Expected:** a maximum difference around 1e-7 (float32 rounding), `earlier positions unchanged: True`, and HR@10 0.667, NDCG@10 0.477, log 4000 = 8.29.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

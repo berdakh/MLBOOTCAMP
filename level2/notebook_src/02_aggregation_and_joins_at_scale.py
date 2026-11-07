@@ -80,6 +80,24 @@ print(f"{len(imps):,} impressions, {len(items):,} items, {len(users):,} users")
 # dataset is generated on first use: about 10 s here, up to a minute on Colab).
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Map task** | reads one input split and emits (key, value) pairs | 4 mappers over the impression files |
+# | **Shuffle** | sends every pair over the network to the reducer that owns its key | reducer = `hash(key) % n_reducers` |
+# | **Reduce task** | merges all values of the keys it owns | sums clicks per `item_id` |
+# | **Combiner** | a map-side pre-aggregation that shrinks the shuffle | 2.4M rows → ~15k partial rows |
+# | **Algebraic aggregate** | partial results merge exactly into a fixed-size state | count, sum, avg as (sum, count) |
+# | **Holistic aggregate** | state grows with the data; cannot combine to a fixed size | count(DISTINCT), median |
+# | **Key skew** | a few keys hold a large share of the rows | the top seller's (seller, user) pairs |
+# | **Salting** | splitting a hot key into S sub-keys, then re-combining | `(seller, hash(user) % S)` |
+# | **Broadcast join** | copy the small table to every worker; no shuffle of the big one | impressions ⋈ sellers |
+# | **As-of join** | attach the latest right row with timestamp ≤ the left row's | the price when the item was shown |
+# | **At-least-once** | every event arrives, some more than once | 2% re-delivered impressions |
+# | **Sketch** | a small fixed-size summary with a known error | HyperLogLog, t-digest, a reservoir |
+
+# %% [markdown]
 # ## 2.1 · Map → shuffle → reduce, by hand
 #
 # A distributed `SELECT item_id, count(*), sum(clicked) … GROUP BY item_id`
@@ -95,6 +113,13 @@ print(f"{len(imps):,} impressions, {len(items):,} items, {len(users):,} users")
 # 3. **Reduce.** Each reducer merges the values per key.
 #
 # Here is all of it in about fifteen lines, checked against DuckDB.
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-map-shuffle-reduce.svg" alt="Map, combine, shuffle by hash(key), reduce: a distributed GROUP BY" width="100%">
+#
+# *What to notice:* the shuffle in the middle is the only step that crosses the network, and the combiner decides how much goes into it.
+#
+# > 💡 **Intuition.** A combiner is counting votes at each polling station and phoning in the totals, instead of trucking every ballot to the capital. *Where it breaks down:* totals add up, but "the median voter's age" does not: a polling station cannot pre-compute its share of a median, which is why holistic aggregates are expensive.
 
 # %%
 def map_shuffle_reduce(df: pd.DataFrame, key: str, n_mappers: int = 4, n_reducers: int = 8,
@@ -171,6 +196,13 @@ print(f"top seller: {share.iloc[0]:.1%} of impressions | top 5: {share.iloc[:5].
 # salt, the sub-keys hold disjoint users, and a second, tiny stage adds the
 # `S` partial counts per seller: an exact answer.
 
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-skew-salting.svg" alt="Key skew makes one reducer a straggler; salting spreads the hot key" width="100%">
+#
+# *What to notice:* the job's time is the *tallest* bar, not the average. Salting makes the bars even, and a tiny second stage adds the partial counts back up.
+#
+# > 💡 **Intuition.** Skew is a supermarket where a celebrity's fans all queue at checkout 3 while the other lanes sit idle. Salting hands each fan a ticket number (`hash(user) % S`) that sends them to one of S lanes; at closing, the S lane totals are added. Because a fan always gets the same ticket, nobody is counted twice. *Where it breaks down:* if you do not know which key is hot, salting every key multiplies the work for all the small ones.
+
 # %%
 N_REDUCERS, S = 64, 16
 bounds = np.linspace(0, len(imps), 5).astype(int)  # 4 mappers
@@ -223,6 +255,11 @@ print("salted two-stage answer exact:", salted_answer.sort_index().equals(exact.
 # if a key has `a` rows on the left and `b` on the right, the join produces
 # `a × b` rows for it. Join the impressions to a **promotions** table where
 # big sellers run many promotions (rows per seller grow with the seller's size):
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-join-strategies.svg" alt="Broadcast hash join versus shuffle hash join" width="100%">
+#
+# *What to notice:* in a broadcast join the big table never moves; in a shuffle join both tables cross the network, so a hot key lands entirely on one partition.
 
 # %%
 seller_items = np.bincount(item_seller, minlength=n_sellers)
@@ -289,6 +326,11 @@ print("same categories:", np.array_equal(merged.category.to_numpy(), looked_up))
 # **as-of join**: for each left row, take the right row with the same key and
 # the latest timestamp `<=` the left timestamp. Build a price-change log
 # (each item gets a few price changes over the eight weeks) and attach prices.
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-asof-join.svg" alt="As-of join on a timeline: each event takes the latest price at or before its timestamp" width="100%">
+#
+# *What to notice:* each impression looks *back* to the most recent price record; nothing to its right on the timeline is visible to it.
 
 # %%
 start = pd.Timestamp(world.config.start)
@@ -387,6 +429,8 @@ print(f"after dedup: {len(dedup):,} rows; identical to the clean log:",
 #   summary of the distribution, accurate in the tails.
 # * **Reservoir sampling**: a uniform sample of fixed size `k` from a stream of
 #   unknown length, in one pass.
+#
+# > 💡 **Intuition (HyperLogLog).** If a friend flips coins all day and tells you only "my longest run of heads was 10", you can guess they flipped about $2^{10}$ times. HLL hashes every value to random-looking bits and remembers, per bucket, the longest run of leading zeros: a few bytes per bucket, whatever the number of values. *Where it breaks down:* one bucket is a very noisy guess (a lucky early run); HLL averages $m$ buckets, which is where the $1.04/\sqrt{m}$ error below comes from.
 #
 # Measure accuracy against speed on the impression table (each timing is the
 # best of 3 runs).
@@ -518,6 +562,68 @@ grade.ex2(partitioned_count)
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · Partitioning by hash.** In words: a key always goes to the same reducer, and keys spread evenly *if* no key is hot.
+#
+# $$
+# \text{reducer}(k) = h(k) \bmod R
+# $$
+#
+# * $h$: a stable hash; $R$: number of reducers. *Example:* with $R = 64$ and one seller holding 25% of the pairs, the reducer that owns it gets at least $0.25 \cdot 64 = 16\times$ the average load, whatever $h$ is. Only changing the key (salting) helps.
+#
+# **2 · Join output size.** In words: each key multiplies its left rows by its right rows, so the output is dominated by keys that are big on *both* sides.
+#
+# $$
+# \lvert A \bowtie B \rvert = \sum_{k} a_k \, b_k
+# $$
+#
+# * $a_k$, $b_k$: rows with key $k$ in $A$ and in $B$. *Example:* a seller with 100,000 impressions and 50 promotions alone contributes $5{,}000{,}000$ rows; aggregating promotions first ($b_k = 1$) contributes 100,000.
+#
+# **3 · HyperLogLog relative error.** In words: the standard error of a distinct count shrinks with the square root of the number of registers.
+#
+# $$
+# \frac{\operatorname{SE}(\hat n)}{n} \approx \frac{1.04}{\sqrt{m}}, \qquad m = 2^{p}
+# $$
+#
+# * $m$: registers (buckets), $p$: precision bits; each register is a few bits. *Example:* $m = 1{,}024$ gives about 3.3%; $m = 16{,}384$ (about 12 KB) gives about 0.8%, for 1 thousand or 1 billion distinct values alike.
+#
+# **4 · Reservoir sampling (Algorithm R).** In words: after reading $n$ items, every one of them is in the size-$k$ reservoir with the same probability.
+#
+# $$
+# P(\text{item } i \text{ in sample after } n \text{ items}) = \frac{k}{n}
+# $$
+#
+# * Item $i$ (counting from 1, $i > k$) enters with probability $k/i$; each later item $j$ evicts it with probability $\frac{k}{j} \cdot \frac{1}{k} = \frac{1}{j}$. So $\frac{k}{i} \prod_{j=i+1}^{n} \frac{j-1}{j} = \frac{k}{i} \cdot \frac{i}{n} = \frac{k}{n}$.
+# * *Example:* $k = 5$, $n = 20$: every item is kept a quarter of the time, the first and the last alike.
+#
+# The cell below checks equation 4 by simulation (Algorithm R written out in five lines; your Exercise 1 version should behave the same).
+
+# %%
+# Check P(in reservoir) = k/n by simulation: k = 5, n = 20, 20,000 runs
+import random as _random
+
+
+def _algorithm_r(n, k, rnd):
+    sample = list(range(min(n, k)))
+    for i in range(k, n):
+        j = rnd.randint(0, i)  # uniform on 0..i inclusive
+        if j < k:
+            sample[j] = i
+    return sample
+
+
+rnd = _random.Random(0)
+hits = np.zeros(20)
+for _ in range(20_000):
+    hits[_algorithm_r(20, 5, rnd)] += 1
+freq = hits / 20_000
+print("k/n =", 5 / 20, "| simulated min/max over the 20 items:", freq.min().round(3), freq.max().round(3))
+
+# %% [markdown]
+# **Expected:** every item's frequency within about ±0.01 of 0.25 (roughly 0.24–0.26), the first items and the last alike.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

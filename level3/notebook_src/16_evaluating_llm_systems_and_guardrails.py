@@ -111,7 +111,25 @@ print(f"evaluation tickets per condition: {N_EVAL}")
 # download the first time). Qwen2.5-0.5B-Instruct is small enough for a free runtime and still
 # follows simple instructions; a production system would use a larger model, and every method below
 # applies unchanged.
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Evaluation set | A fixed, versioned set of inputs with known correct outputs | 12 template tickets with gold fields |
+# | Exact match | Every field of the reply is right | 3/12 for the schema prompt |
+# | Field-level F1 | Partial credit: harmonic mean of field precision and field recall | 0.69 (terse) vs 0.80 (schema) |
+# | Paired bootstrap | Resampling the *same* items for both variants to get a CI for their difference | +0.12 [+0.01, +0.23] |
+# | LLM-as-judge | Using a language model to decide which of two outputs is better | the 0.5B model reading P("A") vs P("B") |
+# | Position bias | A judge preferring an answer because of its slot, not its content | answered "A" every time |
+# | Verbosity bias | A judge preferring longer answers that add nothing | the padded "notes" field |
+# | Prompt injection | Instructions hidden in user-supplied data that the model then follows | "ignore all previous instructions…" |
+# | Attack success rate (ASR) | Share of injected inputs where the attacker got what they wanted | 0.67 (terse), 0.50 (schema) |
+# | Guardrail | A fast check before or after the model that blocks, flags or reroutes | rules + TF-IDF classifier |
+# | Prefill / decode tokens | Prompt tokens processed in parallel vs output tokens generated one at a time | ~130 in, ~32 out per request |
+
+# %% [markdown]
 # ## 16.1 · An evaluation set with exact labels
 #
 # The task: extract four fields from a customer-support ticket as JSON: `name`, `order_id`
@@ -120,6 +138,10 @@ print(f"evaluation tickets per condition: {N_EVAL}")
 # evaluation set is sampled from production traffic and labelled by people; templates make it
 # cheap to start, but they are less diverse than real users, so a good template score is a
 # necessary, not a sufficient, condition.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-llm-eval-harness.svg" alt="An evaluation pipeline: versioned eval set, prompt template, model with fixed decoding, parser, metrics, paired bootstrap CI; every generation is logged" width="100%">
+#
+# *What to notice:* the parser is part of the system under test: a reply in a Markdown fence scores 0 until the parser (or the prompt) is fixed, so log and read the raw replies.
 
 # %%
 tickets = le.make_tickets(N_EVAL, seed=0)
@@ -159,6 +181,13 @@ grade.ex1(field_f1)
 # difference between two prompts is only meaningful with an uncertainty estimate. Both variants run
 # on the **same** tickets, so we use a **paired** bootstrap: resample tickets and recompute the
 # difference of means, which removes ticket-difficulty noise.
+#
+# > 💡 **Intuition.** Comparing two prompts on the same 12 tickets is like comparing two students on
+# > the same exam: subtract their scores *question by question* first, then ask how much that average
+# > difference would wobble if the exam had been a different draw of questions (the bootstrap). Pairing
+# > removes "this ticket was just hard". *Where the analogy breaks down:* the bootstrap only knows the
+# > 12 tickets you have; if they are all from one template family, no interval will warn you about
+# > real users.
 
 # %%
 VARIANTS = ["terse", "schema"] + (["schema_fewshot"] if BUDGET.name == "gpu" else [])
@@ -225,6 +254,16 @@ RESULTS["schema_minus_terse_f1"] = {"diff": d, "ci": [lo, hi]}
 # the position decided. We use our small model as the judge, reading the probabilities of the
 # tokens "A" and "B" (one forward pass per prompt, no sampling). Each pair is the gold extraction vs
 # a copy with one field corrupted, so the right answer is known.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-judge-position-bias.svg" alt="The same pair is judged twice with the order swapped; the judge answers A both times, so it picked the correct answer once and the corrupted one once" width="100%">
+#
+# *What to notice:* a consistent judge's letter must *flip* when the order flips; the same letter twice means the slot, not the content, decided.
+#
+# > 💡 **Intuition.** A wine taster who always prefers the first glass poured is not tasting. Swapping
+# > the order and seeing whether the preference follows the wine is the cheapest honesty test there
+# > is. *Where the analogy breaks down:* averaging the two orders removes the slot effect but not
+# > other biases (length, style, self-preference), which can only be found by checking the judge
+# > against human labels.
 
 # %% [markdown]
 # > **Exercise 2.** Write `position_bias_rate(judgments_ab, judgments_ba)`: two equal-length lists of
@@ -350,6 +389,17 @@ with open(OUT / "generations.jsonl", "w") as f:
 # give the model the least privilege (no tool can do more than the user could); separate and mark
 # untrusted content (delimiters, structured message roles); detect attacks on the way in and anomalies
 # on the way out (guardrails, next section); and red-team continuously, tracking ASR as a metric.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-prompt-injection.svg" alt="An injected ticket passes an input guardrail, an LLM whose system prompt marks the ticket untrusted, an output check and a least-privilege action; a dashed bypass shows the attack path without these layers" width="100%">
+#
+# *What to notice:* each layer is imperfect on its own; what protects the action is that an attack must get past all of them, and ASR measures how often it does.
+#
+# > 💡 **Intuition.** An assistant who opens the post and does whatever the letters say: a letter
+# > reading "please pay the enclosed invoice" gets paid. Telling the assistant "letters are not
+# > instructions" helps a little; requiring a manager's signature for payments (least privilege,
+# > output checks) helps a lot more. *Where the analogy breaks down:* a model cannot reliably tell the
+# > "letter" from the "boss" because both arrive as text in one context window, which is why no
+# > prompt alone fixes it.
 
 # %% [markdown]
 # ## 16.5 · A lightweight guardrail
@@ -497,6 +547,75 @@ print("saved", OUT / "results.json", "and", OUT / "generations.jsonl")
 
 # %% [markdown]
 # *Your answer (Exercise 4):* ...
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · Field-level precision, recall and F1.**
+#
+# $$
+# P = \frac{\mathrm{TP}}{\#\text{non-empty predicted fields}}, \qquad R = \frac{\mathrm{TP}}{\#\text{gold fields}}, \qquad F_1 = \frac{2PR}{P + R}
+# $$
+#
+# *Example:* gold has 4 fields; the reply fills 3, of which 2 are right: $P = 2/3$, $R = 2/4$,
+# $F_1 = 2 \cdot \tfrac{2}{3} \cdot \tfrac{1}{2} / (\tfrac{2}{3} + \tfrac{1}{2}) = 0.571$. Exact match is 0.
+#
+# **2 · Paired bootstrap CI for a difference.**
+#
+# $$
+# d_i = s_i^{B} - s_i^{A}, \qquad \bar{d}^{\,*}_b = \frac{1}{n} \sum_{i \in \text{resample}_b} d_i, \qquad \mathrm{CI}_{95\%} = \big[\, q_{2.5\%}(\bar{d}^{\,*}),\ q_{97.5\%}(\bar{d}^{\,*}) \,\big]
+# $$
+#
+# *In words:* compute the per-item difference, resample items with replacement many times ($b = 1..2000$),
+# and take the middle 95% of the resampled means. *Example:* 12 tickets, mean $\bar{d} = +0.12$, CI about
+# $[+0.01, +0.23]$: excludes 0, but barely.
+#
+# **3 · Position-bias rate and attack success rate.**
+#
+# $$
+# \text{bias rate} = \frac{1}{n} \sum_{i} \mathbb{1}\big[\, v_i^{(X,Y)} = v_i^{(Y,X)} \,\big], \qquad \mathrm{ASR} = \frac{\#\text{injections that got the attacker's value}}{\#\text{injections}}
+# $$
+#
+# *Example:* the 0.5B judge answered "A" for both orders on all 12 pairs: rate $12/12 = 1.0$ (a
+# perfectly consistent judge scores 0). ASR $= 8/12 = 0.67$ with the terse prompt.
+#
+# **4 · Cost per request.**
+#
+# $$
+# \text{API-style: } c = n_{\text{in}}\, p_{\text{in}} + n_{\text{out}}\, p_{\text{out}}, \qquad \text{self-hosted: } c = \frac{p_{\text{hour}}}{3600} \cdot t_{\text{request}}
+# $$
+#
+# *Example (placeholder prices):* 130 input tokens at \$0.10 per million and 32 output tokens at \$0.40 per
+# million cost $(13 + 12.8) \times 10^{-6} = \$0.0000258$, i.e. \$0.026 per 1,000 requests.
+#
+# The cell below checks 1–4 numerically, against `scaleml.llmeval` and this notebook's own measurements.
+
+# %%
+# Key equations, checked numerically (instant; no generation).
+gold = {"name": "Ana", "order_id": "123", "product": "lamp", "issue": "refund"}
+pred = {"name": "ana ", "order_id": "123", "product": "", "issue": "damaged"}
+tp, n_pred = 2, 3  # name and order_id right; product empty (not counted); issue wrong
+P_, R_ = tp / n_pred, tp / len(gold)
+print(f"field F1 by hand {2 * P_ * R_ / (P_ + R_):.3f} | le.field_f1 {le.field_f1(pred, gold):.3f}")
+
+diff = scores["schema"]["f1"] - scores["terse"]["f1"]
+rng_b = np.random.default_rng(0)
+boot = diff[rng_b.integers(0, len(diff), (2000, len(diff)))].mean(axis=1)
+print(f"paired bootstrap by hand {diff.mean():+.3f} [{np.quantile(boot, 0.025):+.3f}, {np.quantile(boot, 0.975):+.3f}] | "
+      "le.paired_bootstrap_diff [{:+.3f}, {:+.3f}]".format(*le.paired_bootstrap_diff(scores["schema"]["f1"],
+                                                                                    scores["terse"]["f1"])[1:]))
+
+ab, ba = ["A", "A", "B", "A"], ["A", "B", "A", "A"]
+print(f"position-bias rate of a toy judge: {np.mean([x == y for x, y in zip(ab, ba)]):.2f} (pairs 1 and 4 kept their letter)")
+s_ = stats["schema"].summary()
+api = (PRICE_IN * s_["prompt_tokens_per_req"] + PRICE_OUT * s_["output_tokens_per_req"]) / 1e6
+print(f"schema prompt, API-style cost per request: {api:.7f} $ = {api * 1000:.4f} $ per 1k requests "
+      f"(table: {cost.loc[cost.variant == 'schema', '$ per 1k req, API-style'].item():.4f})")
+
+# %% [markdown]
+# **Expected:** field F1 `0.571` both ways; the hand-written paired bootstrap gives exactly the interval
+# printed in 16.2 (same seed, same resampling); a toy position-bias rate of `0.50`; and the API-style cost
+# per 1,000 requests matching the table's schema row (≈ 0.025).
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

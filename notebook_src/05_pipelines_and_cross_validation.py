@@ -81,6 +81,22 @@ split.summary().loc[["train", "valid"]]
 # The test row is deliberately not shown.
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Pipeline** | one object that chains preprocessing steps and a model; `fit` and `predict` run them all | `make_model("logreg")` |
+# | **`ColumnTransformer`** | applies a different small pipeline to each named group of columns | `log`, `num` and `cat` branches |
+# | **Imputer** | fills missing values with a statistic learned on training data | median of `features_used_4w` |
+# | **Standardise** | subtract the training mean and divide by the training standard deviation | $z = (x - \mu)/\sigma$ |
+# | **One-hot encoding** | one 0/1 column per category level | `region_EU`, `region_NA`, ... |
+# | **`handle_unknown="ignore"`** | an unseen category becomes all zeros instead of an error | a new region in production |
+# | **Target encoding** | replacing a category with the mean label for that category | "this customer's churn rate" |
+# | **Shuffled k-fold** | split rows at random into k folds, each used once for validation | assumes rows are exchangeable |
+# | **Rolling-origin CV** | train on everything before a cut-off, validate on the next months, move the cut-off | 4 folds inside the train period |
+# | **Training/serving skew** | the served model transforms inputs differently from the evaluated one | a forgotten `log1p` in the API |
+
+# %% [markdown]
 # ## 5.1 · One object from raw columns to probability
 #
 # In research code the usual pattern is: clean the whole array, scale it,
@@ -94,6 +110,17 @@ split.summary().loc[["train", "valid"]]
 #    you validated. Notebook 10 shows that failure.
 #
 # The fix for both is the same: the fitted object *is* the whole recipe.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-pipeline-inside.svg" alt="Wrong: preprocessing fitted on all rows before the split, and re-implemented for serving. Right: split first, fit one Pipeline on train, save it and serve the same object" width="100%">
+#
+# *What to notice:* the right-hand row has no step that could be re-implemented by hand, so there is nothing to get wrong between evaluation and serving.
+#
+# > 💡 **Intuition.** A pipeline is a sealed recipe card with the measurements
+# > already filled in from the training kitchen (this median, this mean, these
+# > categories). Whoever cooks later follows the card; nobody re-measures.
+# > *Where it breaks down:* the card is only as honest as the kitchen it was
+# > filled in: fit it on rows that include the evaluation period and the card
+# > itself has leaked.
 # `churnlab.modeling.make_model` returns such a pipeline:
 
 # %%
@@ -235,6 +262,12 @@ pd.DataFrame(rows).round(3)
 # So "per-customer historical churn rate" is not a feature here at all: its
 # entire apparent value was the current row's label.
 #
+# > 💡 **Intuition.** A target encoding that includes the current row is an
+# > exam where each answer sheet already shows the student's own mark. The
+# > score is perfect and measures nothing. *Where it breaks down:* target
+# > encoding is legitimate when computed out-of-fold from **past, closed**
+# > labels only; the leak is the inclusion, not the technique.
+#
 # > 🧠 **Research bridge.** This is the tabular cousin of normalising EEG
 # > epochs with statistics computed over all subjects (small leak), versus
 # > selecting channels or frequency bands by their correlation with the label
@@ -355,7 +388,16 @@ grade.ex1(build_preprocessor)
 # `churnlab.splits.rolling_origin_folds` yields `(train_idx, valid_idx)` pairs,
 # which is exactly what scikit-learn's `cv=` accepts.
 #
-# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/splits.svg" alt="Random, group and time splits, and rolling-origin folds" width="100%">
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-rolling-origin.svg" alt="Four rolling-origin folds inside the train period: each fits on earlier months, leaves a gap for the label window, and validates on the next two months" width="100%">
+#
+# *What to notice:* the fit window grows fold by fold and never contains a month later than the one being validated; the gap cell is the embargo from notebook 04, applied inside CV.
+#
+# > 💡 **Intuition.** Rolling-origin CV is a weather forecaster replaying
+# > history: "using only what I knew on 1 March, how good was my forecast for
+# > March and April?", then again from 1 May. *Where it breaks down:* early
+# > folds train on less data than the final model will, so their scores are
+# > a little pessimistic; use them to compare models, not to forecast the
+# > exact next-period number.
 
 # %%
 from churnlab.splits import rolling_origin_folds
@@ -483,6 +525,69 @@ print(f"notebook compute time: {time.time() - T0:.0f} s")
 # %% [markdown]
 # **Expected:** well under a minute on a laptop; a free Colab CPU may take
 # about twice as long.
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **Standardisation** (fitted on train only):
+#
+# $$
+# z = \frac{x - \mu_{\text{train}}}{\sigma_{\text{train}}}
+# $$
+#
+# *In words:* how many training standard deviations a value sits from the
+# training mean. *Symbols:* $\mu_{\text{train}}$, $\sigma_{\text{train}}$ = mean
+# and (population) standard deviation of the column on training rows.
+# *Example:* train values 2, 4, 4, 4, 6 have $\mu = 4$, $\sigma = 1.265$, so a
+# new value 7 becomes $z = 3 / 1.265 = 2.37$.
+#
+# **`log1p`**: $\tilde{x} = \ln(1 + x)$. *In words:* turns "per unit" into
+# "roughly per doubling", and maps 0 to 0. *Example:* 0, 1, 9, 99 sessions
+# become 0, 0.69, 2.30, 4.61.
+#
+# **Logistic regression.** Linear in the log-odds, a sigmoid turns that into a probability:
+#
+# $$
+# \log\frac{p}{1-p} = \beta_0 + \sum_j \beta_j z_j,
+# \qquad
+# p = \sigma(\eta) = \frac{1}{1 + e^{-\eta}}
+# $$
+#
+# *In words:* each standardised feature adds $\beta_j z_j$ to the log-odds of
+# churn. *Symbols:* $p$ = churn probability, $\eta$ = the linear score
+# (`decision_function`), $\beta_j$ = coefficients. *Example:* $\eta = -2.9$
+# gives $p = 1/(1 + e^{2.9}) = 0.052$, about the base rate; adding
+# $\beta z = 1.0$ ($\eta = -1.9$) gives $p = 0.130$, odds multiplied by
+# $e^{1} = 2.7$.
+#
+# **Target encoding** of level $c$: $\text{TE}(c) = \frac{1}{n_c} \sum_{i \in c} y_i$.
+# *In words:* the mean label of the rows in that level. It is honest only if
+# the rows $i$ are strictly earlier, with closed label windows, and never
+# include the row being scored. *Example:* a customer with labels 0, 0, 1 has
+# $\text{TE} = 0.33$, and the 1 is the very row you are predicting.
+
+# %%
+# Check standardisation and the sigmoid against scikit-learn.
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+
+x_train = np.array([[2.0], [4.0], [4.0], [4.0], [6.0]])
+scaler = StandardScaler().fit(x_train)
+mu, sd = x_train.mean(), x_train.std()          # population sd, as StandardScaler uses
+print(f"z(7) by hand {(7 - mu) / sd:.4f}   sklearn {scaler.transform([[7.0]])[0, 0]:.4f}")
+
+rng_toy = np.random.default_rng(0)
+X_toy = rng_toy.normal(size=(200, 2))
+y_toy = (X_toy[:, 0] + rng_toy.normal(size=200) > 1).astype(int)
+lr = LogisticRegression().fit(X_toy, y_toy)
+eta = lr.decision_function(X_toy[:3])            # beta_0 + sum_j beta_j x_j
+print("sigmoid(eta) by hand:", np.round(1 / (1 + np.exp(-eta)), 4))
+print("predict_proba       :", np.round(lr.predict_proba(X_toy[:3])[:, 1], 4))
+print(f"p at eta=-2.9: {1 / (1 + np.exp(2.9)):.3f};  at eta=-1.9: {1 / (1 + np.exp(1.9)):.3f}")
+
+# %% [markdown]
+# **Expected:** `z(7)` 2.3717 both ways; the hand sigmoid and `predict_proba`
+# agree to four decimals; 0.052 and 0.130.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

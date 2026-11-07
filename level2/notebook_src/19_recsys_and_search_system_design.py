@@ -72,6 +72,23 @@ OUT.mkdir(parents=True, exist_ok=True)
 SECONDS_PER_DAY = 86_400
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | North-star metric | the business outcome the system ultimately serves | purchases per user per week |
+# | Proxy metric | a fast, measurable stand-in for the north star, with known blind spots | feed CTR rewards clickbait |
+# | Candidate source | one retrieval method that proposes items to rank | two-tower ANN, co-visitation, trending |
+# | Pre-ranker | a cheap model that trims thousands of candidates to hundreds | 2,000 → 500 in design A |
+# | Multi-task ranker | one network with several heads, each predicting a different outcome | click, add-to-cart and purchase heads |
+# | Peak QPS | queries per second at the busiest time of day | about 28,900 for the home feed |
+# | ANN index | a structure that finds near neighbours approximately, trading recall for speed and memory | IVF256 at recall 0.99 in about 0.4 ms |
+# | Sharding | splitting an index or table across machines and querying the parts in parallel | 77 GB of HNSW over 4–8 shards |
+# | BM25 | a classic lexical relevance score built from term frequency, rarity and document length | lexical retrieval in design B |
+# | Cross-encoder | a model that reads query and item text together: accurate but expensive | the L2 ranker on the top 50 |
+# | Cold start | users or items with no history yet | the fresh-items candidate source |
+
+# %% [markdown]
 # ## 19.0 · The framework, extended for ranking systems
 #
 # Level 1 (handbook chapter 7 and Level 1 notebook 17) gave you an eight-step
@@ -245,6 +262,12 @@ ann.round(3)
 # IVF cost grows with `n × nprobe / nlist` and HNSW roughly with `log n`. At
 # 100M items you shard (each shard holds 5–20M vectors), search shards in
 # parallel and merge, and the slowest shard sets your tail latency.
+#
+# > 💡 **Intuition.** Exact search reads every book spine in the library. IVF walks to the
+# > few shelves whose labels match best (`nprobe` = how many shelves); HNSW follows a chain
+# > of "see also" notes from book to book. *Where it breaks down:* a book shelved just across
+# > a boundary is missed, which is why recall is below 1 and grows with `nprobe` or
+# > `efSearch`, at a latency cost you must measure.
 
 # %% [markdown]
 # ## 19.3 · Worked design A: the home feed of a 50M-DAU marketplace
@@ -326,6 +349,10 @@ ann.round(3)
 #   position tower.
 # * **Re-ranking:** diversity (category cap / MMR), seller caps, freshness
 #   boost, policy filters, dedupe across pages of the same session.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-recsys-design.svg" alt="Five candidate sources merge into about 2,000 candidates, then a pre-ranker to 500, a multi-task heavy ranker and re-ranking to a page of 20, with per-stage latency" width="100%">
+#
+# *What to notice:* the heavy ranker gets 45 of the 150 ms because it sees only 500 items; the five sources fail independently, so losing one costs recall, not the page.
 #
 # ### 7. Serving: the numbers
 
@@ -479,6 +506,16 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # Fallbacks: L2 timeout → L1 order; semantic retrieval down → lexical only;
 # query understanding down → raw query to BM25.
 #
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-search-design.svg" alt="Query understanding, then lexical BM25 and semantic two-tower retrieval in parallel, a LambdaMART first stage, a cross-encoder second stage and business rules, with latency per stage" width="100%">
+#
+# *What to notice:* the two retrievers fail in opposite ways (exact terms versus vocabulary mismatch), which is the reason to run both.
+#
+# > 💡 **Intuition.** Lexical retrieval is a book's index: exact, fast and blind to synonyms.
+# > Semantic retrieval is a librarian who knows that "couch" means "sofa", but may hand you
+# > a similar model when you asked for one exact part number. *Where it breaks down:* real
+# > systems blur the two (synonym expansion in BM25, keyword features in the neural model);
+# > the split is a starting point, not a law.
+#
 # **8. Experimentation.** Interleaving is the workhorse for search ranking
 # (sensitive, needs little traffic); A/B by user for launches; human-rated
 # side-by-side evaluations for relevance changes that engagement metrics
@@ -543,6 +580,52 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1. Peak QPS**
+#
+# $$
+# \text{QPS}_{\text{peak}} = \frac{\text{DAU} \times \text{requests per user per day}}{86{,}400} \times \text{peak factor}
+# $$
+#
+# *Example:* $50\text{M} \times 20 / 86{,}400 \times 2.5 \approx 28{,}900$ requests/s.
+#
+# **2. Scoring load and servers**
+#
+# $$
+# \text{rows/s} = \text{QPS} \times \text{candidates scored}, \qquad \text{servers} = \left\lceil \frac{\text{rows/s}}{\text{rows/s per core} \times \text{cores} \times \text{utilisation}} \right\rceil
+# $$
+#
+# *Example:* $28{,}900 \times 500 = 14.5$M rows/s; $14.5\text{M} / (20{,}000 \times 32 \times 0.6) = 37.7 \to 38$ servers. Halving the candidates or the per-row cost saves about 19.
+#
+# **3. Embedding and index memory**
+#
+# $$
+# \text{bytes} = n \times d \times b \quad (\text{flat}), \qquad n\,(d\,b + 2M \cdot 4) \quad (\text{HNSW}), \qquad n\,(\text{code bytes} + 8) \quad (\text{IVF-PQ})
+# $$
+#
+# *Symbols:* $n$ vectors of $d$ dimensions, $b$ bytes per number, $M$ = HNSW links per node.
+# *Example:* 100M × 128 × 4 B = 51.2 GB flat; + 2 · 32 · 4 B of links = 76.8 GB HNSW; 64-byte PQ codes + 8-byte ids = 7.2 GB.
+#
+# **4. How ANN search cost scales**
+#
+# $$
+# \text{exact: } O(n\,d), \qquad \text{IVF: } O\!\left(\frac{n \cdot \text{nprobe}}{\text{nlist}}\, d\right), \qquad \text{HNSW: roughly } O(\log n)\ \text{hops}
+# $$
+#
+# *Example:* $n$ = 100,000, nlist = 256, nprobe = 16: about 6,250 vectors scanned instead of 100,000, 16× less work.
+#
+# **5. BM25** (for one query term $t$; sum over the query's terms)
+#
+# $$
+# \operatorname{score}(t, D) = \operatorname{IDF}(t) \cdot \frac{f(t, D)\,(k_1 + 1)}{f(t, D) + k_1\left(1 - b + b\,\frac{\lvert D \rvert}{\text{avgdl}}\right)}
+# $$
+#
+# *In words:* more occurrences help, with diminishing returns ($k_1$); rare terms count more (IDF); long documents are penalised ($b$).
+# *Symbols:* $f(t, D)$ = occurrences of $t$ in document $D$, $\lvert D \rvert$ = its length, avgdl = average length, usually $k_1 \approx 1.2$, $b \approx 0.75$.
+# *Example:* IDF 2.0, three occurrences, an average-length document: $2.0 \cdot 3 \cdot 2.2 / (3 + 1.2) = 3.14$; ten occurrences give only 3.9.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

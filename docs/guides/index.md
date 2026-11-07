@@ -32,7 +32,9 @@ interview.
 | Guide | Contents |
 |---|---|
 | [Cheat sheet](cheatsheet.md) | pandas, SQL, scikit-learn, FastAPI and pytest snippets |
-| [Glossary](glossary.md) | Terms used in the course, in one place |
+| [Glossary](glossary.md) | Every term from Levels 1–3, with plain-language analogies and links to where it is taught |
+| [Equation sheet](equations.md) | Every key equation in the course, by topic, with a line in words and where it is taught |
+| [Diagram index](diagrams.md) | Every figure in the course, with what it shows |
 
 Exercise and checkpoint answers are kept separately from these guides:
 [solutions/README.md](https://github.com/berdakh/MLBOOTCAMP/blob/main/solutions/README.md).

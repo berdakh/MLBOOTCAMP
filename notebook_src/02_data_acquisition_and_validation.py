@@ -65,6 +65,22 @@ from churnlab.grading import nb02 as grade
 RAW = bootstrap.ensure_raw()
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Raw extract** | the files exactly as exported from the source system, never edited by hand | four `.csv.gz` files in `data/raw/` |
+# | **Checksum (SHA-256)** | a 64-character fingerprint of a file's bytes; one changed byte changes it completely | `verify_raw` compares each file with a pinned hash |
+# | **Atomic download** | write to a temporary name and rename only when complete and verified | `fetch` writes `<name>.part`, then renames |
+# | **Default NA strings** | strings pandas turns into missing values unless told not to | `"NA"`, `"N/A"`, `"null"` |
+# | **Data contract** | a written, checkable statement of what each column must look like | `plan` must be one of `basic`, `pro`, `team` |
+# | **Sentinel** | a fake value standing for "unknown" | `sessions = -1` |
+# | **Unique key** | the columns that should identify exactly one row | (`customer_id`, `week_start`) in `usage_weekly` |
+# | **Referential integrity** | every foreign key points at a row that exists | each `customer_id` in `tickets` is in `customers` |
+# | **Freshness** | the time span a table actually covers | usage runs to the end of December 2024 |
+# | **Export-time column** | a value describing the account on the day of the export, not on an earlier date | `status`, `last_active_week` |
+
+# %% [markdown]
 # ## 2.1 · Acquire, then verify
 #
 # The raw extract is four gzipped CSV files in `data/raw/`. "I downloaded it"
@@ -72,6 +88,15 @@ RAW = bootstrap.ensure_raw()
 # change to the file - one flipped bit, a truncated download, a re-export -
 # changes the hash completely. The expected hashes are pinned in the code,
 # next to the code that uses the data.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-validation-flow.svg" alt="Download to a .part file, verify the checksum, read with only empty fields missing, check the contract, investigate each defect, clean with stated decisions, re-validate" width="100%">
+#
+# *What to notice:* the first three steps prove you have the right bytes, read the right way; the last four turn defects into written decisions. This notebook walks the row left to right.
+#
+# > 💡 **Intuition.** A checksum is a tamper-evident seal on a jar: you do not
+# > need to taste the contents to know nobody opened it. *Where it breaks
+# > down:* the seal proves the bytes are the ones you pinned, not that those
+# > bytes were correct in the first place; that is what the contract is for.
 
 # %%
 for path in sorted(RAW.glob("*.csv.gz")):
@@ -176,6 +201,10 @@ with gzip.open(RAW / "customers.csv.gz", "rt") as fh:
 # The file says `NA` - the region code for North America. `pd.read_csv` treats
 # the strings `"NA"`, `"N/A"`, `"null"`, `"nan"` and a dozen others as missing
 # **by default**. The fix is at read time: only empty fields are missing.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l1-na-trap.svg" alt="The same raw line read with pandas defaults turns the region code NA into NaN; read with keep_default_na=False it stays NA and only 87 regions are truly missing" width="100%">
+#
+# *What to notice:* nothing fails in the top row. The loader quietly produces a different dataset, which is why the fix belongs at read time.
 
 # %%
 fixed = pd.read_csv(RAW / "customers.csv.gz", keep_default_na=False, na_values=[""])
@@ -229,6 +258,11 @@ for report in reports.values():
 #
 # A contract tells you **that** something is wrong. It does not tell you
 # **what to do about it**. That needs an investigation per defect.
+#
+# > 💡 **Intuition.** A data contract is a smoke alarm for a table: cheap,
+# > always on, and it tells you which room, not what is burning. *Where it
+# > breaks down:* it only checks what you thought to write down. Export-time
+# > columns (section 2.6) pass every contract and are still wrong to use.
 
 # %% [markdown]
 # ## 2.4 · Investigate each defect, with evidence
@@ -297,6 +331,12 @@ print(usage.loc[usage["sessions"] == -1, ["active_users", "features_used"]].desc
 # simply not logged), and the `-1` rows have a median of about 2 active users
 # and 2 features used. Weeks with active users and zero sessions are
 # impossible, so `-1` means **"the session count is unknown"**, not "none".
+#
+# > 💡 **Intuition.** A sentinel is a blank on a form that someone filled with
+# > "-1" because the field would not accept empty. Reading it as 0 is like
+# > reading "did not answer" as "answered no". *Where it breaks down:* some
+# > systems really do use 0 for "unknown"; only evidence from other columns
+# > (here, active users in the same row) tells you which it is.
 
 # %% [markdown]
 # ### Plan casing

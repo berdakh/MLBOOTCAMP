@@ -137,6 +137,10 @@ Roll back first, then investigate.
 | **A/B test** | Traffic is split for long enough to measure business outcomes | Causal effect on the outcome you care about | Time, and enough traffic for statistical power |
 | **Blue/green** | Two full environments; switch traffic at once | Fast cut-over and fast rollback | Two environments |
 
+<img src="../assets/diagrams/hb-release-ladder.svg" alt="Release ladder: offline evaluation, shadow, canary, A/B test, full rollout, with dashed rollback arrows from every live step to the previous version" width="100%">
+
+*What to notice:* user exposure grows left to right, and every step that touches users has a one-step path back. Shadow has none because nobody acted on its answers.
+
 For a monthly batch model like TaskFlow churn, the analogue of a shadow
 deployment is scoring a month with both models and comparing their flagged
 lists before choosing which one the team acts on.
@@ -160,6 +164,50 @@ For "the model is producing nonsense":
 3. Check the score distribution and share flagged against last week.
 4. Check matured-cohort performance if labels are available.
 5. Write down what you found, and what alert would have caught it earlier.
+
+## Key equations
+
+Collected, with every other formula in the course, in the
+[equation sheet](../guides/equations.md).
+
+**Population Stability Index** (notebook 14):
+
+$$
+\operatorname{PSI} = \sum_{b=1}^{B} (a_b - e_b)\, \ln\frac{a_b}{e_b}
+$$
+
+*In words:* for each bin of the reference distribution, the change in share
+($a_b$ current, $e_b$ expected) times the log of their ratio; every term is
+$\ge 0$. Rule-of-thumb bands: below 0.1 stable, above 0.25 large.
+
+**Error budget** (notebook 13):
+
+$$
+\text{error budget} = (1 - \text{SLO target}) \times \text{requests in the window}
+$$
+
+*In words:* a 99.5% success SLO over 10 million requests allows 50,000 failures
+in the window; spend them on changes, and slow down when they run out.
+
+**Prediction drift and matured calibration** (notebook 14):
+
+$$
+r = \frac{\bar{s}_{\text{current}}}{\bar{s}_{\text{reference}}}, \qquad \text{calibration ratio} = \frac{\bar{s}_{\text{matured cohort}}}{\bar{y}_{\text{matured cohort}}}
+$$
+
+*In words:* the first is available immediately and only says the scores moved;
+the second needs the 30-day labels and says whether the probabilities are
+still right (1 is perfect).
+
+**Label maturity** (Level 3, notebook 17):
+
+$$
+F(t) = 1 - e^{-t/\tau}
+$$
+
+*In words:* with exponentially distributed delays of mean $\tau$, the share of
+eventual labels visible $t$ days after the prediction. Performance computed
+on an immature cohort counts not-yet-observed positives as negatives.
 
 ## Interview angle
 

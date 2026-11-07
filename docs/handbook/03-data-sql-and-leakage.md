@@ -67,6 +67,10 @@ answer "what did we know at T?". When you can, use tables with validity
 intervals (sometimes called slowly changing dimensions or history tables), or
 the event log itself.
 
+<img src="../assets/diagrams/hb-leakage-map.svg" alt="Label, temporal and group leakage, each with how it gets in and its fix: a point-in-time check, a time split with an embargo, a group split" width="100%">
+
+*What to notice:* all three have the same symptom, a score that is too good, so the symptom alone does not tell you which one you have. The sections below take them one at a time.
+
 ## Label leakage
 
 Label leakage is any feature that encodes the answer.

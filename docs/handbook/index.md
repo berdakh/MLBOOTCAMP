@@ -6,6 +6,7 @@ whether you prefer the map before or after the territory.
 
 | # | Chapter | Read with | Covers |
 |---|---|---|---|
+| 0 | [The problem: predicting churn](00-the-churn-problem.md) | Before notebook 01 | What churn is, why companies care, who uses the predictions, the real goal, what makes it hard, the same problem in other domains |
 | 1 | [The ML engineering job](01-the-ml-engineering-job.md) | Before Day 1 | MLE vs Applied Scientist vs Algorithm Engineer; which research habits transfer and which hurt |
 | 2 | [Reproducibility](02-reproducibility.md) | Day 1 | What "re-runnable" means, environments, seeds, config, run records, data versions |
 | 3 | [Data, SQL and leakage](03-data-sql-and-leakage.md) | Day 1 | Point-in-time correctness, label leakage, group and temporal leakage, the cross-subject analogy |

@@ -86,6 +86,23 @@ OUT.mkdir(parents=True, exist_ok=True)
 NUMBERS: dict = {}  # every case's assumptions and derived numbers, saved at the end
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | DAU | Daily active users | 300M for the ads case |
+# | Peak QPS | Requests per second at the busiest time: average × peak factor | ~138,889 ad requests/s |
+# | Headroom | Spare capacity kept for spikes, a lost replica or a deploy | 30% in the ads fleet |
+# | Replica | One copy of a serving process; the fleet is many of them | 3,969 ranker replicas |
+# | Latency budget | The end-to-end time limit split into per-stage allowances | 100 ms for fraud scoring |
+# | Fan-out | One request calling many services in parallel and waiting for all | 6 feature services |
+# | Tail latency | The slowest requests (p99), often caused by one slow dependency | 5.9% wait on a slow call |
+# | Budget pacing | Spreading an advertiser's daily budget over the day | participation rate 0.40 |
+# | Selective labels | Only the cases the current system let through get labels | declined payments never get chargebacks |
+# | Deflection | Share of conversations resolved without a human | 30–70% in the assistant case |
+# | Fail-open / fail-closed | When a dependency fails: allow by default / block by default | chosen per fraud risk tier |
+
+# %% [markdown]
 # ## 18.0 · One structure for every case
 #
 # This extends the Level 2 notebook 19 ten-step framework. Each case below is
@@ -109,6 +126,10 @@ NUMBERS: dict = {}  # every case's assumptions and derived numbers, saved at the
 #
 # The levelling rows describe *signals interviewers commonly look for*, not
 # any company's ladder.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-design-cases.svg" alt="Four columns: ads (targeting, retrieval, pCTR times pCVR model, auction and pacing), video (sources, pre-ranker, multi-task ranker, blending), LLM assistant (input guardrail, retrieval, LLM with citations, check or hand off), fraud (velocity features, rules, model, decision), each with its signature difficulty" width="100%">
+#
+# *What to notice:* the four pipelines have the same shape (narrow, score, decide); what separates a strong answer is the yellow box, the case's signature difficulty, so that is where the deep dives go.
 #
 # ## 18.1 · Two calculators you will use in every case
 #
@@ -199,6 +220,12 @@ NUMBERS["ads"] = {"assumptions": ads, "peak_ad_requests_per_s": ad_peak, "ads_sc
 # headroom. The replica count is the interesting number: it says the ranker
 # must be batched and probably distilled or cascaded (a light pre-ranker on
 # 1,000, the heavy model on 200), which is where notebooks 11–12 come in.
+#
+# > 💡 **Intuition.** Fleet sizing is booking restaurant tables for the dinner rush, not the daily
+# > average, and leaving a few tables empty for the party that walks in unannounced (headroom). The
+# > "at least 2" rule is the second kitchen in case the first catches fire. *Where the analogy breaks
+# > down:* per-replica capacity must be *measured* at your latency target; a replica that does 50
+# > req/s at p99 = 300 ms may do only 30 at p99 = 100 ms.
 #
 # **Deep dive: why calibration matters.** In ranking-only systems a model
 # that is wrong by a constant factor still orders items correctly. In an
@@ -398,6 +425,11 @@ NUMBERS["video"]["objective_sim"] = {k: top(v) for k, v in objectives.items()}
 # **Deep dive: cost per conversation.** Each turn re-sends the system prompt,
 # the retrieved passages *and the conversation so far*, so prompt tokens grow
 # with every turn:
+#
+# > 💡 **Intuition.** A model has no memory between calls, so each turn is like sending a letter that
+# > must photocopy the whole correspondence so far. The sixth letter is the thickest, and you pay
+# > per page. *Where the analogy breaks down:* prompt caching (if offered) bills repeated pages at a
+# > discount, and summarising old turns trades cost for possible loss of detail.
 
 # %%
 llm = {"turns per conversation": 6, "system prompt tokens": 800, "retrieved context tokens per turn": 1_500,
@@ -484,6 +516,12 @@ NUMBERS["fraud"] = {"latency_stages_ms": fraud_stages, "fanout_slow_6": ds.fanou
 # features (and a model trained to expect them), and track the
 # missing-feature rate as a paged metric.
 #
+# > 💡 **Intuition.** Waiting for six friends before dinner starts: each is late only 1% of the time,
+# > but the chance that *someone* is late is almost 6%, and with twenty friends 18%. The request is as
+# > slow as its slowest dependency. *Where the analogy breaks down:* the formula assumes independent
+# > delays; in practice slowness is correlated (one overloaded cache slows several calls at once),
+# > which can make the tail better or much worse.
+#
 # Fleet size for the scoring service, using the module's helper (equivalent
 # to your Exercise 2, plus zone redundancy):
 
@@ -551,6 +589,71 @@ print("wrote", (OUT / "case_numbers.json").relative_to(ART), "with cases:", list
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · Peak QPS.**
+#
+# $$
+# \text{QPS}_{\text{peak}} = \frac{\text{DAU} \times \text{requests per user per day}}{86{,}400} \times \frac{\text{peak}}{\text{average}}
+# $$
+#
+# *Example (ads):* $3 \times 10^8 \times 20 / 86{,}400 \times 2 = 138{,}889$ requests/s.
+#
+# **2 · Fleet size with headroom.**
+#
+# $$
+# \text{replicas} = \max\!\left(2,\ \left\lceil \frac{\text{QPS}_{\text{peak}}}{\text{QPS}_{\text{replica}} \cdot (1 - h)} \right\rceil \right)
+# $$
+#
+# *Symbols:* $h$ the headroom fraction. *Example:* $138{,}889 / (50 \times 0.7) = 3{,}968.3 \to 3{,}969$
+# replicas. With $z$ zones that must survive losing one, size each zone for $1/(z-1)$ of the load (fraud: 9 per zone × 3 = 27).
+#
+# **3 · Latency budget and fan-out tail.**
+#
+# $$
+# \text{headroom} = T_{\text{total}} - \sum_{\text{stages}} t_s, \qquad P(\text{some call slow}) = 1 - (1 - p)^{k}
+# $$
+#
+# *Example (fraud):* $100 - 60 = 40$ ms of headroom; $k = 6$ calls each slow with $p = 0.01$:
+# $1 - 0.99^6 = 5.9\%$; $k = 20$: 18.2%. (Percentiles do not add: the sum of stage p99s is only an upper bound on the end-to-end p99.)
+#
+# **4 · LLM cost per conversation.**
+#
+# $$
+# P_t = S + R + U + (t - 1)(U + A), \qquad \text{cost} = \sum_{t=1}^{n} \big( P_t\, p_{\text{in}} + A\, p_{\text{out}} \big)
+# $$
+#
+# *Symbols:* $S$ system-prompt, $R$ retrieved, $U$ user and $A$ answer tokens per turn; $p_{\text{in}}, p_{\text{out}}$
+# prices per token. *Example:* $P_1 = 800 + 1{,}500 + 60 = 2{,}360$, $P_6 = 2{,}360 + 5 \times 260 = 3{,}660$; 18,060
+# input and 1,200 output tokens: $18{,}060 \times 0.5/10^6 + 1{,}200 \times 2/10^6 = \$0.0114$.
+#
+# **5 · Blended cost with a human fallback.** $c = c_{\text{LLM}} + (1 - d)\, c_{\text{human}}$, with deflection $d$.
+# *Example:* $0.0114 + 0.5 \times 4.00 = \$2.01$: the human term dominates, so hand-off quality matters more than tokens.
+#
+# **6 · eCPM** (ads, notebook 14): $\mathrm{eCPM} = \mathrm{pCTR} \times \text{bid} \times 1000$, which is why a per-segment calibration error moves money.
+#
+# The cell below recomputes 1–4 by hand and compares them with the numbers this notebook printed.
+
+# %%
+# Key equations, recomputed by hand (instant).
+import math
+
+peak = 300e6 * 20 / 86_400 * 2.0
+print(f"ads peak QPS: by hand {peak:,.0f} | notebook {NUMBERS['ads']['peak_ad_requests_per_s']:,.0f}")
+print(f"ranker replicas: by hand {max(2, math.ceil(peak / (50 * (1 - 0.3)))):,} | notebook {NUMBERS['ads']['ranker_replicas']:,}")
+for k in (6, 20):
+    sims = (np.random.default_rng(k).random((200_000, k)) < 0.01).any(axis=1).mean()
+    print(f"fan-out {k:2d}: 1 - 0.99^k = {1 - 0.99**k:.4f} | simulated {sims:.4f}")
+P = [800 + 1_500 + 60 + (t - 1) * (60 + 200) for t in range(1, 7)]
+cost = sum(p_ * 0.50 / 1e6 + 200 * 2.00 / 1e6 for p_ in P)
+print(f"prompt tokens by turn {P} | cost by hand {cost:.5f} | notebook "
+      f"{NUMBERS['llm_assistant']['llm_cost_per_conversation']:.5f}")
+
+# %% [markdown]
+# **Expected:** `138,889` and `3,969` both ways; `0.0585` and `0.1821` for the formula with simulated
+# values within about ±0.001; prompt tokens `[2360, 2620, 2880, 3140, 3400, 3660]` and `0.01143` both ways.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

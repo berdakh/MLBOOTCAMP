@@ -71,6 +71,25 @@ from churnlab.grading import nb00 as grade
 results = []  # every check below appends its result here; the profile reads it
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# Plain definitions of the words the exercises use. They tell you what a word
+# means, not the answer to any question.
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Sentinel value** | a special number that stands for "unknown" instead of a real measurement | `sessions = -1` in the usage log |
+# | **`LEFT JOIN`** | keep every row of the left table, with NULLs where the right table has no match | customers with no invoices still appear |
+# | **Window function** | a SQL value computed from related rows without collapsing them | "the latest invoice per customer" |
+# | **Positive rate** | share of rows whose label is 1 | 5% of customers churn |
+# | **PR-AUC** | how well a score ranks positives above negatives, focused on the top of the list | the headline metric from Day 1 on |
+# | **Calibrated probability** | a score that matches reality: of accounts scored 0.2, about 20% churn | needed before a cost-based threshold |
+# | **Bootstrap** | resample the evaluation set with replacement to see how much a metric moves | "is 0.745 really above 0.741?" |
+# | **Leakage** | information in training or evaluation that would not exist at prediction time | a column exported after the snapshot date |
+# | **Schema validation** | checking a request against declared field types and limits before using it | Pydantic rejects an unknown field |
+# | **Test that fails on a bug** | an assertion that a correct function passes and a wrong one does not | the grader runs your test against hidden buggy versions |
+
+# %% [markdown]
 # ## 0.1 · Python
 #
 # > **Exercise 1.** Write `top_k_frequent(items, k)` that returns a list of the
@@ -383,6 +402,13 @@ profile = grade.summary(results, self_ratings)
 # > the only subject. The obvious threat to validity is practice: you will have
 # > seen these exact items. Mitigate it the way you would in a study - judge the
 # > retake on speed and on the *written* answer, which you cannot memorise.
+
+# %% [markdown]
+# ### Where the profile sends you
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/roadmap.svg" alt="Five-day roadmap: reproducible projects, evaluation, serving, operations, demonstration, then capstones" width="100%">
+#
+# *What to notice:* each day's notebooks build on the previous day's artifacts, but every notebook can rebuild what it needs, so a "priority" area can be started in any order.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

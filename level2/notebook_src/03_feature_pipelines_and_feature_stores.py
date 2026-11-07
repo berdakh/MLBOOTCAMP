@@ -80,6 +80,24 @@ print(f"{len(imps):,} impressions from {START}; train days {store.TRAIN_DAYS}, v
 # **Expected:** `2,446,900 impressions from 2025-03-03; train days range(0, 42), valid days range(42, 49)`.
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | **Entity** | the thing a feature describes, identified by a key | a user (`user_id`), an item, a user × category |
+# | **Feature view** | a named group of features for one entity, with its definition and TTL | `user_snap`: impressions and clicks, last 7 days |
+# | **Snapshot** | feature values computed for a cut-off time, stamped with it | the row for day `d`, `snapshot_ts = d 00:00` |
+# | **Offline store** | the full history of feature values, for building training sets | DuckDB tables of daily snapshots |
+# | **Online store** | only the latest value per key, readable in about a millisecond | `OnlineStore`, a dict with a TTL |
+# | **Point-in-time join** | for each event, the feature values as they were just before it | `ASOF JOIN … e.ts > s.snapshot_ts` |
+# | **TTL** | the maximum age before a stored value counts as missing | 1 day for daily snapshots |
+# | **Materialisation** | copying the newest offline values into the online store | the daily loop in 3.6 |
+# | **Backfill** | computing a new feature for past dates | recomputing day 30 alone must equal the full run |
+# | **Freshness** | how old the newest data behind a served value is | lag 0, 1, 3, 7 days in 3.5 |
+# | **Leakage** | a feature that uses information not available at prediction time | the same-day window `[d-6, d]` |
+# | **Training/serving skew** | the model sees different feature values in production than in training | a 7-day TTL online, 1-day offline |
+
+# %% [markdown]
 # ## 3.1 · What a feature store is (and is not)
 #
 # A feature store is two databases and a contract between them:
@@ -99,6 +117,11 @@ print(f"{len(imps):,} impressions from {START}; train days {store.TRAIN_DAYS}, v
 # (online, as of now). Feast, Tecton, Vertex AI and SageMaker Feature Store are
 # implementations of these ideas; this notebook builds a small one so you know
 # what they do.
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-feature-store.svg" alt="Offline store plus point-in-time join for training; online store with TTL for serving; a parity test between them" width="100%">
+#
+# *What to notice:* both branches start from the *same* snapshots; they differ only in *which* timestamp they read as of (each past event vs now). The dashed parity line is the test that keeps them honest.
 
 # %% [markdown]
 # ## 3.2 · Daily aggregates and snapshots
@@ -146,6 +169,8 @@ con.execute("SELECT * FROM user_snap WHERE user_id = 42 ORDER BY snap_day LIMIT 
 print(F.PIT_SQL)
 
 # %% [markdown]
+# > 💡 **Intuition.** A point-in-time join is reading the newspaper archive: to explain why a stock moved on 3 March, you may only use papers printed *before* 3 March. A same-day snapshot is the evening edition, printed after the event and stamped with that morning's date. *Where it breaks down:* newspapers carry dates you can trust; a feature table only has the timestamp your pipeline wrote, which is why you assert `snapshot_ts < ts` in code rather than trusting the name.
+#
 # One trap. Snapshots only contain entities that were *active* in the window.
 # If user 7 was inactive last week, there is no day-`d` row for them, and the
 # as-of join happily returns their snapshot from three weeks ago, carrying
@@ -283,6 +308,8 @@ F.build_snapshots(con, START, days=range(56))
 # %% [markdown]
 # **Expected:** `True`.
 #
+# > 💡 **Intuition.** A TTL is the use-by date on milk: after it, the value is thrown away and treated as missing, even if it is still in the fridge. Without it, an inactive user's three-week-old counts would be served as if they were yesterday's. *Where it breaks down:* milk goes bad gradually; a TTL is a hard cliff, so a value one second past it is discarded while one second before is trusted fully.
+#
 # **Freshness** is how old the newest data in a served feature is. A daily
 # batch pipeline that runs at 02:00 serves features 2-26 hours old; if it
 # breaks, features silently age. How much is freshness worth here? Build
@@ -398,6 +425,41 @@ print(f"{len(day45):,} day-45 requests | online == offline for {1 - mismatch.mea
 
 # %% [markdown]
 # *Your answer here.*
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · A window feature, cut off strictly before the snapshot.** In words: the value stamped at day $d$ sums the 7 *complete* days before $d$.
+#
+# $$
+# x_u(d) = \sum_{t=d-7}^{d-1} \text{clicks}_u(t)
+# $$
+#
+# * $x_u(d)$: user $u$'s feature in the snapshot stamped $d$ 00:00; $\text{clicks}_u(t)$: their clicks on day $t$. *Example:* clicks 0, 2, 1, 0, 0, 3, 1 on days $d-7 \dots d-1$ give $x_u(d) = 7$. The leaky version sums $t = d-6 \dots d$ and so includes today's click, the one being predicted.
+#
+# **2 · The point-in-time rule, with a TTL.** In words: take the latest snapshot strictly before the event, and use it only if it is young enough.
+#
+# $$
+# s^{*}(e) = \underset{s:\; k_s = k_e,\; \tau_s < t_e}{\arg\max}\; \tau_s, \qquad \text{use } s^{*} \text{ only if } t_e - \tau_{s^{*}} \le \text{TTL}
+# $$
+#
+# * $e$: an event with key $k_e$ and time $t_e$; $s$: a snapshot with key $k_s$ and timestamp $\tau_s$. *Example:* an impression on day 30 at 14:00; the user's snapshots exist for days 12 and 13 only. The as-of join returns day 13 (17 days old); with TTL = 1 day it counts as missing (activity = 0).
+#
+# **3 · A smoothed click rate.** In words: add $\alpha$ pseudo-impressions at the prior rate, so tiny counts do not produce extreme rates.
+#
+# $$
+# \widetilde{\text{CTR}} = \frac{\text{clicks} + \alpha\, p_0}{\text{impressions} + \alpha}
+# $$
+#
+# * $p_0$: the prior (global) click rate; $\alpha$: the prior's weight in impressions. *Example:* 1 click in 2 impressions with $p_0 = 0.137$ and $\alpha = 20$: $(1 + 2.74) / 22 = 0.17$ instead of a raw 0.50. Compute $p_0$ from past data only, or the prior itself leaks (notebook 06 found that bug).
+#
+# **4 · Feature age at serving.** In words: what the model sees online is as old as the newest data behind it.
+#
+# $$
+# \text{age} = t_\text{request} - t_\text{newest event in the value}
+# $$
+#
+# * *Example:* a daily job that runs at 02:00 over data up to midnight serves values 2 to 26 hours old; if it fails for three days, 74 to 98 hours. Monitor it.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

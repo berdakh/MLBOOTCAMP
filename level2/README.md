@@ -33,6 +33,8 @@ the production policy's own ordering scores *higher* NDCG on clicks than a
 ranking by true relevance does. Position bias is not a footnote; it decides
 which model looks best. Day 3 is about that.
 
+![ShopStream at a glance: users and items, a logging policy, position-biased examination, clicks and purchases; what is logged versus the hidden truth](../docs/assets/diagrams/l2-shopstream-at-a-glance.svg)
+
 Nothing in ShopStream describes a real company or real people. Time split:
 train on weeks 1–6, validate on week 7, test on week 8 (touched once, in
 notebook 20).

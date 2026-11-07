@@ -119,7 +119,26 @@ def show(proc, keep=("rank", "epoch", "resumed", "attempt", "bandwidth", "size",
 # **Expected:** `torch.distributed available: True | gloo: True`. `nccl` reports whether
 # PyTorch was *built* with NCCL: our CUDA-enabled build printed `True` even though this
 # machine has no GPU, and a CPU-only build prints `False`. Collectives on NCCL still need GPUs.
+
+# %% [markdown]
+# ## 📖 Words to know
 #
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Rank / world size | a process's unique number / how many processes the job has | ranks 0–3, world size 4 |
+# | Local rank | a process's index on its own machine; picks which GPU it uses | `torch.cuda.set_device(local_rank)` |
+# | Process group / backend | the set of processes that talk to each other / the library that moves the bytes | gloo on CPU, NCCL on GPUs |
+# | Collective | an operation every rank must call, in the same order | `all_reduce`, `broadcast`, `all_gather`, `barrier` |
+# | All-reduce | every rank contributes a tensor and every rank receives the sum (or max, …) | sum = 10 for 1 + 2 + 3 + 4 |
+# | Reduce-scatter / all-gather | the two halves of a ring all-reduce: sum one chunk each / share every chunk with all | 9.2, 9.6 |
+# | DDP | PyTorch's data parallelism: replicas on every rank, gradients averaged during backward | `DistributedDataParallel` in 9.3 |
+# | Gradient bucket | a group of gradients all-reduced together as soon as they are ready | ~25 MB, `bucket_cap_mb` |
+# | DistributedSampler | gives each rank a disjoint, equal-sized slice of the (shuffled) dataset | `set_epoch(epoch)` reshuffles |
+# | torchrun | the launcher that starts one process per GPU and sets RANK, WORLD_SIZE, … | `torchrun --standalone --nproc_per_node=4` |
+# | Hang | ranks blocked forever in a collective one rank never reached | an `all_reduce` inside `if rank == 0:` |
+# | Straggler | one slow rank that every other rank has to wait for at each collective | a ring is as fast as its slowest link |
+
+# %% [markdown]
 # ## 9.1 · Processes, ranks and the process group
 #
 # Data parallelism uses **one process per GPU**. Each process:
@@ -259,6 +278,17 @@ for i, r4 in enumerate(coll["allreduce"]):
 # communication cost).
 #
 # First, the arithmetic without processes.
+
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-ddp-step.svg" alt="Three ranks each run forward and backward on their own shard and get different local gradients; an all-reduce averages them; every rank takes the same optimizer step" width="100%">
+#
+# *What to notice:* the only box that spans all ranks is the all-reduce; before it the ranks differ (different data, different g), after it they are identical again.
+#
+# > 💡 **Intuition.** Four teaching assistants each grade a quarter of the exam pile, then agree
+# > on the class average, and all four write that same average in their notebooks. If the piles
+# > are the same size, the result is exactly the average over the whole pile. *Where it breaks
+# > down:* if one assistant's pile is smaller (unequal shards) or each uses a different curve
+# > (BatchNorm statistics), the "average of averages" is no longer the true average.
 
 # %% [markdown]
 # > **Exercise 1.** Write `ring_allreduce_bytes(n_params, bytes_per, world_size)`: the number of
@@ -705,6 +735,17 @@ if restart_params is not None and runs.get("ddp") is not None:
 # compute time per step that we simply assume (250 ms), as if the per-GPU batch were tuned
 # to take that long.
 
+# %% [markdown]
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-ring-allreduce.svg" alt="Four ranks in a ring each sending to their neighbour; a reduce-scatter of N minus 1 steps then an all-gather of N minus 1 steps, so each rank sends 2(N-1)/N times the message size" width="100%">
+#
+# *What to notice:* no rank ever talks to more than one neighbour, so the bytes each rank sends approach 2M and stop growing; what still grows with N is the number of steps (latency).
+#
+# > 💡 **Intuition.** Passing a collection bucket around a table: each person adds their share and
+# > passes it on, then the totals go round once more so everyone knows them. Nobody ever talks to
+# > the whole table, so the busiest person's work stays the same as the table grows. *Where it
+# > breaks down:* the slowest person at the table sets the pace for everyone (stragglers), and
+# > every extra person adds a hand-off (latency).
+
 # %%
 models = {"ResNet-50 (25.6M)": 25.6e6, "BERT-base (110M)": 110e6, "GPT-2 XL (1.5B)": 1.5e9, "7B": 7e9}
 links = {"NVLink ~300 GB/s": 300, "PCIe ~25 GB/s": 25, "Ethernet 100Gb ~12.5 GB/s": 12.5}
@@ -761,6 +802,58 @@ print("generated files:", sorted(p.name for p in GEN.iterdir()))
 
 # %% [markdown]
 # *Your answer (Exercise 4):* ...
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1. Data parallelism averages gradients.**
+#
+# $$
+# g = \frac{1}{N} \sum_{r=1}^{N} g_r, \qquad g_r = \nabla_\theta \frac{1}{b} \sum_{j \in \text{shard } r} \ell_j
+# $$
+#
+# In words: with equal shards of size $b$, the mean of the ranks' mean-loss gradients is the
+# gradient of the mean loss over the global batch $N b$. Example: shards with gradients 0.2 and
+# 0.4 give 0.3 on both ranks, exactly what one process on the concatenated batch gets.
+#
+# **2. Ring all-reduce traffic.**
+#
+# $$
+# \text{bytes sent per rank} = 2\,\frac{N - 1}{N}\, M
+# $$
+#
+# In words: $N - 1$ reduce-scatter steps plus $N - 1$ all-gather steps, each sending $M / N$.
+# Example: 7B fp16 gradients ($M = 14$ GB) on 8 GPUs: $2 \cdot \tfrac{7}{8} \cdot 14 = 24.5$ GB per
+# rank per step; on 1,000 GPUs it is still under 28 GB.
+#
+# **3. All-reduce time and bus bandwidth.**
+#
+# $$
+# T_{\text{comm}} \approx 2\,\frac{N-1}{N}\,\frac{M}{\text{BW}} + 2(N-1)\,\alpha, \qquad \text{busbw} = \text{algbw} \cdot 2\,\frac{N-1}{N}
+# $$
+#
+# In words: a bandwidth term that barely depends on $N$, plus a latency term ($\alpha$ per
+# hop) that grows with it. Example: 1.5B fp16 gradients (3 GB), 8 GPUs, PCIe at 25 GB/s:
+# $2 \cdot \tfrac78 \cdot 3 / 25 \approx 0.21$ s.
+#
+# **4. Scaling efficiency.**
+#
+# $$
+# E = \frac{T_{\text{compute}}}{T_{\text{step}}}, \qquad T_{\text{step}} \approx T_{\text{compute}} + (1 - o)\, T_{\text{comm}}
+# $$
+#
+# In words: the share of the step spent on useful compute; $o$ is the fraction of communication
+# hidden behind backward. Example (9.6): $T_{\text{compute}} = 250$ ms, $T_{\text{comm}} = 210$ ms,
+# $o = 0.5$: $E = 250 / 355 = 0.70$.
+#
+# **5. Global batch size.**
+#
+# $$
+# B_{\text{global}} = N \cdot b_{\text{per GPU}} \cdot k_{\text{accum}}
+# $$
+#
+# Example: 8 GPUs × 64 per GPU × 8 accumulation steps = 4,096; DDP's `no_sync()` skips the
+# all-reduce on the first 7 micro-batches.
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

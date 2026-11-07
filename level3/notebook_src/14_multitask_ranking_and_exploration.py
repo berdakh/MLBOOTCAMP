@@ -98,6 +98,24 @@ N_TEST = {"gpu": 400_000, "cpu": 100_000, "smoke": 20_000}[BUDGET.name]
 print(f"train impressions: {N_TRAIN:,} | test impressions: {N_TEST:,}")
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | CVR / pCVR | Conversion rate *among clicks*; pCVR is its prediction | ≈ 15% of clicks convert |
+# | pCTCVR | Probability an impression is clicked *and* converts: pCTR × pCVR | expected conversions per impression |
+# | Sample selection bias (SSB) | Training on one population (clicked rows) and serving on another (all rows) | naive pCVR −14–19% on non-clicked impressions |
+# | Multi-task learning | One network predicting several targets with shared layers | click and conversion heads |
+# | Negative transfer | One task's training hurting another task in a shared model | clickbait helps clicks, hurts conversions |
+# | Expert / gate (MMoE) | Parallel sub-networks, mixed per task by a learned softmax weighting | 3 experts, one gate per task |
+# | eCPM | Expected revenue per 1,000 impressions: pCTR × bid × 1000 | the auction's ranking score |
+# | Second-price auction | The winner pays the smallest bid that would still have won, not its own bid | `bid₂ · pCTR₂ / pCTR₁` per click |
+# | Reserve price | A floor: bids below it are not eligible, the winner pays at least it | 0.5 for uniform values |
+# | Pareto frontier | Settings that cannot improve one metric without hurting another | clicks vs value when blending |
+# | Multi-armed bandit | Repeatedly choosing among options with unknown payoffs while learning them | 10 ads with CTRs 1–5% |
+# | Regret | Expected reward lost compared with always choosing the best option | clicks lost over 50,000 rounds |
+
+# %% [markdown]
 # ## 14.1 · Clicks, conversions and sample selection bias
 #
 # We reuse notebook 13's generator with two changes: higher base rates (CTR ≈ 8%, CVR ≈ 15% of
@@ -144,6 +162,20 @@ print(f"correlation of log true CTR and log true CVR: {corr:+.2f}")
 #   CVR loss on clicked rows only, model `pCTCVR = pCTR × pCVR` and train it on **all impressions**
 #   with the label "clicked and converted". pCVR is never trained on clicks alone, so it is defined
 #   over the entire space; it also borrows the much larger click signal through shared embeddings.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-mmoe.svg" alt="Left: shared-bottom with one shared MLP feeding a CTR tower and a CVR tower. Right: MMoE with three experts mixed by per-task softmax gates before each tower" width="100%">
+#
+# *What to notice:* MMoE only changes what sits between the embeddings and the towers; if the gates stay uniform (as here) it is just a more expensive shared-bottom.
+#
+# > 💡 **Intuition.** Shared-bottom is one consultant writing a single report for two clients with
+# > different goals. MMoE is a small panel of consultants (experts); each client (task) has its own
+# > rule for how much to listen to each panel member, and the rule can change per question (per
+# > example). *Where the analogy breaks down:* nothing forces the experts to specialise; with mild
+# > task conflict and little data they stay interchangeable, which is what 14.2 measured.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-esmm.svg" alt="Nested populations of all impressions, clicked and converted, and the ESMM network where pCTCVR = pCTR × pCVR is trained on all impressions" width="100%">
+#
+# *What to notice:* the naive CVR model learns inside the blue box but is used on the whole grey box; ESMM's losses are both defined on the whole grey box.
 #
 # The "naive" multi-task loss for shared-bottom and MMoE is `BCE(pCTR, click)` on all rows plus
 # `BCE(pCVR, conversion)` on clicked rows. Output biases start at each task's base-rate log-odds
@@ -327,6 +359,16 @@ RESULTS["blending"] = grid.round(3).to_dict(orient="records")
 # shade their bids below their value; second price makes bidding your true value a dominant
 # strategy (Vickrey), which is why it dominated ads for years (display exchanges moved to first
 # price around 2019, for reasons of transparency between exchanges).
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-second-price-auction.svg" alt="Three ads ranked by eCPM = pCTR × bid × 1000; ad A wins with 60 and pays 48 / 30 = 1.60 dollars per click, below its 2-dollar bid" width="100%">
+#
+# *What to notice:* the price depends on the runner-up's eCPM and the winner's own pCTR, so a pCTR error for one advertiser moves both who wins and what everyone pays.
+#
+# > 💡 **Intuition.** In a second-price auction your bid only decides *whether* you win, never *what
+# > you pay*: that is set by the next-best competitor. So shading your bid can only make you lose
+# > auctions you wanted, and bidding your true value is the best strategy (Vickrey). *Where the
+# > analogy breaks down:* that guarantee holds for one slot with truthful values; with budgets,
+# > multiple slots (GSP) and repeated auctions, real advertisers still bid strategically.
 
 # %% [markdown]
 # > **Exercise 1.** Write `second_price_auction(bids, pctrs, reserve)`. Bids are per click. Only bids
@@ -444,6 +486,17 @@ print(auc_df.round(3).to_string(index=False))
 # * **Thompson sampling**: keep a Beta(clicks + 1, non-clicks + 1) posterior per arm, draw one sample
 #   from each, play the argmax. Explores in proportion to the probability that an arm is best; easy to
 #   add priors and delayed feedback; usually the strongest in practice (Chapelle & Li, 2011).
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l3-x-bandits.svg" alt="The bandit loop of choosing, showing, observing and updating, with the rules of epsilon-greedy, UCB1 and Thompson sampling, and conceptual cumulative regret curves" width="100%">
+#
+# *What to notice:* regret that keeps growing linearly means the policy never stops paying for exploration; a flattening curve means it has mostly found the best ad.
+#
+# > 💡 **Intuition.** Thompson sampling is a tasting menu: for each dish (ad) you have a belief about
+# > how good it is, wide if you have tasted it rarely. Each round you *imagine* one plausible quality
+# > for every dish and order the one that looks best in that imagination. Rarely tasted dishes
+# > sometimes imagine well and get ordered; dishes you know are mediocre almost never do.
+# > *Where the analogy breaks down:* the belief must be updated after *every* outcome and the
+# > samples must be fresh each round; reuse them and exploration stops (see Troubleshooting).
 
 # %% [markdown]
 # > **Exercise 2.** Write `thompson_sampling(true_ps, n_rounds, seed)` for a Bernoulli bandit with
@@ -602,6 +655,81 @@ print("saved", OUT / "results.json")
 
 # %% [markdown]
 # *Your answer (Exercise 3):* ...
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1 · ESMM.**
+#
+# $$
+# \mathrm{pCTCVR}(x) = \mathrm{pCTR}(x) \times \mathrm{pCVR}(x), \qquad \mathcal{L} = \mathrm{BCE}(\mathrm{pCTR}, \text{click}) + \mathrm{BCE}(\mathrm{pCTCVR}, \text{click} \wedge \text{conv})
+# $$
+#
+# *In words:* both losses are defined on **every** impression; pCVR is never fitted on clicked rows
+# alone. *Example:* $0.08 \times 0.15 = 0.012$ conversions per impression.
+#
+# **2 · Blended ranking score.** $\text{score} = \mathrm{pCTR}^{a} \cdot \mathrm{pCVR}^{b} \cdot \text{value}$; with
+# calibrated predictions, $a = b = 1$ is expected value per impression. *Example:* pCTR 0.1, pCVR 0.2,
+# value 50 gives $0.1 \cdot 0.2 \cdot 50 = 1.0$ per impression.
+#
+# **3 · eCPM and the second price.**
+#
+# $$
+# \mathrm{eCPM}_i = \mathrm{pCTR}_i \cdot \text{bid}_i \cdot 1000, \qquad \text{price per click} = \max\!\left(\text{reserve},\ \frac{\text{bid}_2 \cdot \mathrm{pCTR}_2}{\mathrm{pCTR}_1}\right) \le \text{bid}_1
+# $$
+#
+# *In words:* rank by expected revenue per 1,000 impressions; the winner pays per click the smallest
+# bid that would still beat the runner-up. *Example:* A (bid 2.00, pCTR 3%) eCPM 60 beats B (bid 4.00,
+# pCTR 1.2%) eCPM 48; A pays $4.00 \cdot 0.012 / 0.03 = \$1.60$. Multiply every pCTR by 1.5 and the
+# price is unchanged; multiply only A's and A pays less (\$1.07).
+#
+# **4 · Revenue equivalence (uniform values).** With $n$ bidders, values i.i.d. $U[0, 1]$, second price
+# and first price (bids $\tfrac{n-1}{n} v$) both earn $\mathbb{E}[\text{revenue}] = \tfrac{n-1}{n+1}$. *Example:* $n = 4$: 0.6.
+#
+# **5 · Bandits: regret, UCB1 and Thompson sampling.**
+#
+# $$
+# \mathrm{Regret}(T) = \sum_{t=1}^{T} \big( p^{*} - p_{a_t} \big), \qquad a_t^{\mathrm{UCB1}} = \arg\max_k \left( \hat{p}_k + \sqrt{\frac{2 \ln t}{n_k}} \right)
+# $$
+#
+# $$
+# \theta_k \sim \mathrm{Beta}(\alpha_k, \beta_k), \quad a_t = \arg\max_k \theta_k, \qquad \alpha_{a_t} \mathrel{+}= r_t, \quad \beta_{a_t} \mathrel{+}= 1 - r_t
+# $$
+#
+# *Symbols:* $p^{*}$ the best arm's click probability, $a_t$ the arm played at round $t$, $\hat{p}_k$ and
+# $n_k$ arm $k$'s empirical CTR and play count, $r_t \in \{0, 1\}$ the click. *Example:* an ad with 3
+# clicks in 100 shows has the posterior $\mathrm{Beta}(1 + 3, 1 + 97) = \mathrm{Beta}(4, 98)$, mean
+# $4/102 = 3.9\%$; its UCB1 bonus at $t = 10{,}000$ is $\sqrt{2 \ln 10^4 / 100} = 0.43$, huge next to a
+# 3% CTR, which is why UCB1 over-explored in 14.5.
+#
+# The cell below checks 3 and 5 numerically.
+
+# %%
+# Key equations, checked numerically (NumPy, instant).
+bids, pctrs = np.array([2.0, 4.0, 1.0]), np.array([0.03, 0.012, 0.04])
+ecpm = pctrs * bids * 1000
+order = np.argsort(-ecpm)
+w_, r_ = order[0], order[1]
+price = bids[r_] * pctrs[r_] / pctrs[w_]
+print(f"eCPM {ecpm.round(1)} | winner {'ABC'[w_]} pays {price:.2f} per click (bid {bids[w_]:.2f})")
+scaled = pctrs * 1.5
+print(f"all pCTRs x1.5 -> price {bids[r_] * scaled[r_] / scaled[w_]:.2f} | only A's x1.5 -> "
+      f"{bids[r_] * pctrs[r_] / (1.5 * pctrs[w_]):.2f}")
+
+alpha_, beta_ = 1 + 3, 1 + 97
+draws = np.random.default_rng(0).beta(alpha_, beta_, 100_000)
+print(f"Beta({alpha_}, {beta_}): mean {alpha_ / (alpha_ + beta_):.4f} (sampled {draws.mean():.4f}), "
+      f"P(theta > 5%) = {np.mean(draws > 0.05):.2f}")
+print(f"UCB1 bonus at t = 10,000, n = 100: {np.sqrt(2 * np.log(10_000) / 100):.3f}")
+true_ps, plays = np.array([0.01, 0.03, 0.05]), np.array([1, 2, 2, 0, 2])
+print(f"regret of plays {plays.tolist()}: {np.sum(true_ps.max() - true_ps[plays]):.2f} clicks")
+
+# %% [markdown]
+# **Expected:** eCPM `[60. 48. 40.]`, winner A paying `1.60` per click (bid 2.00); `1.60` again when
+# every pCTR is scaled and `1.07` when only A's is; the Beta(4, 98) mean `0.0392` (the sampled mean
+# agrees to about three decimals) with roughly a one-in-four chance that the ad's CTR exceeds 5%; a
+# UCB1 bonus of `0.429`; and a regret of `0.06` clicks for the five plays (0.02 for the middle arm, 0.04 for the
+# worst arm, 0 for each play of the best).
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

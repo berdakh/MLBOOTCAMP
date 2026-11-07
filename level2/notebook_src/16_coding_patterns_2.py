@@ -77,6 +77,24 @@ print("Python recursion limit:", sys.getrecursionlimit())
 # still crash the process.
 
 # %% [markdown]
+# ## 📖 Words to know
+#
+# | Term | Plain meaning | Example here |
+# |---|---|---|
+# | Adjacency list | for each node, the list of its neighbours | `graph[u] = [v, ...]` |
+# | BFS | breadth-first search: visit nodes in layers of distance, using a queue | `shortest_steps` on a maze |
+# | DFS | depth-first search: follow one path as deep as it goes, then back up, using a stack | `has_cycle` with three colours |
+# | Topological order | an order in which every node comes after all its prerequisites | `course_order` (Exercise 2) |
+# | In-degree | the number of edges pointing into a node | Kahn's algorithm starts from in-degree 0 |
+# | Dijkstra | shortest paths with non-negative weights, always expanding the cheapest frontier node | Exercise 3 |
+# | Lazy deletion | leave outdated heap entries in place and skip them when popped | `heapq` has no decrease-key |
+# | Monotone predicate | a yes/no test that flips from False to True once as its input grows | "capacity c ships everything in D days" |
+# | Dynamic programming | solve each subproblem once, store it, build bigger answers from stored ones | `min_coins`, edit distance |
+# | Trie | a tree of characters in which words with a shared prefix share nodes | Exercise 7; autocomplete |
+# | Union-find | sets that can be merged, with a fast "which set is x in?" | Exercise 8 |
+# | Path compression | pointing every node a `find` passes straight at the root | the 16.6 timing demo |
+
+# %% [markdown]
 # ## 16.1 · Graphs: representations and BFS
 #
 # Interview graphs come as an **adjacency list** (`graph[u] = [v, ...]`), an
@@ -117,6 +135,15 @@ print(shortest_steps(maze), shortest_steps([[0, 1], [1, 0]]))
 # %% [markdown]
 # **Expected:** `6 -1`. DFS (a stack instead of a queue) also visits every
 # reachable cell, but the first path it finds is not the shortest.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-bfs-vs-dfs.svg" alt="The same tree traversed by BFS in layers and by DFS deep-first, with visit order numbers" width="100%">
+#
+# *What to notice:* BFS's numbers grow layer by layer, so the first time it reaches a node is along a fewest-edges path; DFS finishes a whole branch before starting the next.
+#
+# > 💡 **Intuition.** BFS is a ripple in a pond: everything one step away is reached before
+# > anything two steps away. DFS is a maze-walker with a hand on the wall: deep first, back
+# > up only at dead ends. *Where it breaks down:* ripples measure *steps*, not distance; with
+# > unequal edge lengths the first ripple to arrive may have taken the long way (16.3).
 
 # %% [markdown]
 # > **Exercise 1.** *(target 12 min)* **Number of islands.** Implement
@@ -246,6 +273,10 @@ print("cheapest path 0 -> 2 -> 3 -> 1 costs", 1 + 1 + 1)
 # costs 3. Heap entries are `(distance, node)` tuples; when a shorter distance
 # to a node is found, push a new entry and skip stale ones on pop ("lazy
 # deletion"), since `heapq` has no decrease-key.
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-dijkstra.svg" alt="A four-node graph where BFS takes a one-hop edge of weight 10 while Dijkstra finds a three-hop path of cost 3, with the heap trace" width="100%">
+#
+# *What to notice:* the (10, 1) entry is pushed first but popped last, as a stale entry; correctness comes from popping in order of distance, which needs weights ≥ 0.
 
 # %% [markdown]
 # > **Exercise 3.** *(target 15 min)* **Dijkstra.** Implement
@@ -306,6 +337,11 @@ print([isqrt(n) for n in [0, 1, 8, 9, 10, 10**12]])
 # means: the answer is a number in a known range, and *checking* a candidate is
 # easier than *finding* the answer. Typical signals: "minimum capacity / speed /
 # maximum distance such that …".
+#
+# > 💡 **Intuition.** Binary search on the answer is the "guess my number" game where the
+# > only reply is "enough" or "not enough": each guess halves the range, so even a range of
+# > a billion takes 30 guesses. *Where it breaks down:* the reply must be monotone; if
+# > capacity 15 works but 16 does not, halving can jump past the answer.
 
 # %% [markdown]
 # > **Exercise 4.** *(target 15 min)* **Ship within D days.** Packages with
@@ -367,6 +403,11 @@ print("greedy trap:", min_coins([1, 3, 4], 6))
 # %% [markdown]
 # **Expected:** `3 -1 0` and `greedy trap: 2`. The same template solves
 # knapsack, path counting and sequence alignment; the art is in step 1.
+#
+# > 💡 **Intuition.** DP is doing a problem with sticky notes: every time you solve a
+# > subproblem, write the answer down, and never solve it twice. The state definition is
+# > what you write on the note. *Where it breaks down:* it pays only if subproblems repeat;
+# > when they do not (plain divide-and-conquer, e.g. merge sort), the notes are wasted memory.
 
 # %% [markdown]
 # > **Exercise 5.** *(target 15 min)* **Longest increasing subsequence.**
@@ -469,6 +510,10 @@ _ = growth_table(lambda n: chain_cost(n, True), lambda n: (n,), [1000, 2000, 400
 # our runs; each `find(0)` walks the whole chain) and 4,000 nodes take a few hundred
 # milliseconds (~410 ms); with compression the exponent is about 1 and 100,000
 # nodes take tens of milliseconds (~34 ms).
+#
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/l2-x-union-find.svg" alt="A chain of parent pointers four steps long, flattened by path compression so every node points directly at the root" width="100%">
+#
+# *What to notice:* compression costs one extra pass during a `find` and pays for itself on every later `find` of any node on that path.
 
 # %% [markdown]
 # > **Exercise 7.** *(target 12 min)* **Trie.** Implement a class `Trie` with
@@ -595,6 +640,53 @@ for pattern, days in plan:
 # **Expected:** three lines, each with five dates — today, then +1, +3, +7 and
 # +21 days. Replace the patterns with the problems you solved today and copy the
 # dates into your calendar or spreadsheet.
+
+# %% [markdown]
+# ## 🧮 Key equations
+#
+# **1. Graph traversal cost**
+#
+# $$
+# T_{\text{BFS}} = T_{\text{DFS}} = O(V + E)
+# $$
+#
+# *In words:* each node is enqueued (or pushed) once and each edge is looked at once (twice if undirected). A grid of R × C cells has V = RC and E ≤ 4RC.
+# *Example:* a 500 × 500 grid: 250,000 cells and about 1 million edge checks, a fraction of a second in Python.
+#
+# **2. Dijkstra's relaxation**
+#
+# $$
+# d(v) \leftarrow \min\big(d(v),\ d(u) + w(u, v)\big), \qquad T = O\big((V + E) \log V\big) \text{ with a binary heap}
+# $$
+#
+# *In words:* when you pop the closest unfinished node u, try every edge out of it; correct because, with $w \ge 0$, nothing popped later can be closer.
+# *Example:* in 16.3, popping node 3 at distance 2 relaxes $d(1) = \min(10,\ 2 + 1) = 3$.
+#
+# **3. Binary search iterations**
+#
+# $$
+# \text{iterations} = \lceil \log_2(\text{hi} - \text{lo} + 1) \rceil
+# $$
+#
+# *Example:* Exercise 4's first visible case: capacities from max(w) = 10 to sum(w) = 55 are 46 candidates, so 6 feasibility checks of O(n) each.
+#
+# **4. The DP recurrences in this notebook**
+#
+# $$
+# \text{coins}(a) = 1 + \min_{c \le a} \text{coins}(a - c), \qquad
+# D(i, j) = \min\big(D(i-1, j) + 1,\ D(i, j-1) + 1,\ D(i-1, j-1) + \mathbb{1}[a_i \ne b_j]\big)
+# $$
+#
+# *In words:* the best answer for a state is built from the best answers of smaller states; the base cases are $\text{coins}(0) = 0$, $D(i, 0) = i$, $D(0, j) = j$.
+# *Example:* coins $\{1, 3, 4\}$, amount 6: $1 + \min(\text{coins}(5), \text{coins}(3), \text{coins}(2)) = 1 + \min(2, 1, 2) = 2$ (3 + 3), where greedy gives 3 (4 + 1 + 1). Edit distance "kitten" → "sitting" = 3.
+#
+# **5. Union-find**
+#
+# $$
+# T(\text{m operations on n elements}) = O\big(m\, \alpha(n)\big), \qquad \alpha(n) \le 4 \text{ for any } n \text{ you will meet}
+# $$
+#
+# *In words:* with path compression and union by size each operation is effectively constant time; with neither, a chain makes `find` O(n).
 
 # %% [markdown]
 # ## 🛟 Troubleshooting

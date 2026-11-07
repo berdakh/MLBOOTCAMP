@@ -103,6 +103,10 @@ Retry rules for a well-behaved client:
 - **Never retry 4xx validation errors.** They will fail identically every time.
 - Send a **request id** so a failure can be found in the server logs.
 
+<img src="../assets/diagrams/hb-retry-timeline.svg" alt="Three attempts with doubling waits: a timeout, a 503, then success; a 422 is never retried; only idempotent calls are safe to retry" width="100%">
+
+*What to notice:* the waits double, the request id stays the same, and the 422 box has no arrow: a validation error is the caller's bug, not a transient failure.
+
 If an endpoint *does* change state (for example, "create a retention task"),
 retries can create duplicates. The usual fix is an idempotency key: the client
 sends a unique key and the server ignores repeats.

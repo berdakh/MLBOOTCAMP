@@ -32,6 +32,10 @@ It helps to separate how strict you need to be:
 | **Reproducible** | Different machine, same pinned environment, same number (or within a stated tolerance) | Reports, model releases |
 | **Robust** | Different seeds and reasonable perturbations give a similar conclusion | Decisions |
 
+<img src="../assets/diagrams/hb-repro-layers.svg" alt="Four levels of reproducibility left to right: re-runnable, repeatable, reproducible, robust, above the four questions every result must answer" width="100%">
+
+*What to notice:* the first three are about getting the *same number*; only the last is about getting the same *conclusion*, which is what a decision needs.
+
 The last one is the one that matters for decisions. A model comparison that
 flips when you change the random seed was never a comparison. Day 2 measures
 that with bootstrap intervals.
