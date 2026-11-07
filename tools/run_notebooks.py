@@ -32,7 +32,7 @@ from nbclient.exceptions import CellExecutionError
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from levels import all_notebooks  # noqa: E402
+from levels import LEVELS, all_notebooks  # noqa: E402
 
 
 def versions() -> str:
@@ -80,10 +80,15 @@ def main() -> int:
     parser.add_argument("--timeout", type=int, default=900, help="per-cell timeout, seconds")
     parser.add_argument("--shared", action="store_true", help="share one artifact dir (sequential run)")
     parser.add_argument("--report", type=Path, help="write a markdown report here")
+    parser.add_argument("--level", choices=[lv.name for lv in LEVELS],
+                        help="run only this level's notebooks")
     parser.add_argument("--save-executed", type=Path, help="write executed copies (with outputs) here")
     args = parser.parse_args()
 
     notebooks = all_notebooks()
+    if args.level:
+        nb_dir = next(lv.nb_dir for lv in LEVELS if lv.name == args.level)
+        notebooks = [n for n in notebooks if n.parent == nb_dir]
     if args.only:
         notebooks = [n for n in notebooks
                      if any(t in n.relative_to(REPO_ROOT).as_posix() for t in args.only)]
