@@ -56,10 +56,24 @@ takes an hour and tells you which days need the most attention.
 
 ## The project: TaskFlow churn prediction
 
+**Churn** is a customer leaving a subscription business: cancelling, or not
+renewing. It compounds: at 5% a month, a business loses almost half its
+customers in a year and must replace them just to stand still, so keeping
+customers who would otherwise leave is often one of the cheapest ways to
+grow. A **churn model** ranks current customers by their risk of leaving
+soon, so a retention team with limited time contacts the right ones first.
+The goal is not a high score but **customers kept for less effort**.
+
 TaskFlow is a fictional subscription software company. Its database export
 has four tables: `customers`, `usage_weekly`, `invoices` and `tickets`.
-Every month the company wants to know which active accounts are likely to
-cancel in the next 30 days, so the customer-success team can contact them.
+On the first day of every month the company wants to know which active
+accounts are likely to cancel in the next 30 days, so the customer-success
+team can contact them.
+
+**New to churn?** Read [The problem: predicting churn](docs/handbook/00-the-churn-problem.md)
+first (ten minutes, no code): what churn is, why companies care, who uses the
+predictions, what the real goal is, and why it is a good problem to learn
+ML engineering on.
 
 The data is **synthetic**: it was generated once by
 [`src/churnlab/data.py`](src/churnlab/data.py), committed, and checksummed.
