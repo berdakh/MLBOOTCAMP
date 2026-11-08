@@ -88,7 +88,7 @@ print(f"train {len(train):,} rows | valid {len(valid):,} rows (test week untouch
 # The column `true_p` is P(click | examined) for that (user, item): the
 # simulation's ground truth. We use it as one would use a perfect A/B
 # test: to *grade* methods, never as a training feature or label (except for
-# one clearly labelled "oracle" in 5.6).
+# one clearly labelled "oracle" in 23.6).
 
 # %% [markdown]
 # ## Key terms
@@ -101,14 +101,14 @@ print(f"train {len(train):,} rows | valid {len(valid):,} rows (test week untouch
 # | **Propensity θ_p** | the probability that position p is examined | θ_0 = 1, θ_9 ≈ 0.13 |
 # | **Exploration traffic** | requests shown in random order, so relevance is flat over positions | `is_random`, 5% of requests |
 # | **Inverse propensity scoring (IPS)** | weight each click by 1/θ_p to undo examination | a click at position 9 counts about 8 |
-# | **Clipping** | capping IPS weights at M: less variance, more bias | cap 4, 6 or none in 5.5 |
+# | **Clipping** | capping IPS weights at M: less variance, more bias | cap 4, 6 or none in 23.5 |
 # | **Self-normalised IPS** | divide the IPS sum by the sum of the weights | a standard variance reducer |
 # | **Off-policy evaluation** | estimating a new policy's value from another policy's logs | IPS value of a re-ranking |
 # | **Support problem** | items the old policy never showed cannot be evaluated | no clicks to re-weight |
 # | **Oracle** | the simulation's ground truth, used only to grade | `true_p` |
 
 # %% [markdown]
-# ## 5.1 · Clicks are not relevance
+# ## 23.1 · Clicks are not relevance
 #
 # The **examination hypothesis**: a user clicks an item only if they examine
 # it *and* find it relevant. The simplest model built on it, the
@@ -153,7 +153,7 @@ by_pos.round(3)
 # > **Intuition.** Consider a shop window: items at eye level are looked at, items near the floor rarely are. Counting sales per shelf reveals mostly *where* things were placed, not how good they are. *Tiny example:* an item with relevance 0.4 at position 0 gets clicked 40% of the time; the same item at position 9 ($\theta_9 = 0.13$) only $0.13 \times 0.4 = 5\%$. *Where it breaks down:* real shoppers also stop after finding what they wanted (a cascade), so examination of position 5 depends on what was at positions 0–4, which the PBM ignores.
 
 # %% [markdown]
-# ## 5.2 · The paradox: the old ranker scores best on logged clicks
+# ## 23.2 · The paradox: the old ranker scores best on logged clicks
 #
 # The standard offline evaluation is: take logged requests, re-rank the shown
 # items with the new model, compute NDCG@10 against the clicks. We apply it to
@@ -200,7 +200,7 @@ paradox.round(3)
 #   if the propensity effects are removed. That is what IPS does.
 
 # %% [markdown]
-# ## 5.3 · Estimating examination propensities from exploration traffic
+# ## 23.3 · Estimating examination propensities from exploration traffic
 #
 # On random traffic, the item at position p is a uniformly random draw from
 # the candidates, so E[relevance] is the same at every position. Under the
@@ -313,7 +313,7 @@ out_path.write_text(json.dumps({"normalised_to": "position 0",
 print("wrote", out_path.relative_to(ART))
 
 # %% [markdown]
-# ## 5.4 · Inverse propensity scoring: debiased click rates
+# ## 23.4 · Inverse propensity scoring: debiased click rates
 #
 # If a click at position p happens with probability θ_p · r, then
 # click / θ_p has expectation r. Weighting every click by 1/θ_p turns
@@ -363,9 +363,9 @@ pd.DataFrame(rows).set_index("slice").round(3)
 # gets cut to 4: clipping bias is largest exactly where the weights are large.
 
 # %% [markdown]
-# ## 5.5 · IPS for offline evaluation of a new ranking
+# ## 23.5 · IPS for offline evaluation of a new ranking
 #
-# We now return to the evaluation problem from 5.2. To estimate how many clicks a new
+# We now return to the evaluation problem from 23.2. To estimate how many clicks a new
 # ranking of the logged items would get, move each logged click to its new
 # position: a click observed at logged position p, re-ranked to position q,
 # counts θ_q / θ_p clicks. Summed over a request:
@@ -405,7 +405,7 @@ ope.round(3)
 # rankings correctly: oracle (about 1.84) > item CTR (about 1.60) > logged
 # (about 1.41) > random (about 1.34) > reversed (about 1.29). Naive NDCG on
 # clicks puts the **logged order first**, above item CTR and the oracle, for
-# the reasons in 5.2. (The logging policy is also weak: only about 5% more
+# the reasons in 23.2. (The logging policy is also weak: only about 5% more
 # true clicks than a random order. This is common, and invisible in the
 # policy's own click logs.)
 #
@@ -453,7 +453,7 @@ pd.DataFrame(rows).set_index("clip").round(4)
 # estimators (a reward model plus an IPS correction of its residuals).
 
 # %% [markdown]
-# ## 5.6 · Training on clicks: naive vs IPS vs oracle
+# ## 23.6 · Training on clicks: naive vs IPS vs oracle
 #
 # Evaluation is half of the problem. A model trained on clicks also learns
 # position bias, *through any feature correlated with position*. A very

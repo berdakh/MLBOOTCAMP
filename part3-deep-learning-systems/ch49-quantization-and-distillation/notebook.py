@@ -138,9 +138,9 @@ print(f"labels: {LABELS} | labelled {len(lab_df)}, unlabelled transfer {len(tran
 # |---|---|---|
 # | Quantisation | Storing (and computing with) numbers in fewer bits, e.g. 8-bit integers instead of 32-bit floats | DistilBERT's Linear layers converted to int8 |
 # | Scale `s` | The real-valued size of one integer step; `x ≈ q × s` | `max(abs(W[row])) / 127` for one weight row |
-# | Per-tensor vs per-channel | One scale for a whole matrix vs one scale per output row | per-channel cuts the weight error 2.4× in section 3 |
+# | Per-tensor vs per-channel | One scale for a whole matrix vs one scale per output row | per-channel cuts the weight error 2.4× in section 49.3 |
 # | Dynamic quantisation | Weights stored as int8 once; activations quantised on the fly at run time, no calibration data | `quantize_dynamic(model, {nn.Linear})` |
-# | Weight-only quantisation | Only the weights are low-bit; the arithmetic still runs in floating point | the int8/int4 simulation in section 3 |
+# | Weight-only quantisation | Only the weights are low-bit; the arithmetic still runs in floating point | the int8/int4 simulation in section 49.3 |
 # | Group-wise scales | One scale per small block of weights (e.g. 128), needed for int4 | GPTQ / AWQ 4-bit LLM loaders |
 # | Knowledge distillation | Training a small *student* to imitate a large *teacher*'s outputs | DistilBERT teacher → TF-IDF + MLP student |
 # | Temperature `T` | Divides the logits before the softmax; `T > 1` flattens the distribution | `T = 4` in the student runs |
@@ -149,7 +149,7 @@ print(f"labels: {LABELS} | labelled {len(lab_df)}, unlabelled transfer {len(tran
 # | Agreement | Share of examples where two models give the same prediction | int8 vs fp32 agree on ~96% |
 
 # %% [markdown]
-# ## 1 · The teacher: fine-tune DistilBERT
+# ## 49.1 · The teacher: fine-tune DistilBERT
 #
 # A sequence-classification head (`AutoModelForSequenceClassification`, 4 labels) on
 # DistilBERT, trained with the course's explicit loop (`scaleml.train.train`: AdamW,
@@ -224,7 +224,7 @@ print(f"teacher accuracy on {len(eval_y)} eval examples: {ACC_TEACHER:.3f}")
 # fine-tuning on 20k examples reach ~0.92–0.94 in roughly 10 minutes (not measured in our
 # verification runs).
 #
-# ## 2 · Post-training dynamic int8 quantisation
+# ## 49.2 · Post-training dynamic int8 quantisation
 #
 # **Dynamic quantisation** (`torch.ao.quantization.quantize_dynamic`) converts the weights
 # of every `nn.Linear` to int8 *once*, and at run time quantises each layer's *activations*
@@ -313,7 +313,7 @@ if "int8" in LAT:
 # example only modestly (a 64-token sequence already makes the matrix products large); on a
 # GPU it matters far more (Chapter 50).
 #
-# ## 3 · Quantising a weight matrix by hand
+# ## 49.3 · Quantising a weight matrix by hand
 #
 # Symmetric linear quantisation maps a real weight w to an integer
 # `q = round(w / scale)` in `[-127, 127]` and back with `ŵ = q × scale`. The rounding error
@@ -332,7 +332,7 @@ if "int8" in LAT:
 # > are measured in very coarse steps; per-channel gives each row a ruler cut to its own length.
 # > *Where the analogy breaks down:* a layer's output is a sum of many products, and independent
 # > rounding errors partly cancel in that sum, so the output error is smaller than "ruler
-# > precision" suggests (section 3 measures exactly this).
+# > precision" suggests (section 49.3 measures exactly this).
 
 # %% [markdown]
 # > **Exercise 1.** Write `quantize_per_channel_int8(W)` for a 2-D float tensor `W` (rows = output
@@ -450,7 +450,7 @@ else:
     print("Skipped (RUN_GPU_EXTENSION = False or no GPU).")
 
 # %% [markdown]
-# ## 4 · Knowledge distillation
+# ## 49.4 · Knowledge distillation
 #
 # A teacher's output distribution carries more information than the label: for a
 # Business article it might give Sci/Tech 15% and Sports 0.1%, which says which mistakes
@@ -591,7 +591,7 @@ print(f"(12 students trained in {time.time() - t0:.0f} s) | teacher: {ACC_TEACHE
 # the student is a smaller version of the teacher (same tokenizer, a few layers, e.g.
 # DistilBERT itself was distilled from BERT) than for a very different model like ours.
 #
-# ## 5 · The trade-off table
+# ## 49.5 · The trade-off table
 #
 # Accuracy, latency (batch 1, CPU, *including* featurisation for the student and excluding
 # tokenisation for the transformers, which costs ~1 ms), and size on disk.
@@ -681,7 +681,7 @@ print("wrote", OUT / "compression_table.json")
 # $1 - \alpha$). *Symbols:* $z_t, z_s$ teacher and student logits, $T$ the temperature, $\alpha \in [0, 1]$,
 # $y$ the label. The $T^2$ undoes the $1/T^2$ shrinkage of the soft term's gradient, so changing $T$
 # does not silently change its weight. *Example:* with $\alpha = 0$ this is ordinary cross-entropy
-# (variants A and C of section 4).
+# (variants A and C of section 49.4).
 #
 # The cell below checks all four numerically.
 

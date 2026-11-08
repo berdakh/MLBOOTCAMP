@@ -71,7 +71,7 @@ def cost_per_1k(requests_per_second, price_per_hour, utilization):
     return 1000 * price_per_hour / (requests_per_second * 3600 * utilization)
 ```
 
-**In section 8 of the lab** (assumed $0.20/h, 40% utilisation) the measured CPU throughputs of
+**In section 50.8 of the lab** (assumed $0.20/h, 40% utilisation) the measured CPU throughputs of
 one run gave $0.00114 per 1,000 requests without batching (122 req/s) and
 $0.00045 with dynamic batching (308 req/s); on a quieter machine the no-batching
 plateau was higher (246 req/s), so the saving was smaller. [expected] Your numbers depend
@@ -85,9 +85,9 @@ half the price (spot/reserved instances), or 2× utilisation (autoscaling).
 [open-ended] One good answer:
 
 **(a) Diagnosis.** With static batching the batch runs until its longest
-response finishes; section 6 simulated only 26% of decode slots doing useful work
+response finishes; section 50.6 simulated only 26% of decode slots doing useful work
 for realistic length distributions (3.7× more steps than continuous
-batching). Memory is also reserved per sequence for the maximum length: section 7
+batching). Memory is also reserved per sequence for the maximum length: section 50.7
 found only 24% of reserved KV-cache memory holding real tokens. So the GPU is
 mostly decoding padding, and memory that could hold more sequences sits
 reserved but empty. Batch 8 is far below what a memory-bound decode step could
@@ -121,15 +121,15 @@ and pricing/limits that reflect the longer context.
    multiply-add (arithmetic intensity ~1 FLOP per 2–4 bytes), far below what the
    hardware needs to be compute-bound (a T4 needs ~200 FLOPs per byte at peak
    fp16). A batch of B reuses each weight B times for the same traffic, so time
-   per call grows slowly: section 1 measured ~3 ms at batch 1 and ~15 ms at batch 32
+   per call grows slowly: section 50.1 measured ~3 ms at batch 1 and ~15 ms at batch 32
    on CPU (~6× the throughput). It stops helping once compute-bound, when the
    batch no longer fits in memory, or when the wait to fill it breaks the latency SLO.
 2. **Dynamic batcher.** Queue + background loop; parameters `max_batch_size`
    (largest batch the hardware finishes within the latency budget) and
    `max_wait_ms` (a small fraction of the SLO, a few ms). At low load batches
-   stay small and the wait is pure added latency (section 4: p50 grew from 18 to 55 ms
+   stay small and the wait is pure added latency (section 50.4: p50 grew from 18 to 55 ms
    as the wait went 0 → 25 ms at 4 clients); at high load batches fill without
-   waiting and throughput rises (section 4: ~310 req/s with batching vs a 110–245 req/s
+   waiting and throughput rises (section 50.4: ~310 req/s with batching vs a 110–245 req/s
    plateau without, depending on machine load).
 3. **Load testing.** Report throughput and latency percentiles (p50, p95,
    p99) per offered load, error rate and batch-size distribution; means hide
@@ -143,13 +143,13 @@ and pricing/limits that reflect the longer context.
    Decode generates one token per step: each step reads all weights and the KV
    cache for one token per sequence, memory-bound. The KV cache makes a decode
    step O(1) in the projections/MLP instead of re-running the whole prefix
-   (section 5 measured 1.4–2.1× more tokens/s with the cache for 32 new tokens; more
+   (section 50.5 measured 1.4–2.1× more tokens/s with the cache for 32 new tokens; more
    for longer outputs), at the cost of memory linear in sequence length.
 5. **Continuous batching and paged attention.** Continuous batching schedules
    at every decode step: finished sequences leave, waiting requests join, so
-   slots stay busy (section 6: 97% vs 26%). Paged attention stores KV caches in
+   slots stay busy (section 50.6: 97% vs 26%). Paged attention stores KV caches in
    fixed-size blocks with a block table, so memory is allocated as tokens are
-   generated rather than reserved for the maximum length (section 7: 98% vs 24%
+   generated rather than reserved for the maximum length (section 50.7: 98% vs 24%
    used), allowing more concurrent sequences and prefix sharing.
 6. **Cost per 1,000 requests.** `1000 × price per hour / (requests/s × 3600 ×
    utilisation)`. Halve it by doubling throughput (dynamic/continuous batching,

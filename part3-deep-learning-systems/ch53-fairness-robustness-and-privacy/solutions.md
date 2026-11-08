@@ -85,14 +85,14 @@ their confidence interval, or appeals concentrate on one group.
    non-mentions: an identity-term penalty pushes exactly those benign mentions up.
 
 2. [verified] The score distributions of non-toxic comments differ by group, so one threshold
-   cuts them at different quantiles: different FPRs (section 3). Per-group thresholds can
+   cuts them at different quantiles: different FPRs (section 53.3). Per-group thresholds can
    equalise FPR but then change FNR, and with different base rates no non-trivial
    classifier can equalise FPR, FNR and calibration (positive predictive value)
    simultaneously (Kleinberg et al.; Chouldechova). One must choose which error matters most
    for the harm in question, and document the choice.
 
 3. [expected] Shift tests: train on one period/source and evaluate on a later period and other
-   sources (section 4: catches temporal drift, new topics/vocabulary, source-specific labelling);
+   sources (section 53.4: catches temporal drift, new topics/vocabulary, source-specific labelling);
    slice metrics by segment. Perturbation tests: typos and leetspeak (catches brittle
    tokens, evasion), counterfactual identity swaps (catches spurious identity features),
    paraphrases, negation, length changes. Also check calibration under shift, not just AUC.
@@ -100,7 +100,7 @@ their confidence interval, or appeals concentrate on one group.
 4. [verified] Inferring whether a specific record was in the training set from the model's
    behaviour (loss, confidence). Vulnerability comes from memorisation: over-fitting,
    small datasets, rare/outlier records, large models. Measure with a shadow-model or
-   loss-threshold attack: AUC of distinguishing members from non-members (section 6: weak
+   loss-threshold attack: AUC of distinguishing members from non-members (section 53.6: weak
    regularisation gave a higher attack AUC than strong regularisation). DP training
    bounds it provably.
 
@@ -110,7 +110,7 @@ their confidence interval, or appeals concentrate on one group.
    for the same privacy); σ (noise multiplier) sets the privacy per step. An accountant
    composes the steps (with the sampling rate) into (ε, δ): for any neighbouring
    datasets, the probability of any outcome changes by at most a factor e^ε (plus δ).
-   Smaller ε, stronger privacy, lower accuracy (section 7: AUC fell as σ grew).
+   Smaller ε, stronger privacy, lower accuracy (section 53.7: AUC fell as σ grew).
 
 6. [open-ended] Fairness: subgroup AUC/BPSN/BNSP and FPR/FNR per relevant identity and per language
    variety, with CIs, on locally labelled data from that country; threshold choice

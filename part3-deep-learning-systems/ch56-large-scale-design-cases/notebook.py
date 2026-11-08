@@ -106,7 +106,7 @@ NUMBERS: dict = {}  # every case's assumptions and derived numbers, saved at the
 # | Fail-open / fail-closed | When a dependency fails: allow by default / block by default | chosen per fraud risk tier |
 
 # %% [markdown]
-# ## 0 · One structure for every case
+# ## 56.0 · One structure for every case
 #
 # This extends the ten-step framework of Chapter 37. Each case below is
 # a table with these twelve rows; in an interview each row takes one to four
@@ -134,7 +134,7 @@ NUMBERS: dict = {}  # every case's assumptions and derived numbers, saved at the
 #
 # *What to notice:* the four pipelines have the same shape (narrow, score, decide); what separates a strong answer is the yellow box, the case's signature difficulty, so that is where the deep dives go.
 #
-# ## 1 · Two calculators used in every case
+# ## 56.1 · Two calculators used in every case
 #
 # Chapter 18 asked for a latency budget that returns the
 # leftover milliseconds. At this level the budget is a *design artefact*:
@@ -181,7 +181,7 @@ grade.ex2(serving_fleet_size)
 # losing a whole zone leaves enough capacity.
 
 # %% [markdown]
-# ## 2 · Case A: ads ranking and the auction
+# ## 56.2 · Case A: ads ranking and the auction
 #
 # *Prompt: "Design the system that chooses which ads to show in a feed with
 # 300M daily users."*
@@ -319,7 +319,7 @@ NUMBERS["ads"]["pacing"] = {"greedy_exhausted_hour": exhausted, "paced_rate": ra
 # conversion comes in. Chapter 51 measured this on a synthetic Criteo-like
 # stream; `ds.label_maturity` gives the fraction observed for an exponential delay.
 #
-# ## 3 · Case B: video recommendations
+# ## 56.3 · Case B: video recommendations
 #
 # *Prompt: "Design the 'up next' and home recommendations for a video platform
 # with 200M daily users and 1B videos."*
@@ -405,7 +405,7 @@ NUMBERS["video"]["objective_sim"] = {k: top(v) for k, v in objectives.items()}
 # videos, Chapter 52's bandits) and **new-creator exposure** guardrails stop
 # the loop from only feeding what already won.
 #
-# ## 4 · Case C: an LLM-powered customer-support assistant
+# ## 56.4 · Case C: an LLM-powered customer-support assistant
 #
 # *Prompt: "Design an assistant that answers customer-support chats for a
 # company with 1M support conversations a day, handing off to humans when needed."*
@@ -478,7 +478,7 @@ NUMBERS["llm_assistant"] = {"assumptions": llm, "prompt_tokens_by_turn": rows, "
 # sets for prompt injection; and every prompt, retrieval or model change goes
 # through the same gate, because a prompt edit is a model change.
 #
-# ## 5 · Case D: real-time payment fraud
+# ## 56.5 · Case D: real-time payment fraud
 #
 # *Prompt: "Design fraud detection for card payments: 5,000 transactions per
 # second at peak, decision within 100 ms."*
@@ -547,7 +547,7 @@ NUMBERS["fraud"]["replicas"] = {z: ds.replicas_needed(fraud_peak, per_replica, 0
 # disputes, analyst confirmations); monitoring of rule-hit and score
 # distributions by merchant/channel to see probing; and red-team exercises.
 #
-# ## 6 · Comparing the four cases
+# ## 56.6 · Comparing the four cases
 #
 # | | Ads | Video | LLM assistant | Fraud |
 # |---|---|---|---|---|
@@ -566,7 +566,7 @@ print("wrote", (OUT / "case_numbers.json").relative_to(ART), "with cases:", list
 # %% [markdown]
 # **Expected:** `wrote level3/nb18/case_numbers.json with cases: ['ads', 'video', 'llm_assistant', 'fraud']`.
 #
-# ## 7 · The 45-minute format
+# ## 56.7 · The 45-minute format
 #
 # | Minutes | Do |
 # |---|---|
@@ -584,7 +584,7 @@ print("wrote", (OUT / "case_numbers.json").relative_to(ART), "with cases:", list
 # > design in the twelve-part structure, with: at least one capacity number
 # > from `ds` or your Exercise 2, a latency budget checked with your
 # > Exercise 1, two deep dives (one must be the case's *signature difficulty*
-# > from section 6), three failure modes with their fallbacks, and a final
+# > from section 56.6), three failure modes with their fallbacks, and a final
 # > paragraph "what a staff-level answer would add" in your own words. Then
 # > present it aloud in 15 minutes.
 # >

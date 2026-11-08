@@ -85,11 +85,11 @@ def cap1_rul_cap():
 def cap1_cnn():
     c = Canvas(880, 300)
     c.title("A compact 1D-CNN for RUL",
-            "Convolutions slide along time; pooling makes the output independent of position")
+            "Convolutions slide along time; the flattened head keeps where in the window a pattern occurs")
     names = [("Window", "30 × C sensors", "default"),
              ("Conv1d + ReLU", "32 ch, kernel 5", "accent"),
              ("Conv1d + ReLU", "32 ch, kernel 5", "accent"),
-             ("Global avg pool", "→ 32 numbers", "accent"),
+             ("Flatten", "32 × 30 → 960 numbers", "accent"),
              ("Linear head", "→ RUL in cycles", "good")]
     w, gap, x, y = 148, 28, 30, 110
     for k, (lab, sub, role) in enumerate(names):
@@ -97,10 +97,10 @@ def cap1_cnn():
         if k:
             c.arrow(x + k * (w + gap) - gap + 2, y + 35, x + k * (w + gap) - 2, y + 35, accent=True)
     c.text(440, 214, "loss: mean squared error on capped RUL · early stopping on validation engines", "small")
-    _takeaway(c, 240, "About 7,500 weights: trains on a laptop CPU in well under a minute per run.")
+    _takeaway(c, 240, "About 8,700 weights: trains on a laptop CPU in well under a minute per run.")
     return ("cap1-cnn.svg",
-            c.render("Five boxes left to right: input window, two 1D convolution layers, global "
-                     "average pooling, and a linear head that outputs RUL."),
+            c.render("Five boxes left to right: input window, two 1D convolution layers, a flatten "
+                     "step, and a linear head that outputs RUL."),
             "Capstone 1: the compact 1D-CNN used as the temporal model.")
 
 

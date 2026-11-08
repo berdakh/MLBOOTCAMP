@@ -118,7 +118,7 @@ from different requests get mixed; bigger groups also make pair counts (and
 training time) grow quadratically.
 
 **4. 0.95 vs 0.70.** In order: (a) leakage, i.e. recompute features from a
-truncated log and compare (6.2), check that no feature uses same-day or
+truncated log and compare (24.2), check that no feature uses same-day or
 label data, check the train/valid split is by time and by request; (b) is
 the training-week score in-sample? (it should be evaluated out-of-sample on a
 held-out part of the training period); (c) label/metric definition identical
@@ -131,7 +131,7 @@ feature, serve with a constant (position 0); (b) a separate shallow
 "position tower" (bias term) added to the logit in training and dropped at
 serving; or no feature plus IPS weights. Whether it helped can be established
 only by an unbiased evaluation: IPS/random-traffic offline metrics or an A/B test. In
-6.6 the position feature took 64% of the gain yet changed the ranking by
+24.6 the position feature took 64% of the gain yet changed the ranking by
 almost nothing, because no other feature correlated with position.
 
 **6. 0.002 apart.** Within noise (bootstrap it). Prefer the simpler model if

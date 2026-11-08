@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `loop_score`
 
-[verified] Reference code: [`code/nb20.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def loop_score(scores_by_round, weights):
@@ -52,7 +52,7 @@ different interviewers calibrate differently. Use `by_round` and
 
 ## Exercise 2 · `project_brief`
 
-[verified] Reference code: [`code/nb20.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 TBD = "TBD — fill from your run"
@@ -84,14 +84,14 @@ def project_brief(project):
     return "\n".join(lines) + "\n"
 ```
 
-With notebook 19's `depth_demos.json` in the same artifact directory, the
+With Chapter 57's `depth_demos.json` in the same artifact directory, the
 third brief quotes the val losses at LR 3e-2 (2.751 without warmup, 2.261
 with) and the 20%-noise test accuracies (0.813 final, 0.9277 early-stopped),
 each with its split [verified] (checked by running the notebook with this solution).
 In a fresh runtime every value is TBD, which is the correct output.
 
 The `ValueError` for a value without a split is the code version of the
-course's honesty rule. Numbers harvested generically from Level 1/2 files
+course's honesty rule. Numbers harvested generically from Part I/II files
 get the split `TBD: name the split (from <file>)`; replace it with the real
 description before publishing.
 
@@ -110,7 +110,7 @@ to fill with measured facts; do not invent them):
 > pre-registered held-out evaluation that corrected for position bias, and
 > [fine-tuned / served] [model] on a T4 with [latency or cost number]. What
 > I bring is rigorous evaluation (I look for the leak before I trust the
-> number) and the engineering to ship it: tests, serving, monitoring. I'm
+> number) and the engineering to deploy it: tests, serving, monitoring. I'm
 > looking for an MLE role where models face real users at scale, which is
 > why [this team's problem] interests me."
 
@@ -122,7 +122,7 @@ a forward-looking reason, no complaints about past roles.
 
 ## Checkpoint answers
 
-1. **Tell me about yourself.** [open-ended] See 20-3. Interviewers usually probe the
+1. **Tell me about yourself.** [open-ended] See Exercise 3. Interviewers usually probe the
    most impressive number first ("how was that evaluated?") and the
    transition ("why leave research?"). Prepare a 30-second answer to both.
 2. **Coding: mid vs senior when both solve it.** [expected] Generic signals: the
@@ -154,10 +154,10 @@ a forward-looking reason, no complaints about past roles.
    run.
 6. **Serving cost at 1,000 QPS.** [expected] Arithmetic with assumptions stated:
    measure per-replica throughput at the target p99 (e.g., say a T4 replica
-   sustains R requests/s at batch B within the latency SLO, notebook 12);
+   sustains R requests/s at batch B within the latency SLO, Chapter 50);
    replicas = ⌈1,000 / (R × (1 − headroom))⌉, at least 2, more for zones
-   (`serving_fleet_size` from notebook 18); monthly cost = replicas × price per
+   (`serving_fleet_size` from Chapter 56); monthly cost = replicas × price per
    replica-hour × 730; cost per 1k requests = monthly cost / (average QPS ×
    3,600 × 730) × 1,000 (`ds.cost_per_1k_requests`). Then name the levers:
-   batching, quantisation/distillation (notebook 11), caching, autoscaling to
+   batching, quantisation/distillation (Chapter 49), caching, autoscaling to
    the average instead of the peak.

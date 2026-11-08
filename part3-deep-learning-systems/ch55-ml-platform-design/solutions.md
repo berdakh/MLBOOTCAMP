@@ -114,7 +114,7 @@ assumptions, and measurable revisit triggers.
    versioned. Then name the contracts: who owns a feature, how it is
    deprecated, how consumers are tracked (lineage).
 2. **Online store sizing.** [verified] 200M × (400 × 4 B) = 320 GB raw; with 16-byte
-   keys, 1.5× overhead and 3 replicas ≈ **1.45 TB** (section 1). Halving it: keep
+   keys, 1.5× overhead and 3 replicas ≈ **1.45 TB** (section 55.1). Halving it: keep
    only features read by a production model (usage-based GC; costs a
    governance process); fp16/int8 or bucketed values (costs precision; check
    the model is insensitive); a hot tier for recently active users with

@@ -1,13 +1,13 @@
 # Solutions · Chapter 27 · PyTorch training done right
 
-Try each exercise before reading its answer. Markers: [verified] verified by running ·
+Attempt each exercise before reading its answer. Markers: [verified] verified by running ·
 [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `train_one_epoch`
 
-[verified] Reference code: [`code/nb09.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def train_one_epoch(model, loader, optimizer, loss_fn):
@@ -53,7 +53,7 @@ def expected_initial_loss(pos_rate):
 
 The best constant prediction under log-loss is the base rate itself, and its loss
 is the binary entropy. For ShopStream's 0.137 click rate that is 0.40 nats; for
-a 1% ads CTR, 0.056. The notebook measured 0.395 with the output bias set to
+a 1% ads CTR, 0.056. The lab measured 0.395 with the output bias set to
 `logit(p)` and 0.625 without it ([verified]). The edge cases use the convention
 `0 · log 0 = 0`: a dataset with no positives has zero entropy.
 
@@ -79,7 +79,7 @@ classes, or the entropy of the class prior in general.
 The distractors: **A** (`zero_grad` before the forward pass is correct), **B**
 (`no_grad` in validation is correct), **F** (the seed is set on line 2, before the
 model is built), **G** (`CrossEntropyLoss` takes `long` class indices, so `long` is
-correct), **H** (3e-3 with Adam is fine for this model, as section 9.3 shows; the
+correct), **H** (3e-3 with Adam is fine for this model, as section 27.3 shows; the
 stuck loss has another cause).
 
 **Measured effect of each fix** ([verified] our run, same seed, 3 epochs, train loss / valid AUC
@@ -94,14 +94,14 @@ after the last epoch; the time-split variant trains on days 28–41, validates o
 | fix C + D | 0.3533 | 0.720 |
 | fix C + D + E | 0.3577 | 0.723 |
 
-Read honestly: **C** does almost all the damage. **D** changes little *here*
+Interpretation: **C** does almost all the damage. **D** changes little *here*
 (dropout 0.3 on a small MLP); with BatchNorm, or a model relying on dropout
 for regularisation over many epochs, it matters more. **E** does not make the
 score optimistic *on ShopStream*: users' tastes do not drift, and the
 time-split AUC is even slightly higher. On real logs (trends, new items,
 seasonality, users whose future clicks leak into training) a random split
-typically overstates performance. The rule exists because you cannot know in
-advance that your data is as stationary as a simulator's.
+typically overstates performance. The rule exists because one cannot know in
+advance that real data are as stationary as a simulator's.
 
 ---
 
@@ -132,7 +132,7 @@ moments per parameter, step counts); scheduler state; epoch/step counter; every
 RNG state (Python, NumPy, torch CPU, CUDA, the sampler's generator, and
 DataLoader workers' seeds, which derive from that generator); the AMP
 `GradScaler` state when using mixed precision. Write atomically (temp file +
-rename). The notebook showed a weights-only resume diverging from epoch 3 while the
+rename). The lab showed a weights-only resume diverging from epoch 3 while the
 full one matched bitwise ([verified]).
 
 **5. Same seed, different GPU results.** Non-deterministic kernels (atomic adds

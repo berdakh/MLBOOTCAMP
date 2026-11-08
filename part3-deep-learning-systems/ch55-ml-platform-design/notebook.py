@@ -105,13 +105,13 @@ print("calculators:", ", ".join(n for n, f in vars(ds).items()
 # | Gang scheduling | Starting all workers of a multi-GPU job together, or none | distributed training jobs |
 # | Showback / chargeback | Showing each team its cost / actually billing it | per-team GPU spend |
 # | Model registry | A database of model versions with signature, data snapshot, evaluation and approval | the step before deployment |
-# | CI / CD / CT | Continuous integration / delivery / training: automated tests, rollout and retraining | section 3 |
+# | CI / CD / CT | Continuous integration / delivery / training: automated tests, rollout and retraining | section 55.3 |
 # | Shadow / canary | New model scores live traffic without effect / serves a small share of real traffic | 1% canary |
 # | Label maturity | Fraction of eventual labels already observed | 30% after 7 days (20-day mean delay) |
 # | ADR | Architecture decision record: one decision, its options, consequences and revisit triggers | `adr-001-online-feature-store.md` |
 
 # %% [markdown]
-# ## 0 · From "design a model" to "design a platform"
+# ## 55.0 · From "design a model" to "design a platform"
 #
 # A platform question changes who the user is. In a product design the user
 # is the person scrolling the feed; in a platform design the users are **other
@@ -153,7 +153,7 @@ print("calculators:", ", ".join(n for n, f in vars(ds).items()
 # Embedding Table"* (Liu et al., 2022).
 
 # %% [markdown]
-# ## 1 · The feature platform
+# ## 55.1 · The feature platform
 #
 # Chapters 21–22 built point-in-time joins and streaming features
 # for one project. At platform scale the questions are about **guarantees and
@@ -238,7 +238,7 @@ def feature_store_storage_gb(entities, features, bytes_per, versions, replicatio
 grade.ex1(feature_store_storage_gb)
 
 # %% [markdown]
-# ## 2 · The training platform
+# ## 55.2 · The training platform
 #
 # | Concern | Design choice | Trade-off |
 # |---|---|---|
@@ -340,7 +340,7 @@ print(f"\nidle share of the bill: {idle / total:.0%}  ({idle:,.0f} of {total:,.0
 # checkpointed jobs; then right-sizing (small fine-tunes on small cards). Each
 # needs a *policy* agreed between teams, which is why this is a staff topic.
 #
-# ## 3 · Registry, CI/CD/CT and safe rollout
+# ## 55.3 · Registry, CI/CD/CT and safe rollout
 #
 # A model registry is a database of **versions with contracts**: the artefact,
 # its input/output **signature**, the training snapshot and code version, the
@@ -394,7 +394,7 @@ for rel in (0.5, 1.0):
 # > required sample grows with $1/\Delta^2$, so halving the effect to be detected quadruples the
 # > canary's duration; there is no fixed "canary length".
 #
-# ## 4 · The monitoring platform
+# ## 55.4 · The monitoring platform
 #
 # Chapter 15 built drift checks (PSI) and a rollback for one model.
 # A platform offers them as a **service** every model gets by registering:
@@ -431,7 +431,7 @@ print("labels visible:       ", "  ".join(f"{ds.label_maturity(k, mean_delay):>4
 # > label delay can depend on the case itself (big frauds are reported faster), so "same maturity"
 # > is necessary but not always sufficient.
 #
-# ## 5 · Organisational trade-offs
+# ## 55.5 · Organisational trade-offs
 #
 # **Build vs buy.** Decide per component, not for the whole platform:
 #
@@ -486,7 +486,7 @@ print("\nwrote", (OUT / "platform_costs.csv").relative_to(ART))
 # dominate the bill by more than an order of magnitude over feature storage,
 # which is where cost governance should start.
 #
-# ## 6 · A risk register
+# ## 55.6 · A risk register
 #
 # Staff engineers are expected to say what could go wrong *with the
 # programme*, not only with a model. A register scores each risk by
@@ -519,11 +519,11 @@ ds.table([{k: r[k] for k in ("risk", "L", "I", "score", "level", "owner")} for r
 # %% [markdown]
 # **Expected:** six risks sorted by score: training/serving skew (16) and
 # unhonoured deletion requests (15) are HIGH; GPU spend, adoption and an
-# automatically shipped regression score 12; the online-store outage 10 (rare
+# automatically deployed regression score 12; the online-store outage 10 (rare
 # but severe, which is why its mitigation is designed in from day one). The scores are judgments, not data; their value is forcing
 # the conversation about mitigations and owners.
 #
-# ## 7 · An architecture decision record (ADR)
+# ## 55.7 · An architecture decision record (ADR)
 #
 # Staff-level work is written down. An ADR records one decision: the context,
 # the options, the decision, its consequences, and *when to revisit it*. Here
@@ -566,7 +566,7 @@ print(adr)
 # is *reversible by design* (the API hides the engine), and the "revisit when"
 # triggers are measurable.
 #
-# > **Exercise 4 (written ADR).** Write ADR-002 for one decision from sections 2–5,
+# > **Exercise 4 (written ADR).** Write ADR-002 for one decision from sections 55.2–55.5,
 # > for example *"GPU quotas: strict per-team reservations vs a shared
 # > preemptible pool"*, *"Continuous training: scheduled vs drift-triggered"* or
 # > *"Experiment tracking: adopt an existing tool vs build"*. Use the same
@@ -590,7 +590,7 @@ print(adr)
 # $$
 #
 # *Symbols:* $E$ entities, $k$ key bytes, $F$ features, $b$ bytes per value, $o$ store overhead, $r$
-# replicas. *Example (section 1):* $2 \times 10^8 \cdot (16 + 400 \cdot 4) \cdot 1.5 \cdot 3 / 10^9 = 1{,}454$ GB.
+# replicas. *Example (section 55.1):* $2 \times 10^8 \cdot (16 + 400 \cdot 4) \cdot 1.5 \cdot 3 / 10^9 = 1{,}454$ GB.
 #
 # **2 · Training compute and GPU-hours.**
 #
@@ -645,7 +645,7 @@ print(f"label maturity after 7 days (mean delay 20): by hand {1 - math.exp(-7 / 
 
 # %% [markdown]
 # **Expected:** each pair agrees: `1,454` GB, `171` GPU-hours, the same canary size (≈ 85,900; the
-# number printed in section 3), and `0.295`.
+# number printed in section 55.3), and `0.295`.
 
 # %% [markdown]
 # ## Troubleshooting

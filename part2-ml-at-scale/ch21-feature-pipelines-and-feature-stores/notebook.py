@@ -95,14 +95,14 @@ print(f"{len(imps):,} impressions from {START}; train days {store.TRAIN_DAYS}, v
 # | **Online store** | only the latest value per key, readable in about a millisecond | `OnlineStore`, a dict with a TTL |
 # | **Point-in-time join** | for each event, the feature values as they were just before it | `ASOF JOIN … e.ts > s.snapshot_ts` |
 # | **TTL** | the maximum age before a stored value counts as missing | 1 day for daily snapshots |
-# | **Materialisation** | copying the newest offline values into the online store | the daily loop in 3.6 |
+# | **Materialisation** | copying the newest offline values into the online store | the daily loop in 21.6 |
 # | **Backfill** | computing a new feature for past dates | recomputing day 30 alone must equal the full run |
-# | **Freshness** | how old the newest data behind a served value is | lag 0, 1, 3, 7 days in 3.5 |
+# | **Freshness** | how old the newest data behind a served value is | lag 0, 1, 3, 7 days in 21.5 |
 # | **Leakage** | a feature that uses information not available at prediction time | the same-day window `[d-6, d]` |
 # | **Training/serving skew** | the model sees different feature values in production than in training | a 7-day TTL online, 1-day offline |
 
 # %% [markdown]
-# ## 3.1 · What a feature store is (and is not)
+# ## 21.1 · What a feature store is (and is not)
 #
 # A feature store is two databases and a contract between them:
 #
@@ -113,7 +113,7 @@ print(f"{len(imps):,} impressions from {START}; train days {store.TRAIN_DAYS}, v
 # | **Offline store** | *history*: every value each feature had, with a timestamp; big, cheap, columnar (Parquet, BigQuery) | DuckDB tables of daily snapshots |
 # | **Online store** | *latest* value per entity key, readable in ~1 ms (Redis, DynamoDB, Bigtable) | `OnlineStore`, a dict with a TTL |
 # | **Point-in-time join** | builds training rows: for each event, the feature values *as they were* just before it | `ASOF JOIN … e.ts > snapshot_ts` |
-# | **Materialisation** | copies the latest offline values into the online store on a schedule | a daily loop in 3.6 |
+# | **Materialisation** | copies the latest offline values into the online store on a schedule | a daily loop in 21.6 |
 # | **TTL** | how old a value may be before it counts as missing | 1 day for daily snapshots |
 #
 # The point of the contract: **one definition** of each feature, used both to
@@ -128,7 +128,7 @@ print(f"{len(imps):,} impressions from {START}; train days {store.TRAIN_DAYS}, v
 # *What to notice:* both branches start from the *same* snapshots; they differ only in *which* timestamp they read as of (each past event vs now). The dashed parity line is the test that checks that they agree.
 
 # %% [markdown]
-# ## 3.2 · Daily aggregates and snapshots
+# ## 21.2 · Daily aggregates and snapshots
 #
 # Two steps, both plain SQL:
 #
@@ -163,7 +163,7 @@ con.execute("SELECT * FROM user_snap WHERE user_id = 42 ORDER BY snap_day LIMIT 
 # snapshot for day 0 at all, because there is no history before it.
 
 # %% [markdown]
-# ## 3.3 · A point-in-time training set
+# ## 21.3 · A point-in-time training set
 #
 # For every impression, attach the **latest snapshot strictly before the
 # impression's timestamp**. That is an as-of join (Chapter 20) per entity,
@@ -231,7 +231,7 @@ def point_in_time_join(events: pd.DataFrame, snapshots: pd.DataFrame, key: str, 
 grade.ex1(point_in_time_join)
 
 # %% [markdown]
-# ## 3.4 · The same-day leak, measured
+# ## 21.4 · The same-day leak, measured
 #
 # A very common bug: the snapshot for day `d` is computed over `[d-6, d]`
 # instead of `[d-7, d-1]`. Each row is still "as of" day `d`, nothing looks
@@ -285,11 +285,11 @@ results.to_frame()
 # cannot detect the leak: train and validation leak together. And the leak
 # does not cause any failure; it shows up only as a model that is excellent
 # offline and disappointing in the A/B test. The defence is in code: assert
-# `snapshot_ts < event ts` for every row (as in 3.3), and compare offline
-# feature values with values logged at serving time (3.6).
+# `snapshot_ts < event ts` for every row (as in 21.3), and compare offline
+# feature values with values logged at serving time (21.6).
 
 # %% [markdown]
-# ## 3.5 · Backfills and freshness
+# ## 21.5 · Backfills and freshness
 #
 # A **backfill** computes a feature for past dates: a new feature needs
 # history before a model can train on it. Two properties make backfills safe:
@@ -339,7 +339,7 @@ pd.Series(fresh_rows, name="valid AUC").to_frame().T
 # pipeline, measure what freshness is worth on the actual data.
 
 # %% [markdown]
-# ## 3.6 · The online store
+# ## 21.6 · The online store
 #
 # At serving time there is no as-of join: the service reads the *latest*
 # values per key from the online store, in about a millisecond. A daily job

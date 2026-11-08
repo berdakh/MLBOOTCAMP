@@ -796,12 +796,21 @@ print(f"the random split understates the error by {100 * (1 - RMSE_RANDOM / RMSE
 #
 # ### 6c · A compact 1D-CNN in PyTorch
 #
-# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/cap1-cnn.svg" alt="Window, two Conv1d layers, global average pooling, linear head" width="100%">
+# <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/cap1-cnn.svg" alt="Window, two Conv1d layers, a flatten step, linear head" width="100%">
 #
 # *What to notice:* the network sees the raw window, not our hand-made
 # summaries, and it is tiny on purpose.
 #
-# Design decisions: channels standardised with means and standard deviations
+# **A design question to decide yourself first: pool or flatten?** A common
+# CNN recipe ends with *global average pooling* (average each channel over
+# time). It makes the output independent of *where* in the window a pattern
+# occurs — useful for recognising an object anywhere in an image, harmful here,
+# where the signal is *the trend*: "high at the end, lower at the start" and
+# "lower at the end, high at the start" average to the same number. The
+# alternative is to *flatten* the (channels × time) map into the linear head,
+# which keeps position. We train both and let cross-validation decide.
+#
+# Other design decisions: channels standardised with means and standard deviations
 # from the training engines of the current fold; target divided by the cap so
 # the output is near 0–1; mean squared error; Adam; early stopping on 20% of the
 # **training engines** of the fold (never on windows, never on the validation
@@ -812,19 +821,22 @@ import torch.nn as nn
 
 
 class RULCNN(nn.Module):
-    def __init__(self, n_channels: int, width: int = 32, kernel: int = 5):
+    def __init__(self, n_channels: int, window: int = W, width: int = 32, kernel: int = 5,
+                 head: str = "flatten"):
         super().__init__()
+        self.head_kind = head
         self.conv = nn.Sequential(
             nn.Conv1d(n_channels, width, kernel, padding=kernel // 2), nn.ReLU(),
             nn.Conv1d(width, width, kernel, padding=kernel // 2), nn.ReLU())
-        self.head = nn.Linear(width, 1)
+        self.head = nn.Linear(width * window if head == "flatten" else width, 1)
 
     def forward(self, x):                      # x: (batch, W, channels)
         h = self.conv(x.transpose(1, 2))       # (batch, width, W)
-        return self.head(h.mean(dim=2)).squeeze(-1)
+        h = h.flatten(1) if self.head_kind == "flatten" else h.mean(dim=2)
+        return self.head(h).squeeze(-1)
 
 
-def train_cnn(X, y, units, cap, seed, max_epochs=40, patience=6, batch=256):
+def train_cnn(X, y, units, cap, seed, head="flatten", max_epochs=40, patience=6, batch=256):
     """Train on windows; early-stop on 20% of the given engines. Returns (model, scaler, info)."""
     g = np.random.default_rng(seed)
     eng = np.unique(units)
@@ -835,7 +847,7 @@ def train_cnn(X, y, units, cap, seed, max_epochs=40, patience=6, batch=256):
     Xs = torch.tensor((X - mu) / sd, dtype=torch.float32)
     yt = torch.tensor(np.minimum(y, cap) / cap, dtype=torch.float32)
     torch.manual_seed(seed)
-    model = RULCNN(X.shape[2])
+    model = RULCNN(X.shape[2], window=X.shape[1], head=head)
     opt = torch.optim.Adam(model.parameters(), lr=2e-3)
     tr_idx = np.where(~es)[0]
     best, best_state, best_epoch, waited = np.inf, None, 0, 0
@@ -867,32 +879,42 @@ def cnn_predict(model, scaler, X, cap) -> np.ndarray:
         return model(torch.tensor((X - mu) / sd, dtype=torch.float32)).numpy() * cap
 
 
-n_params = sum(p.numel() for p in RULCNN(len(FEATURES)).parameters())
-print("CNN parameters:", n_params)
+for head in ("pool", "flatten"):
+    n = sum(p.numel() for p in RULCNN(len(FEATURES), head=head).parameters())
+    print(f"CNN with {head} head: {n:,} parameters")
 
-CNN_INFO = []
+CNN_INFO, CNN_CV_SECONDS, head_rows = {}, {}, []
+for head in ("pool", "flatten"):
+    CNN_INFO[head] = []
 
+    def fp_cnn(tr, cut, cap, head=head):
+        model, scaler, info = train_cnn(X_all[tr], RUL_all[tr], U_all[tr], cap, seed=SEED, head=head)
+        CNN_INFO[head].append(info)
+        return cnn_predict(model, scaler, X_all[cut], cap)
 
-def fp_cnn(tr, cut, cap):
-    model, scaler, info = train_cnn(X_all[tr], RUL_all[tr], U_all[tr], cap, seed=SEED)
-    CNN_INFO.append(info)
-    return cnn_predict(model, scaler, X_all[cut], cap)
+    t0 = time.time()
+    row, cv_preds[f"1D-CNN {head}"] = cv_evaluate(fp_cnn, cap=CAP, name=f"1D-CNN, {head} head (1 seed per fold)")
+    head_rows.append(row)
+    CNN_CV_SECONDS[head] = time.time() - t0
+    print(f"{head:>7}: CV RMSE {row['cv_rmse']:.2f} | {CNN_CV_SECONDS[head]:.0f}s on CPU | best epoch per fold",
+          [i["best_epoch"] for i in CNN_INFO[head]])
 
-
-t0 = time.time()
-row, cv_preds["1D-CNN"] = cv_evaluate(fp_cnn, cap=CAP, name="1D-CNN (1 seed per fold)")
-cv_rows.append(row)
-CNN_CV_SECONDS = time.time() - t0
-print(f"CNN 5-fold CV: {CNN_CV_SECONDS:.0f}s on CPU;", "best epochs per fold:",
-      [i["best_epoch"] for i in CNN_INFO])
+HEAD = min(head_rows, key=lambda r: r["cv_rmse"])["model"].split(", ")[1].split()[0]
+cv_preds["1D-CNN"] = cv_preds[f"1D-CNN {HEAD}"]
+cv_rows += head_rows
+n_params = sum(p.numel() for p in RULCNN(len(FEATURES), head=HEAD).parameters())
+print("head chosen by CV:", HEAD)
 cv_table = pd.DataFrame(cv_rows)
 print(cv_table.round(3).to_string(index=False))
 
 # %% [markdown]
-# **Expected (official data):** about 7,500 parameters; well under a minute per
-# fold on a laptop CPU; a CV RMSE in the same range as gradient boosting —
-# sometimes a little better, sometimes not. If yours is far worse, check the
-# scaling and that the target is divided by the cap.
+# **Expected (official data):** about 7,800 parameters with the pooling head
+# and 8,700 with the flatten head; well under a minute per fold on a laptop CPU.
+# When we wrote this walkthrough the **pooling head was clearly worse** (CV RMSE
+# in the low 20s) and the flatten head came out close to gradient boosting
+# (high teens). This is a negative result worth keeping in your README: the
+# textbook default lost, and we can say why. If both of yours are far worse,
+# check the scaling and that the target is divided by the cap.
 #
 # **Is the difference real?** Both models were scored on the same 500 cuts, so
 # we can bootstrap the *paired* difference over validation **engines**.
@@ -938,7 +960,8 @@ print("model chosen for serving (decided on CV only):", SERVED)
 # RMSE, the NASA score and the share of late predictions with 95% bootstrap
 # intervals over test engines. Do not change anything after you see the numbers.
 #
-# **Our solution.** Gradient boosting is retrained on all engines. The CNN is
+# **Our solution.** Gradient boosting is retrained on all engines. The CNN (with
+# the head chosen in 6c) is
 # trained with three seeds (each with its own 20% early-stopping engines) and
 # the three predictions are averaged; we also report the spread across seeds.
 
@@ -958,7 +981,7 @@ const = float(np.minimum(RUL_all, CAP).mean())
 
 cnn_models, seed_preds = [], []
 for s in range(3):
-    model, scaler, info = train_cnn(X_all, RUL_all, U_all, CAP, seed=SEED + 10 + s)
+    model, scaler, info = train_cnn(X_all, RUL_all, U_all, CAP, seed=SEED + 10 + s, head=HEAD)
     cnn_models.append((model, scaler))
     seed_preds.append(np.clip(cnn_predict(model, scaler, Xte, CAP), 0, None))
 FINAL_TRAIN_SECONDS = time.time() - t0
@@ -1252,8 +1275,9 @@ def results_markdown() -> str:
                  f"{RMSE_RANDOM:.1f} (vs {RMSE_GROUP:.1f} engine-level) | – | – |")
     lines.append("")
     lines.append(f"RUL cap {CAP} (chosen by CV among 100/125/150), window {W} cycles, "
-                 f"served model: {SERVED}. CNN: {n_params} parameters, 3 seeds, "
-                 f"5-fold CV took {CNN_CV_SECONDS:.0f}s and final training {FINAL_TRAIN_SECONDS:.0f}s on CPU.")
+                 f"served model: {SERVED}. CNN: {HEAD} head, {n_params:,} parameters, 3 seeds; "
+                 f"5-fold CV took {CNN_CV_SECONDS[HEAD]:.0f}s and all final training "
+                 f"{FINAL_TRAIN_SECONDS:.0f}s on CPU.")
     return "\n".join(lines)
 
 

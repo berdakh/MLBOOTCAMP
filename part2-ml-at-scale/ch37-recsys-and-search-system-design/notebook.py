@@ -557,7 +557,7 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # | Ignoring position bias | training on raw clicks, evaluating on clicks | exploration traffic, IPS, or position-as-feature |
 # | No numbers | "it should be fast" | QPS, candidates, ms per stage, GB of embeddings |
 # | No cold start | new users/items silently get nothing | popularity/fresh sources, content features, exploration |
-# | Offline-only evaluation | "NDCG went up, ship it" | A/B or interleaving, guardrails, novelty, online–offline gap |
+# | Offline-only evaluation | "NDCG went up, launch it" | A/B or interleaving, guardrails, novelty, online–offline gap |
 # | No failure handling | single happy path | timeouts and fallbacks per stage, counted and alerted |
 # | Monologue | 15 minutes without a check-in | signpost each step; ask where to go deeper |
 # | Buzzword stacking | five model names, no trade-offs | one choice per stage with the criterion that decided it |

@@ -37,7 +37,7 @@ row bootstrap on clustered data); a new RNG per replicate seeded `seed + i`
 
 ## Exercise 2 · Three-minute walkthrough (written)
 
-[open-ended] Personal. A model script, with the numbers from our runs (use yours):
+[open-ended] Personal. A model script, with the numbers from our runs (substitute those from your own run):
 
 > *Problem.* A marketplace home feed: 10,000 users, 4,000 items, eight weeks
 > of logged feed requests; the goal is to put the items each user would

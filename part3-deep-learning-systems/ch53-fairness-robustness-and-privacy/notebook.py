@@ -128,13 +128,13 @@ print("the original data are released under CC0 (see https://huggingface.co/data
 # | FPR / FNR | Share of negatives flagged / share of positives missed, at a threshold | FPR 0.083 vs 0.010 at 0.5 |
 # | Distribution shift | Test data drawn from a different time or source than training | 2016 → late 2017 comments |
 # | Counterfactual swap | Replacing one identity term with another and checking the score does not move | "gay" → "straight" |
-# | PII | Personally identifiable information: names, emails, phone numbers | the regex redactor in section 6 |
+# | PII | Personally identifiable information: names, emails, phone numbers | the regex redactor in section 53.6 |
 # | Membership inference | Guessing whether a record was in the training set from the model's behaviour on it | loss-threshold attack, AUC 0.64 |
 # | Differential privacy (ε, δ) | A guarantee that one record barely changes what training outputs; smaller ε = stronger | ε ≤ 1.0 at σ = 8 |
 # | DP-SGD | SGD with per-example gradient clipping and Gaussian noise | `clip_and_noise` in Exercise 2 |
 
 # %% [markdown]
-# ## 1 · Data and a baseline classifier
+# ## 53.1 · Data and a baseline classifier
 #
 # We keep the official WILDS `split` column (train/val/test are random splits) and sample to the
 # budget. The model is TF-IDF (word 1–2-grams) + logistic regression: fast, strong for its cost,
@@ -172,7 +172,7 @@ print(f"TF-IDF {X_train.shape[1]:,} features, trained in {time.perf_counter() - 
 # toxic rate is much higher among comments mentioning *black*, *white*, *homosexual* or *muslim*
 # (23–33%) than overall (11%). ~190,000 TF-IDF features, trained in ~15–35 s; test AUC ≈ 0.893.
 #
-# ## 2 · Subgroup metrics: subgroup AUC, BPSN, BNSP
+# ## 53.2 · Subgroup metrics: subgroup AUC, BPSN, BNSP
 #
 # Overall AUC hides *where* the errors are. Borkan et al. (2019) define three AUCs per identity
 # subgroup `g`, each on a different slice of the test set:
@@ -254,7 +254,7 @@ RESULTS["jigsaw_final_metric"] = round(final, 4)
 # rarely scores above 0.5, so a real deployment would pick a lower threshold (next section).
 
 # %% [markdown]
-# ## 3 · Threshold effects
+# ## 53.3 · Threshold effects
 #
 # Deployment needs a threshold, and one global threshold gives each group its own error rates. Below:
 # FPR per group at a few thresholds, then **per-group thresholds** chosen to give every group the
@@ -303,7 +303,7 @@ print(pd.DataFrame(rows).round(3).to_string(index=False))
 # FPR was bought with unequal (and worse) FNR, which is the trade-off the impossibility results predict.
 
 # %% [markdown]
-# ## 4 · Robustness: distribution shift
+# ## 53.4 · Robustness: distribution shift
 #
 # A random split measures interpolation. Production data comes from the future and from new
 # sources. Two shift tests, each training a fresh model on one slice and testing it on held-out data
@@ -346,7 +346,7 @@ print(shift.round(3).to_string())
 # this would be visible. A transformer would probably degrade less on vocabulary drift, but that
 # has to be measured with the same protocol.
 #
-# ## 5 · Robustness: perturbations and counterfactual identity swaps
+# ## 53.5 · Robustness: perturbations and counterfactual identity swaps
 #
 # Two perturbation tests on the main model:
 #
@@ -412,7 +412,7 @@ print(swaps.round(3).to_string(index=False))
 # depends on *who* is mentioned, which is exactly what counterfactual fairness forbids.
 
 # %% [markdown]
-# ## 6 · Privacy: PII, membership inference
+# ## 53.6 · Privacy: PII, membership inference
 #
 # **PII.** Training data and logs contain names, emails, phone numbers and addresses. Standard
 # practice: minimise what is collected, redact or tokenise PII before it reaches training data and
@@ -469,7 +469,7 @@ print(mi.round(3).to_string(index=False))
 # brings the attack down to ≈ 0.57 at a small cost in test AUC (0.785 → 0.774). The attack AUC tracks
 # the train/test loss gap, i.e. memorisation.
 #
-# ## 7 · Differential privacy: DP-SGD
+# ## 53.7 · Differential privacy: DP-SGD
 #
 # **Differential privacy** (DP) bounds how much any single training record can change what the
 # training algorithm outputs: for neighbouring datasets `D`, `D'` (one record added or removed)
@@ -611,7 +611,7 @@ print("saved", OUT / "results.json")
 # \mathrm{FPR}_g(t) = \Pr(s \ge t \mid y = 0, g), \qquad \mathrm{FNR}_g(t) = \Pr(s < t \mid y = 1, g)
 # $$
 #
-# *Example (section 2):* $\mathrm{FPR}_{\text{black}}(0.5) = 0.083$ vs 0.010 overall: an 8× ratio.
+# *Example (section 53.2):* $\mathrm{FPR}_{\text{black}}(0.5) = 0.083$ vs 0.010 overall: an 8× ratio.
 #
 # **3 · Jigsaw summary (power mean, $p = -5$).** $M_p(m_1, \dots, m_G) = \big(\tfrac{1}{G} \sum_g m_g^{\,p}\big)^{1/p}$;
 # a negative $p$ pulls the mean towards the *worst* group. *Example:* $M_{-5}(0.9, 0.7) = 0.765$, while the plain mean is 0.80.
@@ -657,7 +657,7 @@ print(f"std of the noise on the mean gradient: measured {np.std(noise_only):.5f}
 
 # %% [markdown]
 # **Expected:** the pairwise probability and `roc_auc_score` agree (to about three decimals, on the
-# same subsample; both close to the BPSN for *muslim* in section 2); `M_-5 = 0.765` vs a plain mean of 0.800;
+# same subsample; both close to the BPSN for *muslim* in section 53.2); `M_-5 = 0.765` vs a plain mean of 0.800;
 # gradient norms around 13 before clipping and at most `1.000` after; and a measured noise standard
 # deviation within ~1% of `0.00781`.
 

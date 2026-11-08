@@ -74,7 +74,7 @@ mutating stored values by accident.
 **TTL exactly at the boundary.** The spec says `now - event_ts > ttl` is
 expired, so exactly `ttl` old is valid. The offline join used the same
 comparison; a `>=` on one side and `>` on the other is precisely the kind of
-one-character skew that the parity check in 3.6 is there to catch.
+one-character skew that the parity check in 21.6 is there to catch.
 
 ---
 

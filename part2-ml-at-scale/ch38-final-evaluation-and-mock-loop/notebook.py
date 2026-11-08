@@ -8,19 +8,19 @@
 #
 # **Part II · Chapter 38 · about 90 minutes · CPU only**
 #
-# For nineteen notebooks the test week (days 49–55) has stayed closed. Today
-# it opens, once, under a plan written down *before* the first test number is
-# computed, so that nothing you see can change what you claim. Then you turn
-# the same discipline on yourself: a timed, scored mock interview loop with a
-# progress log you keep adding to until interview day.
+# Throughout Chapters 19–37 the test week (days 49–55) has stayed closed. In this
+# chapter it is opened, once, under a plan written down *before* the first test
+# number is computed, so that nothing observed can change what is claimed. The
+# same discipline is then applied to interview preparation: a timed, scored mock
+# interview loop with a progress log that grows until the real interviews.
 #
 # After this lab you should be able to:
 #
 # 1. pre-register an evaluation (model, metrics, sample, uncertainty method, decision rule) and show it was saved first;
 # 2. evaluate a ranking system on held-out time with several lenses: true relevance, clicks, IPS-corrected clicks, and retrieval recall;
-# 3. estimate position propensities from randomised traffic and see IPS reverse a conclusion that raw clicks get wrong;
+# 3. estimate position propensities from randomised traffic and observe IPS reverse a conclusion that raw clicks get wrong;
 # 4. put grouped bootstrap intervals on every number, resampling users rather than rows;
-# 5. run a four-round mock loop against a rubric and log your progress.
+# 5. run a four-round mock loop against a rubric and log progress.
 #
 # **Outputs:** `artifacts/level2/final/preregistration.json`,
 # `artifacts/level2/final/test_results.json`, and
@@ -91,7 +91,7 @@ print(f"{len(imps):,} impressions loaded, ranker trained ({time.time() - t0:.0f}
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
-# | Validation vs test set | data you may use to choose, versus data opened once for the final claim | days 42–48 versus days 49–55 |
+# | Validation vs test set | data used to choose, versus data opened once for the final claim | days 42–48 versus days 49–55 |
 # | Pre-registration | a written, saved plan of exactly what will be measured and what counts as success, made before the results exist | `preregistration.json` |
 # | Hash | a short fingerprint of a file; changing one byte changes it | the 16-character SHA-256 prefix stored with the results |
 # | Propensity (examination probability) | the chance a user even looks at a given position | a power law with η ≈ 0.88 |
@@ -144,7 +144,7 @@ pd.DataFrame(valid_results)
 # The cascade numbers match Chapter 35 exactly, as they should. (ANN-only
 # with the cap is higher than Chapter 35's 0.58 because here it takes 300
 # neighbours, so the cap can backfill with more ANN items.) The cascade wins
-# either way, so it is the system we take to the test week.
+# either way, so it is the system taken to the test week.
 
 # %% [markdown]
 # ## 38.2 · Pre-register, then look
@@ -156,7 +156,7 @@ pd.DataFrame(valid_results)
 # reviewer can check the plan predates the numbers. (In a company this is the
 # experiment design doc or the launch review's "success criteria" section.)
 #
-# Decisions fixed here that are easy to fudge later:
+# Decisions fixed here that are easy to adjust after the fact:
 #
 # * **Feature refresh:** for the test week the serving state is rebuilt from
 #   days 0–48 (train + validation), as production would refresh it; the
@@ -174,10 +174,10 @@ pd.DataFrame(valid_results)
 #
 # *What to notice:* the dashed path is the one thing the procedure forbids; everything else exists to make it detectable.
 #
-# > **Intuition.** Pre-registration is calling your shot in pool: "eight ball, corner
-# > pocket" before you hit. Sinking a ball you did not call does not count, however good
-# > it looked. *Where it breaks down:* a plan cannot anticipate everything; when you must
-# > deviate, write a new, dated plan with the reason, and report both.
+# > **Intuition.** Pre-registration is calling the shot in pool: "eight ball, corner
+# > pocket" before striking. Sinking a ball that was not called does not count, however good
+# > it looked. *Where it breaks down:* a plan cannot anticipate everything; when a deviation
+# > is necessary, write a new, dated plan with the reason, and report both.
 
 # %%
 prereg = {
@@ -228,7 +228,7 @@ print("sha256:", prereg_sha)
 # > than people at the back: to estimate the whole room, weight each answer by 1 / (the
 # > chance that person was asked). A click at a rarely examined position speaks for many
 # > unseen ones. *Where it breaks down:* a tiny propensity means a huge weight, so one
-# > lucky click can dominate; clip the weights and report that you did.
+# > lucky click can dominate; clip the weights and report the clipping.
 
 # %%
 rnd = imps[(imps["day"] <= store.TRAIN_DAYS[-1]) & imps["is_random"]]
@@ -249,8 +249,8 @@ pd.DataFrame({"raw CTR ratio": raw_prop, "power-law fit": propensity,
 # falling from 1 to about 0.1, bumpy in the tail (positions 6 and 7 are out of
 # order: only ~250 clicks each); a fitted eta of about 0.88 against the hidden
 # 0.9; the fit within about 0.02 of the truth at every position. On real data there is no
-# "hidden truth" row, which is why you smooth and why you keep exploration
-# traffic running.
+# "hidden truth" row, which is why the estimates are smoothed and exploration
+# traffic is kept running.
 
 # %% [markdown]
 # ## 38.4 · Open the test week
@@ -299,7 +299,7 @@ pd.Series({k: v.mean() for k, v in primary.items()}, name="catalogue NDCG@10 (te
 # chosen by the *logging policy* from a random pool of 200 eligible items; a
 # good retriever does not reproduce that pool, so "recall of clicked items"
 # measures agreement with the old system as much as quality. Recall against
-# logged clicks is the metric you usually have; know its bias.
+# logged clicks is the metric usually available; its bias must be understood.
 
 # %% [markdown]
 # Now the logged lists of the test week: re-rank the 10 items each
@@ -349,13 +349,13 @@ pd.DataFrame({name: {lens: np.nanmean(v) for lens, v in d.items()} for name, d i
 # | LightGBM ranker | 0.664 | 2.22 | 2.26 |
 # | random | 0.529 | 1.86 | 1.90 |
 #
-# This is Part II's central lesson in one table. **Raw clicks say the old
-# policy is best** by a wide margin; that is position bias — the items the
-# policy put on top got examined, so they got the clicks. **IPS reverses the
+# This table summarises the central lesson of Part II. **Raw clicks rank the old
+# policy first** by a wide margin; that is position bias: the items the
+# policy placed at the top were examined, so they received the clicks. **IPS reverses the
 # conclusion** and agrees with the truth: the ranker's lists are better.
-# IPS is not perfect (it runs a little below the true DCG here because the
-# propensity estimate is not exact, and its variance is higher), but it is
-# pointed in the right direction, and raw clicks are not.
+# IPS is not perfect (it is a little below the true DCG here because the
+# propensity estimate is not exact, and its variance is higher), but it
+# points in the right direction, and raw clicks do not.
 
 # %% [markdown]
 # ## 38.5 · Uncertainty, by user
@@ -365,8 +365,8 @@ pd.DataFrame({name: {lens: np.nanmean(v) for lens, v in d.items()} for name, d i
 # intervals that are too narrow.
 #
 # > **Intuition.** Five answers from one household are mostly one household's opinion.
-# > Resample households (users), not answers (requests), or the interval pretends you asked
-# > five times as many people. *Where it breaks down:* if users interact (a marketplace, a
+# > Resample households (users), not answers (requests), or the interval behaves as if
+# > five times as many people had been asked. *Where it breaks down:* if users interact (a marketplace, a
 # > social graph), even users are not independent, and the cluster must be bigger still.
 #
 # > **Exercise 1.** Write `bootstrap_ci_grouped(values, groups, n_boot, seed)`
@@ -425,7 +425,7 @@ results.round(3)
 # −0.092], entirely below zero; IPS-DCG +0.29 [0.28, 0.31] and true DCG
 # +0.31 [0.309, 0.315], both entirely above zero.
 #
-# How to report this in one sentence (practise it): *"On the held-out test
+# How to report this in one sentence (worth practising): *"On the held-out test
 # week, the cascade's catalogue NDCG@10 was 0.715 (95 % CI 0.709–0.721,
 # bootstrap over users) versus 0.635 for embedding retrieval alone; on logged
 # traffic raw clicks favour the incumbent policy, but after inverse-propensity
@@ -435,23 +435,23 @@ results.round(3)
 # %% [markdown]
 # ## 38.6 · The mock loop
 #
-# A big-tech ML engineer loop is usually four to six interviews in one day.
-# This notebook's mock covers the four core rounds, back to back, timed:
+# An interview loop for ML engineers at a large technology company is usually four
+# to six interviews in one day. This lab's mock covers the four core rounds, back to back, timed:
 #
 # | Round | Minutes | Format | Material |
 # |---|---|---|---|
-# | 1 · Coding | 45 | 1–2 data-structure/algorithm problems, live, talk while you code | Chapters 33–34 |
+# | 1 · Coding | 45 | 1–2 data-structure/algorithm problems, live, explained while coding | Chapters 33–34 |
 # | 2 · ML coding | 45 | implement an ML method or metric from scratch, test it | Chapters 31–32, 23–24 |
 # | 3 · ML system design | 45 | one open prompt, whiteboard-style | Chapters 35–37 |
 # | 4 · Behavioural | 30 | 3–4 STAR stories, with follow-ups | Chapter 18 (STAR) |
 #
 # Rules that make a mock useful: a real timer, no notes, a partner or a
 # recording, and **scores written down within 10 minutes** of finishing, in the
-# log below. The prompts are drawn at random each time you run the next cell.
+# log below. The prompts are drawn at random each time the next cell runs.
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-x-mock-loop.svg" alt="Four timed rounds in a row, then score within ten minutes, log, practise the lowest column and run the next mock, looping back" width="100%">
 #
-# *What to notice:* the loop around the rounds is the point: a mock that is not scored and logged cannot tell you what to practise next.
+# *What to notice:* the loop around the rounds is what matters: a mock that is not scored and logged cannot indicate what to practise next.
 
 # %%
 import random
@@ -525,10 +525,10 @@ print("wrote", sorted(p.name for p in MOCK.iterdir()))
 # %% [markdown]
 # **Expected:** one prompt per round (different every run: the one
 # deliberately unseeded cell, as in Part I) and `wrote ['plan.md', 'rubric.json']`
-# (plus `progress_log.csv` once you have logged a round).
+# (plus `progress_log.csv` once a round has been logged).
 #
-# Time each round with these two helpers: `start_round` when you begin,
-# `finish_round` with your scores when the timer stops. The log is a CSV that
+# Time each round with these two helpers: `start_round` at the start,
+# `finish_round` with the scores when the timer stops. The log is a CSV that
 # only ever grows.
 
 # %%
@@ -564,10 +564,10 @@ print(f"{len(history)} round(s) logged in {LOG.name}")
 
 # %% [markdown]
 # **Expected:** on a fresh run `0 round(s) logged in progress_log.csv`.
-# After your first loop, four rows; after a few weeks, a history you can plot.
+# After the first loop, four rows; after a few weeks, a history that can be plotted.
 #
-# Here is how to read the log, shown with a clearly labelled **example**
-# history when yours is empty (nothing is saved):
+# The next cell shows how to read the log, using a clearly labelled **example**
+# history when the log is empty (nothing is saved):
 
 # %%
 show = history if len(history) else pd.DataFrame([
@@ -579,15 +579,15 @@ progress = show.pivot_table(index="date", columns="round", values="mean_score", 
 progress
 
 # %% [markdown]
-# **Expected:** a date × round table (two EXAMPLE rows if your log is empty).
+# **Expected:** a date × round table (two EXAMPLE rows if the log is empty).
 # Next week's practice goes to the lowest column. Aim for 3+ in every round,
 # on fresh prompts, before booking real interviews.
 #
 # ## 38.7 · Levelling expectations
 #
 # What distinguishes a **mid-level** from a **senior** answer, phrased
-# generically (every company's ladder differs; use this to calibrate, not to
-# label yourself):
+# generically (every company's ladder differs; use this to calibrate, not as
+# a label):
 #
 # | Round | Mid-level answer | Senior answer adds |
 # |---|---|---|
@@ -595,20 +595,20 @@ progress
 # | ML coding | correct implementation that runs; basic tests | numerical stability (log-sum-exp, clipping), vectorisation, tests against a reference, explains failure modes and how it would behave at scale |
 # | ML system design | a sensible cascade, standard metrics, a model per stage | drives the conversation; numbers (QPS, latency, memory); label bias and feedback loops; experimentation and rollout; prioritises what to build first and why; names what would change the design |
 # | Behavioural | clear STAR stories about own tasks | scope beyond own tasks (influence, mentoring, cross-team), measurable impact, honest reflection on mistakes, judgment under ambiguity |
-# | Project deep-dive | can explain what was built and the metric | can defend every decision against alternatives, knows the system's limits, the evaluation's biases and what they would do next |
+# | Project deep-dive | can explain what was built and the metric | can justify every decision against alternatives, knows the system's limits, the evaluation's biases and what they would do next |
 #
-# The Part II project is designed to give you senior-style material for the
-# deep-dive: a cascade with measured stage latencies (17), an optimisation
-# table (18), a design with numbers (19), and a pre-registered held-out
-# evaluation in which position bias reverses a naive conclusion (20).
+# The Part II project is designed to provide senior-level material for the
+# deep-dive: a cascade with measured stage latencies (Chapter 35), an optimisation
+# table (Chapter 36), a design with numbers (Chapter 37), and a pre-registered held-out
+# evaluation in which position bias reverses a naive conclusion (Chapter 38).
 #
 # > **Exercise 2 (written).** Write the script of a **3-minute walkthrough**
-# > of your Part II system, as you would give it at the start of a project
+# > of the Part II system, as it would be given at the start of a project
 # > deep-dive: the problem and metric, the data and its main bias, the
-# > cascade with one number per stage (latency or recall), how you evaluated
-# > it (pre-registration, IPS, grouped bootstrap), the headline result with its
-# > interval, and one thing you would do next. Then record yourself delivering
-# > it and time it. Over 3:30? Cut.
+# > cascade with one number per stage (latency or recall), how it was evaluated
+# > (pre-registration, IPS, grouped bootstrap), the headline result with its
+# > interval, and one next step. Then record and time the delivery. If it
+# > exceeds 3 minutes 30 seconds, shorten it.
 # >
 # > Write your answer in the cell below.
 
@@ -642,7 +642,7 @@ progress
 # \operatorname{Var}_{\text{grouped}} \approx \operatorname{Var}_{\text{iid}} \cdot \big(1 + (m - 1)\,\rho_{\text{ICC}}\big)
 # $$
 #
-# *In words:* with $m$ correlated rows per user, a row-level bootstrap underestimates the variance by this design effect; resampling users gets it right automatically.
+# *In words:* with $m$ correlated rows per user, a row-level bootstrap underestimates the variance by this design effect; resampling users accounts for it automatically.
 # *Symbols:* $m$ = rows per user, $\rho_{\text{ICC}}$ = the correlation between two rows of the same user.
 # *Example:* 4 requests per user with ICC 0.2: variance × 1.6, so the honest interval is $\sqrt{1.6} = 1.26$× wider than the row-level one.
 #
@@ -660,9 +660,9 @@ progress
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
-# | `AssertionError: write the pre-registration first` | ran 38.4 before 38.2 | run the notebook top to bottom |
-# | "pre-registration already on file" but you changed the system | a plan from an earlier run in this runtime | that is the point: write a *new* file with a reason, never edit the old one |
-# | IPS-DCG intervals much wider than the others | IPS variance: large weights at low-propensity positions | expected; clip weights (e.g. at 1/0.05) and report that you did |
+# | `AssertionError: write the pre-registration first` | ran 38.4 before 38.2 | run the lab top to bottom |
+# | "pre-registration already on file" but the system has changed | a plan from an earlier run in this runtime | that is the point: write a *new* file with a reason, never edit the old one |
+# | IPS-DCG intervals much wider than the others | IPS variance: large weights at low-propensity positions | expected; clip weights (e.g. at 1/0.05) and report the clipping |
 # | Fitted eta far from 0.9 | too few random requests (e.g. a subsampled log) | use more days of random traffic; check clicks per position |
 # | `finish_round` asserts on scores | a score like 3.5 or a missing dimension | whole numbers 1–4 for every rubric dimension |
 # | Progress log lost | Colab runtime recycled | `USE_DRIVE = True` in the setup cell |
@@ -673,13 +673,13 @@ progress
 # Answer aloud, without notes, in under two minutes each:
 #
 # 1. Why must the test set be touched once, and what exactly goes into a pre-registration for a ranking model?
-# 2. On logged data, the old policy has higher NDCG on clicks than your new ranker. Explain why that can happen and how you would decide which is better before an A/B test.
+# 2. On logged data, the old policy has higher NDCG on clicks than a new ranker. Explain why that can happen and how you would decide which is better before an A/B test.
 # 3. How do you estimate position propensities, what does IPS do with them, and what are its weaknesses?
 # 4. Why bootstrap by user rather than by request or impression? What happens to the interval if you get the unit wrong?
-# 5. Your retrieval recall@100 is 0.63 against true relevance but 0.30 against logged clicks. Which do you report, and why do they differ?
-# 6. Give your 3-minute project walkthrough. Then: what is the weakest part of your evaluation?
+# 5. Retrieval recall@100 is 0.63 against true relevance but 0.30 against logged clicks. Which do you report, and why do they differ?
+# 6. Give the 3-minute project walkthrough. Then: what is the weakest part of the evaluation?
 #
-# **Next chapter:** Level 2 is complete. Continue with
-# [Level 3 — Deep learning systems at scale](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/README.md):
-# GPUs, mixed precision, transformers and fine-tuning, with the same habits of
+# **Next:** Part II is complete. Continue with
+# [Part III · Deep Learning and Large-Scale Systems](../../part3-deep-learning-systems/README.md):
+# GPUs, mixed precision, transformers and fine-tuning, with the same habit of
 # measuring every claim.

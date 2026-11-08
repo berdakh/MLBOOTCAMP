@@ -118,6 +118,10 @@ def main() -> int:
 
     total_problems = 0
     for path in notebooks:
+        if not path.exists():
+            total_problems += 1
+            print(f"{path.relative_to(REPO_ROOT).as_posix():<60}  MISSING - run python tools/nbbuild.py")
+            continue
         problems = check_notebook(path)
         total_problems += len(problems)
         status = "OK" if not problems else f"{len(problems)} problem(s)"

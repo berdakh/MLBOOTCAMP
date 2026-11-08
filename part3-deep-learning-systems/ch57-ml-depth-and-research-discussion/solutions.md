@@ -107,7 +107,7 @@ not use these placeholders as results):
 > leave-one-subject-out, [metric] of [your number ± spread] against
 > [baseline number] for [baseline]. In a product, three things would break:
 > new users differ from training users, the same user drifts across sessions,
-> and headsets differ. I would ship a short calibration block with per-session
+> and headsets differ. I would deploy a short calibration block with per-session
 > re-centring of the covariance features and a small adapted head, a signal-
 > quality gate that refuses to decode on high impedance or heavy artefacts,
 > and a streaming loop with a [X] ms budget. I'd know it works from an online

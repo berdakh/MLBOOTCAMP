@@ -93,14 +93,14 @@ print(f"day 42: {len(day):,} impressions, {day.clicked.sum():,} clicks, {day.req
 # | **Sliding window** | fixed size, advancing by a smaller hop; windows overlap | 1 hour, every 15 min |
 # | **Session window** | per key, events closer than a gap belong together | a user's burst of activity |
 # | **Watermark** | the processor's claim: events up to time W have (almost) all arrived | max event time − allowed lateness |
-# | **Allowed lateness** | how long to wait for stragglers before closing a window | 0, 10 min, 1 hour in 4.4 |
+# | **Allowed lateness** | how long to wait for stragglers before closing a window | 0, 10 min, 1 hour in 22.4 |
 # | **Late event** | arrives for a window that is already closed | about 2.5% with no lateness |
 # | **Side output** | late events kept aside for a batch job to reconcile | `sideOutputLateData` in Flink |
 # | **Idempotent update** | applying it twice has the same effect as once | dedup by `event_id` |
 # | **Parity test** | the batch and streaming versions of a feature, compared row by row | `parity_report` in Exercise 2 |
 
 # %% [markdown]
-# ## 4.1 · Event time vs processing time
+# ## 22.1 · Event time vs processing time
 #
 # * **Event time**: when the thing happened (the impression was rendered on the
 #   phone). Features and labels are defined on it.
@@ -166,7 +166,7 @@ print(f"processing-time windows that differ from the event-time truth: {(m.value
 # window is *complete*.
 
 # %% [markdown]
-# ## 4.2 · Windows, computed incrementally
+# ## 22.2 · Windows, computed incrementally
 #
 # A stream processor cannot `GROUP BY` the whole day; it updates state per
 # event. Three window types cover almost every feature:
@@ -245,7 +245,7 @@ print(f"sessions: streaming {n_stream:,} | batch {int(new_session.sum()):,}")
 # stops at the first match), the counts diverge: that is the bridging case.
 
 # %% [markdown]
-# ## 4.3 · Watermarks: when is a window complete?
+# ## 22.3 · Watermarks: when is a window complete?
 #
 # A streaming job must *emit* a window's result at some point, but late events
 # may still arrive. A **watermark** is the processor's assertion that it has
@@ -312,7 +312,7 @@ class TumblingWindowCounter:
 grade.ex1(TumblingWindowCounter)
 
 # %% [markdown]
-# ## 4.4 · Late-data policies, measured
+# ## 22.4 · Late-data policies, measured
 #
 # `F.WindowAggregator` is the same machinery as Exercise 1, extended with
 # sums, the three late-data policies and optional deduplication (read it in
@@ -372,7 +372,7 @@ print(f"update:      {corrections:,} corrected results emitted after the first |
 # already scored a request with the first value has used it.
 
 # %% [markdown]
-# ## 4.5 · At-least-once, exactly-once, and idempotence
+# ## 22.5 · At-least-once, exactly-once, and idempotence
 #
 # Delivery guarantees between a log (Kafka) and a processor:
 #
@@ -418,7 +418,7 @@ print(f"dedup by id: total clicks {idem.results().value.sum():,.0f} | duplicates
 # would differ between the original and the retry.
 
 # %% [markdown]
-# ## 4.6 · Online/offline parity
+# ## 22.6 · Online/offline parity
 #
 # The feature has two implementations: the batch SQL (used to build training
 # data, Chapter 21) and the streaming job (used to serve). A **parity test**
@@ -466,7 +466,7 @@ def parity_report(batch_df: pd.DataFrame, stream_df: pd.DataFrame, key, tol: flo
 grade.ex2(parity_report)
 
 # %% [markdown]
-# ## 4.7 · The real systems
+# ## 22.7 · The real systems
 #
 # Nothing needs to be installed; the table shows how the simulation maps onto production tools.
 #
@@ -539,7 +539,7 @@ grade.ex2(parity_report)
 # t \text{ joins } [a, b] \iff a - g \le t \le b + g
 # $$
 #
-# * *Example:* $g = 30$ min, sessions $[10{:}00, 10{:}20]$ and $[10{:}55, 11{:}05]$; a late event at 10:40 is within 30 min of both, so all three merge into $[10{:}00, 11{:}05]$. That is the "bridging" case from 4.2.
+# * *Example:* $g = 30$ min, sessions $[10{:}00, 10{:}20]$ and $[10{:}55, 11{:}05]$; a late event at 10:40 is within 30 min of both, so all three merge into $[10{:}00, 11{:}05]$. That is the "bridging" case from 22.2.
 
 # %% [markdown]
 # ## Troubleshooting

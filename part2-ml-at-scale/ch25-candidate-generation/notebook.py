@@ -102,7 +102,7 @@ print(f"{len(clicks):,} clicks | train {len(train_clicks):,} | valid {len(valid_
 # | **Popularity bias** | a generator's tendency to return already-popular items | the mean log-popularity column |
 
 # %% [markdown]
-# ## 7.1 · Why two stages
+# ## 25.1 · Why two stages
 #
 # ```
 #   catalogue (10^6-10^9 items)
@@ -134,7 +134,7 @@ print(f"{len(clicks):,} clicks | train {len(train_clicks):,} | valid {len(valid_
 # > **Intuition.** Consider hiring: a recruiter screens 10,000 CVs for keywords and keeps 100 (retrieval, judged by "were the good people kept?"), then a panel interviews those 100 carefully and ranks them (ranking, judged by "is the best person on top?"). *Where it breaks down:* recruiters read every CV; real retrieval never scores every item exactly; it relies on precomputed lists and approximate search.
 
 # %% [markdown]
-# ## 7.2 · What counts as a hit
+# ## 25.2 · What counts as a hit
 #
 # Two truths, for each user active in the validation week:
 #
@@ -199,7 +199,7 @@ def evaluate(name: str, cands: dict, users=eval_users) -> dict:
     return row
 
 # %% [markdown]
-# ## 7.3 · Global popularity
+# ## 25.3 · Global popularity
 #
 # The baseline every system has: the most-clicked items of the training
 # period, the same list for everyone. It is also the fallback when every
@@ -219,7 +219,7 @@ evaluate("global popularity", cands_pop)
 # partly driven by item quality, which every user values.
 
 # %% [markdown]
-# ## 7.4 · Per-category popularity
+# ## 25.4 · Per-category popularity
 #
 # A small amount of personalisation: split the K slots across the categories the
 # user clicked in training, in proportion to their clicks, and fill each
@@ -240,7 +240,7 @@ evaluate("category popularity", cands_catpop)
 # replace category with any coarse attribute (brand, topic, price band).
 
 # %% [markdown]
-# ## 7.5 · Item-to-item co-visitation
+# ## 25.5 · Item-to-item co-visitation
 #
 # "People who clicked X also clicked Y": count, for each pair of items, the
 # number of **sessions** in which both were clicked. Here a session is one
@@ -302,7 +302,7 @@ evaluate("co-visitation", cands_covis)
 # neighbours per item.
 
 # %% [markdown]
-# ## 7.6 · Matrix factorisation (implicit ALS)
+# ## 25.6 · Matrix factorisation (implicit ALS)
 #
 # Learn a vector x_u per user and y_i per item so that x_u · y_i is high for
 # items the user clicked. With implicit feedback there are no negatives,
@@ -353,7 +353,7 @@ pd.DataFrame(results).T.round(3)
 # comparison.
 
 # %% [markdown]
-# ## 7.7 · Cold start
+# ## 25.7 · Cold start
 #
 # Two kinds of newcomers:
 #
@@ -426,7 +426,7 @@ print("new items per list:", round(np.mean([len(set(v) & new_items) for v in can
 # metadata, unlike clicks, is available the moment an item is listed.)
 
 # %% [markdown]
-# ## 7.8 · Blending generators
+# ## 25.8 · Blending generators
 #
 # Production systems run several generators and merge them, typically with
 # **quotas** (e.g. 50 from the main model, 30 from co-visitation, ...),

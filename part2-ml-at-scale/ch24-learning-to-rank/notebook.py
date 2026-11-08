@@ -98,7 +98,7 @@ print(f"{len(imps):,} impressions (days 0-48) | fitted eta {eta_hat:.3f} | {time
 # | **Gain importance** | total loss reduction from splits on a feature | `u_cat_clicks` leads LambdaMART |
 
 # %% [markdown]
-# ## 6.1 · The problem: rank within a request
+# ## 24.1 · The problem: rank within a request
 #
 # In search, the group is a **query**: rank documents for "red shoes". In a
 # feed, there is no typed query; the group is the **request** (one user,
@@ -128,7 +128,7 @@ print(f"requests with no click: {(req['clicks'] == 0).mean():.1%}")
 # click".
 
 # %% [markdown]
-# ## 6.2 · Point-in-time features
+# ## 24.2 · Point-in-time features
 #
 # Features for a (user, item) pair at request time, all computed from logs
 # **strictly before the request's day** (a daily batch job; the point-in-time
@@ -191,10 +191,10 @@ print(f"features of day {cut} unchanged when later days are removed: {same}")
 #   (position 0)** at serving. Under the PBM that recovers the relevance
 #   ordering *if* the model separates the two effects (with trees, the
 #   position effect is not forced to be multiplicative, so it is not
-#   guaranteed). We test it in 6.6.
+#   guaranteed). We test it in 24.6.
 
 # %% [markdown]
-# ## 6.3 · Three ways to learn a ranking
+# ## 24.3 · Three ways to learn a ranking
 #
 # * **Pointwise**: predict each item's label on its own (logistic regression,
 #   a GBDT classifier). Simple, calibrated, and blind to the group: it spends
@@ -234,7 +234,7 @@ def pairwise_accuracy(scores, labels, groups) -> float:
 grade.ex1(pairwise_accuracy)
 
 # %% [markdown]
-# ## 6.4 · Groups for LightGBM
+# ## 24.4 · Groups for LightGBM
 #
 # `LGBMRanker.fit(X, y, group=sizes)` takes **group sizes**, not group ids:
 # `[10, 10, 7, ...]` means "the first 10 rows are one group, the next 10
@@ -257,7 +257,7 @@ def make_groups(df: pd.DataFrame, group_col: str):
 grade.ex2(make_groups)
 
 # %% [markdown]
-# ## 6.5 · A request-grouped time split, sampled
+# ## 24.5 · A request-grouped time split, sampled
 #
 # * **Train:** policy-traffic requests from days 21–41 (the first three weeks
 #   only feed the features) that have at least one click. Sample 40,000
@@ -331,7 +331,7 @@ pd.DataFrame(results).T.round(4)
 # random. Only compare **new** rankers with each other on that column.
 
 # %% [markdown]
-# ## 6.6 · Five rankers
+# ## 24.6 · Five rankers
 #
 # Same features, same rows, four LightGBM models plus a linear baseline:
 #
@@ -410,7 +410,7 @@ table.round(4)
 # clicks): LambdaMART's advantage grows with long lists and graded labels
 # (search relevance grades, purchase > click). Second, IPS and the position
 # feature do little *here* because none of these features encodes the logged
-# position (in contrast with Section 5.6 of the Chapter 23 lab, where the
+# position (in contrast with Section 23.6 of the Chapter 23 lab, where the
 # policy score did). This should be checked before assuming that debiasing
 # will change a metric.
 
@@ -448,7 +448,7 @@ pd.DataFrame(rows).T.round(3)
 # production.
 
 # %% [markdown]
-# ## 6.7 · Feature importance
+# ## 24.7 · Feature importance
 #
 # Gain importance: the total loss reduction from splits on each feature.
 # Useful for debugging ("why is `i_age` at the top?"), not proof of
@@ -470,7 +470,7 @@ imp.round(3)
 # (about 0.4): correlated features share credit arbitrarily, one reason not
 # to over-read importances. In the position-feature model, position takes
 # about **64%** of the gain: the model uses it heavily to explain clicks. Yet
-# serving with position 0 changes the *ranking* by almost nothing (6.6),
+# serving with position 0 changes the *ranking* by almost nothing (24.6),
 # because here position's effect is close to additive in the trees' score;
 # it would matter for calibrated click probabilities, and with features that
 # correlate with position.
@@ -573,7 +573,7 @@ print(f"4. |dNDCG| rank 2 vs 1: {swap(2, 1):.3f} | rank 10 vs 9: {swap(10, 9):.3
 # |---|---|---|
 # | `LightGBMError: ... sum of group counts ... not equal to number of data` | `group` sizes do not add up to the rows | build sizes with `make_groups` from the same frame that is passed as `X` |
 # | Ranker trains but NDCG is barely above random | rows not contiguous by group (shuffled or concatenated after computing sizes) | sort by group (stable) right before `fit`; never shuffle afterwards |
-# | Offline NDCG suspiciously high (0.95+ on clicks) | a feature computed with same-day data (label leakage) | recompute features from a truncated log and compare (6.2) |
+# | Offline NDCG suspiciously high (0.95+ on clicks) | a feature computed with same-day data (label leakage) | recompute features from a truncated log and compare (24.2) |
 # | `ValueError: ... categorical_feature ... must be int` | float or string categoricals | cast to `int32` codes (as `build_features` does) |
 # | Kernel slow or killed while building features | too many rows in memory at once | restrict to the days needed; drop unused columns before `build_features` |
 # | New model loses to production on click NDCG | position bias in the metric (Chapter 23) | compare on truth (here), IPS estimates, or random traffic between new models |

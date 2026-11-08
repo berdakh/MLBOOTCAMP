@@ -101,7 +101,7 @@ print(f"{len(imps):,} impressions, {len(items):,} items, {len(users):,} users")
 # | **Sketch** | a small fixed-size summary with a known error | HyperLogLog, t-digest, a reservoir |
 
 # %% [markdown]
-# ## 2.1 · Map → shuffle → reduce, by hand
+# ## 20.1 · Map → shuffle → reduce, by hand
 #
 # A distributed `SELECT item_id, count(*), sum(clicked) … GROUP BY item_id`
 # runs in three steps:
@@ -167,7 +167,7 @@ print("identical to DuckDB:", by_hand.equals(ref.astype(by_hand.dtypes)))
 # Exercise 2 implements the same map → shuffle → reduce for plain counting.
 
 # %% [markdown]
-# ## 2.2 · Skew, and salting
+# ## 20.2 · Skew, and salting
 #
 # Real marketplaces are dominated by a few big sellers, real search logs by a
 # few queries, and real pipelines by a few junk keys (`NULL`, `-1`,
@@ -246,7 +246,7 @@ print("salted two-stage answer exact:", salted_answer.sort_index().equals(exact.
 # automatic one is not sufficient.
 
 # %% [markdown]
-# ## 2.3 · Join strategies, and the skewed-join trap
+# ## 20.3 · Join strategies, and the skewed-join trap
 #
 # | Strategy | How it works | Use when | Cost |
 # |---|---|---|---|
@@ -322,7 +322,7 @@ print("same categories:", np.array_equal(merged.category.to_numpy(), looked_up))
 # `merge` because there is nothing to hash or shuffle. It is what a broadcast join does inside each mapper.
 
 # %% [markdown]
-# ## 2.4 · As-of joins: the value *at the time of the event*
+# ## 20.4 · As-of joins: the value *at the time of the event*
 #
 # Prices change. To train a model with "price" as a feature, each impression
 # needs the price **when it was shown**, not today's price. That is an
@@ -380,7 +380,7 @@ print(f"impressions whose price differs from the item's latest price: "
 # strict.
 
 # %% [markdown]
-# ## 2.5 · Deduplicating re-delivered events
+# ## 20.5 · Deduplicating re-delivered events
 #
 # Logging pipelines are usually **at-least-once**: a client retries when it
 # does not get an acknowledgement, a consumer restarts and re-reads a batch.
@@ -420,7 +420,7 @@ print(f"after dedup: {len(dedup):,} rows; identical to the clean log:",
 #   delay, or partition by *event* time, as here.
 
 # %% [markdown]
-# ## 2.6 · Approximate answers: HyperLogLog, quantile sketches, reservoirs
+# ## 20.6 · Approximate answers: HyperLogLog, quantile sketches, reservoirs
 #
 # Exact distinct counts and quantiles need memory that grows with the data.
 # Sketches answer with a fixed, small state and a known error:

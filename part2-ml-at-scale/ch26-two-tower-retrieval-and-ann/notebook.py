@@ -104,7 +104,7 @@ print(f"train clicks {len(train_clicks):,} | eval users {len(eval_users):,} (col
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
-# | **Two-tower model** | two networks embed users and items separately; the score is a dot product | `TwoTower` in 8.1 |
+# | **Two-tower model** | two networks embed users and items separately; the score is a dot product | `TwoTower` in 26.1 |
 # | **Embedding** | a learned vector for an id or category | 32 numbers per user id |
 # | **Temperature τ** | divides the scores before the softmax; small τ sharpens it | τ = 0.05 |
 # | **In-batch negatives** | the other items in the batch serve as negatives for each user | a 1024 × 1024 logit matrix |
@@ -118,7 +118,7 @@ print(f"train clicks {len(train_clicks):,} | eval users {len(eval_users):,} (col
 # | **Recall vs exact** | share of the exact top-k that the approximate search returns | 0.92 at `nprobe = 4` |
 
 # %% [markdown]
-# ## 8.1 · The model
+# ## 26.1 · The model
 #
 # ```
 #  user tower                                   item tower
@@ -201,7 +201,7 @@ print(f"parameters: {sum(p.numel() for p in TwoTower().parameters()):,}")
 # tables (10,000 users and 4,001 items × 32).
 
 # %% [markdown]
-# ## 8.2 · In-batch softmax, and its bias
+# ## 26.2 · In-batch softmax, and its bias
 #
 # Training data: (user, clicked item) pairs. For a batch of B pairs, score
 # every user against every item in the batch: a B × B matrix of logits. The
@@ -293,7 +293,7 @@ tt_logq = train_two_tower(logq_correction=True)
 # 1024 matrix.
 
 # %% [markdown]
-# ## 8.3 · Evaluation against ALS
+# ## 26.3 · Evaluation against ALS
 
 # %%
 new_items = set(np.flatnonzero(items["created_day"].to_numpy() >= min(store.VALID_DAYS)).tolist())
@@ -351,7 +351,7 @@ np.save(ART / "level2" / "two_tower_item_emb.npy", ie_logq)
 print("saved two_tower_item_emb.npy", ie_logq.shape)
 
 # %% [markdown]
-# ## 8.4 · Approximate nearest-neighbour search with FAISS
+# ## 26.4 · Approximate nearest-neighbour search with FAISS
 #
 # Serving = "find the 100 item vectors with the largest dot product with
 # u". With 4,000 items, exact search is a 4,000 × 32 matrix–vector product:
@@ -491,7 +491,7 @@ ann.to_csv(ART / "level2" / "ann_benchmark.csv", index=False)
 print("saved ann_benchmark.csv")
 
 # %% [markdown]
-# ## 8.5 · The serving cascade
+# ## 26.5 · The serving cascade
 #
 # ```
 # OFFLINE (daily / hourly)                       ONLINE (per request, p99 budget ~150 ms)
@@ -582,7 +582,7 @@ print(f"by hand {by_hand.item():.5f} | F.cross_entropy {library.item():.5f}")
 print(f"a model that knows nothing, batch 1024: log(1024) = {np.log(1024):.3f}")
 
 # %% [markdown]
-# **Expected:** the two losses agree to five decimals, and `log(1024) = 6.931`, the ceiling the training loss in 8.2 started just below.
+# **Expected:** the two losses agree to five decimals, and `log(1024) = 6.931`, the ceiling the training loss in 26.2 started just below.
 
 # %% [markdown]
 # ## Troubleshooting

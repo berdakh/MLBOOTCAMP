@@ -127,13 +127,13 @@ print(f"served model: {n_params / 1e6:.1f}M parameters ({n_params * 4 / 1e6:.0f}
 # | SLO | Service-level objective: the latency (or availability) target the service commits to | "p95 ≤ 60 ms" |
 # | Closed-loop load test | Each simulated client sends its next request only after the previous answer | the 1 / 4 / 16 / 32 client runs |
 # | KV cache | Stored attention keys and values of earlier tokens, so each new token is computed once | GPT-2 with `use_cache=True` |
-# | Prefill vs decode | Processing the whole prompt in one pass vs generating one token per step | section 5 |
-# | Continuous batching | Re-forming the generation batch at every decode step | vLLM, TGI, the simulation in section 6 |
-# | Paged attention | Storing the KV cache in fixed-size blocks found through a block table | 16-token blocks in section 7 |
+# | Prefill vs decode | Processing the whole prompt in one pass vs generating one token per step | section 50.5 |
+# | Continuous batching | Re-forming the generation batch at every decode step | vLLM, TGI, the simulation in section 50.6 |
+# | Paged attention | Storing the KV cache in fixed-size blocks found through a block table | 16-token blocks in section 50.7 |
 # | Utilisation `u` | Fraction of paid hours the server is actually busy | 40% in the cost table |
 
 # %% [markdown]
-# ## 1 · Why batching helps: latency vs batch size
+# ## 50.1 · Why batching helps: latency vs batch size
 #
 # One request through a Linear layer is a matrix-**vector** product: every weight is read
 # from memory and used for just one multiply-add, about **1 FLOP per 2 bytes** (fp16) or 4
@@ -173,7 +173,7 @@ BATCH_CURVE = rows
 # 1% of the arithmetic. Better measures: achieved FLOP/s vs peak (MFU, Chapter 48), memory
 # bandwidth used vs peak, and simply *throughput at your latency target*.
 #
-# ## 2 · A dynamic batcher
+# ## 50.2 · A dynamic batcher
 #
 # Requests arrive one at a time from many clients. A **dynamic batcher** sits between the
 # request handlers and the model:
@@ -233,7 +233,7 @@ grade.ex1(DynamicBatcher)
 # and an exception in one batch is delivered to *that batch's* callers instead of killing the
 # loop. The server below uses it.
 #
-# ## 3 · A FastAPI endpoint with dynamic batching
+# ## 50.3 · A FastAPI endpoint with dynamic batching
 #
 # The batcher's background task is started in the app's *lifespan* (it must live in the
 # server's event loop). Each `/predict` handler just awaits `batcher.submit(...)`. We run
@@ -288,7 +288,7 @@ print("server answers:", got, "| direct model call:", want)
 # **Expected:** a localhost URL with a free port, and the server's 5 answers equal to the
 # direct model call.
 #
-# ## 4 · Load test: throughput vs latency
+# ## 50.4 · Load test: throughput vs latency
 #
 # A closed-loop load test: `concurrency` clients, each sending its next request as soon as
 # the previous answer arrives (`scaleml.serving.load_test`, using `httpx.AsyncClient`), run
@@ -341,7 +341,7 @@ print(f"({time.time() - t0:.0f} s)")
 # The gain here (1.3× on a quiet machine, 2.8× on a busy one) is capped by the Python HTTP
 # layer: parsing and answering a request costs a few ms of event-loop time whether or not it
 # is batched, so ~300 req/s is the ceiling of one uvicorn process on this CPU. When the model
-# call dominates, as for a transformer on a GPU, batching's gain approaches the 6× of section 1.
+# call dominates, as for a transformer on a GPU, batching's gain approaches the 6× of section 50.1.
 # Production servers also run several worker processes per machine.
 #
 # Read it as a **throughput–latency curve**: each configuration traces latency rising with
@@ -386,7 +386,7 @@ print("wrote", OUT / "load_test.json")
 # **Expected:** `server stopped: True`. Always stop servers you start in a notebook; a
 # leftover one keeps its port and a thread busy.
 #
-# ## 5 · Generation: why the KV cache matters
+# ## 50.5 · Generation: why the KV cache matters
 #
 # A decoder generates one token per forward pass. Without a cache, step t re-runs the model
 # over all t previous tokens; with a **KV cache** (Chapter 41) it runs only the newest token and
@@ -452,7 +452,7 @@ _ = (OUT / "generation.json").write_text(json.dumps({"device": str(DEVICE), "new
 # repetitive; that is the model, not a bug. **On a T4 you should see** hundreds of tokens/s
 # at batch 1 in fp16 and thousands at batch 8+ (not measured in our verification runs).
 #
-# ## 6 · Static vs continuous batching
+# ## 50.6 · Static vs continuous batching
 #
 # With **static batching**, a batch of sequences starts together and the batch is busy
 # until its *longest* sequence finishes; slots whose sequence already ended do nothing
@@ -498,7 +498,7 @@ print(f"(static batching with requests sorted by length - impossible online, len
 # throughput**. Sorting by length would help static batching (82%), but output lengths are unknown
 # until generation ends.
 #
-# ## 7 · Paged attention: the memory side
+# ## 50.7 · Paged attention: the memory side
 #
 # Continuous batching needs memory for many sequences' KV caches at once. KV cache size per
 # token = 2 (K and V) × layers × KV heads × head dim × bytes:
@@ -546,7 +546,7 @@ print(f"64 sequences: tokens actually stored {sum(used):,} | reserved contiguous
 # > room, and keeps a seating chart (the block table). *Where the analogy breaks down:* the attention
 # > kernel must follow the seating chart on every step, so paging needs special kernels; it is not free.
 #
-# ## 8 · Cost per 1,000 requests
+# ## 50.8 · Cost per 1,000 requests
 #
 # A server that handles `r` requests/s when busy, rented at `p` dollars/hour, but busy only
 # a fraction `u` of the time (traffic has peaks; capacity is provisioned for the peak and paid for during the
@@ -593,7 +593,7 @@ for name, rps, price in cases:
 # %% [markdown]
 # > **Exercise 3.** You serve a 7B chat model on GPUs with static batching (batch 8) and the p95 latency
 # > is fine, but the cost per conversation is too high and GPU memory is 40% empty at peak. (a) Explain,
-# > with the simulations of sections 6 and 7, why throughput is low. (b) Propose changes in order (serving
+# > with the simulations of sections 50.6 and 50.7, why throughput is low. (b) Propose changes in order (serving
 # > engine, batching policy, KV-cache memory, model) and the metric you would watch for each. (c) Product
 # > now wants a 2× longer context. What happens to the number of concurrent sequences per GPU, and what can
 # > you do about it? Write your answer in the cell below.
@@ -611,7 +611,7 @@ for name, rps, price in cases:
 # $$
 #
 # *In words:* a batch of $B$ requests finishes together, so throughput rises as long as the call time
-# $t(B)$ grows more slowly than $B$. *Example (section 1, our CPU):* $1 / 3\ \text{ms} = 333$/s at $B = 1$;
+# $t(B)$ grows more slowly than $B$. *Example (section 50.1, our CPU):* $1 / 3\ \text{ms} = 333$/s at $B = 1$;
 # $32 / 15\ \text{ms} = 2{,}133$/s at $B = 32$.
 #
 # **2 · Arithmetic intensity of a Linear layer.**
@@ -666,7 +666,7 @@ print(f"KV bytes per token, GPT-2 fp16: formula {2 * 12 * 12 * 64 * 2:,} | S.kv_
       f"{S.kv_cache_bytes(12, 12, 64, tokens=1):,}")
 
 # %% [markdown]
-# **Expected:** the two batch throughputs as printed in section 1; for each load-test row an "in flight"
+# **Expected:** the two batch throughputs as printed in section 50.1; for each load-test row an "in flight"
 # number close to its number of clients (somewhat below it, because p50 is smaller than the mean
 # latency, which a few slow requests pull up); `0.00045` twice; `36,864` twice.
 

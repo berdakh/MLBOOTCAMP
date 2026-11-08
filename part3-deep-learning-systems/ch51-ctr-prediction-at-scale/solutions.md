@@ -39,7 +39,7 @@ def recalibrate_downsampled(p, w):
 **Derivation.** Keeping every positive and a random fraction `w` of negatives
 multiplies the number of negatives (for any `x`) by `w`, so the odds the model
 learns are `o' = p/(1−p) · 1/w`. Invert: `o = w·o'`, `q = o/(1+o) = w p'/(1 − p' + w p')
-= p'/(p' + (1 − p')/w)`. In section 7 of the lab this brought pred/obs from ~6.4 down to ~0.91 and NE from 1.85 to
+= p'/(p' + (1 − p')/w)`. In section 51.7 of the lab this brought pred/obs from ~6.4 down to ~0.91 and NE from 1.85 to
 0.86 with unchanged AUC; the remaining gap was the model's own under-confidence
 (pred/obs ≈ 0.97 on a downsampled test set), removed by a Platt layer fitted on
 non-downsampled validation data (pred/obs ≈ 1.01). It is exact only
@@ -112,13 +112,13 @@ advertisers react to price changes over days.
    probabilities (auctions multiply pCTR by bids, pacing and billing use them), so a
    metric that rewards calibration (log loss/NE) plus pred/obs matters more than
    AUC, which only measures ranking and is unchanged by any monotone distortion. In
-   section 7 the raw downsampled model had a near-normal AUC and an NE far above 1.
+   section 51.7 the raw downsampled model had a near-normal AUC and an NE far above 1.
 
 2. [verified] It removes the need for a vocabulary: fixed memory, no id-assignment service, unseen
    values handled, training/serving agree by construction. Costs: collisions (two
    unrelated values share a weight), no way to inspect/delete a feature, and
    memory still grows with the number of buckets allocated. Pick the bucket count by
-   measuring (section 3: gains flattened past ~65k–500k buckets for ~426k distinct
+   measuring (section 51.3: gains flattened past ~65k–500k buckets for ~426k distinct
    keys, i.e. once the frequent keys rarely collide); keys seen too rarely to learn do
    not need their own row. The hash must be stable across processes, languages and
    time, or serving looks up the wrong weights.
@@ -138,15 +138,15 @@ advertisers react to price changes over days.
    hand-made feature. FMs model pairwise crosses as dot products of embeddings
    (`⟨v_i, v_j⟩`); DeepFM adds an MLP. DCN-v2 generalises the FM interaction (a
    full-rank or low-rank `W` instead of a fixed dot product) and stacks it to higher
-   orders. Section 5: DCN improved NE from 0.878 (LR) to 0.854 on the same hashed features.
+   orders. Section 51.5: DCN improved NE from 0.878 (LR) to 0.854 on the same hashed features.
 
 5. [verified] See Exercise 2 above. Forgetting it: predictions are inflated by an odds factor 1/w
-   (pred/obs ≈ 6.4 and NE ≈ 1.85 in section 7), so auctions over-value every ad, pacing/budgets
+   (pred/obs ≈ 6.4 and NE ≈ 1.85 in section 51.7), so auctions over-value every ad, pacing/budgets
    mis-forecast, and NE is terrible even though AUC looks fine.
 
 6. [verified] Conversions arrive days after the click; at training time recent clicks whose
    conversion has not happened yet are labelled negative, so the model learns a
-   CVR that is too low (section 8: ~14% of conversions missing at the cutoff; naive
+   CVR that is too low (section 51.8: ~14% of conversions missing at the cutoff; naive
    pred/obs ≈ 0.88 against ≈ 1.04 for a model trained on the eventual labels). Fixes: (i) a wait window (train only on clicks older than
    W days): simple, but the model is W days stale and loses the freshest
    data, bad for new ads and fast-changing traffic; residual bias from delays > W.

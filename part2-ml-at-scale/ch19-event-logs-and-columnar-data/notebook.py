@@ -104,7 +104,7 @@ print(f"small dataset ready in {time.perf_counter() - t0:.1f} s")
 # *What to notice:* the log records *what was shown where* and *what was clicked*, but examination and true relevance stay in the red box. Every method in Part II is graded against that box.
 
 # %% [markdown]
-# ## 1.1 · What a good log row contains
+# ## 19.1 · What a good log row contains
 #
 # > **Intuition.** A log row is like a witness statement: *who, what, where, when, chosen by whom, and what happened next*. A case can be reconstructed from complete statements; a missing "where" (position) or "chosen by whom" (policy version) cannot be recovered later. *Where it breaks down:* a witness can at least say what they looked at; a log never can (examination is invisible).
 #
@@ -151,7 +151,7 @@ print(f"CTR policy traffic {imps.loc[~imps.is_random, 'clicked'].mean():.3f} | "
 # policy doing its job, not a logging bug.
 
 # %% [markdown]
-# ## 1.2 · Two scales: `small` and (part of) `large`
+# ## 19.2 · Two scales: `small` and (part of) `large`
 #
 # `small` has 2.4M rows and fits comfortably in pandas. The `large` preset
 # (200,000 users, 20,000 items) has about **46 million** impressions over 56
@@ -190,7 +190,7 @@ print(sorted(p.name for p in (large_dir / "impressions").iterdir()))
 # the directory listing alone.
 
 # %% [markdown]
-# ## 1.3 · CSV vs Parquet
+# ## 19.3 · CSV vs Parquet
 #
 # CSV is text, one row after another: every read parses every character of
 # every column. Parquet is **columnar** (each column stored contiguously, so
@@ -267,7 +267,7 @@ print("row groups that may contain user_id == 4242:", sum(lo <= 4242 <= hi for l
 # is filtered on most often**; the statistics then do the skipping.
 
 # %% [markdown]
-# ## 1.4 · Partition pruning and predicate pushdown
+# ## 19.4 · Partition pruning and predicate pushdown
 #
 # Row-group skipping still opens every file to read its footer. **Partition
 # pruning** is one level higher: with a `day=` directory per day, a filter on
@@ -335,7 +335,7 @@ for name, q in [("partition filter", week_pruned), ("filter on derived ts", week
 # another column.
 
 # %% [markdown]
-# ## 1.5 · Out of core: aggregating more data than your memory budget
+# ## 19.5 · Out of core: aggregating more data than your memory budget
 #
 # Pandas needs the whole table in RAM, plus copies during a `groupby`.
 # DuckDB streams through the files and, when its `memory_limit` is reached,
@@ -391,7 +391,7 @@ ooc.close()
 # shuffles and spills, and holistic aggregates are the expensive ones.
 
 # %% [markdown]
-# ## 1.6 · Sampling without bias
+# ## 19.6 · Sampling without bias
 #
 # Analyses are rarely run on a full log; they are run on a sample. **The
 # sampling unit decides which metrics stay unbiased.** Three 10% samples of `small`:
@@ -588,7 +588,7 @@ print(f"2. predicted share of row-sampled requests with a click: {predicted:.3f}
       f"(measured above: about 0.20)")
 
 # %% [markdown]
-# **Expected:** the formula and the measured spread agree to within about 20% (both about 0.0007), and the predicted share is about 0.20, matching the row sample in 1.6.
+# **Expected:** the formula and the measured spread agree to within about 20% (both about 0.0007), and the predicted share is about 0.20, matching the row sample in 19.6.
 
 # %% [markdown]
 # ## Troubleshooting

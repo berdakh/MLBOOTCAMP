@@ -401,9 +401,11 @@ audit = q(f"""
          SUM(CASE WHEN Price = 0 THEN 1 ELSE 0 END)                  AS zero_price,
          SUM(CASE WHEN Price < 0 THEN 1 ELSE 0 END)                  AS negative_price,
          SUM(CASE WHEN NOT regexp_matches(StockCode, '{PRODUCT_CODE}') THEN 1 ELSE 0 END) AS non_product_rows,
-         COUNT(DISTINCT CASE WHEN regexp_matches(StockCode, '{PRODUCT_CODE}') THEN StockCode END) AS products
+         COUNT(DISTINCT CASE WHEN regexp_matches(StockCode, '{PRODUCT_CODE}') THEN StockCode END) AS product_codes
   FROM lines""")
-print(audit.T.rename(columns={0: "count"}).assign(share=lambda d: d["count"] / audit.rows_after_dedup[0]).to_string())
+counts = audit.drop(columns="product_codes").T.rename(columns={0: "rows"})
+print(counts.assign(share=lambda d: (d["rows"] / audit.rows_after_dedup[0]).round(4)).to_string())
+print("distinct product codes:", int(audit.product_codes[0]))
 
 # %%
 q(f"""SELECT StockCode, ANY_VALUE(Description) AS description, COUNT(*) AS rows, SUM(Quantity) AS units
@@ -419,13 +421,14 @@ print(q("""SELECT Invoice, StockCode, Quantity, InvoiceDate, Price, "Customer ID
            ORDER BY ABS(Quantity) DESC LIMIT 6""").to_string(index=False))
 
 # %% [markdown]
-# **Expected (real data):** after removing the 22,523 duplicated rows, about 1.04 million rows remain;
-# about 1.9% are cancellation lines, about 23% have no customer ID, about 0.6% have a zero price, a
-# handful have a negative price ("Adjust bad debt"), and about 0.6% are non-product lines (`POST` and
-# `DOT` postage, `M` manual, `C2` carriage, `D` discount, …). Negative quantities without a `C` invoice
-# carry descriptions such as "damaged", "check" and "missing": stock adjustments, not sales. The two
-# largest lines (80,995 and 74,215 units) were each cancelled by the same customer within about 15
-# minutes.
+# **Expected (real data, measured):** after removing the 22,523 duplicated rows, 1,044,848 rows remain:
+# 19,165 cancellation lines (1.8%), 3,393 negative quantities without a `C` invoice (0.3%), 235,287
+# rows without a customer ID (22.5%), 6,024 zero prices (0.6%), 5 negative prices ("Adjust bad debt")
+# and 5,993 non-product lines (0.6%: `POST` and `DOT` postage, `M` manual, `C2` carriage, `D`
+# discount, …); 5,242 distinct product codes. Negative quantities without a `C` invoice mostly have no
+# description, or descriptions such as "check", "damages" and "missing": stock adjustments, not sales.
+# The two largest lines (80,995 and 74,215 units) were each cancelled by the same customer 12 and 16
+# minutes later.
 #
 # **Decisions.**
 #
@@ -513,9 +516,9 @@ print(f"quick-cancel rule removed {int(removed.n):,} sales lines carrying {int(r
 # *What to notice:* cancellations are not thrown away; they leave the sales path and become a
 # returns table, which feeds a feature and the error analysis.
 #
-# **Expected (real data):** about 1.02 million clean sales lines; the 24-hour rule removes only a few
-# hundred lines, but they carry well over 200,000 units, dominated by the two enormous orders. Without
-# this rule those two weeks would be the largest in the history of their products.
+# **Expected (real data, measured):** 1,013,498 clean sales lines. The 24-hour rule removes 6,156 lines
+# (0.6% of sales lines) carrying 240,901 units, about a third of them from the two enormous orders.
+# Without this rule those two weeks would be the largest in the history of their products.
 #
 # ### The weekly panel, with explicit zero weeks
 #
@@ -535,7 +538,7 @@ panel = q(f"""
                                                 INTERVAL 7 DAY) t(w)),
        products AS (SELECT DISTINCT StockCode FROM sales),
        wk AS (SELECT StockCode, date_trunc('week', InvoiceDate) AS week, SUM(Quantity) AS units,
-                     ROUND(SUM(Quantity * Price) / SUM(Quantity), 4) AS avg_price
+                     ROUND(SUM(Quantity * Price) / SUM(Quantity), 4) AS avg_price  -- rounded: parallel float sums vary in the last digit
               FROM sales GROUP BY 1, 2),
        rt AS (SELECT StockCode, date_trunc('week', InvoiceDate) AS week, SUM(returned) AS returned FROM returns GROUP BY 1, 2)
   SELECT p.StockCode, w.week, COALESCE(wk.units, 0) AS units, wk.avg_price, COALESCE(rt.returned, 0) AS returned
@@ -559,9 +562,10 @@ print(f"net-units alternative: {np.mean(net < 0):.2%} of product-weeks would be 
       f"(returns {panel.returned.sum() / panel.units.sum():.1%} of gross units overall)")
 
 # %% [markdown]
-# **Expected (real data):** about 4,900 products × 104 complete weeks (2009-12-07 to the week starting
-# 2011-11-28), roughly 70% zero weeks. Under the net-units label about 1% of product-weeks would be
-# *negative demand*, which is the reason we chose gross units. Returns are a few per cent of units.
+# **Expected (real data, measured):** 4,872 products × 104 complete weeks (2009-12-07 to the week
+# starting 2011-11-28) = 506,688 rows, 61.9% of them zero weeks. Under the net-units label 0.47% of
+# product-weeks would be *negative demand*, which is the reason we chose gross units. Returns are 3.6%
+# of gross units.
 #
 # **Common mistakes here.** Aggregating only the weeks that have sales (no zero rows), using
 # `date_trunc('month', …)` by habit, and forgetting the partial first and last weeks, which then look
@@ -635,8 +639,10 @@ seg_table
 # *What to notice:* the two cut-offs split products by *how often* they sell and *how variable* the
 # order sizes are; the segment decides which baseline is hard to beat.
 #
-# **Expected (real data):** most top products are smooth or erratic and most tail products are
-# intermittent or lumpy; the smooth and erratic segments carry the large majority of units.
+# **Expected (real data, measured):** training 2009-12-07 to 2011-06-13 (80 weeks), validation from
+# 2011-06-20, test from 2011-09-12. The 500 products cover 53% of training-window units. Segments:
+# 224 erratic (184 of them top products, 57% of units), 175 lumpy, 57 smooth (56 top, 25% of units)
+# and 44 intermittent (2% of units). Smooth and erratic products carry over 80% of the volume.
 #
 # > **Intuition.** ADI is "how many weeks do I wait between sales"; CV² is "how surprised am I by the
 # > size when a sale comes". A product that sells 20 units nearly every week is smooth; a product that
@@ -815,10 +821,10 @@ val_scores = score_table(ev_valid, base_valid)
 val_scores[val_scores.segment == "all"].set_index("method").round(3)
 
 # %% [markdown]
-# **Expected (real data, validation):** the all-zeros forecast has WAPE exactly 1 (by definition);
-# naive (last week) has WAPE well above the moving averages, because single weeks are noisy;
-# MA(8) and SBA are the strongest simple methods. Seasonal naive is poor overall: one prior year is a
-# noisy estimate of seasonality, and many products did not exist a year earlier.
+# **Expected (real data, validation, measured):** all zeros 1.000 (WAPE is exactly 1 by definition);
+# naive 0.841; MA(4) 0.701; **MA(8) 0.675**; SBA 0.690; seasonal naive 1.058. Single weeks are noisy,
+# so averaging more of them helps. Seasonal naive is the worst non-trivial method: one prior year is a
+# noisy estimate of seasonality, and many products sold little or nothing a year earlier.
 #
 # **Common mistakes.** Computing the moving average *including* the target week; scoring Croston on
 # the product's whole history including the period being evaluated; and leaving out the all-zeros
@@ -886,9 +892,15 @@ print(seg_val.round(3).to_string())
 print("\nchosen loss:", BEST_LOSS, "| chosen method per segment:", CHOICE)
 
 # %% [markdown]
-# **Expected (real data, validation):** the Poisson GBM has the lowest overall WAPE, clearly below the
-# best baseline; squared error is worse. In the intermittent and lumpy segments the gap shrinks, and a
-# simple method (SBA or a moving average) may be chosen there.
+# **Expected (real data, validation, measured):** the Poisson GBM (WAPE ≈ 0.69) only ties MA(8) (0.675)
+# and SBA (0.690); squared error is clearly worse (≈ 0.75). The equal-weight combination of the GBM and
+# MA(8) is the best candidate (≈ 0.67). Per segment, validation picks MA(8) for smooth and lumpy
+# products, the combination for erratic ones and the GBM for intermittent ones.
+#
+# This is a typical, honest outcome on weekly retail data: with ~100 weeks of history and noisy
+# wholesale orders, a well-chosen moving average is very hard to beat, and the model's value shows
+# mostly in combination. We do **not** go back and tune the GBM until it wins: every extra round of
+# tuning on validation makes the validation number less trustworthy.
 #
 # **Alternatives considered.** LightGBM with a Tweedie loss (similar, slightly faster; in
 # `requirements-part2.txt`); one model per horizon (four times the training cost for little gain at
@@ -974,10 +986,17 @@ comb = ci.loc[f"gbm_ma8_mean − gbm"]
 print(f"\nWAPE(gbm_ma8_mean) − WAPE(gbm) = {comb.WAPE:+.3f}, 95% CI [{comb.ci_low:+.3f}, {comb.ci_high:+.3f}]")
 
 # %% [markdown]
-# **Expected (real data, test):** the GBM has the lowest overall WAPE and the bootstrap interval of its
-# improvement over the best baseline (typically MA(8) or SBA) excludes zero. By segment, the GBM's
-# advantage is largest on smooth and erratic products and small or absent on intermittent and lumpy
-# ones. Bias is negative for most methods in the test period: the pre-Christmas ramp is under-forecast.
+# **Expected (real data, test, measured):** MA(8) WAPE 0.611 (95% CI 0.578–0.649), GBM 0.633
+# (0.596–0.677), combination 0.611, per-segment choice ≈ 0.61–0.62. The GBM is *worse* than MA(8) by
+# 0.023 WAPE, and the interval of that difference (−0.040 to −0.008) excludes zero: on this test period
+# the baseline wins. The combination beats the GBM alone by 0.023 (interval excludes zero) and ties
+# MA(8). By segment, SBA is best on smooth products (0.466) and MA(8) on intermittent ones. Bias is
+# negative for every method except seasonal naive: the autumn ramp is under-forecast.
+#
+# What to write in a README: "a global Poisson GBM did not beat an 8-week moving average on the
+# 12-week test period (WAPE 0.633 vs 0.611); an equal-weight combination matched the moving average".
+# That is a result. A capstone that reports it honestly is stronger than one that tuned on the test
+# set until the model won.
 #
 # > **Intuition.** Bootstrapping products asks "if the retailer had stocked a different but similar
 # > set of 500 products, how much would WAPE move?" Resampling rows would pretend that 48 weeks of one
@@ -1045,13 +1064,17 @@ print(f"smooth products: {smooth.sum()} | zero weeks between two weeks at or abo
       f"{sandwich.sum()} ({sandwich.any(1).mean():.0%} of smooth products have at least one)")
 
 # %% [markdown]
-# **Expected (real data):** WAPE rises in the November weeks, where demand ramps up faster than any
-# history-based feature can follow, and bias turns more negative there; the final test week (the start
-# of December) is often the hardest. Error grows slightly with horizon. The largest absolute misses are
-# high-volume products with occasional very large wholesale orders. Cumulative 4-week WAPE is
-# noticeably lower than weekly WAPE (errors partly cancel across weeks), which is the more relevant
-# number for an order. Dozens of "sandwiched" zero weeks among smooth products are consistent with
-# stock-outs: the label we learn from is censored demand.
+# **Expected (real data, measured):** units per week rise from about 53,000 to about 290,000 over the
+# test period, and the GBM's bias is negative in 9 of the 12 weeks (the ramp is under-forecast). Its
+# worst weeks (2011-09-26 and 2011-10-10, WAPE 0.69 and 0.84) are *over*-forecasts after a very large
+# week, i.e. the model chased a spike. Error grows slowly with horizon (0.62 → 0.65). The single largest
+# miss is product 23084 (a night light) with about 90,000 test units: it barely sold before the
+# validation period, so it was ranked as an *intermittent* tail product, a reminder that segment labels
+# frozen on the training window misclassify new launches. Products with no recorded returns have the
+# highest WAPE (≈ 0.93): they are mostly new or sparse items. Cumulative 4-week WAPE (≈ 0.47) is much
+# lower than weekly WAPE (0.63): weekly errors partly cancel, and the 4-week total is what an order
+# covers. Only 4 "sandwiched" zero weeks appear among the 57 smooth products: weak evidence of
+# stock-outs, which is all this data can give; without stock levels, censoring cannot be measured.
 #
 # **Common mistakes.** Reporting only the overall WAPE (it is dominated by a few products); treating the
 # list of biggest misses as anecdotes instead of a pattern (here: wholesale spikes and the Christmas ramp).

@@ -6,27 +6,30 @@
 # %% [markdown]
 # # Chapter 27 · PyTorch training done right
 #
-# **Day 5 · ~90 minutes · CPU (a GPU only speeds up the optional parts)**
+# **Part II · Chapter 27 · about 90 minutes · CPU (a GPU only speeds up the optional parts)**
 #
-# You have trained PyTorch models before; this notebook is about the parts
-# that decide whether a training run can be *trusted, repeated and resumed*
-# by someone else, which is what reviewers and interviewers probe. The running
-# example is a click model on ShopStream impressions: small enough to train in
-# seconds on a CPU, real enough to show every failure.
+# This lab assumes prior experience of training PyTorch models. It concerns
+# the parts that decide whether a training run can be *trusted, repeated and
+# resumed* by someone else, which is what reviewers and interviewers examine.
+# The running example is a click model on ShopStream impressions: small enough
+# to train in seconds on a CPU, realistic enough to show every failure.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. choose between map-style and iterable datasets, write a collate function, and reason about `num_workers` and `pin_memory`;
 # 2. write the training loop by hand and say exactly where `train()`/`eval()`, `no_grad` and `zero_grad` go and why;
-# 3. predict the loss at initialisation and use it, plus "overfit one batch" and gradient norms, to debug a model that won't learn;
+# 3. predict the loss at initialisation and use it, together with "overfit one batch" and gradient norms, to debug a model that does not learn;
 # 4. make two runs produce **bitwise-identical** loss curves, and prove a resumed run equals an uninterrupted one;
 # 5. use warmup + cosine learning-rate schedules and gradient clipping;
 # 6. find planted bugs in a training script from its symptoms.
 #
-# **You will produce:** `artifacts/level2/nb09/click_mlp.pt` (a full checkpoint:
-# model, optimizer, scheduler and RNG states) and the small helper module
-# [`src/shoprank/torchkit.py`](../../src/shoprank/torchkit.py), which later
-# notebooks reuse.
+# **Outputs of this lab:** `artifacts/level2/nb09/click_mlp.pt` (a full checkpoint:
+# model, optimizer, scheduler and RNG states). The lab also uses the small
+# helper module [`src/shoprank/torchkit.py`](../../src/shoprank/torchkit.py),
+# which later chapters reuse.
+
+# %% [markdown]
+# Read first: [Chapter 27 text](README.md) — data loaders, the training loop, the loss at initialisation, reproducibility, schedules, checkpointing and debugging, explained in full.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -99,19 +102,19 @@ print(f"{len(imps):,} impressions loaded in {time.time() - t0:.0f} s | torch {to
 # | **Gradient clipping** | rescale the gradient when its norm exceeds a threshold | `clip_grad_norm_(…, 1.0)` |
 # | **Warmup + cosine** | ramp the learning rate up linearly, then decay it along a cosine | `tk.warmup_cosine` |
 # | **Checkpoint** | everything needed to continue a run exactly | `click_mlp.pt`: model, optimizer, scheduler, RNG |
-# | **Bitwise reproducible** | two runs give identical floats, not just close ones | `==` on the loss lists in 9.5 |
+# | **Bitwise reproducible** | two runs give identical floats, not just close ones | `==` on the loss lists in 27.5 |
 
 # %% [markdown]
-# ## 9.1 · From a log to tensors
+# ## 27.1 · From a log to tensors
 #
 # The click model predicts `P(click)` for one impression from four inputs:
 # the user, the item, the item's category and the **position** it was shown at.
 # Position is a feature during training so that the model can explain away
-# position bias (notebook 05); at serving time you would fix it to one value.
+# position bias (Chapter 23); at serving time it would be fixed to one value.
 #
 # We train on the last two training weeks (days 28–41) and validate on the
 # validation week (42–48), subsampled so every cell runs in seconds. The split is by
-# **time**, as in every Level 2 notebook; section 9.9 shows what goes wrong otherwise.
+# **time**, as in every Part II lab; section 27.9 shows what goes wrong otherwise.
 
 # %%
 cat_of_item = torch.as_tensor(items["category"].to_numpy(), dtype=torch.long)
@@ -136,14 +139,14 @@ print(f"train {len(train_df):,} rows (days 28-41) | valid {len(valid_df):,} rows
 # %% [markdown]
 # **Expected:** 240,000 training and 60,000 validation rows; a click rate of about 0.137.
 #
-# ## 9.2 · Datasets and DataLoaders
+# ## 27.2 · Datasets and DataLoaders
 #
 # A **map-style** `Dataset` has `__len__` and `__getitem__(i)`: the loader's
 # *sampler* chooses indices (shuffled or not), workers fetch them, and a
 # **collate function** stacks the samples into a batch. An **iterable**
 # `IterableDataset` has only `__iter__`: it decides the order itself, which
 # suits streams that do not fit in memory (Parquet files, a message queue),
-# but shuffling and sharding across workers become *your* job.
+# but shuffling and sharding across workers become the programmer's job.
 #
 # The textbook map-style dataset returns one row at a time:
 
@@ -196,16 +199,16 @@ print(f"per-batch Dataset  : {n:,} rows in {sec_batch:.3f} s  ({sec_rows / sec_b
 # *is* the cost. For images, decoding dominates instead and per-row is fine.
 #
 # `batch_size=None` turns off the loader's own batching: the sampler already
-# yields lists of indices. This pattern is what you want for tabular and
+# yields lists of indices. This pattern is the appropriate one for tabular and
 # embedding-lookup models.
 #
 # **`num_workers`.** Workers are separate *processes* that run
 # `__getitem__` + collate in parallel and pass batches back through shared
 # memory. They help when loading is CPU-heavy (decoding JPEGs, tokenising text)
-# and you have spare cores. They cost process start-up per epoch (unless
+# and spare cores are available. They cost process start-up per epoch (unless
 # `persistent_workers=True`), memory (each worker holds a copy of the dataset
 # object), and inter-process transfer. A free Colab runtime has **2 CPU
-# cores**, so `num_workers=2` is the most that can help there. Measure, don't guess:
+# cores**, so `num_workers=2` is the most that can help there. The effect should be measured, not assumed:
 
 # %%
 for workers in (0, 2):
@@ -218,16 +221,16 @@ for workers in (0, 2):
 # **Expected:** on a 2-core machine the two times are of the same order (0.5–2 s); two
 # workers may be slightly faster or slower, depending on how much of the cost is
 # worker start-up and inter-process copying. The batched dataset with
-# `num_workers=0` beats both by a wide margin, so fix the data path before
-# adding processes.
+# `num_workers=0` is faster than both by a wide margin, so the data path should
+# be fixed before processes are added.
 #
 # **`pin_memory=True`** allocates batches in page-locked host memory so that
 # `.to("cuda", non_blocking=True)` can overlap the copy with compute. It only
 # matters with a GPU; on a CPU-only runtime it does nothing useful.
 #
 # **Iterable datasets and workers.** With an `IterableDataset`, *every*
-# worker runs `__iter__` from the start. Unless you shard, you get each row
-# `num_workers` times. ShopStream's impressions are stored as Parquet part files;
+# worker runs `__iter__` from the start. Without sharding, each row is
+# produced `num_workers` times. ShopStream's impressions are stored as Parquet part files;
 # `tk.ParquetDayStream` streams them and shards files across workers by
 # `get_worker_info()`:
 
@@ -244,7 +247,7 @@ for shard in (False, True):
 # raises in the broken case: the only symptom is an epoch that is
 # suspiciously long and a model that has seen duplicates.
 #
-# ## 9.3 · The model and the loop, by hand
+# ## 27.3 · The model and the loop, by hand
 #
 # The click model: embeddings for user, item, category and position, concatenated,
 # then a small MLP with dropout. It outputs a **logit**; the loss is
@@ -291,7 +294,7 @@ print(model)
 print(f"{tk.count_parameters(model):,} trainable parameters")
 
 # %% [markdown]
-# Now the loop, written out once so every line can be questioned:
+# The loop, written out once so that every line can be examined:
 
 # %%
 from sklearn.metrics import roc_auc_score
@@ -336,7 +339,7 @@ print(f"3 epochs in {time.time() - start:.1f} s")
 # and computed *with dropout on*, which is why train and valid
 # losses are not directly comparable.
 #
-# The numbered comments are the interview questions:
+# The numbered comments correspond to common interview questions:
 #
 # * **(3) `model.train()` inside the epoch loop.** Evaluation switched the model
 #   to eval mode; forgetting to switch back silently trains without dropout
@@ -351,14 +354,14 @@ print(f"3 epochs in {time.time() - start:.1f} s")
 #   alive: the classic slow memory leak.
 
 # %% [markdown]
-# > **Intuition.** `model.eval()` puts the car in parking mode (it changes how the car *behaves*: dropout off, batch-norm statistics frozen); `torch.no_grad()` switches off the dashcam (nothing is *recorded* for a later replay, i.e. backprop). Validation wants both: parked, and not recording. *Where it breaks down:* a parked car cannot move, but a model in eval mode can still be trained, silently and wrongly, if you forget to switch back.
+# > **Intuition.** `model.eval()` puts a car into parking mode (it changes how the car *behaves*: dropout off, batch-norm statistics frozen); `torch.no_grad()` switches off its recording camera (nothing is *recorded* for a later replay, i.e. backprop). Validation needs both: parked, and not recording. *Where it breaks down:* a parked car cannot move, but a model in eval mode can still be trained, silently and wrongly, if it is not switched back.
 
 # %% [markdown]
 # > **Exercise 1.** Package the loop as `train_one_epoch(model, loader, optimizer, loss_fn)`.
 # > The loader yields `(*inputs, y)` tuples; call `model(*inputs)`. Put the model in training
 # > mode, do one optimizer step per batch, and return the **mean loss per example** over the
 # > epoch as a Python float (weight each batch's mean loss by its size). The grader trains a
-# > tiny linear model and compares your weights, step for step, with a reference loop.
+# > tiny linear model and compares the weights, step by step, with a reference loop.
 
 # %%
 def train_one_epoch(model, loader, optimizer, loss_fn):
@@ -369,12 +372,12 @@ def train_one_epoch(model, loader, optimizer, loss_fn):
 grade.ex1(train_one_epoch)
 
 # %% [markdown]
-# `tk.train_epoch` is the same loop with three additions you will use below:
+# `tk.train_epoch` is the same loop with three additions used below:
 # an optional per-step scheduler, gradient clipping, and a per-step log of
 # the loss, gradient norm and learning rate. Read it in
 # [`src/shoprank/torchkit.py`](../../src/shoprank/torchkit.py).
 #
-# ## 9.4 · Know the loss before you train
+# ## 27.4 · Know the loss before you train
 #
 # Before the first step, a sensibly initialised model should predict roughly
 # the base rate for everyone. For binary cross-entropy with a positive rate
@@ -416,7 +419,7 @@ def expected_initial_loss(pos_rate):
 grade.ex2(expected_initial_loss)
 
 # %% [markdown]
-# ## 9.5 · Reproducibility: bitwise-identical runs
+# ## 27.5 · Reproducibility: bitwise-identical runs
 #
 # A training run draws random numbers in four places: weight initialisation,
 # data order, dropout masks, and anything in data-loading workers. To repeat it
@@ -429,7 +432,7 @@ grade.ex2(expected_initial_loss)
 # | NumPy / `random` inside workers | `worker_init_fn=tk.seed_worker`, plus `generator=` on the DataLoader |
 # | non-deterministic kernels (mostly GPU) | `torch.use_deterministic_algorithms(True)`, cuDNN flags (`tk.set_deterministic`) |
 #
-# Here is one complete training run as a function, then two calls with the same seed:
+# The cell below defines one complete training run as a function, then calls it twice with the same seed:
 
 # %%
 def run(seed, epochs=2, extra_draw=False):
@@ -478,10 +481,10 @@ print("epoch 1 identical:", losses_a[:n_steps] == losses_d[:n_steps],
 # the sampler used the global RNG too, the data order would have changed as well.
 # Exact reproducibility is fragile by nature: it holds for *this code, these
 # library versions, this hardware*. Across a GPU model or a PyTorch upgrade,
-# expect "statistically the same", which is why you report the spread over seeds.
+# results are at best "statistically the same", which is why the spread over seeds is reported.
 
 # %% [markdown]
-# ## 9.6 · Learning-rate schedules and gradient clipping
+# ## 27.6 · Learning-rate schedules and gradient clipping
 #
 # **Warmup + cosine.** Adam's second-moment estimates are poor in the first
 # steps, so large early updates can push embeddings or attention weights somewhere bad;
@@ -489,7 +492,7 @@ print("epoch 1 identical:", losses_a[:n_steps] == losses_d[:n_steps],
 # step size so the last epochs refine rather than bounce. Schedules in PyTorch are
 # stepped either per epoch or per optimizer step; `tk.warmup_cosine` is per **step**.
 #
-# > **Intuition.** Warmup is not flooring the accelerator on a cold engine: Adam's running averages start empty, so its first few step sizes are guesses. Cosine decay is easing off the pedal as you approach the parking space. *Where it breaks down:* an engine warms up in minutes regardless; how many warmup steps a model needs depends on the batch size and the optimiser, so treat it as a hyper-parameter, not a constant.
+# > **Intuition.** Warmup is like not accelerating hard on a cold engine: Adam's running averages start empty, so its first few step sizes are guesses. Cosine decay is like easing off the pedal when approaching the parking space. *Where it breaks down:* an engine warms up in minutes regardless; how many warmup steps a model needs depends on the batch size and the optimiser, so treat it as a hyper-parameter, not a constant.
 #
 # **Gradient clipping** rescales the gradient when its global norm exceeds a
 # threshold. It protects against rare huge gradients (a bad batch, a spike in
@@ -540,12 +543,12 @@ plt.show()
 
 # %% [markdown]
 # **Expected:** both runs reach a validation AUC around 0.76. In our runs the schedule gave
-# a slightly lower validation loss than the constant rate (0.335 vs 0.336); on this small model the effect is modest, so do not over-read
-# one run: compare over seeds before claiming a gain. The plots show the
+# a slightly lower validation loss than the constant rate (0.335 vs 0.336); on this small model the effect is modest, so a single run
+# should not be over-interpreted: compare over seeds before claiming a gain. The plots show the
 # warmup ramp and the cosine tail, and gradient norms mostly below 1 with
 # occasional larger steps, which clipping at 1.0 caps.
 #
-# ## 9.7 · Checkpoint and resume, proven
+# ## 27.7 · Checkpoint and resume, proven
 #
 # Colab disconnects; spot instances get pre-empted; long jobs crash at hour 11.
 # A checkpoint that holds only the weights is **not** enough to continue the
@@ -559,7 +562,7 @@ plt.show()
 #
 # *What to notice:* the loop at the top has state in four places (weights, optimizer moments, scheduler position, random generators). The green box saves all four; the red box saves one, which is why its curve departs below.
 #
-# > **Intuition.** A checkpoint is a saved game: you need not only where your character stands (the weights) but the inventory (Adam's moments), the quest log (the scheduler's step) and the dice (every random generator). Load only the position and the game continues, just not *your* game. *Where it breaks down:* a game reloads instantly; a checkpoint is worth saving only as often as losing the work in between would hurt.
+# > **Intuition.** A checkpoint resembles a saved game: restoring it needs not only the character's position (the weights) but the inventory (Adam's moments), the progress log (the scheduler's step) and the dice (every random generator). Restoring only the position continues a game, but not the same one. *Where it breaks down:* a game reloads instantly; a checkpoint is worth saving only as often as losing the work in between would hurt.
 
 # %%
 CKPT = OUT / "click_mlp.pt"
@@ -627,14 +630,14 @@ print("weights-only == uninterrupted         :", curve_a == curve_c)
 # Two habits visible in `tk.save_checkpoint`: write to a temporary file and
 # **rename** (a crash during the save never corrupts the last good
 # checkpoint), and store the epoch so the resumed loop knows where to start.
-# `torch.load(..., weights_only=False)` executes pickled code: only load checkpoints you wrote.
+# `torch.load(..., weights_only=False)` executes pickled code: only load checkpoints from a trusted source.
 
 # %% [markdown]
-# ## 9.8 · A debugging playbook for a model that won't learn
+# ## 27.8 · A debugging procedure for a model that does not learn
 #
 # In order, cheapest first:
 #
-# 1. **Loss at step 0** equals the number from 9.4? If not, the bug is in labels, loss or output scale.
+# 1. **Loss at step 0** equals the number from 27.4? If not, the bug is in labels, loss or output scale.
 # 2. **Overfit one batch.** A model with enough capacity must drive the loss on a
 #    single fixed batch towards zero. If it cannot, the bug is in the model or the
 #    loop (detached tensors, wrong loss, frozen parameters), *not* in the data or
@@ -675,11 +678,11 @@ print("overfit one batch, loss at steps 0/10/20/50/200:", [round(trace[i], 4) fo
 # gradient only from the rows of the batch that use it.
 
 # %% [markdown]
-# ## 9.9 · Find the bug
+# ## 27.9 · Find the bug
 #
 # A colleague's experiment script is below. It runs without errors and prints
-# numbers that look plausible. It contains **three** bugs, each a mistake real
-# teams make. Read it, run it, and look at the symptoms.
+# numbers that look plausible. It contains **three** bugs, each a mistake that
+# real teams make. Read it, run it, and examine the symptoms.
 
 # %%
 import inspect
@@ -731,15 +734,15 @@ print(f"({time.time() - start:.1f} s)")
 
 # %% [markdown]
 # **Expected:** a training loss of about 0.48 that settles around 0.44, *above*
-# the ~0.40 base-rate entropy from 9.4 (a constant predictor would beat it), and a
-# validation AUC of about 0.61–0.63, far below the 0.76 of section 9.3's model.
+# the ~0.40 base-rate entropy from 27.4 (a constant predictor would beat it), and a
+# validation AUC of about 0.61–0.63, far below the 0.76 of section 27.3's model.
 # A training loss that cannot get below the trivial baseline is itself a clue.
 
 # %% [markdown]
 # > **Exercise 3.** Which statements describe bugs that are **actually present** in
 # > `colleague_experiment`? Return a list of letters from `find_bugs()`. The grader
-# > stores only hashes of the answer and tells you how many you found and how many
-# > false alarms you raised.
+# > stores only hashes of the answer and reports how many bugs were found and how
+# > many false alarms were raised.
 # >
 # > * **A.** `opt.zero_grad()` is in the wrong place, so gradients accumulate across steps.
 # > * **B.** The validation pass should not be wrapped in `torch.no_grad()`.
@@ -759,17 +762,17 @@ def find_bugs():
 grade.ex3(find_bugs)
 
 # %% [markdown]
-# For each bug you find, predict what fixing it alone would change in the printed
+# For each bug found, predict what fixing it alone would change in the printed
 # numbers, then check: copy the function, fix one line, re-run. The written
 # solution has the measured effect of each fix.
 #
-# ## 9.10 · Optional GPU extension: mixed precision (AMP)
+# ## 27.10 · Optional GPU extension: mixed precision (AMP)
 #
 # On a GPU, `torch.autocast` runs matmuls in float16 and `GradScaler` scales
 # the loss so small float16 gradients do not underflow. The loop barely changes.
-# This cell does nothing unless you have a CUDA GPU **and** set the flag.
-# We did not run it in our verification runs (CPU only). On a T4 you should
-# expect a speed-up only for much larger models than this one; with a 300k-parameter
+# This cell does nothing unless a CUDA GPU is available **and** the flag is set.
+# It was not run in our verification runs (CPU only). On a T4 a speed-up should
+# be expected only for much larger models than this one; with a 300k-parameter
 # MLP the GPU is limited by Python overhead, not arithmetic.
 
 # %%
@@ -902,7 +905,7 @@ print(f"5. clip: norm before {norm_before.item():.1f}, gradient after {clip_p.gr
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
 # | `ModuleNotFoundError: churnlab` / `shoprank` | setup cell not run | run the first code cell |
-# | Loss at step 0 far from `log 2` / base-rate entropy | labels wrong dtype or range, softmax/sigmoid applied twice, wrong reduction | print one batch; check the loss against 9.4 before training |
+# | Loss at step 0 far from `log 2` / base-rate entropy | labels wrong dtype or range, softmax/sigmoid applied twice, wrong reduction | print one batch; check the loss against 27.4 before training |
 # | Two runs with the same seed differ | the sampler uses the global RNG; a library draws random numbers; non-deterministic GPU kernels | dedicated `torch.Generator` for shuffling, `tk.set_deterministic(True)`, seed before building the model |
 # | Resumed run differs from uninterrupted | optimizer/scheduler/RNG state not saved or not restored | save with `tk.save_checkpoint` and restore with `tk.load_checkpoint` into freshly built objects |
 # | DataLoader with `num_workers>0` hangs or errors in a notebook | dataset/collate defined in an unpicklable way (spawn start method), or a worker crashed | use `num_workers=0` to see the real traceback; define datasets in a module |
@@ -913,13 +916,13 @@ print(f"5. clip: norm before {norm_before.item():.1f}, gradient after {clip_p.gr
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
-# 1. Walk through one training step. Where exactly must `zero_grad` go, and when would you deliberately *not* zero gradients every step?
-# 2. What do `model.eval()` and `torch.no_grad()` each do, and what goes wrong if you use only one of them during validation?
-# 3. Your binary classifier with a 2% positive rate shows a loss of 0.69 at step 0. Is that a bug? What should it be, and how do you fix the initialisation?
+# 1. Walk through one training step. Where exactly must `zero_grad` go, and when would one deliberately *not* zero gradients every step?
+# 2. What do `model.eval()` and `torch.no_grad()` each do, and what goes wrong if only one of them is used during validation?
+# 3. A binary classifier with a 2% positive rate shows a loss of 0.69 at step 0. Is that a bug? What should it be, and how is the initialisation fixed?
 # 4. A job restarted from a checkpoint ends with a worse model than an uninterrupted run. List everything a checkpoint must contain to make resume exact.
-# 5. Two runs with the same seed give different results on a GPU. Name the possible sources and how you would make them repeatable, and when bitwise repeatability is not worth its cost.
-# 6. Your model's loss won't go down. Describe your first 15 minutes of debugging, in order.
+# 5. Two runs with the same seed give different results on a GPU. Name the possible sources and how to make them repeatable, and when bitwise repeatability is not worth its cost.
+# 6. A model's loss does not go down. Describe the first 15 minutes of debugging, in order.
 #
-# **Next chapter:** [`10_sequence_models_for_user_behavior.ipynb`](../ch28-sequence-models-for-user-behavior/notebook.ipynb) — the same loop, applied to a model that reads a user's click history in order.
+# **Next chapter:** [Chapter 28 · Sequence models for user behaviour](../ch28-sequence-models-for-user-behavior/notebook.ipynb) — the same loop, applied to a model that reads a user's click history in order.

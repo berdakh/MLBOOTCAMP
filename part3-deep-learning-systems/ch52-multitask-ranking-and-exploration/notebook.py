@@ -119,7 +119,7 @@ print(f"train impressions: {N_TRAIN:,} | test impressions: {N_TEST:,}")
 # | Regret | Expected reward lost compared with always choosing the best option | clicks lost over 50,000 rounds |
 
 # %% [markdown]
-# ## 1 · Clicks, conversions and sample selection bias
+# ## 52.1 · Clicks, conversions and sample selection bias
 #
 # We reuse Chapter 51's generator with two changes: higher base rates (CTR ≈ 8%, CVR ≈ 15% of
 # clicks) so that a CPU-sized sample holds a few thousand conversions, and a **negative**
@@ -153,7 +153,7 @@ print(f"correlation of log true CTR and log true CVR: {corr:+.2f}")
 # negative correlation (−0.31): a model trained only on clicks sees the wrong slice of the population.
 
 # %% [markdown]
-# ## 2 · Shared-bottom, MMoE and ESMM
+# ## 52.2 · Shared-bottom, MMoE and ESMM
 #
 # Three ways to predict both tasks with one network (all share the hashed embeddings):
 #
@@ -174,7 +174,7 @@ print(f"correlation of log true CTR and log true CVR: {corr:+.2f}")
 # > different goals. MMoE is a small panel of consultants (experts); each client (task) has its own
 # > rule for how much to listen to each panel member, and the rule can change per question (per
 # > example). *Where the analogy breaks down:* nothing forces the experts to specialise; with mild
-# > task conflict and little data they stay interchangeable, which is what section 2 measured.
+# > task conflict and little data they stay interchangeable, which is what section 52.2 measured.
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l3-x-esmm.svg" alt="Nested populations of all impressions, clicked and converted, and the ESMM network where pCTCVR = pCTR × pCVR is trained on all impressions" width="100%">
 #
@@ -284,7 +284,7 @@ print(np.round(np.stack([g.mean(0).cpu().numpy() for g in gates.last_gates]), 3)
 #   corrections (inverse propensity weighting, doubly robust estimators, e.g. ESCM², Wang et al. 2022).
 
 # %% [markdown]
-# ## 3 · Blending objectives
+# ## 52.3 · Blending objectives
 #
 # A ranker needs one score per candidate. A common form is a weighted product,
 #
@@ -351,7 +351,7 @@ RESULTS["blending"] = grid.round(3).to_dict(orient="records")
 # exactly "expected value per impression".
 
 # %% [markdown]
-# ## 4 · Auctions: eCPM, first and second price, reserves, calibration
+# ## 52.4 · Auctions: eCPM, first and second price, reserves, calibration
 #
 # Advertisers bid per click; the platform sells impressions. To compare them, rank by expected
 # revenue per impression, **eCPM = pCTR × bid × 1000**. In a **second-price** (for one slot, the
@@ -476,7 +476,7 @@ print(auc_df.round(3).to_string(index=False))
 # impressions go unsold, others pay the floor).
 
 # %% [markdown]
-# ## 5 · Exploration: bandits and cold-start ads
+# ## 52.5 · Exploration: bandits and cold-start ads
 #
 # A ranker that always shows its current best guess never learns about the alternatives, and a new
 # ad with no history never gets a chance. A **multi-armed bandit** formalises the trade-off: each
@@ -703,7 +703,7 @@ print("saved", OUT / "results.json")
 # $n_k$ arm $k$'s empirical CTR and play count, $r_t \in \{0, 1\}$ the click. *Example:* an ad with 3
 # clicks in 100 shows has the posterior $\mathrm{Beta}(1 + 3, 1 + 97) = \mathrm{Beta}(4, 98)$, mean
 # $4/102 = 3.9\%$; its UCB1 bonus at $t = 10{,}000$ is $\sqrt{2 \ln 10^4 / 100} = 0.43$, huge next to a
-# 3% CTR, which is why UCB1 over-explored in section 5.
+# 3% CTR, which is why UCB1 over-explored in section 52.5.
 #
 # The cell below checks 3 and 5 numerically.
 

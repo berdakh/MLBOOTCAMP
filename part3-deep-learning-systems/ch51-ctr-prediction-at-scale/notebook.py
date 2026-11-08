@@ -118,11 +118,11 @@ print(f"train impressions: {N_TRAIN:,} | test impressions: {N_TEST:,}")
 # | Collision | Two different keys landing in the same hash bucket and sharing a weight | 1,024 buckets: every key collides |
 # | Embedding table | A learned vector per id (row), looked up by index | 2^18 rows × 8 dims |
 # | Cross feature | A feature that fires for a *combination* of values (this ad on this site) | what DCN cross layers learn |
-# | Negative downsampling | Keeping all clicks but only a fraction `w` of non-clicks for training | `w = 0.1` in section 7 |
+# | Negative downsampling | Keeping all clicks but only a fraction `w` of non-clicks for training | `w = 0.1` in section 51.7 |
 # | Delayed feedback | Labels (conversions) that arrive long after the event | exponential delays, mean 2 days |
 
 # %% [markdown]
-# ## 1 · A Criteo-like log with a known truth
+# ## 51.1 · A Criteo-like log with a known truth
 #
 # The public [Criteo display-ads](https://ailab.criteo.com/ressources/) logs have 13 integer
 # features (counts) and 26 categorical features (hashed strings), one row per impression and a
@@ -135,7 +135,7 @@ print(f"train impressions: {N_TRAIN:,} | test impressions: {N_TEST:,}")
 # counts, a time-of-day effect, per-value effects in about half of the categorical fields,
 # and **feature crosses** (pairs of fields, and dense × categorical) that a linear model cannot
 # represent. We split **by time**: train on days 0–9, validate on day 9 (used only for calibration
-# in section 6), test on days 10–13, as production does (train on the past, serve the future).
+# in section 51.6), test on days 10–13, as production does (train on the past, serve the future).
 
 # %%
 t0 = time.perf_counter()
@@ -168,7 +168,7 @@ print(f"distinct (field, value) pairs in train: {card.distinct_in_train.sum():,}
 # distinct (field, value) pairs appear in training (the data are seeded, so these counts repeat).
 
 # %% [markdown]
-# ## 2 · Metrics ads teams use
+# ## 51.2 · Metrics ads teams use
 #
 # * **Log loss** `−mean(y log p + (1−y) log(1−p))`: the training objective, sensitive to
 #   calibration as well as ranking.
@@ -180,7 +180,7 @@ print(f"distinct (field, value) pairs in train: {card.distinct_in_train.sum():,}
 # * **AUC**: ranking quality only; blind to calibration (multiply every prediction by 2 and AUC
 #   does not change).
 # * **Calibration**: mean predicted / observed ratio, overall and per prediction bucket.
-#   Auctions multiply pCTR by the bid (section 6), so a model can improve AUC and still reduce revenue.
+#   Auctions multiply pCTR by the bid (section 51.6), so a model can improve AUC and still reduce revenue.
 #
 # > **Intuition.** NE answers "how much better than a weather forecaster who always says the
 # > average?". Log loss alone is hard to compare across products: predicting a 3% CTR is easier than
@@ -222,7 +222,7 @@ print(pd.DataFrame(table).round(4).to_string(index=False))
 # even when their probability is known. Every model below sits between these two rows.
 
 # %% [markdown]
-# ## 3 · The hashing trick
+# ## 51.3 · The hashing trick
 #
 # A one-hot encoding needs a vocabulary: every value of every field mapped to a row. With millions
 # of values that appear and disappear daily, maintaining that vocabulary (and agreeing on it
@@ -253,7 +253,7 @@ print(pd.DataFrame(table).round(4).to_string(index=False))
 # > **Exercise 3.** Write `hash_feature(field, value, n_buckets)` returning an `int` in `[0, n_buckets)`
 # > that is the same in every process and on every machine (no built-in `hash()`), depends on the
 # > field as well as the value, and spreads values uniformly. `value` may be a `str` or an `int`.
-# > (Exercise 2 comes in section 7.)
+# > (Exercise 2 comes in section 51.7.)
 
 # %%
 def hash_feature(field, value, n_buckets):
@@ -328,7 +328,7 @@ print(sweep[["buckets", "keys/buckets", "collide (measured)", "collide (theory)"
 # for nothing.
 
 # %% [markdown]
-# ## 4 · Embedding tables and memory arithmetic
+# ## 51.4 · Embedding tables and memory arithmetic
 #
 # Deep CTR models replace each one-hot feature with a learned vector: an **embedding table**
 # of `rows × dim` floats. Memory = `rows × dim × bytes_per_value`, plus the optimiser state
@@ -367,10 +367,10 @@ print("T4 memory: 16 GB. A 1e9 x 64 fp32 table alone is 16x that.")
 # (Chapter 47). Other tools: fp16/int8 tables, row-wise Adagrad (one accumulator per row instead
 # of per value), frequency-based admission (only give a row to ids seen ≥ k times) and
 # eviction of stale rows, and caching the hot rows in GPU memory while the long tail
-# lives in host memory or SSD. The power law in section 1 is what makes that cache effective.
+# lives in host memory or SSD. The power law in section 51.1 is what makes that cache effective.
 
 # %% [markdown]
-# ## 5 · Deep & Cross Network (DCN-v2)
+# ## 51.5 · Deep & Cross Network (DCN-v2)
 #
 # Logistic regression adds up per-feature weights; it cannot learn that *this* ad works for
 # *this* site unless someone hand-crafts the cross feature. Factorisation machines and DeepFM
@@ -438,7 +438,7 @@ print(pd.DataFrame(table).round(4).to_string(index=False))
 # CTR models), which is also why production models train on each day's data once, in order.
 
 # %% [markdown]
-# ## 6 · Calibration, and why auctions care
+# ## 51.6 · Calibration, and why auctions care
 #
 # An ad auction ranks by **expected value per impression**, `eCPM = pCTR × bid × 1000`, and with
 # second-price rules the winner's price also depends on the runner-up's pCTR (Chapter 52). If
@@ -493,10 +493,10 @@ print(ctr.calibration_table(y_test, p_dcn_cal, n_bins=5).round(4).to_string(inde
 # %% [markdown]
 # **Expected (measured):** Platt parameters close to `a = 1, b = 0` (ours: a ≈ 1.01, b ≈ 0.04): there
 # was little to fix, so NE and AUC are unchanged and pred/obs stays ≈ 1.0. The layer becomes useful
-# in section 7.
+# in section 51.7.
 
 # %% [markdown]
-# ## 7 · Negative downsampling and re-calibration
+# ## 51.7 · Negative downsampling and re-calibration
 #
 # With a 3% CTR, 97% of the training rows are negatives that teach the model little. Keep every
 # click and only a fraction `w` of the non-clicks: training is ~`1/(CTR + w)` times cheaper with
@@ -578,7 +578,7 @@ print(pd.DataFrame([report(f"LR downsampled w={W}, recalibrated + Platt", y_test
 # the one used to correct, so `w` must be stored with the model.
 
 # %% [markdown]
-# ## 8 · Delayed feedback
+# ## 51.8 · Delayed feedback
 #
 # Clicks arrive within seconds; **conversions** (a purchase, an install) can arrive days later. A
 # conversion-rate (CVR) model trained at time `T` sees recent clicks whose conversions have *not
@@ -718,7 +718,7 @@ print("saved", OUT / "results.json")
 #
 # *Symbols:* $\bar{p}$ the base rate (mean of $y$). *Example:* $\bar{p} = 0.03$ gives
 # $H = 0.03 \cdot 3.507 + 0.97 \cdot 0.0305 = 0.1347$; a model with $\mathrm{LL} = 0.115$ has
-# $\mathrm{NE} = 0.854$ (about the DCN in section 5).
+# $\mathrm{NE} = 0.854$ (about the DCN in section 51.5).
 #
 # **3 · Hash collisions.**
 #
@@ -790,7 +790,7 @@ print(f"recalibrated {p_.round(4)} | ctr.recalibrate_downsampled {ctr.recalibrat
 # | AUC fine, pred/obs ≫ 1 | negatives were downsampled | `recalibrate_downsampled(p, w)` with the training `w` |
 # | `RuntimeError: CUDA out of memory` on a T4 with a big table | `rows × dim × 4 B` × (1 + optimiser slots) exceeds 16 GB | fewer buckets, smaller dim, fp16 table, or sparse optimiser |
 # | DCN worse than LR on NE but better on AUC | overfitting the embeddings (several epochs, LR too high) | one epoch, lower LR, weight decay on the dense part only |
-# | CVR model systematically too low on recent traffic | delayed conversions counted as negatives | wait window or delay-aware likelihood (section 8) |
+# | CVR model systematically too low on recent traffic | delayed conversions counted as negatives | wait window or delay-aware likelihood (section 51.8) |
 # | The notebook is slow on CPU | the CPU budget still trains on 500k rows | expected (~1–2 min in our CPU runs); `BOOTCAMP_BUDGET=smoke` only proves the code runs |
 
 # %% [markdown]

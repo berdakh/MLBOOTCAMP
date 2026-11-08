@@ -6,25 +6,28 @@
 # %% [markdown]
 # # Chapter 28 · Sequence models for user behaviour
 #
-# **Day 5 · ~90 minutes · CPU (a GPU only speeds up the optional parts)**
+# **Part II · Chapter 28 · about 90 minutes · CPU (a GPU only speeds up the optional parts)**
 #
-# Feeds, "up next" rails and session recommendations are often framed as
+# Feeds, "up next" lists and session recommendations are often formulated as
 # **next-item prediction**: given what a user clicked, in order, what will
 # they click next? The model is a small causal transformer, and the
-# engineering is in the details interviewers ask about: masking, padding,
-# and an evaluation that respects time and does not flatter the model.
+# engineering lies in the details that interviewers ask about: masking,
+# padding, and an evaluation that respects time and does not flatter the model.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. turn an impression log into per-user, time-ordered, left-padded click sequences;
 # 2. build the two baselines every sequence model must beat: most-popular and last-item co-visitation;
-# 3. write causal and padding masks and **test** that they do what you think (no peeking, no NaNs);
+# 3. write causal and padding masks and **test** that they behave as intended (no access to the future, no NaNs);
 # 4. train a SASRec-style model on CPU in under two minutes;
 # 5. evaluate with leave-last-out inside the validation week, and explain why **sampled** HR/NDCG can mislead.
 #
-# **You will produce:** `artifacts/level2/nb10/metrics.csv`, a table of full-catalogue
-# and sampled HR@10/NDCG@10 for every model, and the reusable module
+# **Outputs of this lab:** `artifacts/level2/nb10/metrics.csv`, a table of full-catalogue
+# and sampled HR@10/NDCG@10 for every model. The lab uses the reusable module
 # [`src/shoprank/seqrec.py`](../../src/shoprank/seqrec.py).
+
+# %% [markdown]
+# Read first: [Chapter 28 text](README.md) — sequences, time-respecting evaluation, attention masks, SASRec, and full versus sampled metrics, explained in full.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -96,10 +99,10 @@ print(f"{len(imps):,} impressions | {N_ITEMS:,} items | {len(users):,} users")
 # | **Tied embeddings** | the same item table embeds inputs and scores outputs | hidden state · item embedding |
 # | **Leave-last-out** | hold out each user's last event as the test target | here inside the validation week only |
 # | **HR@10** | share of users whose target is in the top 10 | about 0.07 for SASRec |
-# | **Sampled metric** | rank the target against a sample of negatives, not the whole catalogue | 100 uniform negatives in 10.6 |
+# | **Sampled metric** | rank the target against a sample of negatives, not the whole catalogue | 100 uniform negatives in 28.6 |
 
 # %% [markdown]
-# ## 10.1 · From impressions to sequences
+# ## 28.1 · From impressions to sequences
 #
 # A sequence model sees each user's **clicks**, in time order. Three
 # decisions hide in that sentence:
@@ -114,7 +117,7 @@ print(f"{len(imps):,} impressions | {N_ITEMS:,} items | {len(users):,} users")
 #   whatever the history length.
 
 # %% [markdown]
-# > **Intuition.** Left padding right-aligns every history like the end of a receipt: the most recent purchase is always on the last line, whether the receipt is 3 lines or 30 long, so "predict from the last column" works for everyone. *Where it breaks down:* receipts have no blank lines at the top that a reader might try to read; a model does, and must be told (masked) not to.
+# > **Intuition.** Left padding aligns every history at its end, like the last line of a receipt: the most recent purchase is always on the last line, whether the receipt is 3 lines or 30 long, so "predict from the last column" works for everyone. *Where it breaks down:* receipts have no blank lines at the top that a reader might try to read; a model does, and must be told (masked) not to.
 
 # %%
 train_clicks = sr.click_events(imps, store.TRAIN_DAYS)
@@ -151,9 +154,9 @@ grade.ex1(build_sequences)
 
 # %% [markdown]
 # The package version is `sr.build_sequences` (vectorised, no Python loop over
-# users); the rest of the notebook uses it.
+# users); the rest of the lab uses it.
 #
-# ## 10.2 · An evaluation that respects time
+# ## 28.2 · An evaluation that respects time
 #
 # The common *leave-one-out* protocol holds out each user's last event and
 # trains on everything else, including other users' events from *after*
@@ -165,7 +168,7 @@ grade.ex1(build_sequences)
 #   **history** is every earlier click (training weeks plus earlier validation clicks).
 #
 # Using earlier validation clicks as *input* is legitimate: at serving
-# time you know everything the user did before the moment you predict for.
+# time everything the user did before the moment of prediction is known.
 
 # %%
 MAX_LEN = 30
@@ -184,7 +187,7 @@ print(f"{len(T):,} test users | {len(target_rows) - len(T)} users skipped (no ea
 # **Expected:** about 7,600 test users, a few dozen skipped, and about 6% of
 # targets already in the user's recent history (re-clicks). Whether to allow
 # already-clicked items as recommendations is a product decision; we keep
-# them and say so.
+# them and state so.
 #
 # **Metrics.** For each test user, rank all 4,000 items and find the target's
 # rank `r` (0 = top). **HR@10** = share of users with `r < 10`;
@@ -237,13 +240,13 @@ print("co-visitation:", evaluate_scores("co-visitation", covis_scores))
 # **Expected:** popularity reaches a full-catalogue HR@10 of about 0.027 and
 # co-visitation about 0.037: a 30–40% relative gain from one line of
 # personalisation. Absolute numbers are small because there are 4,000
-# candidates and one target per user. Ignore the "sampled" columns until 10.6.
+# candidates and one target per user. The "sampled" columns are discussed in 28.6.
 #
-# ## 10.3 · Masks: what each position may look at
+# ## 28.3 · Masks: what each position may look at
 #
 # Training a next-item model on a sequence trains *every* position at once:
 # the output at position `t` predicts the item at `t + 1`. That is only
-# honest if position `t` cannot see positions after `t`: a **causal
+# valid if position `t` cannot see positions after `t`: a **causal
 # mask**. And padding positions must not be attended to as if they were
 # items: a **padding mask**. We follow PyTorch's convention for boolean
 # attention masks: **`True` means blocked**.
@@ -251,9 +254,9 @@ print("co-visitation:", evaluate_scores("co-visitation", covis_scores))
 # %% [markdown]
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-causal-padding-mask.svg" alt="Causal plus padding attention mask for a left-padded sequence, with the unblocked diagonal that avoids NaN" width="100%">
 #
-# *What to notice:* the green triangle is everything a real position may read (itself and the past). The amber diagonal in the PAD rows is the fix you are about to see: without it those rows are entirely blocked and the softmax returns NaN.
+# *What to notice:* the green triangle is everything a real position may read (itself and the past). The amber diagonal in the PAD rows is the fix shown below: without it those rows are entirely blocked and the softmax returns NaN.
 #
-# > **Intuition.** A causal mask is reading a mystery novel with a card held under the current line: each prediction may use everything above the card and nothing below it. Training slides the card down every line at once, which is why one forward pass trains every position. *Where it breaks down:* a reader can peek; a model without the mask peeks *always*, and its training loss looks wonderful.
+# > **Intuition.** A causal mask resembles reading a mystery novel with a card held under the current line: each prediction may use everything above the card and nothing below it. Training slides the card down every line at once, which is why one forward pass trains every position. *Where it breaks down:* a reader may look ahead occasionally; a model without the mask *always* looks ahead, and its training loss looks excellent.
 
 # %% [markdown]
 # > **Exercise 2.** Write `causal_mask(n)`: a `torch.bool` tensor of shape `(n, n)` where entry
@@ -281,7 +284,7 @@ def padding_mask(lengths, n):
 grade.ex3(padding_mask)
 
 # %% [markdown]
-# Combining them has a trap. With **left** padding, a padding *query* at
+# Combining them contains a trap. With **left** padding, a padding *query* at
 # position 0 may only look at key 0 (causal), which is padding, so its whole
 # row is blocked. A softmax over a row of `-inf` is `0/0 = NaN`, and NaNs
 # spread: one NaN in a matrix multiply contaminates every output in the layer above.
@@ -304,7 +307,7 @@ print("with the diagonal unblocked:\n", torch.softmax(scores, -1)[0].numpy().rou
 # nothing else. (Right-padding avoids this particular trap, at the price of the
 # last real item sitting in a different column for each user.)
 #
-# ## 10.4 · A small SASRec, and tests that it cannot cheat
+# ## 28.4 · A small SASRec, and tests that it cannot cheat
 #
 # `sr.SASRec` (Kang & McAuley, 2018) is: item embedding + learned positional embedding →
 # 2 pre-LayerNorm transformer blocks with the combined mask → a final
@@ -346,19 +349,19 @@ print(f"causal ok: {causal_ok} | padding ok: {padding_ok} | no NaN: {no_nan} | "
 
 # %% [markdown]
 # **Expected:** about 230,000 parameters (most of them the 4,001 x 48 item
-# embedding) and `True` for all three tests. Write tests like these for any
-# attention model you build. A model that can see the future trains to a
-# beautiful loss and is useless in production, and only a test like #1 tells
-# you before the A/B test does.
+# embedding) and `True` for all three tests. Tests like these should accompany
+# any attention model. A model that can see the future trains to an excellent
+# loss and is useless in production, and only a test like #1 reveals this
+# before the A/B test does.
 #
-# ## 10.5 · Training
+# ## 28.5 · Training
 #
 # Inputs are the training-week sequences of length `MAX_LEN + 1`: positions
 # `0..MAX_LEN-1` are the input, `1..MAX_LEN` the targets (shifted by one).
 # The loss is a **full softmax** over all 4,000 items at every non-padding
-# target position. With 4,000 items that is affordable; with millions you
-# would sample negatives (as in notebook 08) or use a sampled softmax.
-# The loop is notebook 09's, with warmup + cosine.
+# target position. With 4,000 items that is affordable; with millions one
+# would sample negatives (as in Chapter 26) or use a sampled softmax.
+# The loop is that of Chapter 27, with warmup + cosine.
 
 # %%
 train_users, train_seqs = sr.build_sequences(train_clicks, MAX_LEN + 1)
@@ -416,12 +419,12 @@ print("SASRec      :", evaluate_scores("SASRec", S))
 # 4,000 items is genuinely uncertain. Compare it with baselines on the
 # metric, not with zero.
 #
-# ## 10.6 · Full-catalogue vs sampled metrics
+# ## 28.6 · Full-catalogue vs sampled metrics
 #
 # Many papers (and many internal dashboards) rank the target against **100
 # randomly sampled negatives** instead of the whole catalogue, because it
 # is cheaper. The "sampled" columns did exactly that, with the same 100
-# uniform negatives for every model. Add one more model, SASRec plus a mild
+# uniform negatives for every model. We add one more model, SASRec plus a mild
 # popularity prior, and compare:
 
 # %%
@@ -440,26 +443,26 @@ print(table.round(4).to_string())
 # * **Disagreement.** In our runs the popularity prior left full-catalogue
 #   metrics unchanged or slightly better (HR@10 0.070 → 0.070 in one run,
 #   0.069 → 0.072 in another) while *lowering* sampled HR@10 in both (by about
-#   0.01). The full-catalogue differences are tiny, so treat this pair as an illustration,
+#   0.01). The full-catalogue differences are tiny, so this pair is an illustration,
 #   not a finding. The mechanism is clear, though: a popularity prior matters against
 #   the popular items that crowd a real top-10, and those are rarely among 100 uniform
 #   negatives, so the sampled metric cannot see the benefit, only the cost.
 #
-# > **Intuition.** A sampled metric is a race against 100 people pulled off the street instead of against the actual field: almost anyone trained beats them, so every runner looks good and the gaps between runners shrink. *Where it breaks down:* a race against the street can still rank two runners correctly; it just is not *guaranteed* to, and the full field is cheap to run here.
+# > **Intuition.** A sampled metric resembles a race against 100 people chosen at random from the street instead of against the actual field: almost anyone trained beats them, so every runner looks good and the gaps between runners shrink. *Where it breaks down:* a race against the street can still rank two runners correctly; it just is not *guaranteed* to, and the full field is cheap to run here.
 #
-# This is a known result, not an artefact of our data: Krichene & Rendle
+# This is a known result, not an artefact of the ShopStream data: Krichene & Rendle
 # (KDD 2020, "On Sampled Metrics for Item Recommendation") show that sampled
 # HR/NDCG are not guaranteed to preserve the ordering of models under the
 # full-catalogue metric. Practical rule: report full-catalogue metrics when
-# you can afford them (scoring 4,000 or even 1 million items with a matrix multiply
-# is cheap offline); if you must sample, say so, use the same negatives for every
-# model, and do not compare your sampled numbers with someone else's.
+# they are affordable (scoring 4,000 or even 1 million items with a matrix multiply
+# is cheap offline); if sampling is unavoidable, state it, use the same negatives for
+# every model, and do not compare sampled numbers across studies.
 
 # %% [markdown]
-# ## 10.7 · Does the *order* matter here?
+# ## 28.7 · Does the *order* matter here?
 #
 # A sequence model earns its complexity only if the order of events carries
-# signal. Test it directly: shuffle each test user's history (keeping the same
+# signal. We test it directly: shuffle each test user's history (keeping the same
 # items and the padding in place) and evaluate the same trained model.
 
 # %%
@@ -473,22 +476,22 @@ print(f"SASRec full HR@10: original order {results['SASRec']['full HR@10']:.4f} 
 
 # %% [markdown]
 # **Expected:** shuffling costs very little (in our run HR@10 went from 0.0700 to
-# 0.0687), and almost all of the gain over popularity survives. That is
-# honest information about **ShopStream**: its users have fixed tastes, so a
+# 0.0687), and almost all of the gain over popularity survives. This is
+# information about **ShopStream**: its users have fixed tastes, so a
 # history is mostly a bag of evidence about *who the user is*. The model is
 # effectively a user-taste model built from recent clicks, which is useful in itself:
 # it needs no per-user parameters and adapts the moment a click arrives. On real
 # data with sessions, intents that change within minutes, and sequential
-# dependencies (phone → phone case), order matters much more. Run this test before
-# you claim a sequence model "understands sequences".
+# dependencies (phone → phone case), order matters much more. This test should be
+# run before claiming that a sequence model "understands sequences".
 
 # %% [markdown]
-# > **Exercise 4 (written).** Your team's new sequence model improves *sampled* HR@10
+# > **Exercise 4 (written).** A team's new sequence model improves *sampled* HR@10
 # > (100 uniform negatives) from 0.58 to 0.63 over the production model, and the
-# > author proposes an A/B test. Write the three checks you would ask for before
-# > approving the test, and for each, what result would change your mind.
+# > author proposes an A/B test. Write three checks to request before approving
+# > the test, and for each, what result would change the decision.
 # >
-# > Write your answer in the cell below.
+# > Write the answer in the cell below.
 
 # %% [markdown]
 # *Your answer here.*
@@ -556,7 +559,7 @@ print(f"HR@10 {np.mean(ranks < 10):.3f} | NDCG@10 {np.where(ranks < 10, 1 / np.l
 # |---|---|---|
 # | `ModuleNotFoundError: churnlab` / `shoprank` | setup cell not run | run the first code cell |
 # | Loss is `nan` from the first step | a fully blocked attention row (left padding + key-padding mask) | unblock the diagonal, as `sr.attention_mask` does |
-# | Training loss far below the baselines' level, test metrics poor | the model sees the future: causal mask missing or transposed | run test 1 in 10.4 |
+# | Training loss far below the baselines' level, test metrics poor | the model sees the future: causal mask missing or transposed | run test 1 in 28.4 |
 # | Initial loss much larger than `log(n_items)` | output logits too large at init (e.g. N(0,1) embeddings with tied weights) | smaller embedding init, as in `SASRec.__init__` |
 # | Epochs take several minutes | full softmax over padding positions, or a large `max_len`/`dim` | compute logits only where `target > 0`; keep `dim`≈48, `max_len`≈30 on CPU |
 # | Item ids off by one in predictions | forgot the +1 shift (0 = padding) | `seq_id - 1` is the ShopStream `item_id` |
@@ -564,13 +567,13 @@ print(f"HR@10 {np.mean(ranks < 10):.3f} | NDCG@10 {np.where(ranks < 10, 1 / np.l
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
-# 1. Why does a next-item transformer need a causal mask during training but not a separate model per position? What would happen if you removed it?
+# 1. Why does a next-item transformer need a causal mask during training but not a separate model per position? What would happen if it were removed?
 # 2. Left vs right padding for a causal model: what changes in the masks, the positional encoding and the prediction position?
-# 3. Explain leave-one-out evaluation and how it can leak future information. How did this notebook avoid that?
+# 3. Explain leave-one-out evaluation and how it can leak future information. How did this lab avoid that?
 # 4. Why can HR@10 with 100 sampled negatives rank two models differently from the full-catalogue metric? When is sampling acceptable?
-# 5. Your catalogue grows from 4,000 to 10 million items. What changes in training (the softmax) and in serving (retrieval)?
-# 6. How would you show that your sequence model uses order, rather than just the set of past items?
+# 5. The catalogue grows from 4,000 to 10 million items. What changes in training (the softmax) and in serving (retrieval)?
+# 6. How can one show that a sequence model uses order, rather than just the set of past items?
 #
-# **Next chapter:** [`11_ab_testing_fundamentals.ipynb`](../ch29-ab-testing-fundamentals/notebook.ipynb) — offline metrics only nominate a model; an experiment decides.
+# **Next chapter:** [Chapter 29 · A/B testing fundamentals](../ch29-ab-testing-fundamentals/notebook.ipynb) — offline metrics only nominate a model; an experiment decides.

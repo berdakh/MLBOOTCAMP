@@ -96,7 +96,7 @@ labels (agreement/κ) before use, and blind to which model produced which reply.
 
 (c) Paired comparison on the same tickets, bootstrap or paired tests for the difference
 with a pre-registered non-inferiority margin ("the cheap model is at most 2 points
-worse"), sample size from a power calculation (section 2 showed how wide intervals are with
+worse"), sample size from a power calculation (section 54.2 showed how wide intervals are with
 12 tickets); slice results by category so an average does not hide a broken segment.
 
 (d) Prompt-injection suite with attack success rate at or below the current model, toxicity
@@ -114,23 +114,23 @@ p50/p95, cost per ticket, sampled human audits; alert and roll back on regressio
 1. [open-ended] Sample real traffic, stratify, label carefully (exact fields or rubric), freeze a
    held-out split, version it. A small set with exact labels gives cheap, deterministic,
    unbiased metrics that can be re-run on every change; an LLM-judged large set adds noise and
-   the judge's own biases (section 3) and may reward style over correctness. Use LLM judges
+   the judge's own biases (section 54.3) and may reward style over correctness. Use LLM judges
    for scale only after validating them against human labels.
 
-2. [expected] A confidence interval for the *paired* difference (bootstrap over examples, section 2:
+2. [expected] A confidence interval for the *paired* difference (bootstrap over examples, section 54.2:
    with 12 tickets intervals were very wide); a pre-registered metric and normalisation;
    evidence it is not overfitted to the set (fresh held-out examples); per-slice results;
    checking that the gain is not just formatting the parser happens to prefer; and ideally
    an online test. 3 points on 50 examples is usually within noise.
 
-3. [verified] Position bias (swap orders; section 3 measured it), verbosity bias (compare a padded
-   and an unpadded correct answer; section 3), self-preference (judge outputs from several model
+3. [verified] Position bias (swap orders; section 54.3 measured it), verbosity bias (compare a padded
+   and an unpadded correct answer; section 54.3), self-preference (judge outputs from several model
    families and compare with human preferences). Mitigate: both orders + consistency
    filter, length-controlled comparisons or instructions, a different and stronger judge,
    rubric and references, human calibration.
 
 4. [verified] Untrusted input containing instructions that the model follows because instructions
-   and data share one channel (section 4: the schema prompt told the model not to follow such
+   and data share one channel (section 54.4: the schema prompt told the model not to follow such
    instructions, and attacks still succeeded on part of the tickets). Instructions in the
    prompt are only a request, not an enforcement mechanism. Layers: least privilege for
    tools, output validation and business rules, human approval for risky actions, input
@@ -140,9 +140,9 @@ p50/p95, cost per ticket, sampled human audits; alert and roll back on regressio
    after: schema validation, policy checks, toxicity/PII on the output. Threshold set on
    validation data for a target FPR on benign traffic (blocking real customers is costly),
    then measure recall per attack family, including families held out from training
-   (section 5), plus latency. Review blocked samples; feed new attacks back into training.
+   (section 54.5), plus latency. Review blocked samples; feed new attacks back into training.
 
-6. [expected] Needs: tokens in/out per request (section 6 measured them per prompt variant), throughput
+6. [expected] Needs: tokens in/out per request (section 54.6 measured them per prompt variant), throughput
    per accelerator at the target latency (with batching), peak vs average load, price per
    accelerator-hour or per token. 10M/day ≈ 116 requests/s average, more at peak; cost =
    requests × (input tokens × input price + output tokens × output price) for an API, or

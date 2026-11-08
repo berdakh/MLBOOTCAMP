@@ -6,23 +6,24 @@
 # %% [markdown]
 # # Chapter 58 · Full interview loop & portfolio
 #
-# **Day 10 · ~90 minutes (plus the loop itself: about 5 hours, ideally on a separate day) · CPU is enough**
+# **Part III · Chapter 58 · about 90 minutes (plus the loop itself: about 5 hours, ideally on a separate day) · CPU is enough**
 #
-# Level 1 ended with a 45-minute mock and Level 2 with a four-round loop.
-# This notebook simulates the whole thing as large tech companies commonly
-# run it for ML engineers: a phone screen, then an onsite of two coding
-# rounds, ML coding, ML system design, ML depth and a behavioural/leadership
-# round, each with an interviewer script, a timer and a rubric whose anchors
-# describe mid, senior and staff signals. Then you package three levels of
-# work into a portfolio a hiring manager can read in five minutes.
+# Part I ended with a 45-minute mock interview (Chapter 18) and Part II with a
+# four-round loop (Chapter 38). This lab simulates a complete loop as large
+# technology companies commonly run it for ML engineers: a phone screen, then an
+# onsite of two coding rounds, ML coding, ML system design, ML depth and a
+# behavioural/leadership round, each with an interviewer script, a timer and a
+# rubric whose anchors describe mid, senior and staff signals. It then packages
+# the work of Parts I–III into a portfolio that a hiring manager can read in
+# five minutes.
 #
-# By the end you will be able to:
+# By the end of this lab you should be able to:
 #
 # 1. run each round of a full loop from a script, on a timer, and score it against signal-level rubrics;
 # 2. describe, in generic terms, what distinguishes mid, senior and staff answers in each round;
 # 3. combine round scores into an overall and per-signal summary (Exercise 1) and keep a progress log across attempts;
 # 4. structure capstone READMEs and generate one-page project briefs from your own artifacts, with every number tied to its split (Exercise 2);
-# 5. audit your readiness across Levels 1–3 and choose what to practise next.
+# 5. audit your readiness across Parts I–III and choose what to practise next.
 #
 # **You will produce:** `artifacts/level3/loop/` (`plan.md`, `rubric.json`,
 # `progress.jsonl` once you log a round) and `artifacts/level3/portfolio/`
@@ -32,7 +33,10 @@
 # **A note on honesty.** Interview formats, levels and pay differ between
 # companies and change over time. Nothing here describes a specific
 # company's process or ladder; the rubrics are generic "signals interviewers
-# commonly look for", meant to calibrate your practice.
+# commonly look for", meant to calibrate practice.
+
+# %% [markdown]
+# Read first: [Chapter 58 text](README.md), which explains the structure of an interview loop, the scoring signals and the portfolio in more detail than this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -107,7 +111,7 @@ print(f"{len(ds.read_jsonl(PROGRESS))} round(s) already logged in {PROGRESS.name
 # | Phone screen | A first, shorter round that gates the onsite | 45 minutes of coding |
 # | Signal | One quality interviewers score, which recurs across rounds | `verification`, `communication` |
 # | Rubric anchor | A short description of what a score or level sounds like | "designs the verification strategy" (staff) |
-# | Mid / senior / staff | Generic levels of scope and independence, not any company's ladder | 20.3 |
+# | Mid / senior / staff | Generic levels of scope and independence, not any company's ladder | section 58.3 |
 # | STAR | Situation, Task, Action, Result: a structure for behavioural stories | 4–5 stories in the behavioural round |
 # | Weighted overall | A weighted mean of per-round means | 2.77 for the EXAMPLE attempt |
 # | Weakest signal | The signal with the lowest mean across the rounds that score it | `verification` (2.0) |
@@ -117,19 +121,19 @@ print(f"{len(ds.read_jsonl(PROGRESS))} round(s) already logged in {PROGRESS.name
 # | Readiness | Whether you can do a skill unaided, from a blank file, in interview time | `ready: 0/20` on a fresh run |
 
 # %% [markdown]
-# ## 20.1 · The loop
+# ## 58.1 · The loop
 #
 # | Round | Minutes | Format | Course material |
 # |---|---|---|---|
-# | **Phone screen · coding** | 45 | one or two data-structure/algorithm problems in a shared editor | Level 1 nb 16, Level 2 nbs 15–16 |
-# | **Onsite 1 · coding** | 45 | a medium problem plus a follow-up that changes a constraint | Level 2 nbs 15–16 |
-# | **Onsite 2 · coding** | 45 | a different pattern (graphs, intervals, heaps, design-a-class) | Level 2 nbs 15–16 |
-# | **Onsite 3 · ML coding** | 45 | implement a model component, loss or metric from scratch and test it | Level 2 nbs 13–14, Level 3 nbs 03, 06, 08 |
-# | **Onsite 4 · ML system design** | 45–60 | an open product or platform prompt | Level 1 nb 17, Level 2 nb 19, Level 3 nbs 17–18 |
-# | **Onsite 5 · ML depth** | 45 | drill-down on your CV's topics plus a paper or research discussion | Level 3 nb 19 |
-# | **Onsite 6 · behavioural / leadership** | 45 | 4–5 STAR stories with follow-ups; scope and influence | Level 1 nb 17 (STAR), this notebook |
+# | **Phone screen · coding** | 45 | one or two data-structure/algorithm problems in a shared editor | Chapter 17, Chapters 33–34 |
+# | **Onsite 1 · coding** | 45 | a medium problem plus a follow-up that changes a constraint | Chapters 33–34 |
+# | **Onsite 2 · coding** | 45 | a different pattern (graphs, intervals, heaps, design-a-class) | Chapters 33–34 |
+# | **Onsite 3 · ML coding** | 45 | implement a model component, loss or metric from scratch and test it | Chapters 31–32, 41, 44, 46 |
+# | **Onsite 4 · ML system design** | 45–60 | an open product or platform prompt | Chapters 18, 37, 55–56 |
+# | **Onsite 5 · ML depth** | 45 | drill-down on your CV's topics plus a paper or research discussion | Chapter 57 |
+# | **Onsite 6 · behavioural / leadership** | 45 | 4–5 STAR stories with follow-ups; scope and influence | Chapter 18 (STAR), this chapter |
 #
-# Common variations (say these out loud if asked how you prepared): some
+# Common variations (worth mentioning if asked about preparation): some
 # loops swap one coding round for a second design round at senior and staff
 # levels; some merge depth into the design round; some add a "project deep
 # dive" or a presentation. Practise the components; the arrangement varies.
@@ -138,7 +142,7 @@ print(f"{len(ds.read_jsonl(PROGRESS))} round(s) already logged in {PROGRESS.name
 #
 # *What to notice:* the same signal names recur across rounds, so the debrief can see a *pattern* (e.g. weak verification in every coding round), which matters more than any one score.
 #
-# ## 20.2 · Interviewer scripts and the draw
+# ## 58.2 · Interviewer scripts and the draw
 #
 # Each round has an opening prompt (drawn at random), a ladder of follow-ups
 # the interviewer escalates through, and time cues. If you practise with a
@@ -252,14 +256,14 @@ script("ml_design")
 # **Expected:** one prompt per round (different every run: this is the
 # notebook's one deliberately unseeded cell) and the full script for the
 # design round. Total interview time is 320 minutes; a real onsite spreads
-# it over a day with breaks, and so should you.
+# it over a day with breaks, and a practice loop should too.
 #
-# ## 20.3 · Rubrics with leveling anchors
+# ## 58.3 · Rubrics with leveling anchors
 #
 # Every round is scored 1–4 on a few **signals** (the same signal names
 # recur across rounds, so you can see, e.g., your *communication* across the
-# whole loop). The 1–4 scale is the same as Level 2's
-# (`ds.SCORE_ANCHORS`). The table says what each signal tends to look like
+# whole loop). The 1–4 scale is the same as Part II's (Chapter 38;
+# `ds.SCORE_ANCHORS`). The table says what each signal tends to look like
 # at three levels; use it to decide which level your answer *sounded* like.
 #
 # | Signal | Mid-level signal | Senior signal | Staff signal |
@@ -313,7 +317,7 @@ print("wrote", sorted(p.name for p in LOOP.iterdir()))
 # **Expected:** `wrote ['plan.md', 'rubric.json']` (plus `progress.jsonl` once
 # you have logged rounds).
 #
-# ## 20.4 · Timing and logging rounds
+# ## 58.4 · Timing and logging rounds
 #
 # `start(round)` when the clock starts; `log_round(round, scores, notes)` when
 # it stops. Scores are whole numbers 1–4 for *every* signal of that round.
@@ -350,7 +354,7 @@ def log_round(name: str, scores: dict, notes: str = "") -> int:
 print("helpers ready: start(round), log_round(round, scores, notes), script(round)")
 
 # %% [markdown]
-# ## 20.5 · Scoring a loop
+# ## 58.5 · Scoring a loop
 #
 # A loop is not an average of everything. Interviewers write feedback per
 # round; a hiring discussion then looks at each round *and* at signals that
@@ -415,8 +419,8 @@ pd.DataFrame(rows).set_index("attempt")
 # coding_2, 3.33 for ml_depth, …) and, until Exercise 1 is done, the note
 # saying the weighted summary needs it. With the reference solution the
 # EXAMPLE's overall is about **2.77** and the weakest signal is
-# **verification** (2.0 in all four coding rounds), so next week's plan
-# writes itself: test before you are asked, in every coding round.
+# **verification** (2.0 in all four coding rounds), so next week's practice
+# plan follows directly: write tests before being asked, in every coding round.
 #
 # > **Intuition.** A loop is scored like a decathlon judged event by event, not like a single
 # > stopwatch: the committee reads each round's write-up, then looks across rounds for a recurring
@@ -424,11 +428,11 @@ pd.DataFrame(rows).set_index("attempt")
 # > breaks down:* in a decathlon points add up; in hiring one very weak round (or a "no hire" on a
 # > core signal) can outweigh a high average.
 #
-# ## 20.6 · Packaging the portfolio
+# ## 58.6 · Packaging the portfolio
 #
 # A hiring manager spends minutes, not hours, on a portfolio. Each project
-# README (Level 1's TaskFlow churn service, Level 2's shoprank ranking
-# system, a Level 3 project and the capstones) should answer, in this order:
+# README (Part I's TaskFlow churn service, Part II's shoprank ranking
+# system, a Part III project and the capstones) should answer, in this order:
 
 # %%
 README_TEMPLATE = """# <Project name>: <one-line outcome, with the metric and the split>
@@ -474,9 +478,9 @@ print(README_TEMPLATE[:400], "...")
 #
 # | Project | What it proves | The one number to quote (from *your* run) |
 # |---|---|---|
-# | Level 1 · TaskFlow churn service | leakage-safe evaluation, a tested API, monitoring and rollback | test PR-AUC with its interval, and p95 latency |
-# | Level 2 · shoprank ranking cascade | retrieval + LTR at scale, position-bias correction, pre-registered evaluation | held-out NDCG/IPS metric with grouped-bootstrap interval; cascade p99 |
-# | Level 3 · e.g. a fine-tuned classifier, a retrieval system or a CTR model | deep models on a GPU budget, efficiency, evaluation of LLM systems | accuracy/recall vs baseline on the named split; latency or cost per 1k requests |
+# | Part I · TaskFlow churn service | leakage-safe evaluation, a tested API, monitoring and rollback | test PR-AUC with its interval, and p95 latency |
+# | Part II · shoprank ranking cascade | retrieval + LTR at scale, position-bias correction, pre-registered evaluation | held-out NDCG/IPS metric with grouped-bootstrap interval; cascade p99 |
+# | Part III · e.g. a fine-tuned classifier, a retrieval system or a CTR model | deep models on a GPU budget, efficiency, evaluation of LLM systems | accuracy/recall vs baseline on the named split; latency or cost per 1k requests |
 # | Capstones | applying all of it to a new public dataset | the capstone's pre-registered primary metric |
 #
 # ### A one-page project brief from your artifacts
@@ -568,8 +572,8 @@ print("wrote", (PORTFOLIO / "briefs.json").relative_to(ART))
 # **Expected:** in a fresh runtime (as in our verification run) only this
 # notebook's own files exist (`3 result-like files`: `plan.md`,
 # `rubric.json`, `README_template.md`), every project says `results TBD`, and
-# `briefs.json` is written. After running Level 1 notebook 15, Level 2
-# notebook 20 and Level 3 notebook 19 *in the same artifact directory* (e.g.
+# `briefs.json` is written. After running Chapters 16, 38 and 57 *in the
+# same artifact directory* (e.g.
 # with `USE_DRIVE = True`), their numbers appear here, each waiting for you
 # to name its split.
 #
@@ -612,7 +616,7 @@ except NotImplementedError:
 # third brief printed in Markdown (with `TBD — fill from your run` in a fresh
 # runtime) and three `brief_*.md` files.
 #
-# ## 20.7 · Readiness across Levels 1–3
+# ## 58.7 · Readiness across Parts I–III
 #
 # Score yourself with the full
 # [readiness rubric](https://github.com/berdakh/MLBOOTCAMP/blob/main/appendices/readiness-rubric.md)
@@ -655,7 +659,7 @@ _ = (PORTFOLIO / "readiness.json").write_text(json.dumps(
 # **Expected:** `ready: 0/20 (0%)` on a fresh run, then the first three gaps.
 # Be strict: "I recognise it" is level 1 on the rubric, not level 3.
 #
-# ## 20.8 · "Tell me about yourself"
+# ## 58.8 · "Tell me about yourself"
 #
 # Most loops open with it, and it frames everything after. Two minutes,
 # four beats:
@@ -663,7 +667,7 @@ _ = (PORTFOLIO / "readiness.json").write_text(json.dumps(
 # 1. **Who you are in one line**, as the role sees it ("an ML engineer with a
 #    research background in EEG decoding and signal processing").
 # 2. **Two proof points** with your role and a measured number, each with
-#    its split: one research, one engineering (a Level 1–3 project or a capstone).
+#    its split: one research, one engineering (a Part I–III project or a capstone).
 # 3. **What you are good at**, tied to the job description's needs (e.g.
 #    rigorous evaluation, deep models under compute limits, ranking systems).
 # 4. **Why this role, now**, in one or two sentences, without criticising
@@ -692,7 +696,7 @@ _ = (PORTFOLIO / "readiness.json").write_text(json.dumps(
 # $r$, $R_s$ the rounds that score signal $s$, $w_r$ round weights. *Example (the EXAMPLE attempt):*
 # $(0.5 \cdot 2.75 + 2.5 + 2.25 + 2.75 + 1.5 \cdot 2.8 + 3.33 + 3.0) / 7 = 19.41 / 7 = 2.77$.
 #
-# **2 · "What would it cost to serve at 1,000 QPS?"** (Checkpoint 6), with the fleet formula from notebook 18.
+# **2 · "What would it cost to serve at 1,000 QPS?"** (Checkpoint 6), with the fleet formula from Chapter 56.
 #
 # $$
 # n = \max\!\left(2, \left\lceil \frac{\text{QPS}_{\text{peak}}}{\text{QPS}_{\text{replica}}\,(1 - h)} \right\rceil\right), \qquad \text{cost}_{1k} = \frac{n \cdot p \cdot 730}{\overline{\text{QPS}} \cdot 3600 \cdot 730 / 1000}
@@ -725,7 +729,7 @@ print(f"monthly {monthly:,.0f} | per 1k requests: by hand {monthly / (500 * 3600
 
 # %% [markdown]
 # **Expected:** round means 2.75, 2.5, 2.25, 2.75, 2.8, 3.33 and 3.0, a weighted overall of `2.77` (the
-# value Exercise 1's reference solution gives in 20.5); `15` replicas both ways; a monthly cost of
+# value Exercise 1's reference solution gives in section 58.5); `15` replicas both ways; a monthly cost of
 # 5,475 and `0.0042` per 1,000 requests both ways.
 
 # %% [markdown]
@@ -750,10 +754,10 @@ print(f"monthly {monthly:,.0f} | per 1k requests: by hand {monthly / (500 * 3600
 # 3. What would make your ML system design answer read as staff rather than senior? Give two concrete additions for the ads case.
 # 4. Your loop log shows *verification* as your weakest signal across four rounds. What is your practice plan for the next two weeks, and how will you know it worked?
 # 5. Walk through your strongest portfolio project in three minutes: problem, the one number with its split, the main trade-off and what you would do next.
-# 6. An interviewer asks what your Level 3 model would cost to serve at 1,000 QPS. Answer with the arithmetic and your assumptions.
+# 6. An interviewer asks what your Part III model would cost to serve at 1,000 QPS. Answer with the arithmetic and your assumptions.
 #
-# **Next chapter:** you have finished Level 3. Choose a capstone from the
-# [capstones page](https://github.com/berdakh/MLBOOTCAMP/blob/main/part4-capstones/README.md),
+# **Next:** this completes Part III. Choose a capstone from
+# [Part IV · Capstones](../../part4-capstones/README.md),
 # score yourself honestly with the
 # [readiness rubric](https://github.com/berdakh/MLBOOTCAMP/blob/main/appendices/readiness-rubric.md),
 # and run one logged loop per week until every round scores 3 or more on fresh prompts.

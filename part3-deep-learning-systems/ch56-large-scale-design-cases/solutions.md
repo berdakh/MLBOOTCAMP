@@ -105,7 +105,7 @@ Score the design with the rubric of Chapter 58 afterwards; time each part.
 
 1. **Calibration in ads.** [verified] (simulation) The auction ranks by bid × pCTR
    and prices by the runner-up's eCPM divided by the winner's pCTR, so a
-   prediction's *scale* moves money. In section 2, over-predicting one segment by
+   prediction's *scale* moves money. In section 56.2, over-predicting one segment by
    1.5× raised its win share from 50% to ~69% and lowered both platform
    revenue (3,172 → 3,057) and advertiser value (5,019 → 4,893). A feed ranker
    only needs the order within one request, which a constant scale error
@@ -115,7 +115,7 @@ Score the design with the rubric of Chapter 58 afterwards; time each part.
    model's output, then verify with a reliability plot per segment.
 2. **Served length doubled.** [expected] It is a problem if satisfaction did not
    rise with it: the expected-watch-time objective favours long videos by
-   construction (section 3: median 27 min in the top 100 vs 6 min catalogue). Check
+   construction (section 56.3: median 27 min in the top 100 vs 6 min catalogue). Check
    satisfaction signals (surveys, likes, "not interested", return visits) by
    length bucket and in a long-term holdout; check completion and early
    abandonment. Changes: blend completion/satisfaction heads, normalise

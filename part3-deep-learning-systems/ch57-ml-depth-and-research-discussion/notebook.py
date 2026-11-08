@@ -114,8 +114,8 @@ print(f"{len(text):,} characters, vocab {tok.vocab_size}")
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
-# | Depth round | An interview round that probes one topic with "why?" until the edge of the candidate's knowledge | section 0 |
-# | Warmup | Starting with a small learning rate and raising it linearly over the first steps | 100 warmup steps in section 2 |
+# | Depth round | An interview round that probes one topic with "why?" until the edge of the candidate's knowledge | section 57.0 |
+# | Warmup | Starting with a small learning rate and raising it linearly over the first steps | 100 warmup steps in section 57.2 |
 # | Cosine decay | Lowering the learning rate along half a cosine to a minimum | `warmup_cosine_lr` (Exercise 1) |
 # | Linear scaling rule | Multiplying the learning rate by k when the batch grows k times | batch 32 → 512, LR 0.01 → 0.16 |
 # | Critical batch size | The batch beyond which larger batches stop buying proportionally faster progress | linear scaling breaks at 2,048 |
@@ -127,7 +127,7 @@ print(f"{len(text):,} characters, vocab {tok.vocab_size}")
 # | Data leakage | Test information reaching training (split, preprocessing or tuning) | flaws A, B, E in the abstract |
 
 # %% [markdown]
-# ## 0 · How a depth round works
+# ## 57.0 · How a depth round works
 #
 # The interviewer picks a topic the candidate claimed (the CV is the syllabus) and
 # probes it: *what* → *why* → *what happens if* → *how would you know*. They are
@@ -142,7 +142,7 @@ print(f"{len(text):,} characters, vocab {tok.vocab_size}")
 #   would check Z" scores better than a confident wrong answer;
 # * **connection to practice**: what this changes in a production system.
 #
-# ## 1 · The question bank
+# ## 57.1 · The question bank
 #
 # Read a row, answer aloud *before* reading the right-hand columns, then compare.
 #
@@ -151,16 +151,16 @@ print(f"{len(text):,} characters, vocab {tok.vocab_size}")
 # | Question | What a strong answer covers | Common wrong answer |
 # |---|---|---|
 # | Adam vs SGD with momentum: when would you pick each? | Adam adapts per-parameter step sizes (first and second moment estimates, bias correction); robust to badly scaled gradients and sparse features, default for transformers; SGD+momentum often generalises as well or better on vision with a tuned schedule, uses less memory (no second moment: 8 vs 4 extra bytes/param for fp32 states); AdamW decouples weight decay from the adaptive step | "Adam is always better because it is adaptive"; "Adam's weight decay is the same as L2" (not with adaptive steps; hence AdamW) |
-# | Why does warmup help? | Early on, Adam's second-moment estimate is based on few samples and the network is far from a good region, so large steps can blow up activations (especially with post-LayerNorm transformers); a linear ramp keeps updates small until statistics settle; it widens the range of usable peak learning rates (section 2) | "Warmup avoids local minima" |
-# | How should the learning rate change with batch size? | Larger batches reduce gradient noise; for SGD, a linear scaling rule (k× batch → k× LR) with warmup works up to a *critical batch size*, beyond which returns diminish and training can become unstable; for Adam, square-root scaling is a common heuristic; always re-tune (section 3) | "Keep the LR, it is a property of the model"; "scale linearly forever" |
+# | Why does warmup help? | Early on, Adam's second-moment estimate is based on few samples and the network is far from a good region, so large steps can blow up activations (especially with post-LayerNorm transformers); a linear ramp keeps updates small until statistics settle; it widens the range of usable peak learning rates (section 57.2) | "Warmup avoids local minima" |
+# | How should the learning rate change with batch size? | Larger batches reduce gradient noise; for SGD, a linear scaling rule (k× batch → k× LR) with warmup works up to a *critical batch size*, beyond which returns diminish and training can become unstable; for Adam, square-root scaling is a common heuristic; always re-tune (section 57.3) | "Keep the LR, it is a property of the model"; "scale linearly forever" |
 # | What does a learning-rate schedule (cosine, step, linear decay) do? | Large steps early explore and make fast progress; decaying reduces the noise floor so the model settles into a lower-loss region; cosine and linear decay are smooth versions of step decay; the end LR and the schedule length matter more than the shape | "Schedules are only for speed" |
 #
 # **Generalisation**
 #
 # | Question | What a strong answer covers | Common wrong answer |
 # |---|---|---|
-# | Explain double descent. | Test error vs model size can fall, rise to a peak near the *interpolation threshold* (parameters ≈ training points, where the fit is forced through noise with a badly conditioned solution), then fall again as the minimum-norm interpolating solution gets smoother; regularisation (ridge, early stopping, more data) flattens the peak (section 5) | "Bigger models always overfit more" / "bigger is always better" |
-# | Your network reaches 100% training accuracy on noisy labels. Is it broken? | No: deep networks can memorise random labels; clean structure is learned first and noise later, which is why early stopping on a validation set helps; noisy validation labels still rank checkpoints reasonably; robust losses or label cleaning for heavy noise (section 4) | "100% train accuracy proves overfitting, so the test accuracy must be bad" |
+# | Explain double descent. | Test error vs model size can fall, rise to a peak near the *interpolation threshold* (parameters ≈ training points, where the fit is forced through noise with a badly conditioned solution), then fall again as the minimum-norm interpolating solution gets smoother; regularisation (ridge, early stopping, more data) flattens the peak (section 57.5) | "Bigger models always overfit more" / "bigger is always better" |
+# | Your network reaches 100% training accuracy on noisy labels. Is it broken? | No: deep networks can memorise random labels; clean structure is learned first and noise later, which is why early stopping on a validation set helps; noisy validation labels still rank checkpoints reasonably; robust losses or label cleaning for heavy noise (section 57.4) | "100% train accuracy proves overfitting, so the test accuracy must be bad" |
 # | How do L2, dropout and data augmentation differ? | L2 shrinks weights (a prior); dropout trains an implicit ensemble and discourages co-adaptation; augmentation encodes invariances believed to hold (the most powerful when correct); all trade bias for variance, measured on validation | "They are interchangeable" |
 #
 # **Transformers**
@@ -196,7 +196,7 @@ print(f"{len(text):,} characters, vocab {tok.vocab_size}")
 # The four experiments below provide measured numbers for four of these rows.
 
 # %% [markdown]
-# ## 2 · Experiment: warmup widens the stable learning-rate range
+# ## 57.2 · Experiment: warmup widens the stable learning-rate range
 #
 # A 2-layer, 64-wide `TinyGPT` (Chapter 41) trained with plain Adam (no
 # gradient clipping, so instability is visible) for 300 steps at three peak
@@ -276,7 +276,7 @@ def warmup_cosine_lr(step, base_lr, warmup_steps, total_steps, min_lr=0.0):
 grade.ex1(warmup_cosine_lr)
 
 # %% [markdown]
-# ## 3 · Experiment: learning rate vs batch size
+# ## 57.3 · Experiment: learning rate vs batch size
 #
 # A 2-hidden-layer MLP on a synthetic 40-feature classification task (16k
 # training rows, 8k test), SGD with momentum 0.9, a **fixed budget of 3
@@ -354,7 +354,7 @@ RESULTS["batch_scaling"] = bs_rows
 # > analogy breaks down:* once the gradient noise is already small (past the critical batch size),
 # > bigger steps overshoot curvature rather than average out noise, and the rule fails, as at 2,048.
 #
-# ## 4 · Experiment: noisy labels and memorisation
+# ## 57.4 · Experiment: noisy labels and memorisation
 #
 # A wide MLP (2 × 384 hidden units, ~160k parameters) on 2,000 training
 # examples, with 0%, 20% or 40% of training labels flipped at random. Test
@@ -420,7 +420,7 @@ RESULTS["label_noise"] = noise_rows
 # > validation set that has the same typos, so it ranks checkpoints correctly but understates their
 # > true accuracy.
 #
-# ## 5 · Experiment: double descent with random features
+# ## 57.5 · Experiment: double descent with random features
 #
 # Regression with 100 training points, 20 inputs and a non-linear target.
 # The model is a random ReLU feature map with *p* features followed by the
@@ -498,7 +498,7 @@ print("wrote", (OUT / "depth_demos.json").relative_to(ART), "sections:", list(RE
 # %% [markdown]
 # **Expected:** `wrote level3/nb19/depth_demos.json sections: ['warmup', 'batch_scaling', 'label_noise', 'double_descent']`.
 #
-# ## 6 · Critiquing a paper
+# ## 57.6 · Critiquing a paper
 #
 # Research discussions often include "tell me about a paper you read
 # recently" or "here is an abstract: what would you ask the authors?". A
@@ -574,7 +574,7 @@ grade.ex2(critique_flags)
 # *Your answer here.*
 
 # %% [markdown]
-# ## 7 · Research to production: an EEG story
+# ## 57.7 · Research to production: an EEG story
 #
 # Interviewers ask researchers some version of *"how would your research
 # work in production?"* or *"tell me about taking a model from a paper to a
@@ -592,7 +592,7 @@ grade.ex2(critique_flags)
 #    (a short calibration block, re-centring of covariance or feature
 #    statistics per session, or fine-tuning a small head; PEFT from Chapter 44),
 #    a data-quality gate (impedance, artefact rate) that refuses to predict on
-#    bad signal, a streaming inference loop with a latency budget (Chapter 56, section 1),
+#    bad signal, a streaming inference loop with a latency budget (Section 56.1),
 #    monitoring of input drift per session, and a fallback (ask the user to
 #    repeat; default to a non-BCI control).
 # 4. **How you would know it works** (20 s): online evaluation with new users
@@ -634,7 +634,7 @@ grade.ex2(critique_flags)
 # \eta(kB) = k\, \eta(B) \ \ \text{(linear, SGD)}, \qquad \eta(kB) = \sqrt{k}\, \eta(B) \ \ \text{(square-root, more conservative)}
 # $$
 #
-# *Example:* batch 32 at 0.01 → batch 2,048 ($k = 64$): linear 0.64 (unstable in section 3), √k 0.08 (stable).
+# *Example:* batch 32 at 0.01 → batch 2,048 ($k = 64$): linear 0.64 (unstable in section 57.3), √k 0.08 (stable).
 #
 # **3 · Minimum-norm least squares and ridge.**
 #
@@ -645,7 +645,7 @@ grade.ex2(critique_flags)
 # *In words:* when there are more features than points, infinitely many $w$ fit exactly; the
 # pseudo-inverse picks the shortest. Near $p = n$ the smallest singular value $\sigma_{\min}$ of $X$ is
 # tiny and $\lVert \hat{w} \rVert$ scales like $1/\sigma_{\min}$: the peak. Ridge's $\lambda$ keeps
-# $1/(\sigma^2 + \lambda)$ bounded. *Example:* in section 5, p = 100 = n gives test MSE ~190.
+# $1/(\sigma^2 + \lambda)$ bounded. *Example:* in section 57.5, p = 100 = n gives test MSE ~190.
 #
 # **4 · Self-attention cost.** Compute $O(T^2 d)$ per layer; materialised score memory
 # $= L \cdot H \cdot T^2 \cdot b$ bytes per sequence. *Example:* $12 \cdot 12 \cdot 2{,}048^2 \cdot 2 = 1.2$ GB.

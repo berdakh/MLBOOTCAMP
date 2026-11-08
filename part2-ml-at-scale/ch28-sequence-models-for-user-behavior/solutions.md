@@ -1,13 +1,13 @@
 # Solutions · Chapter 28 · Sequence models for user behaviour
 
-Try each exercise before reading its answer. Markers: [verified] verified by running ·
+Attempt each exercise before reading its answer. Markers: [verified] verified by running ·
 [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `build_sequences`
 
-[verified] Reference code: [`code/nb10.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def build_sequences(df, max_len):
@@ -28,8 +28,8 @@ row (left padding).
 
 The loop is fine for 10,000 users. `shoprank.seqrec.build_sequences` does the
 same without a Python loop: it computes each event's distance from the end of its
-user's history and scatters the events directly into the array. Worth
-knowing for 100 million users.
+user's history and scatters the events directly into the array, which matters
+for 100 million users.
 
 ---
 
@@ -41,7 +41,7 @@ knowing for 100 million users.
 its own item). Watch the convention: PyTorch's boolean `attn_mask` uses
 `True` = *blocked*; some code (and `scaled_dot_product_attention`'s boolean mask) uses
 `True` = *allowed*. Getting it backwards gives a model that sees *only* the future.
-Test 1 in 10.4 catches that in one line.
+Test 1 in 28.4 catches that in one line.
 
 ---
 
@@ -57,27 +57,27 @@ without the diagonal fix); a length-`n` row has no padding.
 
 ## Exercise 4 · Before approving the A/B test (written)
 
-[open-ended] Personal. A strong answer asks for checks that could *change the decision*:
+[open-ended] A strong answer asks for checks that could *change the decision*:
 
 1. **Full-catalogue metrics, same protocol for both models.** Sampled metrics
    compress differences and can reorder models (Krichene & Rendle, 2020; section
-   10.6 showed sampled HR penalise a change the full metric was indifferent to).
-   *Changes my mind:* the full-catalogue HR@10/NDCG@10 difference is within
+   28.6 showed sampled HR penalise a change the full metric was indifferent to).
+   *Would change the decision:* the full-catalogue HR@10/NDCG@10 difference is within
    noise (bootstrap over users), or reverses.
 2. **A time-respecting split and no leakage.** Trained only on data before the
    evaluation window; no item or user features computed over the evaluation
    window; the same candidate filtering as production (e.g. already-purchased items
-   removed). *Changes my mind:* the gain shrinks or disappears under the
+   removed). *Would change the decision:* the gain shrinks or disappears under the
    time-respecting protocol, or most of it comes from re-recommending items the
    user just clicked (check the repeat rate of hits).
 3. **The gain holds where the product is.** Slices that matter (new vs heavy
    users, cold-start items), coverage/popularity of recommendations, and
-   serving cost (latency at production sequence lengths). *Changes my mind:*
+   serving cost (latency at production sequence lengths). *Would change the decision:*
    the model wins only for heavy users and loses for new users, collapses
    coverage to the head of the catalogue, or busts the latency budget.
 
 Credit also: an offline replay with a debiased metric (IPS on exploration
-traffic, notebook 05), or an interleaving test before a full A/B test (notebook 12).
+traffic, Chapter 23), or an interleaving test before a full A/B test (Chapter 30).
 
 ---
 
@@ -115,15 +115,15 @@ checked on a full-catalogue subset, or with corrected estimators.
 
 **5. 10 million items.** Training: the full softmax is too expensive per
 position; use sampled softmax / in-batch negatives with a logQ correction
-(notebook 08), or hierarchical/negative sampling, and mixed precision. The item
+(Chapter 26), or hierarchical/negative sampling, and mixed precision. The item
 embedding table becomes the dominant memory cost (shard it). Serving: score
-with ANN retrieval over item embeddings (FAISS, notebook 08) using the
+with ANN retrieval over item embeddings (FAISS, Chapter 26) using the
 sequence model's last hidden state as the query, then rerank a few hundred
 candidates.
 
 **6. Does it use order?** Ablate order at evaluation time: shuffle each
-history (as in 10.7) and/or train a bag-of-items model (mean of item embeddings,
+history (as in 28.7) and/or train a bag-of-items model (mean of item embeddings,
 no positions) with the same capacity. If shuffled histories score as well,
 order is not being used. Also probe: does swapping only the last two items change
-the prediction? Section 10.7 measured 0.0700 → 0.0687 HR@10 with shuffled
+the prediction? Section 28.7 measured 0.0700 → 0.0687 HR@10 with shuffled
 histories ([verified]): on ShopStream, order carries little signal.
