@@ -1,13 +1,13 @@
 # Solutions · Chapter 49 · Quantisation & distillation
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `quantize_per_channel_int8`
 
-✅ Reference code: [`code/nb11.py`](solutions.py) (`ex1`), graded in CI. The course's
+[verified] Reference code: [`code/nb11.py`](solutions.py) (`ex1`), graded in CI. The course's
 version with a `bits` argument is `scaleml.serving.quantize_per_channel_int8`.
 
 ```python
@@ -38,7 +38,7 @@ over columns (`dim=0`) instead of output rows.
 
 ## Exercise 2 · `kd_loss`
 
-✅ Reference code: [`code/nb11.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb11.py`](solutions.py) (`ex2`).
 
 ```python
 def kd_loss(student_logits, teacher_logits, labels, T, alpha):
@@ -61,7 +61,7 @@ With α = 1 and a student identical to the teacher the loss is 0.
 
 ## Exercise 3 · Choosing a model for a 20 ms p99 on CPUs
 
-✍️ / 🔬 Based on the table in 11.5 (your numbers will differ):
+[open-ended] / [expected] Based on the table in 11.5 (your numbers will differ):
 
 **(a)** At batch 1 on one CPU thread, the fp32 teacher took ~45–55 ms (median) and
 the int8 teacher ~15–20 ms; neither leaves room for a 20 ms *p99* (p99 is well above
@@ -91,7 +91,7 @@ train longer; then ensembling teachers for better soft targets.
 
 ## Checkpoint answers
 
-1. **Symmetric int8.** ✅ `scale = max|w| / 127`, `q = round(w / scale)`,
+1. **Symmetric int8.** [verified] `scale = max|w| / 127`, `q = round(w / scale)`,
    `ŵ = q × scale`, error ≤ scale/2. Per-channel uses one scale per output row,
    so rows with small weights are not forced onto a coarse grid set by the
    largest weight in the matrix (11.3: 2.4× lower error). Int4 has only 15
@@ -105,7 +105,7 @@ train longer; then ensembling teachers for better soft targets.
    quantisation during training so the model adapts; when PTQ loses too much
    accuracy (int4, small models). *Weight-only*: weights int8/int4, compute in
    fp16; memory-bound LLM decoding on GPUs, where reading fewer weight bytes is the win.
-3. **Half, not a quarter.** ✅ Only `nn.Linear` weights became int8; the
+3. **Half, not a quarter.** [verified] Only `nn.Linear` weights became int8; the
    embedding matrix (23.4M of 67M parameters) stayed fp32, plus per-layer scales
    and biases (11.2: 268 → 139 MB). The speed-up comes from int8 matrix
    multiplies (more operations per instruction with VNNI) and moving fewer weight

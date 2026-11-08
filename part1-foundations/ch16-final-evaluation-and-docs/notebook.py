@@ -72,7 +72,7 @@ print(split.summary().drop(columns=["positive_rate"]))
 # even its base rate.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -96,7 +96,7 @@ print(split.summary().drop(columns=["positive_rate"]))
 # cheat; it happens through many small, reasonable decisions (statisticians
 # call it the *garden of forking paths*).
 #
-# > 💡 **Intuition.** The test set is a sealed envelope with the exam answers.
+# > **Intuition.** The test set is a sealed envelope with the exam answers.
 # > Open it once, at the end, in front of witnesses (the pre-registered plan).
 # > Peek and re-seal it, and every later "grade" is partly self-marked.
 # > *Where it breaks down:* even an honest single look is one sample of one
@@ -108,7 +108,7 @@ print(split.summary().drop(columns=["positive_rate"]))
 # says. Anything you decide to look at afterwards is allowed, but it is labelled
 # *exploratory*.
 #
-# > 🧠 **Research bridge.** You know this from cross-subject BCI papers: once a
+# > **Research bridge.** You know this from cross-subject BCI papers: once a
 # > held-out subject's accuracy has influenced a design choice, that subject is
 # > no longer held out. Here the "held-out subject" is a future time period.
 #
@@ -212,7 +212,7 @@ if prereg_path.exists():
     if previous.get("plan_sha256") != plan_sha:
         archived = prereg_path.with_name(f"preregistration.superseded-{previous.get('plan_sha256')}.json")
         prereg_path.rename(archived)
-        print(f"⚠️  the plan CHANGED since {previous.get('created_at')}; old plan kept as {archived.name}. "
+        print(f" the plan CHANGED since {previous.get('created_at')}; old plan kept as {archived.name}. "
               "If you had already seen test results, say so in the report.")
 prereg_path.write_text(json.dumps({"created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
                                    "plan_sha256": plan_sha, "plan": plan}, indent=2, default=str))
@@ -773,7 +773,7 @@ print(f"{len(numbers)} decimal numbers in the README; not traceable to final_rep
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **Pre-registered decision rule.** With a paired customer bootstrap of
 # $\Delta = \text{PR-AUC}_{\text{CURRENT}} - \text{PR-AUC}_{\text{baseline}}$:
@@ -799,11 +799,11 @@ print(f"{len(numbers)} decimal numbers in the README; not traceable to final_rep
 # means about ±0.06 on 625, and you would need ≈ 10,000 customers for ±0.015.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
-# | `⚠️ the plan CHANGED since ...` | you edited the plan cell after an earlier run | fine while learning; in real work, report both plans and which one you saw results under |
+# | `the plan CHANGED since ...` | you edited the plan cell after an earlier run | fine while learning; in real work, report both plans and which one you saw results under |
 # | `test access #2`, `#3`, ... | the notebook was re-run in the same artifact directory | harmless if the plan hash is unchanged; that is what the log is for |
 # | Registry build takes minutes | first run in a fresh runtime trains both models; a busy machine slows the tree model | wait (normally 10-30 s); it is cached in `artifacts/registry` afterwards |
 # | `UserWarning: model trained with sklearn X, running Y` | registry built under another sklearn version | delete `artifacts/registry` and re-run; never compare numbers across mixed versions |
@@ -822,4 +822,4 @@ print(f"{len(numbers)} decimal numbers in the README; not traceable to final_rep
 # 5. After deployment the team calls every flagged account. What happens to next quarter's training labels, and what would you log to handle it?
 # 6. Give the three limitations you would raise yourself before an interviewer does.
 #
-# ➡️ **Next:** [`16_python_and_sql_drills.ipynb`](../ch17-python-and-sql-drills/notebook.ipynb) — timed Python and SQL drills, the fluency half of the interview loop.
+# **Next chapter:** [`16_python_and_sql_drills.ipynb`](../ch17-python-and-sql-drills/notebook.ipynb) — timed Python and SQL drills, the fluency half of the interview loop.

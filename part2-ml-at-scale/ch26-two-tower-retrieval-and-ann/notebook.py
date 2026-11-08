@@ -97,7 +97,7 @@ print(f"train clicks {len(train_clicks):,} | eval users {len(eval_users):,} (col
 # notebook does not depend on 07 having run.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -219,7 +219,7 @@ print(f"parameters: {sum(p.numel() for p in TwoTower().parameters()):,}")
 #
 # *What to notice:* only the dot product connects the two towers, so item vectors can be computed once and indexed. Every off-diagonal cell is a negative that costs nothing extra, and a popular item fills many of those cells.
 #
-# > 💡 **Intuition.** In-batch training is a speed-dating evening: each person must pick their date out of everyone who happens to be in the room. A celebrity turns up at every event, so they are "not picked" by almost everyone and the model learns that celebrities are unattractive. Subtracting $\log q_i$ is telling the model "this person was in the room 50 times more often than average; discount the rejections accordingly". *Where it breaks down:* $q_i$ is estimated from click counts, so a brand-new item has a noisy $q_i$, and its correction is noisy too.
+# > **Intuition.** In-batch training is a speed-dating evening: each person must pick their date out of everyone who happens to be in the room. A celebrity turns up at every event, so they are "not picked" by almost everyone and the model learns that celebrities are unattractive. Subtracting $\log q_i$ is telling the model "this person was in the room 50 times more often than average; discount the rejections accordingly". *Where it breaks down:* $q_i$ is estimated from click counts, so a brand-new item has a noisy $q_i$, and its correction is noisy too.
 #
 # > **Exercise 1.** Write `in_batch_softmax_loss(user_emb, item_emb, log_q=None)`:
 # > tensors of shape [B, d] and [B, d] (row b of each is a positive pair),
@@ -373,7 +373,7 @@ print("saved two_tower_item_emb.npy", ie_logq.shape)
 #
 # *What to notice:* every index is a curve, not a point: the knob (`nprobe`, `efSearch`) moves you along it. The shape matches the table you are about to compute; read your own numbers off the cell below.
 #
-# > 💡 **Intuition.** IVF is a library with sections: walk to the 4 sections whose signs best match your topic and search only those shelves (`nprobe = 4`). HNSW is asking for directions: take the motorway to roughly the right town, then smaller and smaller streets (`efSearch` is how many routes you keep open). *Where it breaks down:* a good book can sit in a neighbouring section that you did not visit; that missing share is exactly the "recall vs exact" you will measure.
+# > **Intuition.** IVF is a library with sections: walk to the 4 sections whose signs best match your topic and search only those shelves (`nprobe = 4`). HNSW is asking for directions: take the motorway to roughly the right town, then smaller and smaller streets (`efSearch` is how many routes you keep open). *Where it breaks down:* a good book can sit in a neighbouring section that you did not visit; that missing share is exactly the "recall vs exact" you will measure.
 #
 # > **Exercise 2.** Write `recall_vs_exact(approx_ids, exact_ids)`: two
 # > integer arrays of shape [n_queries, k] (FAISS output, where −1 means "no
@@ -526,7 +526,7 @@ print("saved ann_benchmark.csv")
 # *Your answer:*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · The two-tower score.** In words: the cosine similarity of the two normalised vectors, divided by a temperature.
 #
@@ -581,7 +581,7 @@ print(f"a model that knows nothing, batch 1024: log(1024) = {np.log(1024):.3f}")
 # **Expected:** the two losses agree to five decimals, and `log(1024) = 6.931`, the ceiling the training loss in 8.2 started just below.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -605,4 +605,4 @@ print(f"a model that knows nothing, batch 1024: log(1024) = {np.log(1024):.3f}")
 # 5. How do you get a brand-new item into the index within minutes, and what must stay consistent between the user tower and the index?
 # 6. Your ANN index loses 3% recall@100 vs exact search. How do you decide whether that matters?
 #
-# ➡️ **Next:** [`09_pytorch_training_done_right.ipynb`](../ch27-pytorch-training-done-right/notebook.ipynb) — Day 5: the training loop itself, done properly: data loaders, checkpoints and resume, determinism, schedules, and debugging a model that will not learn.
+# **Next chapter:** [`09_pytorch_training_done_right.ipynb`](../ch27-pytorch-training-done-right/notebook.ipynb) — Day 5: the training loop itself, done properly: data loaders, checkpoints and resume, determinism, schedules, and debugging a model that will not learn.

@@ -1,13 +1,13 @@
 # Solutions · Chapter 28 · Sequence models for user behaviour
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `build_sequences`
 
-✅ Reference code: [`code/nb10.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb10.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def build_sequences(df, max_len):
@@ -35,7 +35,7 @@ knowing for 100 million users.
 
 ## Exercise 2 · `causal_mask`
 
-✅ `torch.triu(torch.ones(n, n, dtype=torch.bool), diagonal=1)`.
+[verified] `torch.triu(torch.ones(n, n, dtype=torch.bool), diagonal=1)`.
 
 `diagonal=1` excludes the diagonal: a position may attend to itself (it needs
 its own item). Watch the convention: PyTorch's boolean `attn_mask` uses
@@ -47,7 +47,7 @@ Test 1 in 10.4 catches that in one line.
 
 ## Exercise 3 · `padding_mask`
 
-✅ `torch.arange(n)[None, :] < (n - lengths)[:, None]`.
+[verified] `torch.arange(n)[None, :] < (n - lengths)[:, None]`.
 
 With left padding, the first `n - length` positions are padding. A length-0
 row is all padding (and, combined with the causal mask, would be all-NaN
@@ -57,7 +57,7 @@ without the diagonal fix); a length-`n` row has no padding.
 
 ## Exercise 4 · Before approving the A/B test (written)
 
-✍️ Personal. A strong answer asks for checks that could *change the decision*:
+[open-ended] Personal. A strong answer asks for checks that could *change the decision*:
 
 1. **Full-catalogue metrics, same protocol for both models.** Sampled metrics
    compress differences and can reorder models (Krichene & Rendle, 2020; section
@@ -126,4 +126,4 @@ history (as in 10.7) and/or train a bag-of-items model (mean of item embeddings,
 no positions) with the same capacity. If shuffled histories score as well,
 order is not being used. Also probe: does swapping only the last two items change
 the prediction? Section 10.7 measured 0.0700 → 0.0687 HR@10 with shuffled
-histories (✅): on ShopStream, order carries little signal.
+histories ([verified]): on ShopStream, order carries little signal.

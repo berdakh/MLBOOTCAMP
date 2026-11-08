@@ -1,7 +1,7 @@
 # Solutions · Chapter 31 · ML from scratch I
 
 Try each exercise before reading its answer, with a timer running. Markers:
-✅ verified by running · 🔬 expected, depends on your run · ✍️ personal / open-ended.
+[verified] verified by running · [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 Reference code for every exercise: [`code/nb13.py`](solutions.py), graded in CI
 by `tests/test_solutions.py` against the graders in
@@ -11,7 +11,7 @@ by `tests/test_solutions.py` against the graders in
 
 ## Exercise 1 · `fit_logreg` (logistic regression, batch GD + L2)
 
-✅ Reference: `ex1` in [`code/nb13.py`](solutions.py).
+[verified] Reference: `ex1` in [`code/nb13.py`](solutions.py).
 
 ```python
 def fit_logreg(X, y, lr=0.1, epochs=1000, l2=0.0):
@@ -50,7 +50,7 @@ coordinate-wise code).
 
 ## Exercise 2 · `softmax_grad`
 
-✅ Reference: `ex2` in [`code/nb13.py`](solutions.py).
+[verified] Reference: `ex2` in [`code/nb13.py`](solutions.py).
 
 ```python
 def softmax_grad(W, X, y):
@@ -79,7 +79,7 @@ to catch it); forgetting `/ n` in the gradient while the loss is a mean
 
 ## Exercise 3 · `kmeans` with k-means++
 
-✅ Reference: `ex3` in [`code/nb13.py`](solutions.py).
+[verified] Reference: `ex3` in [`code/nb13.py`](solutions.py).
 
 Key lines:
 
@@ -94,7 +94,7 @@ for _ in range(1, k):
 # keep the old center if a cluster is empty, stop when labels do not change.
 ```
 
-✅ On the grader's five blobs, uniform random init plus Lloyd gave a median
+[verified] On the grader's five blobs, uniform random init plus Lloyd gave a median
 inertia of ~9,100 against sklearn's ~790 (it merged blobs); the k-means++
 reference matches sklearn.
 
@@ -110,7 +110,7 @@ sklearn's `n_init`).
 
 ## Exercise 4 · `knn_predict`
 
-✅ Reference: `ex4` in [`code/nb13.py`](solutions.py).
+[verified] Reference: `ex4` in [`code/nb13.py`](solutions.py).
 
 ```python
 d2 = (Xte**2).sum(1)[:, None] - 2 * Xte @ Xtr.T + (Xtr**2).sum(1)[None, :]
@@ -126,14 +126,14 @@ return classes[votes.argmax(1)]                          # first max = smallest 
 **Complexity.** O(m·n·d) for distances (one GEMM), O(m·n) for selection, O(m·n)
 memory — chunk the test set if m·n·8 bytes does not fit.
 
-✅ A version with two Python loops over test and training points failed the
+[verified] A version with two Python loops over test and training points failed the
 grader's timing at 1,600 training points (3.3 s > 2 s budget).
 
 ---
 
 ## Exercise 5 · `roc_auc` with ties
 
-✅ Reference: `ex5` in [`code/nb13.py`](solutions.py).
+[verified] Reference: `ex5` in [`code/nb13.py`](solutions.py).
 
 ```python
 order = np.argsort(s, kind="mergesort"); s_sorted = s[order]
@@ -151,7 +151,7 @@ contribute exactly ½.
 
 **Complexity.** O(n log n) time, O(n) memory.
 
-✅ Ordinal ranks (no tie handling) gave 0.7761 against sklearn's 0.7765 on the
+[verified] Ordinal ranks (no tie handling) gave 0.7761 against sklearn's 0.7765 on the
 grader's rounded scores; the pairwise O(n₊n₋) version is correct but failed
 the timing check at n = 16,000 (2.8 s).
 
@@ -159,7 +159,7 @@ the timing check at n = 16,000 (2.8 s).
 
 ## Exercise 6 · `ndcg_at_k`
 
-✅ Reference: `ex6` in [`code/nb13.py`](solutions.py).
+[verified] Reference: `ex6` in [`code/nb13.py`](solutions.py).
 
 ```python
 order = np.argsort(-scores, kind="stable")
@@ -185,35 +185,35 @@ reports how many); IDCG over the full candidate set vs the shown list.
    p − y for the same reason; squared loss with an identity link gives ŷ − y.
    All three are generalised linear models with the **canonical link**, for
    which the gradient of the negative log-likelihood w.r.t. the natural
-   parameter is always "mean minus observation". ✅ (13-1, 13-2 gradient checks)
+   parameter is always "mean minus observation". [verified] (13-1, 13-2 gradient checks)
 2. **NaN in softmax.** (a) Overflow: `exp` of logits > ~709 → inf/inf. Fix:
    subtract the row max / use log-softmax. (b) `log(0)` in the loss when a
    probability underflows to 0. Fix: compute CE from logits
    (`logsumexp(z) − z_y`). Other real causes: a learning rate so high the
    weights diverge (fix the lr, clip gradients), NaN already in the inputs
-   (validate data), mixed-precision overflow in fp16 (loss scaling). ✍️
+   (validate data), mixed-precision overflow in fp16 (loss scaling). [open-ended]
 3. **Convexity.** The logistic loss is convex in (w, b) and strictly convex with
    L2, so any minimum is global and the init does not matter (only speed). The
    k-means objective is non-convex in the centers (permutations alone give k!
    equivalent minima, and there are bad local ones), so the init matters: use
    k-means++ and several restarts, report the best inertia, and check stability
-   across seeds. ✅ (13-3: uniform init ~9,100 vs ~790)
+   across seeds. [verified] (13-3: uniform init ~9,100 vs ~790)
 4. **High AUC, useless model.** AUC averages over all thresholds and is
    insensitive to class balance: with 0.5% positives, a model can rank most
    positives above most negatives yet have terrible precision at any threshold
    you can afford to act on (e.g. 0.92 AUC with 3% precision at the top 1%).
    Report precision/recall at the operating point, PR-AUC, and the cost-weighted
-   outcome; also check calibration if scores are used as probabilities. ✍️
+   outcome; also check calibration if scores are used as probabilities. [open-ended]
 5. **kNN at 50M items / 20 ms.** Exact brute force is O(N·d) per query —
    50M × 128 floats is ~25 GB and seconds per query. Move to approximate
    nearest-neighbour search (IVF, HNSW, product quantisation; notebook 08),
    possibly on GPU, sharded across machines; reduce d; cache popular queries.
    You give up exact recall (measure recall@k vs exact on a sample), memory
-   (index overhead), and freshness (index rebuilds/updates). ✍️
+   (index overhead), and freshness (index rebuilds/updates). [open-ended]
 6. **Gradient check.** Central differences with ε ≈ 1e-5 in float64 on a small
    problem (few examples, few dimensions); relative error
    ‖g − g_num‖ / (‖g‖ + ‖g_num‖); < 1e-7 good, > 1e-4 a bug. Misleading when:
    the function has kinks (ReLU at 0, max, hinge) near the test point;
    float32; randomness inside the loss (dropout — fix the mask/seed);
    regularisation terms checked separately from the data term; only a subset
-   of parameters checked. ✅ (13.4: 7.5e-12 vs 0.33 for a missing factor 2)
+   of parameters checked. [verified] (13.4: 7.5e-12 vs 0.33 for a missing factor 2)

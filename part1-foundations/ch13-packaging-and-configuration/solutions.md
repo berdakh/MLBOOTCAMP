@@ -1,13 +1,13 @@
 # Solutions · Chapter 13 · Packaging & configuration
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `dockerfile_problems`
 
-✅ Reference code: [`code/nb12.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb12.py`](solutions.py) (`ex1`), graded in CI.
 
 The work is in parsing, not in the rules. Turn the text into a list of
 *instructions* first, then each rule is one or two lines:
@@ -59,7 +59,7 @@ bloats every layer, and without a health check nobody notices a hung process.
 
 ## Exercise 2 · `settings_from_env`
 
-✅ Reference code: [`code/nb12.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb12.py`](solutions.py) (`ex2`).
 
 ```python
 LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")
@@ -106,7 +106,7 @@ twenty lines it replaces makes its errors easy to read.
 
 ## Exercise 3 · Bake the model into the image, or load it from the registry? (written)
 
-✍️ Personal. Both choices can be defended; the grade is in the reasoning. A
+[open-ended] Personal. Both choices can be defended; the grade is in the reasoning. A
 strong answer for this project:
 
 > Load from the registry at start-up. The model is retrained monthly and must

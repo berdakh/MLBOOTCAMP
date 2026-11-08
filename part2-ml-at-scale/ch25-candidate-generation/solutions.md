@@ -1,13 +1,13 @@
 # Solutions · Chapter 25 · Candidate generation
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `covisitation`
 
-✅ Reference code: [`code/nb07.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb07.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def covisitation(pairs_df, top_n):
@@ -40,7 +40,7 @@ neighbours become the global best-sellers.
 
 ## Exercise 2 · `recall_at_k_batch`
 
-✅ Reference code: [`code/nb07.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb07.py`](solutions.py) (`ex2`).
 
 ```python
 def recall_at_k_batch(candidates, truth, k):
@@ -64,7 +64,7 @@ generator cannot look good by abstaining. Recall@K is capped below 1 when
 
 ## Exercise 3 · Retrieval for 50 million listings (written)
 
-✍️ One strong answer, as bullets:
+[open-ended] One strong answer, as bullets:
 
 * **Budget split** (15 ms): generators run in parallel, each ≤ 8–10 ms,
   merge + de-dup ≤ 2 ms, leaving headroom for tail latency.

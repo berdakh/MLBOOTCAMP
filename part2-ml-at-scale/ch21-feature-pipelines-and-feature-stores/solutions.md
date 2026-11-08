@@ -1,13 +1,13 @@
 # Solutions · Chapter 21 · Feature pipelines & feature stores
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `point_in_time_join`
 
-✅ Reference code: [`code/nb03.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb03.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def point_in_time_join(events, snapshots, key, ts_col):
@@ -40,7 +40,7 @@ restore it afterwards.
 
 ## Exercise 2 · `OnlineStore`
 
-✅ Reference code: [`code/nb03.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb03.py`](solutions.py) (`ex2`).
 
 ```python
 class OnlineStore:
@@ -80,7 +80,7 @@ one-character skew that the parity check in 3.6 is there to catch.
 
 ## Exercise 3 · A streaming feature joined "as it is today" (written)
 
-✍️ A strong answer names several of these problems:
+[open-ended] A strong answer names several of these problems:
 
 1. **Future leakage.** The table "as it is today" holds the *latest* value
    per item (or values computed after the training events). Joining it to
@@ -116,7 +116,7 @@ feature is not suspiciously high, and confirm with an A/B test.
 
 ## Checkpoint answers
 
-1. **Offline vs online store.** ✅ Offline: full history of feature values
+1. **Offline vs online store.** [verified] Offline: full history of feature values
    with timestamps, columnar and cheap, used to build training sets with
    point-in-time joins and for batch scoring. Online: only the latest value
    per entity key, in a low-latency key-value store, read at request time.
@@ -126,13 +126,13 @@ feature is not suspiciously high, and confirm with an A/B test.
    streaming job writes both), the same TTL semantics, and continuous parity
    checks against logged served values (our day-45 check agreed on 100% of
    4,739 requests).
-2. **Point-in-time join.** ✅
+2. **Point-in-time join.** [verified]
    `SELECT e.*, s.f FROM events e ASOF LEFT JOIN snaps s ON e.user_id =
    s.user_id AND e.ts > s.snapshot_ts`. For each event, the latest feature
    row with a timestamp before the event. Strict because a feature stamped at
    the event's own time may include the event (or other information from that
    instant) and so its outcome.
-3. **Offline lift, flat A/B.** ✅ Suspect leakage first: check every
+3. **Offline lift, flat A/B.** [verified] Suspect leakage first: check every
    feature's timestamp against the event time (`snapshot_ts < ts` for all
    rows), window bounds, joins to "current" tables. In our run, a same-day
    window turned an honest 0.793 into a reported 0.849, and the leaky model
@@ -141,14 +141,14 @@ feature is not suspiciously high, and confirm with an A/B test.
    population differences (new users, traffic mix), the metric (AUC on
    impressions vs the business metric), position bias and feedback loops
    (Day 3), and whether the A/B test is powered (Day 6).
-4. **TTL.** ✅ Offline: stops the as-of join from carrying a stale snapshot
+4. **TTL.** [verified] Offline: stops the as-of join from carrying a stale snapshot
    forward for entities absent from recent snapshots (5% of our training
    rows). Online: stops serving values from a pipeline that stopped updating,
    or for entities that went inactive; expired → default value, as in
    training. Choose it from the materialisation cadence (a bit more than one
    period, to tolerate a late run) and the feature's meaning; it must be the
    same offline and online.
-5. **Is real-time worth it?** 🔬 Measure the value of freshness offline first:
+5. **Is real-time worth it?** [expected] Measure the value of freshness offline first:
    rebuild features with artificial staleness (lag 0, 1, 3, 7 days) and
    compare validation metrics; in ShopStream the AUC barely moved
    (0.7933 → 0.7922), because tastes are static. On real data, look at segments
@@ -156,7 +156,7 @@ feature is not suspiciously high, and confirm with an A/B test.
    the gain against the cost: a streaming pipeline, its on-call, parity
    risks. Often a cheaper middle ground (hourly batch, or a few session
    features computed in the request path) captures most of it.
-6. **Backfill for two years.** ✍️ Correct: the same code as production,
+6. **Backfill for two years.** [open-ended] Correct: the same code as production,
    point-in-time windows (data before each date only), handling of late data
    consistent with production, versioned feature definition. Safe to re-run:
    deterministic, idempotent writes (overwrite each date partition, never

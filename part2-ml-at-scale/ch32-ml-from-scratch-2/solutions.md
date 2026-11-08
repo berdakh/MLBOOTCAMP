@@ -1,7 +1,7 @@
 # Solutions · Chapter 32 · ML from scratch II
 
 Try each exercise before reading its answer, with a timer running. Markers:
-✅ verified by running · 🔬 expected, depends on your run · ✍️ personal / open-ended.
+[verified] verified by running · [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 Reference code: [`code/nb14.py`](solutions.py), graded in CI against
 [`src/shoprank/grading/nb14.py`](../../src/grading/ch32.py).
@@ -10,7 +10,7 @@ Reference code: [`code/nb14.py`](solutions.py), graded in CI against
 
 ## Exercise 1 · `best_split` in O(n log n)
 
-✅ Reference: `ex1` in [`code/nb14.py`](solutions.py).
+[verified] Reference: `ex1` in [`code/nb14.py`](solutions.py).
 
 ```python
 order = np.argsort(x, kind="stable"); xs, ys = x[order], y[order]
@@ -27,7 +27,7 @@ return (xs[i] + xs[i + 1]) / 2, loss[i]
 **Complexity.** O(n log n) time (sort), O(n) memory. Everything after the sort
 is a handful of vectorised O(n) passes.
 
-✅ A correct O(n²) version (recompute both children per split) passed every
+[verified] A correct O(n²) version (recompute both children per split) passed every
 correctness test but took 3.95 s at n = 64,000 in the grader's timing check.
 
 **Edge cases.** Duplicates (the `xs[:-1] < xs[1:]` mask), constant `x` or n < 2
@@ -39,7 +39,7 @@ subtract `y.mean()` first for robustness; the minimiser does not change).
 
 ## Exercise 2 · `gbm_fit` / `gbm_predict` with stumps
 
-✅ Reference: `ex2` and `gbm_predict` in [`code/nb14.py`](solutions.py).
+[verified] Reference: `ex2` and `gbm_predict` in [`code/nb14.py`](solutions.py).
 
 ```python
 init = y.mean(); F = np.full(len(y), init); stumps = []
@@ -56,7 +56,7 @@ for _ in range(n_estimators):
 (The reference calls `best_split` once per feature; the one-liner above is for
 reading, not for copying.)
 
-✅ On the grader's 200-point problem (variance of y ≈ 0.758), 50 stumps at
+[verified] On the grader's 200-point problem (variance of y ≈ 0.758), 50 stumps at
 lr = 0.1 reach a training MSE of 0.2345 — identical to
 `GradientBoostingRegressor(max_depth=1)` to 16 digits, and predictions on new
 points agree to ~4e-16. sklearn's default `friedman_mse` criterion ranks
@@ -75,7 +75,7 @@ adding `lr × stump` with 0 < lr ≤ 1 never increases the training SSE.
 
 ## Exercise 3 · `mlp_grads`
 
-✅ Reference: `ex3` in [`code/nb14.py`](solutions.py).
+[verified] Reference: `ex3` in [`code/nb14.py`](solutions.py).
 
 ```python
 z1 = X @ W1 + b1; h = np.maximum(z1, 0); logits = h @ W2 + b2
@@ -98,7 +98,7 @@ forgetting `/ n` (all gradients off by n).
 
 ## Exercise 4 · Masked `attention`
 
-✅ Reference: `ex4` in [`code/nb14.py`](solutions.py).
+[verified] Reference: `ex4` in [`code/nb14.py`](solutions.py).
 
 ```python
 scores = Q @ np.swapaxes(K, -1, -2) / np.sqrt(d)
@@ -111,7 +111,7 @@ w = np.divide(e, den, out=np.zeros_like(e), where=den > 0)
 return w @ V, w
 ```
 
-✅ The common `-1e9` fill passes everything except the fully masked row, where
+[verified] The common `-1e9` fill passes everything except the fully masked row, where
 it silently produces uniform weights (the grader reports "attention weights
 differ from the reference").
 
@@ -121,7 +121,7 @@ differ from the reference").
 
 ## Exercise 5 · `batchnorm_forward`
 
-✅ Reference: `ex5` in [`code/nb14.py`](solutions.py).
+[verified] Reference: `ex5` in [`code/nb14.py`](solutions.py).
 
 Training: `mu, var = x.mean(0), x.var(0)`; `out = gamma * (x - mu) / sqrt(var + eps) + beta`;
 `new_mean = (1-m)·old + m·mu`; `new_var = (1-m)·old + m·var·n/(n-1)`; raise for
@@ -139,7 +139,7 @@ same reason.
 
 ## Exercise 6 · `inverted_dropout`
 
-✅ Reference: `ex6` in [`code/nb14.py`](solutions.py).
+[verified] Reference: `ex6` in [`code/nb14.py`](solutions.py).
 
 ```python
 if not training or p == 0: return x.copy()
@@ -156,7 +156,7 @@ norm interact badly when stacked (the "variance shift" seen at eval).
 
 ## Exercise 7 · Backprop through softmax + cross-entropy (written)
 
-✍️ A whiteboard-ready derivation (your wording will differ):
+[open-ended] A whiteboard-ready derivation (your wording will differ):
 
 1. **Softmax:** pₖ = e^{zₖ} / Σⱼ e^{zⱼ}. Its Jacobian: ∂pₖ/∂zⱼ = pₖ(δₖⱼ − pⱼ).
 2. **Loss:** L = −log p_y = −z_y + log Σⱼ e^{zⱼ}. Differentiate directly (easier
@@ -187,14 +187,14 @@ norm interact badly when stacked (the "variance shift" seen at eval).
    residuals y − σ(F), Newton leaf values Σ(y − p)/Σp(1 − p), init = log-odds.
    LambdaMART: pseudo-residuals are the "lambdas" — pairwise RankNet gradients
    within a query weighted by |ΔNDCG| of swapping the pair — and leaves use
-   the Newton step with the matching second derivatives (notebook 06). ✅ (14-2)
+   the Newton step with the matching second derivatives (notebook 06). [verified] (14-2)
 2. **Histogram GBDTs.** They bucket each feature into ≤ 255 bins once; a node's
    split search builds gradient/hessian histograms in O(n) and scans B bins,
    instead of sorting (O(n log n)) per node; the sibling's histogram comes from
    parent − child for free; bins are small integers (cache-friendly, less
    memory) and parallelise well. They give up exact thresholds (only bin edges
    are candidates), which rarely matters and acts as regularisation; very
-   fine-grained features may lose a little. ✍️
+   fine-grained features may lose a little. [open-ended]
 3. **NaN at inference with masks.** Check for queries with **no** allowed key
    (empty history after filtering, all-padding sequences, left- vs
    right-padding mismatch between training and serving); the mask's polarity
@@ -202,7 +202,7 @@ norm interact badly when stacked (the "variance shift" seen at eval).
    (float additive mask vs boolean); fp16 overflow of −inf/−1e9 fills; and
    reproduce with the failing users' inputs, asserting `isfinite` after each
    layer. Fix by defining the empty-row output (zeros, as in 14-4) or by
-   guaranteeing at least one valid key (e.g. a "no history" token). ✍️
+   guaranteeing at least one valid key (e.g. a "no history" token). [open-ended]
 4. **Batch norm offline vs one-at-a-time serving.** (a) The model is served in
    training mode: outputs depend on the batch, and a batch of 1 normalises
    everything to `beta` (PyTorch would raise; ONNX exports may not). Confirm by
@@ -210,15 +210,15 @@ norm interact badly when stacked (the "variance shift" seen at eval).
    parity test. (b) The running statistics do not match serving inputs
    (computed on a different distribution or preprocessing, or never updated
    because of a frozen/fused export). Confirm by comparing per-feature input
-   mean/variance in serving with the stored running stats. ✍️
+   mean/variance in serving with the stored running stats. [open-ended]
 5. **Quadratic attention.** Every query scores every key: Lq·Lk dot products and
    an Lq × Lk weight matrix per head. Reducing memory/time: IO-aware exact
    kernels (FlashAttention: tiling, no materialised matrix — memory linear,
    time still quadratic); sparse/local patterns (sliding windows, block-sparse,
    Longformer/BigBird); low-rank or kernelised linear attention (Linformer,
    Performer); and for recommender histories, truncating or summarising the
-   sequence. ✍️
+   sequence. [open-ended]
 6. **Gradient of softmax CE.** p − y (or p − q for a target distribution q).
    Because the gradient only needs a target distribution, label smoothing
    (q = (1 − ε)·onehot + ε/C) and distillation (q = teacher softmax at
-   temperature T) plug in without any new derivation. ✅ (14-7, 13-2)
+   temperature T) plug in without any new derivation. [verified] (14-7, 13-2)

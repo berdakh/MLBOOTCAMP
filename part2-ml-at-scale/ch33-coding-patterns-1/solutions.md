@@ -1,7 +1,7 @@
 # Solutions · Chapter 33 · Coding patterns I
 
 Try each exercise against the clock before reading its answer. Markers:
-✅ verified by running · 🔬 expected, depends on your run · ✍️ personal / open-ended.
+[verified] verified by running · [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 Reference code: [`code/nb15.py`](solutions.py), graded in CI against
 [`src/shoprank/grading/nb15.py`](../../src/grading/ch33.py). Each grader
@@ -12,7 +12,7 @@ reference, and a timing check (2-second budget per size).
 
 ## Exercise 1 · `two_sum_pairs`
 
-✅ Reference: `ex1` in [`code/nb15.py`](solutions.py).
+[verified] Reference: `ex1` in [`code/nb15.py`](solutions.py).
 
 ```python
 seen = defaultdict(list)            # value -> indices so far
@@ -32,14 +32,14 @@ target = 2x): output-bound, unavoidable.
 **Edge cases.** Single element; the same index cannot pair with itself (we add
 `j` to `seen` *after* looking up); duplicates; negatives; empty input.
 
-✅ The all-pairs double loop was correct but took 4.4 s at n = 16,000 in the
+[verified] The all-pairs double loop was correct but took 4.4 s at n = 16,000 in the
 grader.
 
 ---
 
 ## Exercise 2 · `longest_unique`
 
-✅ Reference: `ex2` in [`code/nb15.py`](solutions.py).
+[verified] Reference: `ex2` in [`code/nb15.py`](solutions.py).
 
 ```python
 last, best, left = {}, 0, 0
@@ -53,14 +53,14 @@ for right, ch in enumerate(s):
 **Complexity.** O(n) time — `left` and `right` each move forward at most n
 times; O(min(n, alphabet)) space.
 
-✅ Without the `>= left` check (`if ch in last: left = last[ch] + 1`), `"abba"`
+[verified] Without the `>= left` check (`if ch in last: left = last[ch] + 1`), `"abba"`
 returns 3 instead of 2: at the final `a`, `left` jumps *back* from 2 to 1.
 
 ---
 
 ## Exercise 3 · `top_k_frequent`
 
-✅ Reference: `ex3` in [`code/nb15.py`](solutions.py) (a size-k heap with a
+[verified] Reference: `ex3` in [`code/nb15.py`](solutions.py) (a size-k heap with a
 reversed-order wrapper for tie-breaking). A shorter equivalent that is
 perfectly acceptable in an interview:
 
@@ -79,7 +79,7 @@ are not mutually comparable (then tie-break by first occurrence instead).
 
 ## Exercise 4 · `merge_intervals` (merge + insert)
 
-✅ Reference: `ex4` in [`code/nb15.py`](solutions.py).
+[verified] Reference: `ex4` in [`code/nb15.py`](solutions.py).
 
 ```python
 if new is None:                                   # O(n log n)
@@ -109,20 +109,20 @@ several; empty list; negative coordinates.
 
 ## Exercise 5 · `MinStack`
 
-✅ Reference: `ex5` in [`code/nb15.py`](solutions.py) — a parallel stack
+[verified] Reference: `ex5` in [`code/nb15.py`](solutions.py) — a parallel stack
 `mins[i] = min(items[:i+1])`.
 
 **Complexity.** O(1) for every operation; O(n) extra space (the space-saving
 variant pushes to `mins` only when `x <= mins[-1]`).
 
-✅ A `min(self.items)` version passed all correctness tests and failed the
+[verified] A `min(self.items)` version passed all correctness tests and failed the
 timing (2.2 s at 16,000 operations of each kind).
 
 ---
 
 ## Exercise 6 · `product_except_self`
 
-✅ Reference: `ex6` in [`code/nb15.py`](solutions.py).
+[verified] Reference: `ex6` in [`code/nb15.py`](solutions.py).
 
 ```python
 out = [1] * n; prefix = 1
@@ -133,14 +133,14 @@ for i in range(n - 1, -1, -1): out[i] *= suffix; suffix *= nums[i]
 
 **Complexity.** O(n) time; O(1) extra space besides the output.
 
-✅ The division shortcut (`total // x`) raised `ZeroDivisionError` on the
+[verified] The division shortcut (`total // x`) raised `ZeroDivisionError` on the
 grader's first zero.
 
 ---
 
 ## Exercise 7 · `subarray_sum_count`
 
-✅ Reference: `ex7` in [`code/nb15.py`](solutions.py).
+[verified] Reference: `ex7` in [`code/nb15.py`](solutions.py).
 
 ```python
 count, prefix, seen = 0, 0, {0: 1}
@@ -155,7 +155,7 @@ the current prefix excludes the empty subarray (j = i) when k = 0.
 
 **Complexity.** O(n) time, O(n) space.
 
-✅ Two brute-force versions (with and without a running sum) were rejected by
+[verified] Two brute-force versions (with and without a running sum) were rejected by
 the timing projection at n = 1,000 and n = 4,000.
 
 ---
@@ -168,13 +168,13 @@ the timing projection at n = 1,000 and n = 4,000.
    for each character, count it in the whole string, O(n²). Optimise: one pass
    with a `Counter`, a second pass returning the first character with count 1.
    Complexity: O(n) time, O(alphabet) space. Streaming follow-up: a dict of
-   counts plus an ordered dict/queue of candidates. ✍️
+   counts plus an ordered dict/queue of candidates. [open-ended]
 2. **Sliding window cost.** Each index is added once (when `right` passes it)
    and removed at most once (when `left` passes it), so the inner `while` runs
    at most n times **in total**: amortised O(n). It fails when shrinking the
    window does not move the constraint monotonically — e.g. sums with negative
    numbers, or "exactly k" constraints — and is replaced by prefix sums with a
-   hash map (15-7), or by "at most k" minus "at most k−1" tricks. ✅ (15-2, 15-7)
+   hash map (15-7), or by "at most k" minus "at most k−1" tricks. [verified] (15-2, 15-7)
 3. **Top 100 of 10 billion lines.** Exact: hash-partition the log by query
    into files/shards that fit in memory (a map-reduce shuffle, notebook 02),
    count per shard, keep a size-100 heap per shard, merge the heaps. Two
@@ -182,24 +182,24 @@ the timing projection at n = 1,000 and n = 4,000.
    Count-Min sketch (or Space-Saving/Misra-Gries) plus a size-100 heap; the
    counts are overestimates with bounded error, and the top-100 set can be
    wrong near the cut-off — re-count the candidates exactly in a second pass if
-   needed. ✍️
+   needed. [open-ended]
 4. **Hash map worst case.** O(n) per operation when many keys collide in the
    same bucket (pathological or adversarial keys). Python randomises `str` and
    `bytes` hashing per process (`PYTHONHASHSEED`) to make crafted collisions
    hard; ints are not randomised (`hash(i) == i` for small ints), so keys that
    are multiples of the table size can collide. It matters for services
    hashing untrusted input (hash-flooding DoS) and for skewed join keys in
-   distributed systems (the same "hot key" effect from notebook 02). ✍️
+   distributed systems (the same "hot key" effect from notebook 02). [open-ended]
 5. **Sort over hash.** When the output must be ordered anyway; when memory is
    tight (in-place sort, O(1) extra vs a hash table's overhead); when data is
    already sorted or nearly sorted (Timsort is O(n) there); for external data
    that does not fit in memory (external merge sort streams well; a hash table
    does not); when worst-case guarantees matter; and when the hash-based
-   constants (hashing strings, cache misses) dominate at realistic n. ✍️
+   constants (hashing strings, cache misses) dominate at realistic n. [open-ended]
 6. **O(1) extra space.** 15-6: write prefix products into the output, then
    multiply by a running suffix — O(1) extra (the output does not count). 15-1
    with a **sorted** input: two pointers from both ends, O(1) extra; on
    unsorted input you must sort first (O(n log n), and indices change unless you
    sort index pairs, which is O(n) space again). 15-7 with negatives cannot be
    done in O(1) extra space and O(n) time by any known method: say so and
-   explain the trade-off (O(n²) time with O(1) space). ✍️
+   explain the trade-off (O(n²) time with O(1) space). [open-ended]

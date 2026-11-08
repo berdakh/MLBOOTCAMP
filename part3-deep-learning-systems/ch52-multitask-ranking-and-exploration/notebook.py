@@ -98,7 +98,7 @@ N_TEST = {"gpu": 400_000, "cpu": 100_000, "smoke": 20_000}[BUDGET.name]
 print(f"train impressions: {N_TRAIN:,} | test impressions: {N_TEST:,}")
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -167,7 +167,7 @@ print(f"correlation of log true CTR and log true CVR: {corr:+.2f}")
 #
 # *What to notice:* MMoE only changes what sits between the embeddings and the towers; if the gates stay uniform (as here) it is just a more expensive shared-bottom.
 #
-# > 💡 **Intuition.** Shared-bottom is one consultant writing a single report for two clients with
+# > **Intuition.** Shared-bottom is one consultant writing a single report for two clients with
 # > different goals. MMoE is a small panel of consultants (experts); each client (task) has its own
 # > rule for how much to listen to each panel member, and the rule can change per question (per
 # > example). *Where the analogy breaks down:* nothing forces the experts to specialise; with mild
@@ -364,7 +364,7 @@ RESULTS["blending"] = grid.round(3).to_dict(orient="records")
 #
 # *What to notice:* the price depends on the runner-up's eCPM and the winner's own pCTR, so a pCTR error for one advertiser moves both who wins and what everyone pays.
 #
-# > 💡 **Intuition.** In a second-price auction your bid only decides *whether* you win, never *what
+# > **Intuition.** In a second-price auction your bid only decides *whether* you win, never *what
 # > you pay*: that is set by the next-best competitor. So shading your bid can only make you lose
 # > auctions you wanted, and bidding your true value is the best strategy (Vickrey). *Where the
 # > analogy breaks down:* that guarantee holds for one slot with truthful values; with budgets,
@@ -491,7 +491,7 @@ print(auc_df.round(3).to_string(index=False))
 #
 # *What to notice:* regret that keeps growing linearly means the policy never stops paying for exploration; a flattening curve means it has mostly found the best ad.
 #
-# > 💡 **Intuition.** Thompson sampling is a tasting menu: for each dish (ad) you have a belief about
+# > **Intuition.** Thompson sampling is a tasting menu: for each dish (ad) you have a belief about
 # > how good it is, wide if you have tasted it rarely. Each round you *imagine* one plausible quality
 # > for every dish and order the one that looks best in that imagination. Rarely tasted dishes
 # > sometimes imagine well and get ordered; dishes you know are mediocre almost never do.
@@ -657,7 +657,7 @@ print("saved", OUT / "results.json")
 # *Your answer (Exercise 3):* ...
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · ESMM.**
 #
@@ -732,7 +732,7 @@ print(f"regret of plays {plays.tolist()}: {np.sum(true_ps.max() - true_ps[plays]
 # worst arm, 0 for each play of the best).
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -756,4 +756,4 @@ print(f"regret of plays {plays.tolist()}: {np.sum(true_ps.max() - true_ps[plays]
 # 5. Compare ε-greedy, UCB and Thompson sampling. Which would you use for cold-start ads, and how would you limit its cost?
 # 6. Design question: your ads system must launch a "conversion value" objective next quarter. Which models, labels, metrics and online experiments do you need?
 #
-# ➡️ **Next:** [`15_fairness_robustness_and_privacy.ipynb`](../ch53-fairness-robustness-and-privacy/notebook.ipynb) — from revenue to responsibility: subgroup metrics, robustness to shift and perturbations, and differential privacy.
+# **Next chapter:** [`15_fairness_robustness_and_privacy.ipynb`](../ch53-fairness-robustness-and-privacy/notebook.ipynb) — from revenue to responsibility: subgroup metrics, robustness to shift and perturbations, and differential privacy.

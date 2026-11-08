@@ -76,7 +76,7 @@ print(f"small dataset ready in {time.perf_counter() - t0:.1f} s")
 # Colab CPU), then `using cached ...` on re-runs.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -103,7 +103,7 @@ print(f"small dataset ready in {time.perf_counter() - t0:.1f} s")
 # %% [markdown]
 # ## 1.1 · What a good log row contains
 #
-# > 💡 **Intuition.** A log row is a witness statement: *who, what, where, when, chosen by whom, and what happened next*. A detective can reconstruct a case from complete statements; a missing "where" (position) or "chosen by whom" (policy version) cannot be recovered later. *Where it breaks down:* a witness can at least say what they looked at; a log never can (examination is invisible).
+# > **Intuition.** A log row is a witness statement: *who, what, where, when, chosen by whom, and what happened next*. A detective can reconstruct a case from complete statements; a missing "where" (position) or "chosen by whom" (policy version) cannot be recovered later. *Where it breaks down:* a witness can at least say what they looked at; a log never can (examination is invisible).
 #
 # One impression row should let you answer, months later: *who saw what,
 # where, when, chosen by which system, with what probability, and what
@@ -227,7 +227,7 @@ del df_csv, df_pq, df_2  # free memory before the larger steps
 # types, so every reader re-guesses them. With Parquet, the schema travels
 # with the data.
 #
-# > 💡 **Intuition.** CSV is a stack of index cards, one per impression: to total the `clicked` field you pick up every card. Parquet is a ledger with one page per column, and a sticky note on each chapter saying "request ids 24k–37k in here". You open only the pages and chapters you need. *Where it breaks down:* changing one row in Parquet means rewriting a whole file; columnar formats are for reading, not for row-by-row updates.
+# > **Intuition.** CSV is a stack of index cards, one per impression: to total the `clicked` field you pick up every card. Parquet is a ledger with one page per column, and a sticky note on each chapter saying "request ids 24k–37k in here". You open only the pages and chapters you need. *Where it breaks down:* changing one row in Parquet means rewriting a whole file; columnar formats are for reading, not for row-by-row updates.
 #
 # **Row groups and statistics.** The file was written sorted by
 # `request_id`. Each row group stores min/max per column, so a filter like
@@ -432,7 +432,7 @@ pd.DataFrame({name: metrics(df) for name, df in samples.items()}).T.round(3)
 #   only about 25-30 in the row and request samples. A per-user metric needs
 #   *all* of a user's rows: sample users.
 #
-# > 💡 **Intuition.** Sampling rows to measure "did the request get a click?" is like tearing out 10% of a book's pages at random and asking how many chapters have a happy ending: each chapter survives as a page or two, and most of the endings are gone. *Tiny example:* a request with one click, rows kept with probability 0.1: the request survives (any of its 10 rows kept) with probability $1-0.9^{10}=0.65$, but its click survives with probability only 0.1, so given that it survives, it shows a click $0.1/0.65 \approx 15\%$ of the time instead of 100%.
+# > **Intuition.** Sampling rows to measure "did the request get a click?" is like tearing out 10% of a book's pages at random and asking how many chapters have a happy ending: each chapter survives as a page or two, and most of the endings are gone. *Tiny example:* a request with one click, rows kept with probability 0.1: the request survives (any of its 10 rows kept) with probability $1-0.9^{10}=0.65$, but its click survives with probability only 0.1, so given that it survives, it shows a click $0.1/0.65 \approx 15\%$ of the time instead of 100%.
 #
 # **Rule:** sample at the level of the unit your metric is computed over (or
 # coarser). Requests for ranking metrics; users for anything per-user, and for
@@ -535,7 +535,7 @@ grade.ex2(daily_ctr_by_position_sql)
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · Standard error of a sampled click rate.** In words: a CTR from $n$ independent rows wobbles by about $\sqrt{p(1-p)/n}$ from sample to sample.
 #
@@ -585,7 +585,7 @@ print(f"2. predicted share of row-sampled requests with a click: {predicted:.3f}
 # **Expected:** the formula and the measured spread agree to within about 20% (both about 0.0007), and the predicted share is about 0.20, matching the row sample in 1.6.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -609,4 +609,4 @@ print(f"2. predicted share of row-sampled requests with a click: {predicted:.3f}
 # 5. A colleague samples 1% of impression rows and reports that NDCG@10 dropped. What is wrong, and how should they sample?
 # 6. Why `hash(salt + id) % 100 < k` rather than `random() < k/100`, why a salt, and why not Python's `hash()`?
 #
-# ➡️ **Next:** [`02_aggregation_and_joins_at_scale.ipynb`](../ch20-aggregation-and-joins-at-scale/notebook.ipynb) — what a distributed engine does with your `GROUP BY` and `JOIN`, why skew hurts, and when an approximate answer is the right one.
+# **Next chapter:** [`02_aggregation_and_joins_at_scale.ipynb`](../ch20-aggregation-and-joins-at-scale/notebook.ipynb) — what a distributed engine does with your `GROUP BY` and `JOIN`, why skew hurts, and when an approximate answer is the right one.

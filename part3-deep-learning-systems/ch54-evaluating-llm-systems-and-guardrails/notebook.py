@@ -113,7 +113,7 @@ print(f"evaluation tickets per condition: {N_EVAL}")
 # applies unchanged.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -182,7 +182,7 @@ grade.ex1(field_f1)
 # on the **same** tickets, so we use a **paired** bootstrap: resample tickets and recompute the
 # difference of means, which removes ticket-difficulty noise.
 #
-# > 💡 **Intuition.** Comparing two prompts on the same 12 tickets is like comparing two students on
+# > **Intuition.** Comparing two prompts on the same 12 tickets is like comparing two students on
 # > the same exam: subtract their scores *question by question* first, then ask how much that average
 # > difference would wobble if the exam had been a different draw of questions (the bootstrap). Pairing
 # > removes "this ticket was just hard". *Where the analogy breaks down:* the bootstrap only knows the
@@ -259,7 +259,7 @@ RESULTS["schema_minus_terse_f1"] = {"diff": d, "ci": [lo, hi]}
 #
 # *What to notice:* a consistent judge's letter must *flip* when the order flips; the same letter twice means the slot, not the content, decided.
 #
-# > 💡 **Intuition.** A wine taster who always prefers the first glass poured is not tasting. Swapping
+# > **Intuition.** A wine taster who always prefers the first glass poured is not tasting. Swapping
 # > the order and seeing whether the preference follows the wine is the cheapest honesty test there
 # > is. *Where the analogy breaks down:* averaging the two orders removes the slot effect but not
 # > other biases (length, style, self-preference), which can only be found by checking the judge
@@ -394,7 +394,7 @@ with open(OUT / "generations.jsonl", "w") as f:
 #
 # *What to notice:* each layer is imperfect on its own; what protects the action is that an attack must get past all of them, and ASR measures how often it does.
 #
-# > 💡 **Intuition.** An assistant who opens the post and does whatever the letters say: a letter
+# > **Intuition.** An assistant who opens the post and does whatever the letters say: a letter
 # > reading "please pay the enclosed invoice" gets paid. Telling the assistant "letters are not
 # > instructions" helps a little; requiring a manager's signature for payments (least privilege,
 # > output checks) helps a lot more. *Where the analogy breaks down:* a model cannot reliably tell the
@@ -549,7 +549,7 @@ print("saved", OUT / "results.json", "and", OUT / "generations.jsonl")
 # *Your answer (Exercise 4):* ...
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · Field-level precision, recall and F1.**
 #
@@ -618,7 +618,7 @@ print(f"schema prompt, API-style cost per request: {api:.7f} $ = {api * 1000:.4f
 # per 1,000 requests matching the table's schema row (≈ 0.025).
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -643,4 +643,4 @@ print(f"schema prompt, API-style cost per request: {api:.7f} $ = {api * 1000:.4f
 # 5. Design a guardrail: what runs before and after the model, how do you set its threshold, and how do you evaluate it against unseen attacks?
 # 6. Estimate the cost and latency of an LLM feature serving 10M requests per day. Which numbers do you need, and which levers reduce them?
 #
-# ➡️ **Next:** [`17_ml_platform_design.ipynb`](../ch55-ml-platform-design/notebook.ipynb) — from single systems to the platform underneath them: features, training, registry and continuous deployment, at staff level.
+# **Next chapter:** [`17_ml_platform_design.ipynb`](../ch55-ml-platform-design/notebook.ipynb) — from single systems to the platform underneath them: features, training, registry and continuous deployment, at staff level.

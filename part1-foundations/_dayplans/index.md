@@ -14,7 +14,7 @@ day takes two sittings.
 2. **Run every cell.** In Colab: open the notebook link, then *Runtime → Run all*,
    then go back to the top and read as you re-run cell by cell.
 3. **Do the exercises before reading the solutions.** Each graded exercise
-   prints ✅, ❌ (with a hint) or ⏳ TODO. A ✅ means the mechanics are right; it
+   prints [verified], (with a hint) or [TODO]. A [verified] means the mechanics are right; it
    does not mean you can explain them.
 4. **Answer the checkpoint questions aloud**, without notes, at the end of each
    notebook. They are interview questions on purpose. If you cannot answer one

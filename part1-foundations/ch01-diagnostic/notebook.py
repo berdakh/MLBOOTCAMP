@@ -32,7 +32,7 @@
 # * **Score honestly.** Nobody sees this but you. A flattering profile sends
 #   you to the wrong notebooks.
 # * Run the setup cell first, then work top to bottom. Every check prints
-#   ✅ / ❌ / ⏳ and never stops the notebook.
+#   [verified] / / and never stops the notebook.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -71,7 +71,7 @@ from grading import ch01 as grade
 results = []  # every check below appends its result here; the profile reads it
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # Plain definitions of the words the exercises use. They tell you what a word
 # means, not the answer to any question.
@@ -362,7 +362,7 @@ self_ratings = {
 }
 
 # %% [markdown]
-# > **Exercise 7 (written).** ✍️ In three sentences: describe the most rigorous
+# > **Exercise 7 (written).** [open-ended] In three sentences: describe the most rigorous
 # > evaluation you have done in your research, and name its main threat to
 # > validity. Write it as you would say it to an interviewer. Time yourself: two
 # > minutes. Write your answer in the cell below.
@@ -398,7 +398,7 @@ profile = grade.summary(results, self_ratings)
 #   `diagnostic.json` files. The exercises will feel easier; the useful
 #   question is whether you now finish each within the timebox.
 #
-# > 🧠 **Research bridge.** This is a pre-test / post-test design with you as
+# > **Research bridge.** This is a pre-test / post-test design with you as
 # > the only subject. The obvious threat to validity is practice: you will have
 # > seen these exact items. Mitigate it the way you would in a study - judge the
 # > retake on speed and on the *written* answer, which you cannot memorise.
@@ -411,7 +411,7 @@ profile = grade.summary(results, self_ratings)
 # *What to notice:* each day's notebooks build on the previous day's artifacts, but every notebook can rebuild what it needs, so a "priority" area can be started in any order.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -433,4 +433,4 @@ profile = grade.summary(results, self_ratings)
 # 4. What does validating requests at an API boundary protect you from that validating training data does not?
 # 5. Which of your areas came out weakest, and what will you do differently in those notebooks?
 #
-# ➡️ **Next:** [`01_reproducible_project.ipynb`](../ch02-reproducible-project/notebook.ipynb) — start the project: pin code, data, environment and randomness so every number you produce can be reproduced.
+# **Next chapter:** [`01_reproducible_project.ipynb`](../ch02-reproducible-project/notebook.ipynb) — start the project: pin code, data, environment and randomness so every number you produce can be reproduced.

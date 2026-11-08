@@ -129,7 +129,7 @@ print(f"labels: {LABELS} | labelled {len(lab_df)}, unlabelled transfer {len(tran
 # 20,000 / 4,000 on a T4). The first run downloads AG News (~30 MB) and the tokenizer.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -234,7 +234,7 @@ print(f"teacher accuracy on {len(eval_y)} eval examples: {ACC_TEACHER:.3f}")
 # in favour of the `torchao` library); the cell suppresses the warning and reports cleanly
 # if the API is missing.
 #
-# > 💡 **Intuition.** Dynamic quantisation is like a shop that keeps its price list (the weights)
+# > **Intuition.** Dynamic quantisation is like a shop that keeps its price list (the weights)
 # > in whole cents, but converts each customer's foreign currency (the activations) at today's rate
 # > as they arrive. Nothing needs to be prepared in advance, at the cost of a conversion per request.
 # > *Where the analogy breaks down:* only `nn.Linear` layers are converted; the embeddings (a third of
@@ -324,7 +324,7 @@ if "int8" in LAT:
 #
 # *What to notice:* with one per-tensor scale the small-range rows get only one or two integer levels; per-channel scales give every row the whole grid.
 #
-# > 💡 **Intuition.** Quantising is measuring every weight with a ruler that has only 255 tick
+# > **Intuition.** Quantising is measuring every weight with a ruler that has only 255 tick
 # > marks. A per-tensor scale sizes the ruler for the *longest* object in the matrix, so short rows
 # > are measured in very coarse steps; per-channel gives each row a ruler cut to its own length.
 # > *Where the analogy breaks down:* a layer's output is a sum of many products, and independent
@@ -466,7 +466,7 @@ else:
 #
 # *What to notice:* the student gets two signals, the teacher's soft targets (weighted α·T²) and the true label (weighted 1 − α); without a label only the KL term remains.
 #
-# > 💡 **Intuition.** A hard label says "this is Business". The teacher's soft targets say "Business,
+# > **Intuition.** A hard label says "this is Business". The teacher's soft targets say "Business,
 # > but it reads a bit like Sci/Tech and nothing like Sports", which tells the student *which*
 # > mistakes are reasonable. Raising `T` is like turning up the contrast on those faint marks:
 # > `softmax([4, 1, 0])` is `[0.94, 0.05, 0.02]` at `T = 1` but `[0.54, 0.26, 0.20]` at `T = 4`.
@@ -642,7 +642,7 @@ print("wrote", OUT / "compression_table.json")
 # *Your answer (Exercise 3):* ...
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · Symmetric int8 quantisation.**
 #
@@ -707,7 +707,7 @@ print(f"distillation loss by hand {by_hand.item():.4f} | scaleml.serving.kd_loss
 # library (`0.6325` both).
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -732,4 +732,4 @@ print(f"distillation loss by hand {by_hand.item():.4f} | scaleml.serving.kd_loss
 # 5. Why does distillation with an unlabelled transfer set often help more than soft targets alone?
 # 6. You must cut inference cost by 4× with at most 1 point of accuracy loss. Walk through your plan and the measurements you would make.
 #
-# ➡️ **Next:** [`12_high_throughput_serving.ipynb`](../ch50-high-throughput-serving/notebook.ipynb) — put a model behind an API and make it fast: dynamic batching, latency vs throughput curves, KV caches and continuous batching for generation, and cost per 1,000 requests.
+# **Next chapter:** [`12_high_throughput_serving.ipynb`](../ch50-high-throughput-serving/notebook.ipynb) — put a model behind an API and make it fast: dynamic batching, latency vs throughput curves, KV caches and continuous batching for generation, and cost per 1,000 requests.

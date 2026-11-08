@@ -65,7 +65,7 @@ from grading import ch03 as grade
 RAW = bootstrap.ensure_raw()
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -93,7 +93,7 @@ RAW = bootstrap.ensure_raw()
 #
 # *What to notice:* the first three steps prove you have the right bytes, read the right way; the last four turn defects into written decisions. This notebook walks the row left to right.
 #
-# > 💡 **Intuition.** A checksum is a tamper-evident seal on a jar: you do not
+# > **Intuition.** A checksum is a tamper-evident seal on a jar: you do not
 # > need to taste the contents to know nobody opened it. *Where it breaks
 # > down:* the seal proves the bytes are the ones you pinned, not that those
 # > bytes were correct in the first place; that is what the contract is for.
@@ -216,7 +216,7 @@ print(fixed["region"].value_counts(dropna=False))
 # `churnlab.data.load_raw` reads every table this way and parses the date
 # columns. From here on we use it.
 #
-# > 🧠 **Research bridge.** This is the tabular cousin of a mis-specified
+# > **Research bridge.** This is the tabular cousin of a mis-specified
 # > channel montage or a wrong sampling-rate header in an EEG file: the loader
 # > does not fail, it silently gives you different data. The defence is the
 # > same - check summary statistics against what you know must be true before
@@ -259,7 +259,7 @@ for report in reports.values():
 # A contract tells you **that** something is wrong. It does not tell you
 # **what to do about it**. That needs an investigation per defect.
 #
-# > 💡 **Intuition.** A data contract is a smoke alarm for a table: cheap,
+# > **Intuition.** A data contract is a smoke alarm for a table: cheap,
 # > always on, and it tells you which room, not what is burning. *Where it
 # > breaks down:* it only checks what you thought to write down. Export-time
 # > columns (section 2.6) pass every contract and are still wrong to use.
@@ -332,7 +332,7 @@ print(usage.loc[usage["sessions"] == -1, ["active_users", "features_used"]].desc
 # and 2 features used. Weeks with active users and zero sessions are
 # impossible, so `-1` means **"the session count is unknown"**, not "none".
 #
-# > 💡 **Intuition.** A sentinel is a blank on a form that someone filled with
+# > **Intuition.** A sentinel is a blank on a form that someone filled with
 # > "-1" because the field would not accept empty. Reading it as 0 is like
 # > reading "did not answer" as "answered no". *Where it breaks down:* some
 # > systems really do use 0 for "unknown"; only evidence from other columns
@@ -535,7 +535,7 @@ print(pd.crosstab(will_churn.rename("churns in [T, T+30d)"), active_at_T["status
 # Notebook 04 measures how badly these columns inflate validation scores.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -557,4 +557,4 @@ print(pd.crosstab(will_churn.rename("churns in [T, T+30d)"), active_at_T["status
 # 4. Why is `sessions = -1` not the same as `sessions = 0`, and what would a model learn if you treated it as 0?
 # 5. Name a column that is safe to use as a label input but not as a feature, and explain why.
 #
-# ➡️ **Next:** [`03_sql_for_ml.ipynb`](../ch04-sql-for-ml/notebook.ipynb) — turn the clean tables into point-in-time features and labels with SQL.
+# **Next chapter:** [`03_sql_for_ml.ipynb`](../ch04-sql-for-ml/notebook.ipynb) — turn the clean tables into point-in-time features and labels with SQL.

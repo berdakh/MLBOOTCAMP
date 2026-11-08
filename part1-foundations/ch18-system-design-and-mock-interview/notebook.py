@@ -62,7 +62,7 @@ split = bootstrap.ensure_split()
 print(f"train rows: {len(split.train):,}")
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -105,7 +105,7 @@ print(f"train rows: {len(split.train):,}")
 #
 # *What to notice:* the model is step 5 of 9; more than half the answer is about the problem, the data and what happens after deployment.
 #
-# > 💡 **Intuition.** The framework is an architect's checklist for a house:
+# > **Intuition.** The framework is an architect's checklist for a house:
 # > who lives there and what they need comes before the choice of bricks.
 # > *Where it breaks down:* a real interviewer will interrupt and steer; the
 # > order is a default, not a script. Follow them, then come back to the
@@ -119,7 +119,7 @@ print(f"train rows: {len(split.train):,}")
 # Capacity arithmetic should take you 30 seconds and be done out loud. These
 # helpers exist so you can check your mental arithmetic, not replace it.
 #
-# > 💡 **Intuition.** A day has 86,400 seconds; call it $10^5$. Then "requests
+# > **Intuition.** A day has 86,400 seconds; call it $10^5$. Then "requests
 # > per day ÷ $10^5$" is the average QPS in your head, and a peak factor of 2-4
 # > covers the busy hour. *Where it breaks down:* traffic can be spikier than
 # > any daily average suggests (a push notification sends everyone at once);
@@ -336,7 +336,7 @@ print(f"10M accounts: ~{hours_10m_one_core * 60:.1f} min of model time on one pr
 # | Threshold | fixed probability | top-k by capacity | capacity is fixed daily → top-k is simpler and robust to drift |
 # | Retraining | scheduled monthly | triggered by drift | label delay makes triggers slow anyway; schedule + alerts |
 #
-# > 🧠 **Research bridge.** "Inference is cheap, the pipeline is the system"
+# > **Research bridge.** "Inference is cheap, the pipeline is the system"
 # > mirrors a BCI pipeline: the classifier is milliseconds; artefact rejection,
 # > filtering and epoching are where real-time systems fail. You already know
 # > how to say that; now say it about features.
@@ -578,7 +578,7 @@ progress
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **Capacity.**
 #
@@ -614,7 +614,7 @@ progress
 # accounts at 50,000 rows/s is 200 s: a nightly batch job, not an online service.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -636,7 +636,7 @@ progress
 # 5. What is interleaving, and why is it more sensitive than an A/B test for comparing two rankers?
 # 6. Tell your "flaw in my own evaluation" story in STAR form in 90 seconds.
 #
-# ➡️ **Next:** the capstones. Choose your first one from the
+# **Next chapter:** the capstones. Choose your first one from the
 # [capstones page](https://github.com/berdakh/MLBOOTCAMP/blob/main/part4-capstones/README.md),
 # and score yourself honestly with the
 # [readiness rubric](https://github.com/berdakh/MLBOOTCAMP/blob/main/appendices/readiness-rubric.md)

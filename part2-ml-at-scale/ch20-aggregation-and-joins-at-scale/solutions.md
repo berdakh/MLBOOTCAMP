@@ -1,13 +1,13 @@
 # Solutions · Chapter 20 · Aggregation & joins at scale
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `reservoir_sample`
 
-✅ Reference code: [`code/nb02.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb02.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def reservoir_sample(stream, k, seed):
@@ -47,7 +47,7 @@ the new item enters *and* lands on its slot:
 
 ## Exercise 2 · `partitioned_count`
 
-✅ Reference code: [`code/nb02.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb02.py`](solutions.py) (`ex2`).
 
 ```python
 def partitioned_count(keys, n_partitions):
@@ -81,7 +81,7 @@ chunk size: for fewer than 4 keys it is 0, and `range(0, n, 0)` raises.
 
 ## Exercise 3 · Distinct users per item per day on 10B rows (written)
 
-✍️ A strong answer:
+[open-ended] A strong answer:
 
 * **Approximate, with HLL sketches.** Exact distinct counts per item-day need
   state proportional to the number of distinct (item, day, user) triples:
@@ -112,14 +112,14 @@ chunk size: for fewer than 4 keys it is 0, and `range(0, n, 0)` raises.
 
 ## Checkpoint answers
 
-1. **GROUP BY on 1 TB.** ✅ Mappers read input splits (Parquet row groups),
+1. **GROUP BY on 1 TB.** [verified] Mappers read input splits (Parquet row groups),
    project `item_id`, and emit `(item_id, 1)`; with a combiner (partial
    aggregation) each mapper emits one `(item_id, partial_count)` per item it
    saw. Rows are hash-partitioned by `item_id`, written to local disk,
    fetched over the network by reducers (the shuffle), merged and summed. The
    cost is the shuffle: serialisation, disk, network, sort. In our run the
    combiner cut shuffled rows from 2,446,900 to about 15,000.
-2. **The straggler.** ✅ Skew: one partition holds a hot key (a top seller, a
+2. **The straggler.** [verified] Skew: one partition holds a hot key (a top seller, a
    `NULL`/default value, a bot user). Confirm in the Spark UI (task duration and
    shuffle-read size distribution per stage; one task far above the median)
    and with a `GROUP BY key ORDER BY count DESC LIMIT 20` on a sample. Fixes:
@@ -128,14 +128,14 @@ chunk size: for fewer than 4 keys it is 0, and `range(0, n, 0)` raises.
    broadcast the small side of a join; pre-aggregate before joining; enable
    AQE skew-join handling; increase partitions only helps if the skew is
    *many* moderately hot keys, not one.
-3. **Join choice.** ✍️ impressions ⋈ items: broadcast (items is small).
+3. **Join choice.** [open-ended] impressions ⋈ items: broadcast (items is small).
    impressions ⋈ clicks: both large, joined on impression id: shuffle-hash or
    sort-merge; better, bucket/partition both by date and id so the join is
    co-partitioned (no shuffle). users ⋈ user_embeddings (1B each): sort-merge
    (Spark's default for large–large; robust, spills); if both tables are
    stored bucketed by user id with the same bucket count, the shuffle is
    avoided.
-4. **Current price.** ✅ "Current price" is the price at export time: for an
+4. **Current price.** [verified] "Current price" is the price at export time: for an
    impression last month it is a future value, partly caused by the outcomes
    (prices are cut for items that do not sell), so offline it leaks and online
    the model sees a different distribution. In our run 55% of impressions had a
@@ -144,14 +144,14 @@ chunk size: for fewer than 4 keys it is 0, and `range(0, n, 0)` raises.
    side is derived from data that includes the event itself (e.g. a daily
    aggregate stamped at the event's time), so an event never sees its own
    outcome.
-5. **Duplicates.** ✅ Compare `count(*)` with `count(DISTINCT event_id)` per
+5. **Duplicates.** [verified] Compare `count(*)` with `count(DISTINCT event_id)` per
    day/hour; check the gap against the ingest-time distribution (retries show
    up as rows with the same event id and later `ingest_ts`), and against client
    release or pipeline incidents. Deduplicate with
    `ROW_NUMBER() OVER (PARTITION BY event_id ORDER BY ingest_ts) = 1`: event
    identity only, deterministic tie-break, over a window covering the maximum
    redelivery delay. In our run, 2% injected duplicates were removed exactly.
-6. **HLL.** ✅ Acceptable for dashboards, monitoring, capacity planning and
+6. **HLL.** [verified] Acceptable for dashboards, monitoring, capacity planning and
    exploratory analysis where a known relative error is fine; not for billing,
    payments, legal or experiment metrics whose differences are as small as the
    sketch error (DuckDB's default sketch was 6.5% off on 2M distinct pairs in

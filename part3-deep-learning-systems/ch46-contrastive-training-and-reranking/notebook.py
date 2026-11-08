@@ -164,7 +164,7 @@ print(f"(embedding the corpus took {embed_s:.0f} s: paid again after every train
 # embedding the sub-corpus took ~21 s.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -202,13 +202,13 @@ print(f"(embedding the corpus took {embed_s:.0f} s: paid again after every train
 #
 # *What to notice:* every row is its own classification problem with one green target; the batch size sets how many grey distractors you get for free, the hard-negative columns make the distractors harder.
 #
-# > 💡 **Intuition.** InfoNCE is a multiple-choice test: for each claim, pick its abstract from all
+# > **Intuition.** InfoNCE is a multiple-choice test: for each claim, pick its abstract from all
 # > the abstracts in the batch. A bigger batch means more options, a harder test and more to
 # > learn from each step. *Where it breaks down:* when two options are both correct (a false
 # > negative), the test marks the right answer wrong, and the model learns to push away a
 # > relevant document.
 #
-# > 💡 **The temperature, in numbers.** Two candidates with cosines 0.8 (positive) and 0.3
+# > **The temperature, in numbers.** Two candidates with cosines 0.8 (positive) and 0.3
 # > (negative). At $\tau = 1$ the logits are 0.8 and 0.3 and the loss is
 # > $\ln(1 + e^{-0.5}) = 0.47$: the model is still being pushed. At $\tau = 0.05$ the logits are
 # > 16 and 6 and the loss is $\ln(1 + e^{-10}) \approx 5 \times 10^{-5}$: this pair is "solved",
@@ -423,7 +423,7 @@ for name, m in metrics.items():
 #
 # *What to notice:* the two arrows into the cosine box come from independent encoders, so the document side can be precomputed; the cross-encoder has a single input, so every (query, document) pair costs a full forward pass.
 #
-# > 💡 **Intuition.** A bi-encoder compares two CVs that were written separately; a cross-encoder
+# > **Intuition.** A bi-encoder compares two CVs that were written separately; a cross-encoder
 # > interviews the two candidates together, so it can notice how their answers relate. The
 # > interview is better, but you cannot interview a million candidates per query.
 
@@ -544,7 +544,7 @@ print("wrote", OUT / "two_stage_results.json")
 # *Your answer (Exercise 3):* ...
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1. InfoNCE with in-batch and hard negatives.**
 #
@@ -587,7 +587,7 @@ print("wrote", OUT / "two_stage_results.json")
 # costs.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -611,4 +611,4 @@ print("wrote", OUT / "two_stage_results.json")
 # 5. How would you build training data for a retriever from search logs, and what biases does it carry?
 # 6. Design: a two-stage retrieval system for 100M documents at 1,000 QPS with a 150 ms p99 budget. Allocate the budget across stages and justify the numbers.
 #
-# ➡️ **Next:** [`09_distributed_data_parallel.ipynb`](../ch47-distributed-data-parallel/notebook.ipynb) — Day 5: train on several processes with `torch.distributed`, by hand.
+# **Next chapter:** [`09_distributed_data_parallel.ipynb`](../ch47-distributed-data-parallel/notebook.ipynb) — Day 5: train on several processes with `torch.distributed`, by hand.

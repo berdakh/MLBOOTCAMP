@@ -83,7 +83,7 @@ print(f"{len(imps):,} logged impressions | population of {len(pop):,} users, mea
 # The simulator is notebook 11's `ex.simulate_users`.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -117,7 +117,7 @@ print(f"{len(imps):,} logged impressions | population of {len(pop):,} users, mea
 #
 # *What to notice:* CUPED keeps only the vertical distance from each point to the line; the adjusted metric has the same centre and a narrower spread.
 #
-# > 💡 **Intuition.** Judging a diet by weight after two weeks is hopeless when people
+# > **Intuition.** Judging a diet by weight after two weeks is hopeless when people
 # > differ by 30 kg; judging it by each person's *change* from their starting weight
 # > removes that spread. CUPED is the refined version: it subtracts θ × (starting value),
 # > with θ chosen to minimise the variance (θ = 1 is the plain change score).
@@ -199,7 +199,7 @@ print(f"power at this size: raw {(cv['raw'] / cv['raw'].std() > 1.96).mean():.2f
 # with means, variances and covariance of per-user clicks `c` and impressions `n`,
 # and N users in the arm.
 #
-# > 💡 **Intuition.** For small wobbles, a ratio of two averages behaves like a straight
+# > **Intuition.** For small wobbles, a ratio of two averages behaves like a straight
 # > line in (mean clicks, mean impressions): a 1% rise in clicks raises CTR by about 1%,
 # > a 1% rise in impressions lowers it by about 1%. The variance of a straight-line
 # > combination is a textbook formula, and that is the delta method. The covariance term
@@ -319,7 +319,7 @@ print(seg.round(4).to_string(index=False))
 #
 # *What to notice:* each shown item belongs to exactly one team, and the coin flip per round keeps either ranker from always owning the top slot.
 #
-# > 💡 **Intuition.** An A/B test is two groups each tasting one cola; interleaving is
+# > **Intuition.** An A/B test is two groups each tasting one cola; interleaving is
 # > every person sipping both, side by side. Differences between tasters (some love any
 # > sugar) cancel within the person. *Where it breaks down:* a sip-test cannot tell you
 # > whether people will buy more cola over a month; interleaving cannot measure session-
@@ -568,7 +568,7 @@ print(criteria)
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1. CUPED adjustment and its variance**
 #
@@ -624,7 +624,7 @@ print(f"3. interleaving t: {0.05 / (0.8 / np.sqrt(400)):.2f} with 400 users, {0.
 # about 0.0019 matching the bootstrap within a few percent; 3. t = 1.25 and 2.50.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -647,4 +647,4 @@ print(f"3. interleaving t: {0.05 / (0.8 / np.sqrt(400)):.2f} with 400 users, {0.
 # 5. Your new ranker wins offline NDCG on logged clicks but loses the A/B test. Give two mechanisms, and how you would make the offline metric more trustworthy.
 # 6. What belongs in launch criteria, and why must they be written before the experiment starts?
 #
-# ➡️ **Next:** [`13_ml_from_scratch_1.ipynb`](../ch31-ml-from-scratch-1/notebook.ipynb) — Day 7 starts the ML coding interview: logistic regression, k-means, kNN, AUC and NDCG from scratch in NumPy.
+# **Next chapter:** [`13_ml_from_scratch_1.ipynb`](../ch31-ml-from-scratch-1/notebook.ipynb) — Day 7 starts the ML coding interview: logistic regression, k-means, kNN, AUC and NDCG from scratch in NumPy.

@@ -1,13 +1,13 @@
 # Solutions · Chapter 54 · Evaluating LLM systems & guardrails
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `field_f1`
 
-✅ Reference code: [`code/nb16.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb16.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def field_f1(pred_dict, gold_dict):
@@ -32,7 +32,7 @@ field-F1 shows *which* fields fail. Report both.
 
 ## Exercise 2 · `position_bias_rate`
 
-✅ Reference code: [`code/nb16.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb16.py`](solutions.py) (`ex2`).
 
 ```python
 def position_bias_rate(judgments_ab, judgments_ba):
@@ -49,7 +49,7 @@ order; count only order-consistent verdicts as wins, or average the two probabil
 
 ## Exercise 3 · `guardrail`
 
-✅ Reference code: [`code/nb16.py`](solutions.py) (`ex3`): rules only, which pass the hidden
+[verified] Reference code: [`code/nb16.py`](solutions.py) (`ex3`): rules only, which pass the hidden
 set; in the notebook, combining them with the classifier (`rules OR classifier`) is the
 natural answer:
 
@@ -79,7 +79,7 @@ real attacks are not, so keep red-teaming.
 
 ## Exercise 4 · Evaluating a cheaper model
 
-✍️ Model answer:
+[open-ended] Model answer:
 
 (a) A few hundred tickets sampled from recent production traffic (stratified by
 category, language, length, difficulty; including rare but costly cases: angry customers,
@@ -111,38 +111,38 @@ p50/p95, cost per ticket, sampled human audits; alert and roll back on regressio
 
 ## Checkpoint answers
 
-1. ✍️ Sample real traffic, stratify, label carefully (exact fields or rubric), freeze a
+1. [open-ended] Sample real traffic, stratify, label carefully (exact fields or rubric), freeze a
    held-out split, version it. A small set with exact labels gives cheap, deterministic,
    unbiased metrics you can re-run on every change; an LLM-judged large set adds noise and
    the judge's own biases (16.3) and may reward style over correctness. Use LLM judges
    for scale only after validating them against human labels.
 
-2. 🔬 A confidence interval for the *paired* difference (bootstrap over examples, 16.2:
+2. [expected] A confidence interval for the *paired* difference (bootstrap over examples, 16.2:
    with 12 tickets intervals were very wide); a pre-registered metric and normalisation;
    evidence it is not overfitted to the set (fresh held-out examples); per-slice results;
    checking that the gain is not just formatting the parser happens to prefer; and ideally
    an online test. 3 points on 50 examples is usually within noise.
 
-3. ✅ Position bias (swap orders; 16.3 measured it), verbosity bias (compare a padded
+3. [verified] Position bias (swap orders; 16.3 measured it), verbosity bias (compare a padded
    and an unpadded correct answer; 16.3), self-preference (judge outputs from several model
    families and compare with human preferences). Mitigate: both orders + consistency
    filter, length-controlled comparisons or instructions, a different and stronger judge,
    rubric and references, human calibration.
 
-4. ✅ Untrusted input containing instructions that the model follows because instructions
+4. [verified] Untrusted input containing instructions that the model follows because instructions
    and data share one channel (16.4: the schema prompt told the model not to follow such
    instructions, and attacks still succeeded on part of the tickets). Instructions in the
    prompt are only a request, not an enforcement mechanism. Layers: least privilege for
    tools, output validation and business rules, human approval for risky actions, input
    and output guardrails, isolation/marking of untrusted content, monitoring and red-teaming.
 
-5. ✍️ Before: rules + a classifier on the input (injection, abuse, PII), cheap and fast;
+5. [open-ended] Before: rules + a classifier on the input (injection, abuse, PII), cheap and fast;
    after: schema validation, policy checks, toxicity/PII on the output. Threshold set on
    validation data for a target FPR on benign traffic (blocking real customers is costly),
    then measure recall per attack family, including families held out from training
    (16.5), plus latency. Review blocked samples; feed new attacks back into training.
 
-6. 🔬 Needs: tokens in/out per request (16.6 measured them per prompt variant), throughput
+6. [expected] Needs: tokens in/out per request (16.6 measured them per prompt variant), throughput
    per accelerator at the target latency (batching!), peak vs average load, price per
    accelerator-hour or per token. 10M/day ≈ 116 requests/s average, more at peak; cost =
    requests × (input tokens × input price + output tokens × output price) for an API, or

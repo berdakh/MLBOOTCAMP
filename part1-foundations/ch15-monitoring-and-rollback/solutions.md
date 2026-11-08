@@ -1,13 +1,13 @@
 # Solutions · Chapter 15 · Monitoring & rollback
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `psi`
 
-✅ Reference code: [`code/nb14.py`](solutions.py) (`ex1`), graded in CI against
+[verified] Reference code: [`code/nb14.py`](solutions.py) (`ex1`), graded in CI against
 `churnlab.monitoring.psi`.
 
 ```python
@@ -52,7 +52,7 @@ fallback for features with few distinct values: treat them as categories
 
 ## Exercise 2 · `should_rollback`
 
-✅ Reference code: [`code/nb14.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb14.py`](solutions.py) (`ex2`).
 
 ```python
 def should_rollback(candidate, baseline, policy):
@@ -90,7 +90,7 @@ check is needed.
 
 ## Exercise 3 · Incident postmortem for the bad deploy (written)
 
-✍️ Personal. A strong six-sentence answer (times from the notebook run are
+[open-ended] Personal. A strong six-sentence answer (times from the notebook run are
 illustrative):
 
 > **Timeline:** the automated monthly retrain registered `v3` and promoted it
@@ -163,7 +163,7 @@ distribution, disagreement with the incumbent, at no user risk), then a full
 switch with instant rollback by pointer (blue/green-like). A traffic canary
 adds little here except for service-level risk.
 
-🔬 Numbers above are from the course's verification run (seed 2025, 3,000
+[expected] Numbers above are from the course's verification run (seed 2025, 3,000
 simulated customers, March-July 2025 snapshots). Your run should match
 closely, because the simulation and models are seeded; library versions can
 move the third decimal.

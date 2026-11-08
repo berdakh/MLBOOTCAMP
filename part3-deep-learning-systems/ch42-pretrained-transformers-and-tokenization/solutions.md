@@ -1,13 +1,13 @@
 # Solutions · Chapter 42 · Pretrained transformers & tokenisation
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `mean_pool`
 
-✅ Reference code: [`code/nb04.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb04.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def mean_pool(last_hidden, attention_mask):
@@ -26,7 +26,7 @@ fp32 (`.float()`) for long sequences.
 
 ## Exercise 2 · `bucket_by_length`
 
-✅ Reference code: [`code/nb04.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb04.py`](solutions.py) (`ex2`).
 
 ```python
 def bucket_by_length(lengths, batch_size):
@@ -51,7 +51,7 @@ excludes that variant on purpose.
 
 ## Exercise 3 · Reviewing a semantic-search pipeline
 
-✍️ Problems and fixes:
+[open-ended] Problems and fixes:
 
 1. **Naive mean over padding (correctness).** Offline embeddings include up to 500
    pad positions per text; online queries (batch of 1) have none, so documents and
@@ -85,7 +85,7 @@ excludes that variant on purpose.
 
 ## Checkpoint answers
 
-1. ✍️ Subwords bound the vocabulary (memory for the embedding and softmax) while
+1. [open-ended] Subwords bound the vocabulary (memory for the embedding and softmax) while
    covering any word, and keep sequences short. WordPiece: fixed vocabulary chosen by
    likelihood, `##` continuation pieces, typically lower-cased with an `[UNK]` token;
    byte-level BPE: merges over bytes, lossless and never unknown, `Ġ` marks spaces.
@@ -93,19 +93,19 @@ excludes that variant on purpose.
    arithmetic; acronyms split oddly (`bc`, `##is`); non-English text and code use many
    more tokens per character (higher cost, shorter effective context).
 
-2. 🔬 The mask marks padding so attention gives it zero weight (−∞ before softmax),
+2. [expected] The mask marks padding so attention gives it zero weight (−∞ before softmax),
    and pooling/loss ignore it. With **right** padding a decoder's last position for
    short rows is a pad token: generation would continue from padding, and positions of the
    new tokens are wrong. Pad on the **left** (and pass the mask / position ids) for batched generation.
 
-3. ✅ CLS when the model was trained to put a summary there (BERT's NSP, or after
+3. [verified] CLS when the model was trained to put a summary there (BERT's NSP, or after
    fine-tuning a classifier on it); mean pooling for models trained with it
    (sentence-transformers) and as a more robust default for off-the-shelf encoders: in 4.3,
    mean pooling separated related from unrelated pairs ~3× more clearly (gap 0.20 vs 0.06).
    Mask-aware because padding states otherwise leak in and make the embedding depend on the
    batch (cosine 0.85 between the same sentence padded and unpadded).
 
-4. 🔬 Throughput depends on total token positions (including padding) × per-token
+4. [expected] Throughput depends on total token positions (including padding) × per-token
    cost, and on hardware utilisation. Maximise it with: length bucketing + dynamic
    padding (4.5: 2.1–2.7× on CPU); the largest batch that fits; fp16/bf16 (Tensor Cores) or int8
    (notebook 11); truncating to the length you actually need; a smaller/distilled model;
@@ -114,13 +114,13 @@ excludes that variant on purpose.
    2e10 tokens; at ~5e4 tokens/s per T4 (an order-of-magnitude guess, not measured here)
    that is ~4.6 GPU-days: worth optimising.
 
-5. ✍️ Pin model and tokenizer to a commit hash; load `safetensors` only; no
+5. [open-ended] Pin model and tokenizer to a commit hash; load `safetensors` only; no
    `trust_remote_code` unless reviewed and pinned; mirror the artifacts into your own
    model registry (with the licence and card) instead of depending on the Hub at
    serving time; run an evaluation gate before promotion; record versions with every
    prediction log.
 
-6. ✍️ A tokenizer change (new normalisation, special tokens, `model_max_length`, fast vs
+6. [open-ended] A tokenizer change (new normalisation, special tokens, `model_max_length`, fast vs
    slow tokenizer differences, padding/truncation side defaults), a model revision pulled from
    `main`, a changed default (e.g. attention implementation, dtype), or a pooling/head
    weights mismatch reported only as a warning ("newly initialised weights"). You catch it

@@ -69,7 +69,7 @@ from shoprank.drills import growth_table
 from grading import ch33 as grade
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -156,7 +156,7 @@ _ = growth_table(drain_deque, lambda n: (n,), [12_500, 25_000, 50_000, 100_000])
 # 100,000-node graph with a list as its queue is therefore ~200× slower than it
 # needs to be, and an interviewer who sees `queue.pop(0)` will ask about it.
 #
-# > 💡 **Intuition.** `list.pop(0)` is a queue at a counter where, every time the first
+# > **Intuition.** `list.pop(0)` is a queue at a counter where, every time the first
 # > person is served, everyone else must take one step forward: serving n people costs
 # > about n²/2 steps. A `deque` moves the counter instead. *Where it breaks down:* the
 # > shift is a fast C `memmove`, so for a few thousand items you will not notice; the
@@ -217,7 +217,7 @@ def two_sum_pairs(nums, target):
 grade.ex1(two_sum_pairs)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.** *Clarify:* indices or values? Pairs ordered? Can the
+# > **Talk it through.** *Clarify:* indices or values? Pairs ordered? Can the
 # > same element be used twice? Duplicates? Negative numbers? *Brute force:* all
 # > pairs, O(n²). *Optimise:* scan once; for each j, the partners are earlier
 # > indices with value `target − nums[j]` — keep a dict value → list of indices.
@@ -237,7 +237,7 @@ grade.ex1(two_sum_pairs)
 # (positive numbers only — the window shrinks safely because adding an element
 # never decreases the sum).
 #
-# > 💡 **Intuition.** A sliding window is a caterpillar: the head moves forward to take in
+# > **Intuition.** A sliding window is a caterpillar: the head moves forward to take in
 # > more, the tail moves forward to let go, and neither ever moves back, so every element
 # > is eaten once and released once: at most 2n steps. *Where it breaks down:* the tail may
 # > only move when letting go cannot make the window valid again, which is false for
@@ -284,7 +284,7 @@ def longest_unique(s):
 grade.ex2(longest_unique)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.** *Clarify:* character set (ASCII or Unicode)? Case
+# > **Talk it through.** *Clarify:* character set (ASCII or Unicode)? Case
 # > sensitive? Return the length or the substring? *Brute force:* every start,
 # > extend until a repeat: O(n·m) for answer length m, O(n²) worst case.
 # > *Optimise:* window `[left, right]` with no repeats; dict `last[ch]` = last
@@ -304,7 +304,7 @@ grade.ex2(longest_unique)
 # all). Python's `heapq` is a min-heap: to keep the k *largest*, keep a min-heap
 # of size k and evict its smallest. **Worked example:** merge k sorted lists.
 #
-# > 💡 **Intuition.** A size-k min-heap is a bouncer at a club with k places who only
+# > **Intuition.** A size-k min-heap is a bouncer at a club with k places who only
 # > compares each newcomer with the *weakest* person inside: beat them and you swap in.
 # > Nobody else needs comparing. *Where it breaks down:* the bouncer knows only who is
 # > weakest; the people inside are not sorted, so sort the final k before returning them.
@@ -349,7 +349,7 @@ def top_k_frequent(items, k):
 grade.ex3(top_k_frequent)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.** *Clarify:* tie-breaking, k larger than the number of
+# > **Talk it through.** *Clarify:* tie-breaking, k larger than the number of
 # > distinct items, item types (comparable?). *Plan:* `Counter` in O(n), then a
 # > size-k min-heap keyed so the *worst* kept item is on top: (count, item with
 # > reversed order); or `heapq.nsmallest(k, counts, key=lambda x: (-counts[x], x))`,
@@ -409,7 +409,7 @@ def merge_intervals(intervals, new=None):
 grade.ex4(merge_intervals)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.** *Clarify:* closed or half-open? Sorted input? May I
+# > **Talk it through.** *Clarify:* closed or half-open? Sorted input? May I
 # > modify it? Empty input? *Merge:* sort by start; keep `out`; if
 # > `start <= out[-1][1]` extend `out[-1][1] = max(...)` (the `max` handles nesting
 # > like `[1,10],[2,3]`), else append. *Insert in O(n):* three phases — copy
@@ -474,7 +474,7 @@ class MinStack:
 grade.ex5(MinStack)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.** *Clarify:* what happens on an empty stack? Duplicate
+# > **Talk it through.** *Clarify:* what happens on an empty stack? Duplicate
 # > values? *Naive:* `min(self.items)` in `get_min` is O(n). *Idea:* the minimum
 # > of a stack only changes at push/pop, and each element "remembers" the minimum
 # > below it — keep a parallel stack `mins[i] = min(items[:i+1])`. *Space
@@ -526,7 +526,7 @@ def product_except_self(nums):
 grade.ex6(product_except_self)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.** *Clarify:* why no division? (zeros, and in some
+# > **Talk it through.** *Clarify:* why no division? (zeros, and in some
 # > settings division is expensive or unavailable, e.g. modular arithmetic.)
 # > Overflow? (none in Python; in fixed-width languages, ask.) *Idea:* out[i] =
 # > prefix product before i × suffix product after i; one pass left-to-right
@@ -550,7 +550,7 @@ def subarray_sum_count(nums, k):
 grade.ex7(subarray_sum_count)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.** *Clarify:* negatives? zero-length subarrays (no)?
+# > **Talk it through.** *Clarify:* negatives? zero-length subarrays (no)?
 # > count or list? *Brute force:* all (i, j) with a running sum: O(n²).
 # > *Optimise:* `sum(i..j) = P[j+1] − P[i] = k` ⇔ `P[i] = P[j+1] − k`, so walk once,
 # > keep `count[prefix_value]`, and add `count[P − k]` at each step. *Initialise
@@ -600,7 +600,7 @@ for name, row in my_scores.items():
 # **Expected:** seven lines reading `not scored yet` until you fill the dict in.
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # Coding rounds have little algebra, but a few lines of arithmetic decide whether an approach can work before you write it.
 #
@@ -654,7 +654,7 @@ for name, row in my_scores.items():
 # *Example:* two-sum on `[0] * n` with target 0 has $p = n(n-1)/2$ pairs: any algorithm that lists them is quadratic there, and saying so is part of a strong answer.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -680,4 +680,4 @@ for name, row in my_scores.items():
 # 5. When would you prefer sorting (O(n log n)) over a hash-based O(n) solution, even though it is asymptotically slower?
 # 6. An interviewer says your solution is correct but asks you to reduce extra space from O(n) to O(1). Pick one exercise from this notebook and explain how (or why it is impossible).
 #
-# ➡️ **Next:** [`16_coding_patterns_2.ipynb`](../ch34-coding-patterns-2/notebook.ipynb) — graphs, binary search on the answer, dynamic programming, tries and union-find, and a 4-week practice plan.
+# **Next chapter:** [`16_coding_patterns_2.ipynb`](../ch34-coding-patterns-2/notebook.ipynb) — graphs, binary search on the answer, dynamic programming, tries and union-find, and a 4-week practice plan.

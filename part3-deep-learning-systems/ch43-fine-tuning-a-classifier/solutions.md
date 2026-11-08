@@ -1,13 +1,13 @@
 # Solutions · Chapter 43 · Fine-tuning a classifier
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `expected_calibration_error`
 
-✅ Reference code: [`code/nb05.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb05.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def expected_calibration_error(probs, labels, n_bins=15):
@@ -35,7 +35,7 @@ model shows a positive ECE.
 
 ## Exercise 2 · `fit_temperature`
 
-✅ Reference code: [`code/nb05.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb05.py`](solutions.py) (`ex2`).
 
 ```python
 def fit_temperature(logits, labels):
@@ -59,18 +59,18 @@ must stay positive; optimising `log T` removes the constraint. A grid search ove
 `exp(linspace(log 0.05, log 20))` is a perfectly good alternative for one parameter.
 **Fit on validation, never on test**: in the notebook (CPU run) `T = 0.59` fitted on 225
 validation examples cut test ECE from 0.124 to 0.034 and test NLL from 0.487 to 0.427,
-with accuracy unchanged at 0.872. 🔬 A longer GPU fine-tune usually gives `T > 1`
+with accuracy unchanged at 0.872. [expected] A longer GPU fine-tune usually gives `T > 1`
 (over-confidence), the direction reported by Guo et al. (2017).
 
 ---
 
 ## Exercise 3 · When a TF-IDF baseline is the right production choice
 
-✍️ A strong answer weighs evidence, not fashion:
+[open-ended] A strong answer weighs evidence, not fashion:
 
 * **Accuracy gap and its uncertainty.** In our CPU run TF-IDF + LR scored 0.822 vs
   0.872 fine-tuned on 500 test examples (SE ≈ ±0.015 each): a real gap here, but on a
-  larger training set the gap on AG News shrinks to a few points (🔬 ~0.90 vs ~0.94).
+  larger training set the gap on AG News shrinks to a few points ([expected] ~0.90 vs ~0.94).
   Ask what each point is *worth* to the product (fewer misrouted articles? revenue?).
 * **Cost and latency.** TF-IDF + LR fits in ~1 s and predicts in microseconds on a CPU;
   DistilBERT ran at ~36 texts/s on two CPU threads. At 50M articles/day (~580/s on

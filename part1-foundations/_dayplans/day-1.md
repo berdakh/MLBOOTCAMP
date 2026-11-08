@@ -78,7 +78,7 @@ You are done with Day 1 when you can show:
 | Two numbers: the baseline's score on a random split and on the time split, with the split named | Notebook 04 |
 | Spoken answers to every checkpoint question in 01–04, without notes | Checkpoints |
 
-Graded exercises should show ✅. Compare your written answers with
+Graded exercises should show [verified]. Compare your written answers with
 [the solutions](https://github.com/berdakh/MLBOOTCAMP/blob/main/appendices/solutions.md)
 only after you have committed to your own.
 

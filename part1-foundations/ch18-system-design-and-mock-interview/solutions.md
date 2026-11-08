@@ -1,13 +1,13 @@
 # Solutions · Chapter 18 · System design & mock interview
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `peak_qps`
 
-✅ Reference code: [`code/nb17.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb17.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def peak_qps(dau, requests_per_user_per_day, peak_factor):
@@ -28,7 +28,7 @@ single-time-zone or event-driven one. Ask for it or state it.
 
 ## Exercise 2 · `latency_budget`
 
-✅ Reference code: [`code/nb17.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb17.py`](solutions.py) (`ex2`).
 
 ```python
 def latency_budget(total_ms, components):
@@ -48,7 +48,7 @@ which is the number that counts."
 
 ## Exercise 3 · A full design for one practice prompt (written)
 
-✍️ Open-ended. A strong answer to **prompt 1, card-fraud detection**, under the
+[open-ended] Open-ended. A strong answer to **prompt 1, card-fraud detection**, under the
 nine headings:
 
 1. **Clarify.** Decision: approve / decline / step-up (send a code) for each
@@ -97,7 +97,7 @@ and bias addressed, a fallback named.
 
 ## Exercise 4 · Two STAR stories (written)
 
-✍️ Personal: only real stories. A strong *shape* for prompt 1, from a
+[open-ended] Personal: only real stories. A strong *shape* for prompt 1, from a
 cross-subject EEG project (adapt the facts to yours, never borrow them):
 
 * **S (10%).** "In my BCI project, we reported cross-subject decoding accuracy
@@ -159,5 +159,5 @@ far less traffic than an A/B test for the same sensitivity. Its limit: it
 measures preference (clicks), not long-term business metrics, so confirm
 winners with an A/B test.
 
-**6. STAR story.** ✍️ Personal. Use your 17-4 answer; time it. Ninety seconds
+**6. STAR story.** [open-ended] Personal. Use your 17-4 answer; time it. Ninety seconds
 is roughly 220 words; most of it should be the Action.

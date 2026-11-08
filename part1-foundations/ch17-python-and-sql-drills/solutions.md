@@ -1,7 +1,7 @@
 # Solutions · Chapter 17 · Python & SQL drills
 
-Try each drill against the clock before reading its answer. Markers: ✅
-verified by running · 🔬 expected, depends on your run · ✍️ personal /
+Try each drill against the clock before reading its answer. Markers: [verified]
+verified by running · [expected] expected, depends on your run · [open-ended] personal /
 open-ended.
 
 All coded answers are in [`code/nb16.py`](solutions.py) and graded in CI.
@@ -11,7 +11,7 @@ In an interview, say the approach and complexity first, then code.
 
 ## Exercise 1 · `dedupe_keep_latest`
 
-✅ `ex1`. One pass, a dict keyed by `record[key]`, replace when
+[verified] `ex1`. One pass, a dict keyed by `record[key]`, replace when
 `record[ts] >= latest[k][ts]`.
 
 * **O(n) time, O(u) space** for u distinct keys.
@@ -33,7 +33,7 @@ partition by key to disk, dedupe each partition; or in SQL,
 
 ## Exercise 2 · `merge_intervals`
 
-✅ `ex2`. Sort by start, then sweep: if `start <= last_end` extend
+[verified] `ex2`. Sort by start, then sweep: if `start <= last_end` extend
 `last_end = max(last_end, end)`, else open a new interval.
 
 * **O(n log n)** for the sort, O(n) sweep.
@@ -48,7 +48,7 @@ period inside a long one then *shrinks* the long one.
 
 ## Exercise 3 · `sliding_window_max`
 
-✅ `ex3`. A deque of **indices** whose values are strictly decreasing from
+[verified] `ex3`. A deque of **indices** whose values are strictly decreasing from
 left to right. For each new index: pop from the right every index whose
 value is `<=` the new one (they can never be a maximum again), append the new
 index, drop the left index if it has left the window, and the left element is
@@ -67,7 +67,7 @@ first answer if you then improve it.
 
 ## Exercise 4 · `precision_at_k`
 
-✅ `ex4`. `top = sorted(range(n), key=lambda i: scores[i], reverse=True)[:k]`,
+[verified] `ex4`. `top = sorted(range(n), key=lambda i: scores[i], reverse=True)[:k]`,
 then `sum(y_true[i] for i in top) / k`. Raise `ValueError` for `k <= 0`
 (dividing by zero silently would be worse).
 
@@ -82,7 +82,7 @@ then `sum(y_true[i] for i in top) / k`. Raise `ValueError` for `k <= 0`
 
 ## Exercise 5 · `stratified_split`
 
-✅ `ex5`. Group indices by label, shuffle each group with one
+[verified] `ex5`. Group indices by label, shuffle each group with one
 `random.Random(seed)`, put `round(len(group) * test_frac)` of each into test.
 
 * Iterate classes in a **fixed order** (`sorted`), otherwise the random stream is
@@ -97,7 +97,7 @@ mistake notebook 04 measured.
 
 ## Exercise 6 · Monthly revenue with a running total
 
-✅ `ex6`.
+[verified] `ex6`.
 
 ```sql
 SELECT date_trunc('month', invoice_date) AS month,
@@ -123,13 +123,13 @@ the difference from `ROWS`.
 
 ## Exercise 7 · Cohort retention
 
-✅ `ex7`. Two shapes are accepted. Reference (grader) uses
+[verified] `ex7`. Two shapes are accepted. Reference (grader) uses
 `COUNT(DISTINCT CASE WHEN active_month = cohort_month + INTERVAL k MONTH THEN customer_id END) / COUNT(DISTINCT customer_id)`;
 the solution file aggregates to one row per customer with 0/1 flags first,
 then `AVG(flag)`. The second is easier to debug: you can inspect the per-customer
 flags.
 
-🔬 On this data retention is high (around 0.95-0.98 at month +1, ~0.85-0.92 at
+[expected] On this data retention is high (around 0.95-0.98 at month +1, ~0.85-0.92 at
 +3). Synthetic data; real SaaS cohorts usually decay faster.
 
 **Why the date bounds.** Usage starts in January 2023, so earlier cohorts
@@ -141,7 +141,7 @@ observed. Interviewers love asking how you handle the right-censored edge.
 
 ## Exercise 8 · Each customer's 3rd invoice
 
-✅ `ex8`. `ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY invoice_date, invoice_id)`
+[verified] `ex8`. `ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY invoice_date, invoice_id)`
 in a CTE, then `WHERE rn = 3`. (DuckDB also allows `QUALIFY rn = 3` directly.)
 
 * `ROW_NUMBER` gives exactly one row per position, even on ties, which is what
@@ -154,7 +154,7 @@ in a CTE, then `WHERE rn = 3`. (DuckDB also allows `QUALIFY rn = 3` directly.)
 
 ## Exercise 9 · Longest inactive streak (gaps and islands)
 
-✅ `ex9`. The grader's reference uses `LEAD`:
+[verified] `ex9`. The grader's reference uses `LEAD`:
 
 ```sql
 WITH weeks AS (SELECT DISTINCT customer_id, week_start FROM usage_weekly),
@@ -173,7 +173,7 @@ The solution file uses the classic islands trick on a generated weekly grid:
 of equal `inactive` values, so it labels the runs; count rows per run and take
 the longest inactive one. Both give identical results (checked in CI).
 
-🔬 Most customers never skip a week (median 0); the maximum is about 7 weeks.
+[expected] Most customers never skip a week (median 0); the maximum is about 7 weeks.
 
 The `LEAD` version is shorter and O(rows); the grid version generalises to
 "longest *active* streak" or "streaks of weeks with < 3 sessions", where gaps
@@ -183,10 +183,10 @@ are not simply missing rows. Know both.
 
 ## Exercise 10 · Median resolution hours by category
 
-✅ `ex10`. `MEDIAN(resolution_hours)` or `quantile_cont(resolution_hours, 0.5)`,
+[verified] `ex10`. `MEDIAN(resolution_hours)` or `quantile_cont(resolution_hours, 0.5)`,
 `GROUP BY category`.
 
-🔬 Cancellation tickets ≈ 4.8 h median vs ≈ 15 h for the others.
+[expected] Cancellation tickets ≈ 4.8 h median vs ≈ 15 h for the others.
 
 `quantile_cont` interpolates between the two middle values, `quantile_disc`
 returns an actual observed value. Resolution times are right-skewed (a few

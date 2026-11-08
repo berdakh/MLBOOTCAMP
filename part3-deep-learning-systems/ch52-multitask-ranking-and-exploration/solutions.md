@@ -1,13 +1,13 @@
 # Solutions · Chapter 52 · Multi-task ranking & exploration
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `second_price_auction`
 
-✅ Reference code: [`code/nb14.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb14.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def second_price_auction(bids, pctrs, reserve):
@@ -34,7 +34,7 @@ increment (one cent), quality scores beyond pCTR, and per-slot position effects.
 
 ## Exercise 2 · `thompson_sampling`
 
-✅ Reference code: [`code/nb14.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb14.py`](solutions.py) (`ex2`).
 
 ```python
 def thompson_sampling(true_ps, n_rounds, seed):
@@ -61,7 +61,7 @@ the last third of rounds adds less regret than the first third.
 
 ## Exercise 3 · Segment miscalibration and the exploration budget
 
-✍️ Model answer:
+[open-ended] Model answer:
 
 (a) Only auctions where a video ad competes with non-video ads are affected. With
 video pCTR ×1.1, a video ad's eCPM rises 10%: it now wins auctions where it was
@@ -100,7 +100,7 @@ upside, and cap per-ad exploration impressions.
 
 ## Checkpoint answers
 
-1. ✍️ MMoE addresses negative transfer in hard-sharing multi-task models: with one
+1. [open-ended] MMoE addresses negative transfer in hard-sharing multi-task models: with one
    shared bottom, conflicting tasks pull the representation in different directions.
    MMoE has several expert networks and, per task, a softmax gate (a function of the
    input) that mixes experts per example, so tasks can share where they agree and
@@ -109,7 +109,7 @@ upside, and cap per-ad exploration impressions.
    within ~0.002 NE of each other on our one-epoch CPU run, which is typical when the
    conflict is mild.
 
-2. ✍️ CVR is only labelled on clicked impressions but applied to all impressions:
+2. [open-ended] CVR is only labelled on clicked impressions but applied to all impressions:
    training and serving distributions differ (SSB), plus conversions are sparse.
    ESMM models `pCTCVR = pCTR × pCVR` and trains pCTR (click labels) and pCTCVR
    (click-and-convert labels) on **all** impressions, so pCVR is learned over the
@@ -120,14 +120,14 @@ upside, and cap per-ad exploration impressions.
    (one epoch, CPU budget) ESMM improved CTR NE but its pCVR ranked worse than the
    naive multi-task model's: re-measure on your data rather than assuming the paper's gains.
 
-3. 🔬 Score = `pCTR^a · pCVR^b · value` (or a weighted sum of calibrated expected values:
+3. [expected] Score = `pCTR^a · pCVR^b · value` (or a weighted sum of calibrated expected values:
    `w₁·pCTR + w₂·pCTR·pCVR·value + …`). Choose weights by mapping the Pareto frontier
    offline (14.3) and then running online experiments at a few points; pick according
    to the business objective (e.g. maximise value subject to CTR ≥ x), revisit when
    models change. Products of calibrated probabilities keep a meaning (expected value
    per impression); exponents are tuning knobs and break that meaning.
 
-4. ✅ eCPM = pCTR × bid × 1000, the expected revenue per thousand impressions.
+4. [verified] eCPM = pCTR × bid × 1000, the expected revenue per thousand impressions.
    Second price: the winner pays per click the minimum needed to keep winning,
    `bid₂·pCTR₂/pCTR₁`; truthful bidding is dominant. A uniform factor `k` on all pCTRs
    multiplies every eCPM by `k`: the ranking and the per-click price (ratio of pCTRs)
@@ -136,7 +136,7 @@ upside, and cap per-ad exploration impressions.
    change: the 14.4 simulation showed advertiser 0's win share and value/cost moving
    when only its pCTR was biased.
 
-5. 🔬 ε-greedy: simple, explores uniformly forever (linear regret), wastes impressions on
+5. [expected] ε-greedy: simple, explores uniformly forever (linear regret), wastes impressions on
    clearly bad ads. UCB: deterministic optimism, logarithmic regret, needs care with
    delayed feedback and many arms. Thompson: samples from the posterior, logarithmic
    regret, handles priors and delayed/batched feedback naturally, best in our 14.5
@@ -144,7 +144,7 @@ upside, and cap per-ad exploration impressions.
    advertiser history), with a capped exploration share or boost only for ads with few
    impressions, and logged propensities for later off-policy evaluation.
 
-6. ✍️ Labels: conversion events with value, attribution window, delayed-feedback
+6. [open-ended] Labels: conversion events with value, attribution window, delayed-feedback
    handling (13.8), deduplication. Models: pCTR, pCVR (ESMM/multi-task with shared
    embeddings), maybe a value regression model; calibration layers per segment. Ranking:
    `pCTR × pCVR × value` (or advertiser's target CPA/ROAS bidding: bid derived from value).

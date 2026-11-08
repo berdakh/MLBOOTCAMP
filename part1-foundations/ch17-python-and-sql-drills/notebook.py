@@ -69,7 +69,7 @@ for name, df in tables.items():
 # `"NA"` kept as North America.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # Vocabulary only: the drills themselves are yours to solve.
 #
@@ -97,7 +97,7 @@ for name, df in tables.items():
 # 3. If you go over the target by more than 50%, stop, read the hint in the
 #    grader message, and **put the drill on your repeat list** (section 16.4).
 #
-# > 💡 **Intuition.** Saying the complexity before coding is reading the map
+# > **Intuition.** Saying the complexity before coding is reading the map
 # > before driving: an interviewer cares more that you know the route is
 # > $O(n \log n)$ than that you reach the end. *Where it breaks down:* Big-O
 # > hides constants; for $n$ = 100, a "slow" $O(n^2)$ loop can beat a clever
@@ -270,7 +270,7 @@ def stratified_split(labels, test_frac: float, seed: int):
 stop("ex5", grade.ex5(stratified_split))
 
 # %% [markdown]
-# > 🧠 **Research bridge.** Exercise 5 is the same idea as keeping class balance
+# > **Research bridge.** Exercise 5 is the same idea as keeping class balance
 # > per subject in a BCI dataset. The interview follow-up is usually *"and if
 # > rows are grouped?"*: then you stratify **groups**, not rows (scikit-learn's
 # > `StratifiedGroupKFold`), exactly as you would never split one subject's
@@ -471,7 +471,7 @@ print("\npassed:", int((board["status"] == "pass").sum()), "of", len(board), "->
 # minutes in week 1 takes 5 in week 4.
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **Precision at k:**
 #
@@ -494,7 +494,7 @@ print("\npassed:", int((board["status"] == "pass").sum()), "of", len(board), "->
 # $\approx 2n = 4 \times 10^5$ operations for an $O(n)$ method.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -518,4 +518,4 @@ print("\npassed:", int((board["status"] == "pass").sum()), "of", len(board), "->
 # 4. Explain the "difference of two row numbers" trick for gaps and islands to someone who has never seen it.
 # 5. Why report the median resolution time rather than the mean, and what would you add to make the comparison between categories honest?
 #
-# ➡️ **Next:** [`17_system_design_and_mock_interview.ipynb`](../ch18-system-design-and-mock-interview/notebook.ipynb) — the other half of the loop: designing an ML system out loud, and a scored mock interview.
+# **Next chapter:** [`17_system_design_and_mock_interview.ipynb`](../ch18-system-design-and-mock-interview/notebook.ipynb) — the other half of the loop: designing an ML system out loud, and a scored mock interview.

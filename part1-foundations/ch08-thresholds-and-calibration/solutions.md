@@ -1,13 +1,13 @@
 # Solutions · Chapter 8 · Thresholds & calibration
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `top_k_per_snapshot`
 
-✅ Reference code: [`code/nb07.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb07.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def top_k_per_snapshot(df, scores, k):
@@ -30,7 +30,7 @@ returning the flags in *sorted* order; using `np.asarray(scores)` with a
 
 ## Exercise 2 · `best_threshold`
 
-✅ Reference code: [`code/nb07.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb07.py`](solutions.py) (`ex2`).
 
 ```python
 def best_threshold(y, scores, value_tp, cost_fp):
@@ -59,7 +59,7 @@ as a candidate if all values are negative.
 
 ## Exercise 3 · Explaining the threshold to a manager (written)
 
-✍️ Personal. A good answer (numbers 🔬 from our run):
+[open-ended] Personal. A good answer (numbers [expected] from our run):
 
 > "The model gives each account a risk score. We call an account when its
 > score is above about 0.19, roughly a one-in-five chance of cancelling. That

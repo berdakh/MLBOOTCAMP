@@ -6,9 +6,9 @@ Each exercise in a notebook ends with a cell such as::
 
 The grader runs small tests against your work and prints one of:
 
-    ✅ PASS  - every test passed
-    ❌ FAIL  - the first failing test, with a hint
-    ⏳ TODO  - your function still raises NotImplementedError
+    [PASS]  - every test passed
+    [FAIL]  - the first failing test, with a hint
+    [TODO]  - your function still raises NotImplementedError
 
 Graders never raise, so a notebook always runs top to bottom even with
 unfinished exercises. Passing the checks means the *mechanics* are right; it
@@ -34,7 +34,7 @@ class CheckResult:
         """Already printed by run_check; don't print it a second time in Jupyter."""
 
     def __repr__(self) -> str:
-        icon = {"pass": "✅ PASS", "fail": "❌ FAIL", "todo": "⏳ TODO", "error": "💥 ERROR"}[self.status]
+        icon = {"pass": "[PASS]", "fail": "[FAIL]", "todo": "[TODO]", "error": "[ERROR]"}[self.status]
         return f"{icon}  {self.name}" + (f"\n    {self.message}" if self.message else "")
 
 

@@ -99,7 +99,7 @@ print(f"{len(ds.read_jsonl(PROGRESS))} round(s) already logged in {PROGRESS.name
 # that matters here, because the log is meant to grow over weeks.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -418,7 +418,7 @@ pd.DataFrame(rows).set_index("attempt")
 # **verification** (2.0 in all four coding rounds), so next week's plan
 # writes itself: test before you are asked, in every coding round.
 #
-# > 💡 **Intuition.** A loop is scored like a decathlon judged event by event, not like a single
+# > **Intuition.** A loop is scored like a decathlon judged event by event, not like a single
 # > stopwatch: the committee reads each round's write-up, then looks across rounds for a recurring
 # > weakness. The weighted overall is your summary of that, not the decision rule. *Where the analogy
 # > breaks down:* in a decathlon points add up; in hiring one very weak round (or a "no hire" on a
@@ -487,7 +487,7 @@ print(README_TEMPLATE[:400], "...")
 # files it finds; anything else stays **TBD**, and every number it finds is
 # marked "name the split" until you do.
 #
-# > 💡 **Intuition.** A number without its split is a nutrition label without the serving size:
+# > **Intuition.** A number without its split is a nutrition label without the serving size:
 # > "94% accuracy" means nothing until you know whether it was per trial on seen subjects or per new
 # > user on a held-out month. *Where the analogy breaks down:* a serving size is a convention, while a
 # > split encodes the *claim* (new users? new time?); choosing the wrong one changes the number and
@@ -680,7 +680,7 @@ _ = (PORTFOLIO / "readiness.json").write_text(json.dumps(
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · Scoring a loop** (Exercise 1).
 #
@@ -729,7 +729,7 @@ print(f"monthly {monthly:,.0f} | per 1k requests: by hand {monthly / (500 * 3600
 # 5,475 and `0.0042` per 1,000 requests both ways.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -752,7 +752,7 @@ print(f"monthly {monthly:,.0f} | per 1k requests: by hand {monthly / (500 * 3600
 # 5. Walk through your strongest portfolio project in three minutes: problem, the one number with its split, the main trade-off and what you would do next.
 # 6. An interviewer asks what your Level 3 model would cost to serve at 1,000 QPS. Answer with the arithmetic and your assumptions.
 #
-# ➡️ **Next:** you have finished Level 3. Choose a capstone from the
+# **Next chapter:** you have finished Level 3. Choose a capstone from the
 # [capstones page](https://github.com/berdakh/MLBOOTCAMP/blob/main/part4-capstones/README.md),
 # score yourself honestly with the
 # [readiness rubric](https://github.com/berdakh/MLBOOTCAMP/blob/main/appendices/readiness-rubric.md),

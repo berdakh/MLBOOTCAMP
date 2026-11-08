@@ -59,7 +59,7 @@ from grading import chNN as grade
 # ## N.1 · First section
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -70,4 +70,4 @@ from grading import chNN as grade
 #
 # 1. ...
 #
-# ➡️ **Next:** [Chapter NN+1 · Title](../chNN-next/notebook.ipynb) — why.
+# **Next chapter:** [Chapter NN+1 · Title](../chNN-next/notebook.ipynb) — why.

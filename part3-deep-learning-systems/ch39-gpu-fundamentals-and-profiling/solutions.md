@@ -1,13 +1,13 @@
 # Solutions · Chapter 39 · GPU fundamentals & profiling
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `time_fn`
 
-✅ Reference code: [`code/nb01.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb01.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def time_fn(fn, device, warmup, iters):
@@ -44,7 +44,7 @@ statistics for you.
 
 ## Exercise 2 · `tflops`
 
-✅ Reference code: [`code/nb01.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb01.py`](solutions.py) (`ex2`).
 
 ```python
 def tflops(n, seconds):
@@ -61,7 +61,7 @@ tokens` for a full training step: the rule used for LLM compute budgets.
 
 ## Exercise 3 · `arithmetic_intensity`
 
-✅ Reference code: [`code/nb01.py`](solutions.py) (`ex3`).
+[verified] Reference code: [`code/nb01.py`](solutions.py) (`ex3`).
 
 ```python
 def arithmetic_intensity(flops, bytes):
@@ -80,7 +80,7 @@ caches, so measured intensity at DRAM is lower.
 
 ## Exercise 4 · Reading a profiler table
 
-✍️ A good answer, in the order an interviewer wants it:
+[open-ended] A good answer, in the order an interviewer wants it:
 
 **Bottleneck: the input pipeline (data loading on the CPU); the GPU is idle
 most of the time.** Evidence:
@@ -109,14 +109,14 @@ Then measure again: the next bottleneck becomes visible only after this one is g
 
 ## Checkpoint answers
 
-1. ✅ **Timing without sync.** CUDA calls are asynchronous: `model(x)` enqueues
+1. [verified] **Timing without sync.** CUDA calls are asynchronous: `model(x)` enqueues
    kernels and returns, so the measurement is Python + launch time. Fix: warm up,
    then `torch.cuda.synchronize()` before starting and before stopping the clock
    (or CUDA events), repeat, report the median. In 1.2 the CPU numbers were
    equal with and without sync because CPU ops are synchronous; that is exactly
    why the bug survives code that was first tested on a laptop.
 
-2. 🔬 **Roofline.** Arithmetic intensity = FLOPs / bytes moved. Attainable FLOP/s =
+2. [expected] **Roofline.** Arithmetic intensity = FLOPs / bytes moved. Attainable FLOP/s =
    min(peak compute, intensity × bandwidth); the ridge point (peak / bandwidth,
    ~25 FLOP/byte fp32 and ~200 fp16 on a T4) separates the two regimes.
    LayerNorm does a handful of FLOPs per element read and written → intensity
@@ -125,7 +125,7 @@ Then measure again: the next bottleneck becomes visible only after this one is g
    run showed the same split: an add at ~0.4–0.8 GFLOP/s vs a matmul at
    ~130–270 GFLOP/s on the same chip.
 
-3. 🔬 **fp16 on a T4.** Tensor Cores (fp16 only on Turing) give ~8× the fp32
+3. [expected] **fp16 on a T4.** Tensor Cores (fp16 only on Turing) give ~8× the fp32
    peak, and fp16 halves memory traffic for memory-bound ops. fp16's
    exponent range is small (min normal ~6e-5), so small gradients underflow
    to zero: the GradScaler multiplies the loss by a large factor S (gradients
@@ -134,7 +134,7 @@ Then measure again: the next bottleneck becomes visible only after this one is g
    of fewer mantissa bits); T4s do not support it. Autocast keeps reductions,
    softmax and losses in fp32.
 
-4. ✍️ **30% utilisation.** (a) Input pipeline: profile or time the loader alone;
+4. [open-ended] **30% utilisation.** (a) Input pipeline: profile or time the loader alone;
    check `num_workers`, CPU usage per core (`top`/`htop`), disk/network reads.
    (b) Host-device syncs in the loop (`.item()`, `.cpu()`, printing, `nonzero`):
    profiler trace shows gaps after `cudaStreamSynchronize`. (c) Too-small work per
@@ -144,7 +144,7 @@ Then measure again: the next bottleneck becomes visible only after this one is g
    "utilisation" is the fraction of time *any* kernel runs, not how busy the SMs
    are: 100% can still be inefficient.
 
-5. 🔬 **Loader knobs.** `num_workers`: processes that run `__getitem__` + collate in
+5. [expected] **Loader knobs.** `num_workers`: processes that run `__getitem__` + collate in
    parallel. `prefetch_factor`: batches queued per worker ahead of use.
    `pin_memory`: batches returned in page-locked memory so copies can be
    asynchronous DMA. `non_blocking=True`: the copy is enqueued and the CPU continues.
@@ -153,7 +153,7 @@ Then measure again: the next bottleneck becomes visible only after this one is g
    you run out of cores (2 on Colab), or when the shared resource is I/O or memory
    bandwidth.
 
-6. ✍️ **Overhead-bound / launch-bound** (also "CPU-bound"). Fixes: fuse ops
+6. [open-ended] **Overhead-bound / launch-bound** (also "CPU-bound"). Fixes: fuse ops
    (`torch.compile`, fused optimizers `fused=True`, fused kernels like
    `scaled_dot_product_attention`), capture the step in **CUDA graphs** (replay
    with one launch; `torch.compile(mode="reduce-overhead")`), increase work per

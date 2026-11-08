@@ -1,13 +1,13 @@
 # Solutions · Chapter 57 · ML depth & research discussion
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `warmup_cosine_lr`
 
-✅ Reference code: [`code/nb19.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb19.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def warmup_cosine_lr(step, base_lr, warmup_steps, total_steps, min_lr=0.0):
@@ -34,7 +34,7 @@ fine-tuning.
 
 ## Exercise 2 · `critique_flags`
 
-✅ Reference code: [`code/nb19.py`](solutions.py) (`ex2`): `{"A", "B", "C", "D", "E"}`.
+[verified] Reference code: [`code/nb19.py`](solutions.py) (`ex2`): `{"A", "B", "C", "D", "E"}`.
 
 * **A (real).** A random *trial* split puts every subject (and every session)
   in both training and test, so the model can learn subject-specific
@@ -66,7 +66,7 @@ fine-tuning.
 
 ## Exercise 3 · The full critique
 
-✍️ Open-ended. A strong answer, in template order:
+[open-ended] Open-ended. A strong answer, in template order:
 
 1. **Claim:** calibration-free decoding for *unseen users*.
 2. **Split:** random trials → the claim is untested (A). Expected effect:
@@ -100,7 +100,7 @@ leave-subjects-out split, with tuning inside the training subjects?"*
 
 ## Exercise 4 · Research-to-production story
 
-✍️ Personal. A shape to aim for (fill with your own measured numbers; do
+[open-ended] Personal. A shape to aim for (fill with your own measured numbers; do
 not use these placeholders as results):
 
 > "In my PhD I built a cross-subject motor-imagery decoder: [N] subjects,
@@ -123,7 +123,7 @@ evaluation unit that matches the claim.
 
 ## Checkpoint answers
 
-1. **Warmup.** ✅ In our CPU run (TinyGPT, 300 steps, Adam, no clipping):
+1. **Warmup.** [verified] In our CPU run (TinyGPT, 300 steps, Adam, no clipping):
    at LR 3e-3 warmup made no difference (val loss 2.27 vs 2.31); at 1e-2 it
    was 2.53 without vs 2.24 with; at 3e-2, 2.75 vs 2.26. Mechanism: Adam's
    second-moment estimate is built from very few gradients at the start, so
@@ -131,7 +131,7 @@ evaluation unit that matches the claim.
    for post-LN transformers, the gradient scale near the output) is least
    stable; ramping the LR keeps early updates small until statistics settle.
    Warmup widens the usable peak-LR range.
-2. **Batch 64 → 2,048.** 🔬 Scale the LR (linear for SGD as a starting
+2. **Batch 64 → 2,048.** [expected] Scale the LR (linear for SGD as a starting
    point, often √k for Adam), add or lengthen warmup, keep the total number
    of *examples* (not steps) and re-tune the schedule length; check
    per-replica batch statistics (BatchNorm) and use gradient clipping. You
@@ -139,14 +139,14 @@ evaluation unit that matches the claim.
    longer roughly halves the steps to reach a target loss, or when stability
    becomes seed-dependent. In our toy run, linear scaling to batch 2,048
    gave 0.55–0.75 accuracy across seeds against 0.92 for √k.
-3. **100% train, 81% test, 20% noisy labels.** ✅ (our run: 1.000 train,
+3. **100% train, 81% test, 20% noisy labels.** [verified] (our run: 1.000 train,
    0.813 final test, 0.928 early-stopped) The network memorised the
    flipped labels after first fitting the clean structure. First: early
    stopping on validation (even a noisy one ranks checkpoints), stronger
    regularisation; then measure the noise (relabel a sample), and if
    confirmed use noise-robust losses, label cleaning (confident learning,
    loss-based filtering) or better labelling.
-4. **Double descent.** ✅ The peak is at the interpolation threshold
+4. **Double descent.** [verified] The peak is at the interpolation threshold
    (parameters ≈ training points: in our run, p = n = 100 gave a test MSE of
    ~194 against ~0.5 at p = 50). There, exactly one interpolating solution
    exists and it is badly conditioned, so it fits the noise with huge
@@ -154,7 +154,7 @@ evaluation unit that matches the claim.
    interpolating solutions and the minimum-norm one (which gradient descent
    from small init tends to find) is smooth: p = 3,000 gave ~0.30. Ridge
    removes the spike.
-5. **Attention complexity.** ✅ (arithmetic) Compute O(T²·d) per layer,
+5. **Attention complexity.** [verified] (arithmetic) Compute O(T²·d) per layer,
    score memory O(T²) per head: 12 layers × 12 heads at fp16 is 1.2 GB per
    sequence at T = 2,048 and 19.3 GB at 8,192 if materialised.
    FlashAttention-style kernels compute the same result in tiles without
@@ -162,7 +162,7 @@ evaluation unit that matches the claim.
    far less memory traffic). A KV cache avoids recomputing keys and values
    for past tokens during generation (each new token costs O(T·d) instead of
    re-running the prefix) at the price of memory linear in T per layer.
-6. **SpectraFormer in 90 seconds.** 🔬 In order of likely inflation:
+6. **SpectraFormer in 90 seconds.** [expected] In order of likely inflation:
    (A) random trial split vs a new-user claim; (B) tuning on test and (D)
    best-of-five seeds; (C) under-tuned baselines; (E) global normalisation.
    Then the decisive experiment from 19-3.

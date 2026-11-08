@@ -121,7 +121,7 @@ print(f"{N_PARAMS:,} parameters | batch {B} x seq {T}")
 # parameters), batch 64 × 128.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -177,7 +177,7 @@ print(f"{N_PARAMS:,} parameters | batch {B} x seq {T}")
 #
 # *What to notice:* the Adam moments alone are as big as weights and gradients together, and switching to mixed precision moves bytes between the boxes without shrinking the total.
 #
-# > 💡 **Intuition.** Every parameter carries a backpack: its value (4 bytes), its gradient
+# > **Intuition.** Every parameter carries a backpack: its value (4 bytes), its gradient
 # > (4 bytes) and Adam's two running averages (8 bytes). That is 16 bytes before any data goes
 # > through the model. Activations are the scratch paper of the forward pass, kept until backward
 # > reads them. *Where it breaks down:* the backpack is fixed per parameter, but the scratch paper
@@ -326,7 +326,7 @@ print("wrote", OUT / "memory_report.json")
 #
 # *What to notice:* there is exactly one `optimizer.step()` and one `zero_grad()` per big batch; the weights `nᵢ / N` are what make the sum equal the big-batch gradient.
 #
-# > 💡 **Intuition.** Totalling a big bill from the receipts of several shopping trips: the sum is
+# > **Intuition.** Totalling a big bill from the receipts of several shopping trips: the sum is
 # > the same as one big trip, as long as each receipt is counted with the right weight. *Where it
 # > breaks down:* BatchNorm only ever sees one trip at a time, so its statistics differ from a
 # > real big batch.
@@ -390,7 +390,7 @@ grade.ex2(accumulated_step)
 #
 # *What to notice:* the red boxes disappear but the compute does not: every dashed 'recompute' box is a second forward pass through that block during backward.
 #
-# > 💡 **Intuition.** Instead of photocopying every page of your working, you keep the first page
+# > **Intuition.** Instead of photocopying every page of your working, you keep the first page
 # > of each chapter and redo a chapter when you need its details again. Worked numbers: a step
 # > costs about 1 forward + 2 forwards' worth of backward = 3 units; recomputing adds 1, so
 # > 4/3 ≈ +33% time, for memory that falls from "all layers" to "one input per layer + one layer".
@@ -578,7 +578,7 @@ for keep in (False, True):
 # *Your answer (Exercise 3):* ...
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1. Model-state memory.**
 #
@@ -670,7 +670,7 @@ print("max |manual - torch.optim.AdamW| after 3 steps:", (theta - w.detach()).ab
 # PyTorch weights agree to float32 rounding (our run: 2.4e-07).
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -695,4 +695,4 @@ print("max |manual - torch.optim.AdamW| after 3 steps:", (theta - w.detach()).ab
 # 5. Your training job's memory grows every step and eventually OOMs. Walk through how you find the cause.
 # 6. What does `torch.compile` do, when does it give a speed-up, and what are its operational risks?
 #
-# ➡️ **Next:** [`03_transformer_from_scratch.ipynb`](../ch41-transformer-from-scratch/notebook.ipynb) — build, train and sample from the decoder you have been measuring, and make generation fast with a KV cache.
+# **Next chapter:** [`03_transformer_from_scratch.ipynb`](../ch41-transformer-from-scratch/notebook.ipynb) — build, train and sample from the decoder you have been measuring, and make generation fast with a KV cache.

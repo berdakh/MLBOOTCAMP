@@ -1,13 +1,13 @@
 # Solutions · Chapter 50 · High-throughput serving
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `DynamicBatcher`
 
-✅ Reference code: [`code/nb12.py`](solutions.py) (`ex1`, a class), graded in CI. The
+[verified] Reference code: [`code/nb12.py`](solutions.py) (`ex1`, a class), graded in CI. The
 production version with a worker thread and error handling is
 `scaleml.serving.DynamicBatcher`.
 
@@ -64,7 +64,7 @@ class DynamicBatcher:
 
 ## Exercise 2 · `cost_per_1k`
 
-✅ Reference code: [`code/nb12.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb12.py`](solutions.py) (`ex2`).
 
 ```python
 def cost_per_1k(requests_per_second, price_per_hour, utilization):
@@ -74,7 +74,7 @@ def cost_per_1k(requests_per_second, price_per_hour, utilization):
 **In 12.8** (assumed $0.20/h, 40% utilisation) the measured CPU throughputs of
 one run gave $0.00114 per 1,000 requests without batching (122 req/s) and
 $0.00045 with dynamic batching (308 req/s); on a quieter machine the no-batching
-plateau was higher (246 req/s), so the saving was smaller. 🔬 Your numbers depend
+plateau was higher (246 req/s), so the saving was smaller. [expected] Your numbers depend
 on the machine. Halving the cost needs any of: 2× throughput,
 half the price (spot/reserved instances), or 2× utilisation (autoscaling).
 
@@ -82,7 +82,7 @@ half the price (spot/reserved instances), or 2× utilisation (autoscaling).
 
 ## Exercise 3 · Why the 7B chat service is expensive
 
-✍️ One good answer:
+[open-ended] One good answer:
 
 **(a) Diagnosis.** With static batching the batch runs until its longest
 response finishes; 12.6 simulated only 26% of decode slots doing useful work
@@ -117,7 +117,7 @@ and pricing/limits that reflect the longer context.
 
 ## Checkpoint answers
 
-1. **Why batching helps.** ✅ At batch 1 every weight is read from memory for one
+1. **Why batching helps.** [verified] At batch 1 every weight is read from memory for one
    multiply-add (arithmetic intensity ~1 FLOP per 2–4 bytes), far below what the
    hardware needs to be compute-bound (a T4 needs ~200 FLOPs per byte at peak
    fp16). A batch of B reuses each weight B times for the same traffic, so time

@@ -81,7 +81,7 @@ print(f"{len(clicks):,} clicks | train {len(train_clicks):,} | valid {len(valid_
 # ignored at this stage.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -127,7 +127,7 @@ print(f"{len(clicks):,} clicks | train {len(train_clicks):,} | valid {len(valid_
 #
 # *What to notice:* each stage cuts the item count by one or more orders of magnitude, so each can afford a more expensive model per item. Retrieval is judged by recall@K because the ranker can only reorder what it is given.
 #
-# > 💡 **Intuition.** Hiring: a recruiter skims 10,000 CVs for keywords and keeps 100 (retrieval, judged by "did we keep the good people?"), then a panel interviews those 100 carefully and ranks them (ranking, judged by "is the best person on top?"). *Where it breaks down:* recruiters read every CV; real retrieval never scores every item exactly; it relies on precomputed lists and approximate search.
+# > **Intuition.** Hiring: a recruiter skims 10,000 CVs for keywords and keeps 100 (retrieval, judged by "did we keep the good people?"), then a panel interviews those 100 carefully and ranks them (ranking, judged by "is the best person on top?"). *Where it breaks down:* recruiters read every CV; real retrieval never scores every item exactly; it relies on precomputed lists and approximate search.
 
 # %% [markdown]
 # ## 7.2 · What counts as a hit
@@ -246,7 +246,7 @@ evaluate("category popularity", cands_catpop)
 # their neighbours merged. It is the generator behind most "related items"
 # carousels: cheap, fresh (recomputed hourly), and explainable.
 #
-# > 💡 **Intuition.** Co-visitation is reading supermarket receipts: if crisps and salsa appear on the same receipt again and again, show salsa to whoever just picked up crisps. *Where it breaks down:* milk is on almost every receipt, so it "co-occurs" with everything; that is why production tables down-weight very popular items.
+# > **Intuition.** Co-visitation is reading supermarket receipts: if crisps and salsa appear on the same receipt again and again, show salsa to whoever just picked up crisps. *Where it breaks down:* milk is on almost every receipt, so it "co-occurs" with everything; that is why production tables down-weight very popular items.
 #
 # > **Exercise 1.** Write `covisitation(pairs_df, top_n)`. `pairs_df` has one
 # > row per click with columns `session_id` and `item_id`. Return a dict
@@ -319,7 +319,7 @@ evaluate("co-visitation", cands_covis)
 #
 # *What to notice:* the blank cells in R are not zeros you know; they are mostly items the user never saw. Implicit ALS still fits them (with low confidence), which is what makes the problem a cheap weighted least squares.
 #
-# > 💡 **Intuition.** ALS is fitting a lock and key by alternating: hold the key still and file the lock to fit it, then hold the lock still and file the key. Each step is easy (a closed-form least-squares solve); together they converge. *Where it breaks down:* a lock and key converge to one fit; ALS converges to *a* good solution, and many rotations of the vectors fit equally well, so individual dimensions mean nothing on their own.
+# > **Intuition.** ALS is fitting a lock and key by alternating: hold the key still and file the lock to fit it, then hold the lock still and file the key. Each step is easy (a closed-form least-squares solve); together they converge. *Where it breaks down:* a lock and key converge to one fit; ALS converges to *a* good solution, and many rotations of the vectors fit equally well, so individual dimensions mean nothing on their own.
 
 # %%
 t0 = time.time()
@@ -480,7 +480,7 @@ print("saved:", sorted(p.name for p in (ART / "level2").glob("*") if p.suffix in
 # *Your answer:*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · Recall@K.** In words: of the items that were relevant for a user, what share did the K candidates contain?
 #
@@ -523,7 +523,7 @@ print("saved:", sorted(p.name for p in (ART / "level2").glob("*") if p.suffix in
 # * $\sigma$: the logistic function; $\Theta$: all parameters. *Example:* scores 2.0 (clicked) and 0.5 (sampled): $-\log \sigma(1.5) = 0.20$; reversed (0.5 vs 2.0): $-\log \sigma(-1.5) = 1.70$. It is RankNet (notebook 06) applied to (clicked, unclicked) pairs.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -546,4 +546,4 @@ print("saved:", sorted(p.name for p in (ART / "level2").glob("*") if p.suffix in
 # 5. Design the cold-start path for a brand-new item and for a brand-new user. When does each "graduate" to the main generators?
 # 6. You blend four generators with fixed quotas. How do you choose the quotas, and what would you replace them with at larger scale?
 #
-# ➡️ **Next:** [`08_two_tower_retrieval_and_ann.ipynb`](../ch26-two-tower-retrieval-and-ann/notebook.ipynb) — learn user and item embeddings with a two-tower model, correct its popularity bias, and serve it with approximate nearest-neighbour search.
+# **Next chapter:** [`08_two_tower_retrieval_and_ann.ipynb`](../ch26-two-tower-retrieval-and-ann/notebook.ipynb) — learn user and item embeddings with a two-tower model, correct its popularity bias, and serve it with approximate nearest-neighbour search.

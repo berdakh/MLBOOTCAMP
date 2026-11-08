@@ -77,7 +77,7 @@ print("Python recursion limit:", sys.getrecursionlimit())
 # still crash the process.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -140,7 +140,7 @@ print(shortest_steps(maze), shortest_steps([[0, 1], [1, 0]]))
 #
 # *What to notice:* BFS's numbers grow layer by layer, so the first time it reaches a node is along a fewest-edges path; DFS finishes a whole branch before starting the next.
 #
-# > 💡 **Intuition.** BFS is a ripple in a pond: everything one step away is reached before
+# > **Intuition.** BFS is a ripple in a pond: everything one step away is reached before
 # > anything two steps away. DFS is a maze-walker with a hand on the wall: deep first, back
 # > up only at dead ends. *Where it breaks down:* ripples measure *steps*, not distance; with
 # > unequal edge lengths the first ripple to arrive may have taken the long way (16.3).
@@ -163,7 +163,7 @@ def num_islands(grid):
 grade.ex1(num_islands)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.** *Clarify:* 4- or 8-connectivity? May I modify the grid
+# > **Talk it through.** *Clarify:* 4- or 8-connectivity? May I modify the grid
 # > (sinking visited land is a common trick, but it destroys the caller's data —
 # > ask)? Empty grid, ragged rows? *Plan:* scan cells; on unvisited land, count one
 # > island and flood-fill it with BFS/iterative DFS. *Complexity:* O(R·C) time,
@@ -237,7 +237,7 @@ def course_order(n, prerequisites):
 grade.ex2(course_order)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.** *Clarify the edge direction out loud* — `[a, b]` means
+# > **Talk it through.** *Clarify the edge direction out loud* — `[a, b]` means
 # > "b before a" here; getting it backwards gives a reversed order. Duplicates?
 # > Self-loops (a cycle)? *Plan:* Kahn's algorithm: in-degrees, queue of zeros,
 # > pop/append/decrement; `len(order) < n` ⇒ cycle. *Complexity:* O(V + E) time
@@ -297,7 +297,7 @@ def dijkstra(n, edges, source):
 grade.ex3(dijkstra)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.** *Clarify:* directed? negative weights (then not
+# > **Talk it through.** *Clarify:* directed? negative weights (then not
 # > Dijkstra)? one target or all nodes? return the path too? *Plan:* adjacency
 # > lists; `dist = [inf] * n`; heap `[(0, source)]`; pop, skip stale, relax.
 # > *Complexity:* O((V + E) log V) with a binary heap; O(V²) with an array scan,
@@ -338,7 +338,7 @@ print([isqrt(n) for n in [0, 1, 8, 9, 10, 10**12]])
 # easier than *finding* the answer. Typical signals: "minimum capacity / speed /
 # maximum distance such that …".
 #
-# > 💡 **Intuition.** Binary search on the answer is the "guess my number" game where the
+# > **Intuition.** Binary search on the answer is the "guess my number" game where the
 # > only reply is "enough" or "not enough": each guess halves the range, so even a range of
 # > a billion takes 30 guesses. *Where it breaks down:* the reply must be monotone; if
 # > capacity 15 works but 16 does not, halving can jump past the answer.
@@ -362,7 +362,7 @@ def min_capacity(weights, days):
 grade.ex4(min_capacity)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.** *Clarify:* order fixed? integer weights? `days` ≥ 1?
+# > **Talk it through.** *Clarify:* order fixed? integer weights? `days` ≥ 1?
 # > *Observations to say aloud:* capacity below `max(w)` can never work;
 # > `sum(w)` always works; if capacity c works, c + 1 works (monotone) → binary
 # > search the first feasible c in `[max(w), sum(w)]`. *Feasibility:* greedy
@@ -404,7 +404,7 @@ print("greedy trap:", min_coins([1, 3, 4], 6))
 # **Expected:** `3 -1 0` and `greedy trap: 2`. The same template solves
 # knapsack, path counting and sequence alignment; the art is in step 1.
 #
-# > 💡 **Intuition.** DP is doing a problem with sticky notes: every time you solve a
+# > **Intuition.** DP is doing a problem with sticky notes: every time you solve a
 # > subproblem, write the answer down, and never solve it twice. The state definition is
 # > what you write on the note. *Where it breaks down:* it pays only if subproblems repeat;
 # > when they do not (plain divide-and-conquer, e.g. merge sort), the notes are wasted memory.
@@ -426,7 +426,7 @@ def lis_length(nums):
 grade.ex5(lis_length)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.** *First the O(n²) DP* — state: `dp[i]` = length of the
+# > **Talk it through.** *First the O(n²) DP* — state: `dp[i]` = length of the
 # > longest increasing subsequence ending at i; transition: `1 + max(dp[j])` over
 # > `j < i` with `nums[j] < nums[i]`. *Then improve:* keep `tails[L]` = the
 # > smallest possible tail of an increasing subsequence of length L + 1; `tails` is
@@ -454,7 +454,7 @@ def edit_distance(a, b):
 grade.ex6(edit_distance)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.** *State:* `dp[i][j]` = distance between `a[:i]` and
+# > **Talk it through.** *State:* `dp[i][j]` = distance between `a[:i]` and
 # > `b[:j]`. *Transition:* `min(dp[i-1][j] + 1` (delete), `dp[i][j-1] + 1` (insert),
 # > `dp[i-1][j-1] + (a[i-1] != b[j-1]))` (substitute or match). *Base:*
 # > `dp[i][0] = i`, `dp[0][j] = j`. *Order:* row by row. *Complexity:* O(m·n) time;
@@ -541,7 +541,7 @@ class Trie:
 grade.ex7(Trie)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.** *Clarify:* character set (26 lowercase letters → an
+# > **Talk it through.** *Clarify:* character set (26 lowercase letters → an
 # > array of 26 children; Unicode → a dict), deletions needed? *Plan:* nested
 # > dicts with an end marker; `search` and `starts_with` share a `_walk(prefix)`
 # > helper. *Complexity:* O(L) per operation; space O(total characters) in the
@@ -575,7 +575,7 @@ class UnionFind:
 grade.ex8(UnionFind)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.** *Plan:* `parent` array, `size` array, a component
+# > **Talk it through.** *Plan:* `parent` array, `size` array, a component
 # > counter. `find`: walk to the root, then point every visited node at the root —
 # > iteratively (a recursive `find` on a 200,000-long chain hits the recursion
 # > limit). `union`: find both roots; if equal return False; attach the smaller
@@ -642,7 +642,7 @@ for pattern, days in plan:
 # dates into your calendar or spreadsheet.
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1. Graph traversal cost**
 #
@@ -689,7 +689,7 @@ for pattern, days in plan:
 # *In words:* with path compression and union by size each operation is effectively constant time; with neither, a chain makes `find` O(n).
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -717,4 +717,4 @@ for pattern, days in plan:
 # 5. Trie vs hash set vs sorted array with binary search for query autocomplete over 10 million queries: compare memory, prefix-query cost and update cost.
 # 6. You must cluster 50 million product listings into groups of near-duplicates, given a stream of candidate pairs from a similarity model. Which data structure, and what are the risks of transitive merging?
 #
-# ➡️ **Next:** [`17_serving_a_ranking_cascade.ipynb`](../ch35-serving-a-ranking-cascade/notebook.ipynb) — Day 9: put retrieval, features and a ranker behind one service, with per-stage latency budgets.
+# **Next chapter:** [`17_serving_a_ranking_cascade.ipynb`](../ch35-serving-a-ranking-cascade/notebook.ipynb) — Day 9: put retrieval, features and a ranker behind one service, with per-stage latency budgets.

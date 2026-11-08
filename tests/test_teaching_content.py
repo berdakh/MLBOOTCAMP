@@ -1,6 +1,6 @@
 """Guard the teaching scaffolding that every notebook promises.
 
-* Every notebook has a "📖 Words to know" glossary table near the top.
+* Every notebook has a "Key terms" glossary table near the top.
 * Display maths uses ``$$`` on its own line, balanced within each markdown
   cell - an unbalanced ``$$`` swallows the rest of the cell in Jupyter, Colab
   and GitHub alike, and nothing else would notice.
@@ -46,8 +46,8 @@ def test_sources_found():
 @pytest.mark.parametrize("src", ALL_SOURCES, ids=lambda p: p.parent.name[:5])
 def test_every_notebook_has_a_glossary(src):
     text = src.read_text(encoding="utf-8")
-    assert "## 📖 Words to know" in text, f"{src.name}: add a '## 📖 Words to know' table"
-    section = text.split("## 📖 Words to know", 1)[1].split("# %%", 1)[0]
+    assert "## Key terms" in text, f"{src.name}: add a '## Key terms' table"
+    section = text.split("## Key terms", 1)[1].split("# %%", 1)[0]
     rows = [ln for ln in section.splitlines() if ln.startswith("# |") and "---" not in ln]
     assert len(rows) >= 6, f"{src.name}: the glossary should define at least 5 terms"
 

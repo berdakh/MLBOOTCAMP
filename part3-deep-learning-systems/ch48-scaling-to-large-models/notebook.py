@@ -99,7 +99,7 @@ RESULTS = {}
 GB = 1e9
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -153,7 +153,7 @@ GB = 1e9
 #
 # *What to notice:* each stage shards one more colour; the green optimizer block is the biggest, which is why stage 1 alone already saves most of the memory.
 #
-# > 💡 **Intuition.** With DDP every member of a study group carries the full encyclopedia.
+# > **Intuition.** With DDP every member of a study group carries the full encyclopedia.
 # > ZeRO-1 splits the bulky index volumes (optimizer state), ZeRO-2 also the notes (gradients),
 # > ZeRO-3 the encyclopedia itself: each person carries a few volumes and borrows the page they
 # > need right before reading it. *Where it breaks down:* borrowing takes network time, twice per
@@ -399,7 +399,7 @@ print(f"per device: {fc.weight.numel() // 2 + proj.weight.numel() // 2:,} MLP we
 #
 # *What to notice:* the idle triangles have the same size whatever m is; more micro-batches make the busy part longer, so the bubble's *share* shrinks.
 #
-# > 💡 **Intuition.** A car-wash with four stations: the first car needs four steps to reach the
+# > **Intuition.** A car-wash with four stations: the first car needs four steps to reach the
 # > end, and the last stations stand idle while the line fills (and the first ones while it
 # > drains). Washing 16 cars per batch instead of 4 makes the fill-and-drain a small part of the
 # > day. *Where it breaks down:* every car in flight must have its activations stored until its
@@ -546,7 +546,7 @@ for name, n, d, gpu, tf, mfu, g, src in examples:
 #
 # *What to notice:* for a fixed budget, a model that is too big sees too few tokens and one that is too small cannot use them; the optimum moves right (bigger) as compute grows, but only as √C.
 #
-# > 💡 **Intuition: where 6 comes from.** Every training token visits every weight three times: in
+# > **Intuition: where 6 comes from.** Every training token visits every weight three times: in
 # > the forward pass (activation × weight), in backward to get the activation gradient, and in
 # > backward to get the weight gradient. Each visit is a multiply and an add: $3 	imes 2 = 6$
 # > FLOPs per parameter per token.
@@ -741,7 +741,7 @@ print("wrote", OUT / "budget.json")
 # *Your answer (Exercise 4):* ...
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1. Model-state memory per GPU (mixed-precision Adam, $N$ data-parallel GPUs).**
 #
@@ -833,7 +833,7 @@ print(f"Young: sqrt(2 * 300 s * {mtbf / 3600:.1f} h) = {math.sqrt(2 * 300 * mtbf
 # 9.4-hour job MTBF.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -857,4 +857,4 @@ print(f"Young: sqrt(2 * 300 s * {mtbf / 3600:.1f} h) = {math.sqrt(2 * 300 * mtbf
 # 5. What did the Chinchilla paper change about how we size models, and why do many production models deliberately train past the compute-optimal point?
 # 6. Why does fp16 training need loss scaling and bf16 training not? What does the dynamic loss scaler do when it sees `inf`?
 #
-# ➡️ **Next:** [`11_quantization_and_distillation.ipynb`](../ch49-quantization-and-distillation/notebook.ipynb) — from training big models to serving small ones: int8 quantisation and knowledge distillation, with accuracy, latency and size measured.
+# **Next chapter:** [`11_quantization_and_distillation.ipynb`](../ch49-quantization-and-distillation/notebook.ipynb) — from training big models to serving small ones: int8 quantisation and knowledge distillation, with accuracy, latency and size measured.

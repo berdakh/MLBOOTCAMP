@@ -71,7 +71,7 @@ np.set_printoptions(precision=4, suppress=True)
 print("numpy", np.__version__)
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -167,7 +167,7 @@ print("max |difference|:", np.abs(d_loop - d_ex).max())
 # cancellation can make a distance of zero come out as `-1e-15`, and a
 # `sqrt` of that is NaN.
 #
-# > 💡 **Intuition.** A Python loop is a cashier who scans one item, chats, then scans the
+# > **Intuition.** A Python loop is a cashier who scans one item, chats, then scans the
 # > next; a BLAS matrix product is a conveyor belt that moves the whole basket through
 # > hardware built for it. The expansion trick turns "distance between every pair" into
 # > exactly one such basket. *Where it breaks down:* vectorising by broadcasting can build
@@ -226,7 +226,7 @@ with Timer("np.sort of 1M floats, timed with Timer"):
 #
 # so every exponent is ≤ 0 and the largest term is exactly 1.
 #
-# > 💡 **Intuition.** Subtracting the maximum is quoting every price relative to the most
+# > **Intuition.** Subtracting the maximum is quoting every price relative to the most
 # > expensive item: softmax only cares about ratios, which are unchanged, but no number is
 # > astronomically large any more. *Where it breaks down:* very negative entries still
 # > underflow to exactly 0 after `exp`; harmless inside softmax, fatal if you then take
@@ -279,7 +279,7 @@ print("stable -log(sigmoid(z)):", np.logaddexp(0, -zb))     # log(1 + e^{-z}) wi
 # or a wrong transpose usually gives 0.1-1). Five lines, and interviewers notice
 # when you write them unprompted.
 #
-# > 💡 **Intuition.** A gradient check is measuring a slope with a ruler: nudge one weight
+# > **Intuition.** A gradient check is measuring a slope with a ruler: nudge one weight
 # > a hair up and down and see how much the loss moves. If the formula and the ruler
 # > disagree, the formula is wrong. *Where it breaks down:* at a kink (ReLU at 0, `abs`,
 # > `max`) there is no single slope, and in float32 the "hair" is lost in rounding.
@@ -357,7 +357,7 @@ def fit_logreg(X, y, lr=0.1, epochs=1000, l2=0.0):
 grade.ex1(fit_logreg)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.**
+# > **Talk it through.**
 # > 1. *Clarify:* labels 0/1 or ±1? Intercept regularised? Mean or sum loss? Fixed epochs or a tolerance?
 # > 2. *Derive aloud:* dL/dz = σ(z) − y, so ∇w = Xᵀ(p − y)/n + λw and ∂b = mean(p − y). That one line is the whole model.
 # > 3. *Stability:* σ for very negative z: `np.exp(-z)` overflows → use a piecewise sigmoid or `scipy.special.expit`; compute the loss with `np.logaddexp(0, z) - y*z`, never `log(sigmoid)`.
@@ -386,7 +386,7 @@ def softmax_grad(W, X, y):
 grade.ex2(softmax_grad)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.**
+# > **Talk it through.**
 # > 1. *Shapes first:* logits `Z = XW` is `(n, C)`; the one-hot target `Y` is `(n, C)`, built by indexing, not by a loop.
 # > 2. *The key fact:* for softmax + cross-entropy, ∂L/∂Z = (softmax(Z) − Y)/n. Then dW = Xᵀ(P − Y)/n. Offer to derive it (notebook 14, Exercise 7, walks through it).
 # > 3. *Stability:* subtract the row max before `exp`; loss = mean(logsumexp(Z) − Z[i, yᵢ]).
@@ -415,7 +415,7 @@ def kmeans(X, k, seed=0, n_iter=100):
 grade.ex3(kmeans)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.**
+# > **Talk it through.**
 # > 1. *Objective:* inertia = Σ‖xᵢ − μ_{c(i)}‖². Both steps (assign, re-average) can only lower it, so Lloyd converges, but to a **local** minimum: that is why the init matters.
 # > 2. *Why k-means++:* D² sampling spreads the initial centers; it is O(log k)-competitive in expectation, versus arbitrarily bad for uniform init. Production libraries also run several inits (`n_init`) and keep the best.
 # > 3. *Vectorise:* the (n, k) distance matrix with the expansion trick; `argmin` over axis 1.
@@ -445,7 +445,7 @@ def knn_predict(X_train, y_train, X_test, k):
 grade.ex4(knn_predict)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.**
+# > **Talk it through.**
 # > 1. *Clarify:* distance metric? Tie-breaking? Memory limit (m × n distances)?
 # > 2. *Plan:* distances with the expansion trick → `np.argpartition(d2, k-1, axis=1)[:, :k]` (O(n) per row instead of a full sort) → map labels to 0..C−1 with `np.unique(..., return_inverse=True)` → count votes with `np.add.at`.
 # > 3. *Complexity:* O(m·n·d) for distances + O(m·n) for selection; memory O(m·n) → process the test set in chunks if it does not fit.
@@ -475,7 +475,7 @@ def roc_auc(y_true, scores):
 grade.ex5(roc_auc)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.**
+# > **Talk it through.**
 # > 1. *Define it two ways:* the area under TPR-vs-FPR, and the probability that a random positive outscores a random negative (ties ½). The second gives the algorithm.
 # > 2. *Brute force first, in one sentence:* compare every positive with every negative, O(n₊·n₋), then improve.
 # > 3. *Sort once:* average ranks for tie groups (run boundaries from `np.diff` on the sorted scores), sum the positives' ranks, subtract the minimum possible sum n₊(n₊+1)/2.
@@ -503,7 +503,7 @@ def ndcg_at_k(scores, labels, k):
 grade.ex6(ndcg_at_k)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.**
+# > **Talk it through.**
 # > 1. *Clarify the conventions out loud* — they change the number: exponential (2^rel − 1) or linear gain? log₂(i+1) discount with 1-based i? How are score ties broken? What is NDCG for a query with no relevant item (0, or skip the query)? Is IDCG computed over the top k of *all* candidates or of the shown list?
 # > 2. *Complexity:* O(n log n) for the sort (O(n + k log k) with `argpartition`); computing many queries at once is a group-by.
 # > 3. *Context:* in notebook 05 you saw that NDCG on logged clicks rewards the logging policy's own order (position bias); the formula is easy, choosing the labels is the hard part.
@@ -518,7 +518,7 @@ grade.ex6(ndcg_at_k)
 # over 1.5× the target means the method is not yet automatic.
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1. Logistic regression: loss and gradient**
 #
@@ -623,7 +623,7 @@ print(f"6. NDCG@3 of (1, 0, 1): {ndcg_reference([1, 0, 1], 3):.3f}")
 # 4. 2.50; 5. 0.75 both ways; 6. 0.920.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -650,4 +650,4 @@ print(f"6. NDCG@3 of (1, 0, 1): {ndcg_reference([1, 0, 1], 3):.3f}")
 # 5. kNN works well offline with 50k items. The catalogue grows to 50M items with a 20 ms latency budget. What changes, and what do you give up?
 # 6. An interviewer asks how you know your gradient is right. Describe a gradient check: ε, the error measure, the threshold, and two situations where it misleads.
 #
-# ➡️ **Next:** [`14_ml_from_scratch_2.ipynb`](../ch32-ml-from-scratch-2/notebook.ipynb) — trees, boosting, backprop, attention and batch norm from scratch.
+# **Next chapter:** [`14_ml_from_scratch_2.ipynb`](../ch32-ml-from-scratch-2/notebook.ipynb) — trees, boosting, backprop, attention and batch norm from scratch.

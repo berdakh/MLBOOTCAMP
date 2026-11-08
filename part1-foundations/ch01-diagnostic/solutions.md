@@ -1,14 +1,14 @@
 # Solutions · Chapter 1 · Skills diagnostic
 
 Do the diagnostic **before** reading this. The point is to measure where you
-are, and reading first measures nothing. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+are, and reading first measures nothing. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `top_k_frequent`
 
-✅ Reference code: [`code/nb00.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb00.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 from collections import Counter
@@ -35,7 +35,7 @@ key=...)` is O(n log k). Say when that matters (rarely, below millions).
 
 ## Exercise 2 · `weekly_active`
 
-✅ Reference code: [`code/nb00.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb00.py`](solutions.py) (`ex2`).
 
 ```python
 def weekly_active(usage):
@@ -59,7 +59,7 @@ counts rows, so the duplicated row is counted twice.
 
 ## Exercise 3 · `customer_summary_sql`
 
-✅ Reference code: [`code/nb00.py`](solutions.py) (`ex3`).
+[verified] Reference code: [`code/nb00.py`](solutions.py) (`ex3`).
 
 ```sql
 WITH ranked AS (
@@ -95,7 +95,7 @@ returns the *first* invoice; the fixture catches that.
 
 ## Exercise 4 · `test_rolling_mean`
 
-✅ Reference code: [`code/nb00.py`](solutions.py) (`ex4`).
+[verified] Reference code: [`code/nb00.py`](solutions.py) (`ex4`).
 
 ```python
 def test_rolling_mean(fn):
@@ -129,7 +129,7 @@ the same algorithm as the implementation tests nothing.
 
 ## Exercise 5 · Evaluation judgement
 
-✅ Reference code: [`code/nb00.py`](solutions.py) (`ex5`).
+[verified] Reference code: [`code/nb00.py`](solutions.py) (`ex5`).
 
 | Q | Answer | Why |
 |---|---|---|
@@ -147,7 +147,7 @@ make notebooks 04-07 a priority.
 
 ## Exercise 6 · Pydantic `Order`
 
-✅ Reference code: [`code/nb00.py`](solutions.py) (`ex6`).
+[verified] Reference code: [`code/nb00.py`](solutions.py) (`ex6`).
 
 ```python
 from pydantic import BaseModel, ConfigDict, Field
@@ -174,7 +174,7 @@ to 5; use `strict=True` if you need to refuse strings.
 
 ## Exercise 7 · The most rigorous evaluation you have done (written)
 
-✍️ Personal. A strong three-sentence answer has: **what** was evaluated and on
+[open-ended] Personal. A strong three-sentence answer has: **what** was evaluated and on
 what data, **how** the evaluation matched the claim (e.g. leave-one-subject-out
 for a cross-subject claim, with the number of subjects and a spread), and
 **one specific threat** with what was done about it. Example:
@@ -211,6 +211,6 @@ you; requests arrive from clients you do not control, forever. Schemas reject
 malformed or out-of-range inputs before they reach the model, where they would
 otherwise produce a confident, meaningless score.
 
-**5. Your weakest area.** ✍️ Personal. A good answer names the area, the
+**5. Your weakest area.** [open-ended] Personal. A good answer names the area, the
 specific failure (e.g. "my test caught 1/3 bugs: I never checked the input"),
 and a concrete plan (e.g. "do notebook 11's exercises without solutions").

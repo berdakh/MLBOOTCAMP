@@ -1,13 +1,13 @@
 # Solutions · Chapter 44 · Parameter-efficient fine-tuning
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `LoRALinear`
 
-✅ Reference code: [`code/nb06.py`](solutions.py) (`ex1`), graded in CI. The course
+[verified] Reference code: [`code/nb06.py`](solutions.py) (`ex1`), graded in CI. The course
 version with dropout and merging is `scaleml.finetune.LoRALinear`.
 
 ```python
@@ -36,7 +36,7 @@ parameters on `base.weight.device` (the course version does).
 
 ## Exercise 2 · `merge_lora`
 
-✅ Reference code: [`code/nb06.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb06.py`](solutions.py) (`ex2`).
 
 ```python
 def merge_lora(W, A, B, alpha, r):
@@ -54,7 +54,7 @@ exact in the dtype you merged in.
 
 ## Exercise 3 · Fine-tuning a 7B LLM for 40 customers
 
-✍️ A strong answer:
+[open-ended] A strong answer:
 
 * **Memory arithmetic (6.1).** Full fine-tuning in fp32 + AdamW: 16 B/param ≈ 112 GB
   (104 GiB) plus activations: impossible on 16–24 GB. LoRA with a frozen fp16 base:

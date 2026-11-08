@@ -89,7 +89,7 @@ print(f"threshold {threshold:.3f} | " + ", ".join(f"{k} {v:.3f}" for k, v in rep
 # the base rate).
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -158,7 +158,7 @@ print(f"  overall      {pt_all:.3f}  95% customer CI [{lo_all:.3f}, {hi_all:.3f}
 # *"we see no slice where the model is clearly worse, at this sample size"*,
 # not a story about why one region is hard.
 #
-# > 💡 **Intuition.** A slice with 40 churners is a poll with 40 respondents:
+# > **Intuition.** A slice with 40 churners is a poll with 40 respondents:
 # > its PR-AUC can swing several hundredths on who happened to answer. Read
 # > the `positives` column before the metric. *Where it breaks down:* a
 # > consistent gap across many months *is* evidence, even if each month's
@@ -267,7 +267,7 @@ print(f"churn rate among all healthy-looking rows: {v.loc[healthy, LABEL].mean()
 # features in which order, which library versions, what threshold, which
 # validation metrics, and the SHA-256 of the model file.
 #
-# > 💡 **Intuition.** A bundle is a medicine bottle, not a loose pill: the
+# > **Intuition.** A bundle is a medicine bottle, not a loose pill: the
 # > label says what is inside, the batch, the dose (threshold), the expiry
 # > (library versions) and carries a seal (the hash). *Where it breaks down:*
 # > a seal stored next to the bottle can be re-made by anyone who can open
@@ -359,7 +359,7 @@ with tempfile.TemporaryDirectory() as tmp:
 #
 # *What to notice:* nothing in the version folders ever changes; the only mutable thing is one tiny file, which is why rollback takes seconds.
 #
-# > 💡 **Intuition.** The registry is a library shelf of numbered editions and
+# > **Intuition.** The registry is a library shelf of numbered editions and
 # > `CURRENT` is the bookmark saying which one the service reads. Rolling back
 # > moves the bookmark; it does not reprint a book. *Where it breaks down:* a
 # > rollback restores the model, not the world: if the input data changed,
@@ -520,7 +520,7 @@ print(f"notebook compute time: {time.time() - T0:.0f} s")
 # **Expected:** well under a minute.
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **Lift at the top $q$ of scores:**
 #
@@ -545,7 +545,7 @@ print(f"notebook compute time: {time.time() - T0:.0f} s")
 # to 40 positives multiplies the width by $\sqrt{360/40} = 3$, to ≈ 0.18.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -568,4 +568,4 @@ print(f"notebook compute time: {time.time() - T0:.0f} s")
 # 5. Walk through deploying v2 and rolling back to v1 with this registry. Why can rollback not half-succeed?
 # 6. Name two things your model card says the model must *not* be used for, and why.
 #
-# ➡️ **Next:** [`09_fastapi_and_contracts.ipynb`](../ch10-fastapi-and-contracts/notebook.ipynb) — serve the promoted model behind a typed API contract.
+# **Next chapter:** [`09_fastapi_and_contracts.ipynb`](../ch10-fastapi-and-contracts/notebook.ipynb) — serve the promoted model behind a typed API contract.

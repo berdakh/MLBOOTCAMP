@@ -1,13 +1,13 @@
 # Solutions · Chapter 41 · A transformer from scratch
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `causal_self_attention`
 
-✅ Reference code: [`code/nb03.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb03.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def causal_self_attention(x, w_qkv, w_out, n_heads):
@@ -36,7 +36,7 @@ FlashAttention/memory-efficient kernels, no `T × T` matrix in memory.
 
 ## Exercise 2 · `top_k_sample`
 
-✅ Reference code: [`code/nb03.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb03.py`](solutions.py) (`ex2`).
 
 ```python
 def top_k_sample(logits, k, temperature, generator):
@@ -60,7 +60,7 @@ confident and many when it is not. Temperature 0 is handled separately as `argma
 
 ## Exercise 3 · Attention complexity and the KV cache
 
-✍️ Model answer:
+[open-ended] Model answer:
 
 (a) One forward pass over `n` tokens: computing Q, K, V and the output projection is
 **O(n·d²)**; the scores `QKᵀ` and the weighted sum `AV` are **O(n²·d)**. The attention
@@ -89,14 +89,14 @@ KV cache quantisation, paged attention to avoid fragmentation, sliding-window at
 
 ## Checkpoint answers
 
-1. ✍️ `softmax(QKᵀ/√d + M)V`. Q (what am I looking for), K (what do I contain), V
+1. [open-ended] `softmax(QKᵀ/√d + M)V`. Q (what am I looking for), K (what do I contain), V
    (what I pass on) are linear projections of the input; `QKᵀ` scores every pair;
    `/√d` keeps the scores' variance ~1 so the softmax is not saturated (vanishing
    gradients); M (−∞ above the diagonal) enforces causality; the softmax turns
    scores into weights summing to 1; multiple heads attend to different
    relations in parallel subspaces at the same total cost, then a projection mixes them.
 
-2. ✍️ Post-LN: `x = LN(x + f(x))`: the residual path passes through every
+2. [open-ended] Post-LN: `x = LN(x + f(x))`: the residual path passes through every
    LayerNorm, gradients near the input can vanish/explode with depth, and training
    needs learning-rate warm-up and care. Pre-LN: `x = x + f(LN(x))`: an unobstructed
    identity path from output to input, so gradients flow, deep stacks train stably at
@@ -104,13 +104,13 @@ KV cache quantisation, paged attention to avoid fragmentation, sliding-window at
    Trade-off reported in the literature: post-LN can reach slightly better quality when
    it trains at all.
 
-3. ✅ A leaky mask (the model sees the token it must predict) or targets not
+3. [verified] A leaky mask (the model sees the token it must predict) or targets not
    shifted by one (`y == x`). Test: the perturbation test from 3.3 (change token
    `t`, logits before `t` must not change), check `y[:, :-1] == x[:, 1:]`, compare
    with the unigram baseline (3.347 here) and a known-good reference: a character model
    reaching 0.05 on Shakespeare is not plausible (ours: 1.83 validation after 1,500 steps).
 
-4. 🔬 Temperature divides logits: τ < 1 sharpens (more conservative, more
+4. [expected] Temperature divides logits: τ < 1 sharpens (more conservative, more
    repetitive), τ > 1 flattens (more diverse, more errors). Top-k keeps a fixed number
    of candidates; top-p keeps the smallest set covering probability p, adapting to
    the model's confidence; top-p is the common default for open-ended text, top-k (or a
@@ -119,7 +119,7 @@ KV cache quantisation, paged attention to avoid fragmentation, sliding-window at
    itself, the loop is self-reinforcing (3.6: "the stand the stand…"). Repetition penalties
    and sampling break it.
 
-5. 🔬 Stores, per layer, the K and V vectors of every token processed so far;
+5. [expected] Stores, per layer, the K and V vectors of every token processed so far;
    each new step computes Q/K/V for one token and attends over the cache, saving the
    recomputation of all previous positions (O(n²d²) → O(nd²) projection work over a
    generation; measured 2–5× here on a toy model, much more for real LLMs). Costs
@@ -128,7 +128,7 @@ KV cache quantisation, paged attention to avoid fragmentation, sliding-window at
    the cache shrinks by the number of heads (MQA) or the group size (GQA) with little
    quality loss.
 
-6. ✍️ Tying shares the `vocab × d` matrix: fewer parameters (large for big
+6. [open-ended] Tying shares the `vocab × d` matrix: fewer parameters (large for big
    vocabularies and small models), and a consistent geometry where tokens that are
    embedded similarly are also predicted in similar contexts; it often improves
    perplexity on small data. You might not tie when the model is large (the

@@ -82,7 +82,7 @@ print(f"{len(imps):,} impressions | {N_ITEMS:,} items | {len(users):,} users")
 # **Expected:** about 2.45 million impressions, 4,000 items, 10,000 users.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -114,7 +114,7 @@ print(f"{len(imps):,} impressions | {N_ITEMS:,} items | {len(users):,} users")
 #   whatever the history length.
 
 # %% [markdown]
-# > 💡 **Intuition.** Left padding right-aligns every history like the end of a receipt: the most recent purchase is always on the last line, whether the receipt is 3 lines or 30 long, so "predict from the last column" works for everyone. *Where it breaks down:* receipts have no blank lines at the top that a reader might try to read; a model does, and must be told (masked) not to.
+# > **Intuition.** Left padding right-aligns every history like the end of a receipt: the most recent purchase is always on the last line, whether the receipt is 3 lines or 30 long, so "predict from the last column" works for everyone. *Where it breaks down:* receipts have no blank lines at the top that a reader might try to read; a model does, and must be told (masked) not to.
 
 # %%
 train_clicks = sr.click_events(imps, store.TRAIN_DAYS)
@@ -253,7 +253,7 @@ print("co-visitation:", evaluate_scores("co-visitation", covis_scores))
 #
 # *What to notice:* the green triangle is everything a real position may read (itself and the past). The amber diagonal in the PAD rows is the fix you are about to see: without it those rows are entirely blocked and the softmax returns NaN.
 #
-# > 💡 **Intuition.** A causal mask is reading a mystery novel with a card held under the current line: each prediction may use everything above the card and nothing below it. Training slides the card down every line at once, which is why one forward pass trains every position. *Where it breaks down:* a reader can peek; a model without the mask peeks *always*, and its training loss looks wonderful.
+# > **Intuition.** A causal mask is reading a mystery novel with a card held under the current line: each prediction may use everything above the card and nothing below it. Training slides the card down every line at once, which is why one forward pass trains every position. *Where it breaks down:* a reader can peek; a model without the mask peeks *always*, and its training loss looks wonderful.
 
 # %% [markdown]
 # > **Exercise 2.** Write `causal_mask(n)`: a `torch.bool` tensor of shape `(n, n)` where entry
@@ -445,7 +445,7 @@ print(table.round(4).to_string())
 #   the popular items that crowd a real top-10, and those are rarely among 100 uniform
 #   negatives, so the sampled metric cannot see the benefit, only the cost.
 #
-# > 💡 **Intuition.** A sampled metric is a race against 100 people pulled off the street instead of against the actual field: almost anyone trained beats them, so every runner looks good and the gaps between runners shrink. *Where it breaks down:* a race against the street can still rank two runners correctly; it just is not *guaranteed* to, and the full field is cheap to run here.
+# > **Intuition.** A sampled metric is a race against 100 people pulled off the street instead of against the actual field: almost anyone trained beats them, so every runner looks good and the gaps between runners shrink. *Where it breaks down:* a race against the street can still rank two runners correctly; it just is not *guaranteed* to, and the full field is cheap to run here.
 #
 # This is a known result, not an artefact of our data: Krichene & Rendle
 # (KDD 2020, "On Sampled Metrics for Item Recommendation") show that sampled
@@ -494,7 +494,7 @@ print(f"SASRec full HR@10: original order {results['SASRec']['full HR@10']:.4f} 
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · Scaled dot-product attention with a mask.** In words: each query position takes a weighted average of the values, with weights from a softmax over query–key similarities; blocked pairs get $-\infty$, so weight 0.
 #
@@ -550,7 +550,7 @@ print(f"HR@10 {np.mean(ranks < 10):.3f} | NDCG@10 {np.where(ranks < 10, 1 / np.l
 # **Expected:** a maximum difference around 1e-7 (float32 rounding), `earlier positions unchanged: True`, and HR@10 0.667, NDCG@10 0.477, log 4000 = 8.29.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -573,4 +573,4 @@ print(f"HR@10 {np.mean(ranks < 10):.3f} | NDCG@10 {np.where(ranks < 10, 1 / np.l
 # 5. Your catalogue grows from 4,000 to 10 million items. What changes in training (the softmax) and in serving (retrieval)?
 # 6. How would you show that your sequence model uses order, rather than just the set of past items?
 #
-# ➡️ **Next:** [`11_ab_testing_fundamentals.ipynb`](../ch29-ab-testing-fundamentals/notebook.ipynb) — offline metrics only nominate a model; an experiment decides.
+# **Next chapter:** [`11_ab_testing_fundamentals.ipynb`](../ch29-ab-testing-fundamentals/notebook.ipynb) — offline metrics only nominate a model; an experiment decides.

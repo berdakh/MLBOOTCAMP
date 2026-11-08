@@ -1,13 +1,13 @@
 # Solutions · Chapter 51 · CTR prediction at scale
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `normalized_entropy`
 
-✅ Reference code: [`code/nb13.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb13.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def normalized_entropy(y, p, eps=1e-7):
@@ -28,7 +28,7 @@ test day's CTR. Report NE differences in relative terms ("−0.5% NE").
 
 ## Exercise 2 · `recalibrate_downsampled`
 
-✅ Reference code: [`code/nb13.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb13.py`](solutions.py) (`ex2`).
 
 ```python
 def recalibrate_downsampled(p, w):
@@ -50,7 +50,7 @@ segment (e.g. per country), apply each segment's own `w`.
 
 ## Exercise 3 · `hash_feature`
 
-✅ Reference code: [`code/nb13.py`](solutions.py) (`ex3`).
+[verified] Reference code: [`code/nb13.py`](solutions.py) (`ex3`).
 
 ```python
 import hashlib
@@ -73,7 +73,7 @@ to manage).
 
 ## Exercise 4 · Calibration shift after changing the downsampling rate
 
-✍️ Model answer:
+[open-ended] Model answer:
 
 (a) The new model was trained with `w = 0.05`, so its raw predictions are inflated
 by odds factor 20 instead of 10; if the serving path still re-calibrates with
@@ -106,7 +106,7 @@ advertisers react to price changes over days.
 
 ## Checkpoint answers
 
-1. ✅ NE = log loss / entropy of the base rate (= log loss of predicting the average).
+1. [verified] NE = log loss / entropy of the base rate (= log loss of predicting the average).
    1 = no better than the average; lower is better; normalisation makes it comparable
    across days and products with different CTRs. Ads care about the *values* of the
    probabilities (auctions multiply pCTR by bids, pacing and billing use them), so a
@@ -114,7 +114,7 @@ advertisers react to price changes over days.
    AUC, which only measures ranking and is unchanged by any monotone distortion. In
    13.7 the raw downsampled model had a near-normal AUC and an NE far above 1.
 
-2. ✅ It removes the vocabulary: fixed memory, no id-assignment service, unseen
+2. [verified] It removes the vocabulary: fixed memory, no id-assignment service, unseen
    values handled, training/serving agree by construction. Costs: collisions (two
    unrelated values share a weight), no way to inspect/delete a feature, and
    memory still grows with the buckets you allocate. Pick the bucket count by
@@ -123,14 +123,14 @@ advertisers react to price changes over days.
    not need their own row. The hash must be stable across processes, languages and
    time, or serving looks up the wrong weights.
 
-3. 🔬 10⁹ × 64 × 4 B = 256 GB of fp32 weights; Adam adds two slots (512 GB) → 768 GB.
+3. [expected] 10⁹ × 64 × 4 B = 256 GB of fp32 weights; Adam adds two slots (512 GB) → 768 GB.
    No single GPU holds that: shard the tables (row-wise for the huge ones, table-wise
    for the many small ones) across GPUs/hosts (model parallel), run the dense layers
    data-parallel, and exchange ids/embeddings with all-to-all (DLRM/TorchRec). Reduce
    it with row-wise Adagrad (one scalar per row), fp16/int8 storage, frequency-based
    admission and eviction, and a GPU cache of hot rows backed by host memory/SSD.
 
-4. ✍️ `x_{l+1} = x0 ⊙ (W x_l + b) + x_l`: each layer multiplies the current
+4. [open-ended] `x_{l+1} = x0 ⊙ (W x_l + b) + x_l`: each layer multiplies the current
    representation, element-wise, by a linear function of the input, raising the
    polynomial degree by one while the residual keeps the lower-order terms; `L`
    layers express all crosses up to degree `L+1`, with weights shared through `W`.
@@ -140,11 +140,11 @@ advertisers react to price changes over days.
    full-rank or low-rank `W` instead of a fixed dot product) and stacks it to higher
    orders. 13.5: DCN improved NE from 0.878 (LR) to 0.854 on the same hashed features.
 
-5. ✅ See 13-2 above. Forgetting it: predictions are inflated by an odds factor 1/w
+5. [verified] See 13-2 above. Forgetting it: predictions are inflated by an odds factor 1/w
    (pred/obs ≈ 6.4 and NE ≈ 1.85 in 13.7), so auctions over-value every ad, pacing/budgets
    mis-forecast, and NE is terrible even though AUC looks fine.
 
-6. ✅ Conversions arrive days after the click; at training time recent clicks whose
+6. [verified] Conversions arrive days after the click; at training time recent clicks whose
    conversion has not happened yet are labelled negative, so the model learns a
    CVR that is too low (13.8: ~14% of conversions missing at the cutoff; naive
    pred/obs ≈ 0.88 against ≈ 1.04 for a model trained on the eventual labels). Fixes: (i) a wait window (train only on clicks older than

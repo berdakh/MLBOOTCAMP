@@ -68,7 +68,7 @@ print(f"train {len(train):,} rows | valid {len(valid):,} rows")
 # **Expected:** `CURRENT=v1`, then `train 25,278 rows | valid 6,956 rows`.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -183,7 +183,7 @@ print("offline vs served:", skew(p_offline, p_served))
 #
 # *What to notice:* the coefficients are identical in both rows of the top half; the damage is done entirely before the model sees the numbers.
 #
-# > 💡 **Intuition.** Skew is two translators working from the same novel
+# > **Intuition.** Skew is two translators working from the same novel
 # > without comparing notes: each chapter reads fine, and the two books tell
 # > different stories. *Where it breaks down:* translators make random
 # > mistakes; skew bugs are systematic (a whole column scaled wrongly), which
@@ -309,7 +309,7 @@ print(f"ids in order        : {[p['customer_id'] for p in resp['predictions']] =
 # **Expected:** a maximum difference of about **5e-7** (not 1e-15); zero
 # after rounding; zero decision flips; ids in order.
 #
-# > 💡 **Intuition.** A parity test is weighing the same parcel on the
+# > **Intuition.** A parity test is weighing the same parcel on the
 # > warehouse scale and the shop scale. They need not agree to the microgram
 # > (the API rounds), but a gap bigger than the rounding means one scale is
 # > broken. *Where it breaks down:* it only tests the rows you send; pick rows
@@ -574,7 +574,7 @@ grade.ex2(fixed_serve_preprocess)
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **How a skewed feature moves a score.** For logistic regression the log-odds
 # are $\eta = \beta_0 + \sum_j \beta_j z_j$. If serving computes feature $j$ as
@@ -605,7 +605,7 @@ grade.ex2(fixed_serve_preprocess)
 # decimals can explain ($0.5 \times 10^{-6}$), with a little slack.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -629,4 +629,4 @@ grade.ex2(fixed_serve_preprocess)
 # 5. What does `load_bundle` verify, what does it not verify, and what should the service do when loading fails?
 # 6. A customer complains about a prediction made last week. What do you need from the response or the logs to investigate it?
 #
-# ➡️ **Next:** [`11_api_clients_and_tests.ipynb`](../ch12-api-clients-and-tests/notebook.ipynb) — call the service over real HTTP with timeouts and retries, and write the test suite that guards all of this.
+# **Next chapter:** [`11_api_clients_and_tests.ipynb`](../ch12-api-clients-and-tests/notebook.ipynb) — call the service over real HTTP with timeouts and retries, and write the test suite that guards all of this.

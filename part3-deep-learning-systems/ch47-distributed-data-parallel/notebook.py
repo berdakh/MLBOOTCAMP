@@ -121,7 +121,7 @@ def show(proc, keep=("rank", "epoch", "resumed", "attempt", "bandwidth", "size",
 # machine has no GPU, and a CPU-only build prints `False`. Collectives on NCCL still need GPUs.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -284,7 +284,7 @@ for i, r4 in enumerate(coll["allreduce"]):
 #
 # *What to notice:* the only box that spans all ranks is the all-reduce; before it the ranks differ (different data, different g), after it they are identical again.
 #
-# > 💡 **Intuition.** Four teaching assistants each grade a quarter of the exam pile, then agree
+# > **Intuition.** Four teaching assistants each grade a quarter of the exam pile, then agree
 # > on the class average, and all four write that same average in their notebooks. If the piles
 # > are the same size, the result is exactly the average over the whole pile. *Where it breaks
 # > down:* if one assistant's pile is smaller (unequal shards) or each uses a different curve
@@ -740,7 +740,7 @@ if restart_params is not None and runs.get("ddp") is not None:
 #
 # *What to notice:* no rank ever talks to more than one neighbour, so the bytes each rank sends approach 2M and stop growing; what still grows with N is the number of steps (latency).
 #
-# > 💡 **Intuition.** Passing a collection bucket around a table: each person adds their share and
+# > **Intuition.** Passing a collection bucket around a table: each person adds their share and
 # > passes it on, then the totals go round once more so everyone knows them. Nobody ever talks to
 # > the whole table, so the busiest person's work stays the same as the table grows. *Where it
 # > breaks down:* the slowest person at the table sets the pace for everyone (stragglers), and
@@ -804,7 +804,7 @@ print("generated files:", sorted(p.name for p in GEN.iterdir()))
 # *Your answer (Exercise 4):* ...
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1. Data parallelism averages gradients.**
 #
@@ -856,7 +856,7 @@ print("generated files:", sorted(p.name for p in GEN.iterdir()))
 # all-reduce on the first 7 micro-batches.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -882,4 +882,4 @@ print("generated files:", sorted(p.name for p in GEN.iterdir()))
 # 5. One rank of a 512-GPU job crashes; another job hangs with no error. How does each look from the outside, how do you detect it, and how do you recover?
 # 6. You must train with a global batch of 4,096 on 8 GPUs that each fit 64 examples. How do you get there, and what changes in the training recipe?
 #
-# ➡️ **Next:** [`10_scaling_to_large_models.ipynb`](../ch48-scaling-to-large-models/notebook.ipynb) — when the model itself no longer fits on one GPU: ZeRO/FSDP, tensor and pipeline parallelism, compute budgets and fault tolerance.
+# **Next chapter:** [`10_scaling_to_large_models.ipynb`](../ch48-scaling-to-large-models/notebook.ipynb) — when the model itself no longer fits on one GPU: ZeRO/FSDP, tensor and pipeline parallelism, compute budgets and fault tolerance.

@@ -10,7 +10,7 @@ Reading a solution before attempting the exercise feels productive and teaches
 very little. Recognising a correct answer is a different, much easier skill
 than producing one, and interviews test producing. A good routine:
 
-1. Attempt the exercise until the grader shows ✅, or for at least 15 minutes.
+1. Attempt the exercise until the grader shows [verified], or for at least 15 minutes.
 2. For written questions and checkpoints, write or say your answer **before**
    opening this folder.
 3. Then read the solution and note anything you missed, or did differently
@@ -62,9 +62,9 @@ Each answer is marked with how it was established:
 
 | Marker | Meaning |
 |---|---|
-| ✅ | **Verified by running.** The code or the claim was executed and checked (for code, by CI against the grader) |
-| 🔬 | **Expected; depends on a run.** The answer describes what you should see, with ranges or directions rather than exact numbers, because the value depends on your run, library versions, or choices you made |
-| ✍️ | **Personal or open-ended.** There is no single right answer (a design choice, a written explanation, a reflection); the solution shows one good answer and what any good answer should contain |
+| [verified] | **Verified by running.** The code or the claim was executed and checked (for code, by CI against the grader) |
+| [expected] | **Expected; depends on a run.** The answer describes what you should see, with ranges or directions rather than exact numbers, because the value depends on your run, library versions, or choices you made |
+| [open-ended] | **Personal or open-ended.** There is no single right answer (a design choice, a written explanation, a reflection); the solution shows one good answer and what any good answer should contain |
 
 Numbers quoted in solutions come from the course's **synthetic** TaskFlow data.
 They describe that teaching dataset, not real customers.

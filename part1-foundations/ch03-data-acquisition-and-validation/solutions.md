@@ -1,13 +1,13 @@
 # Solutions · Chapter 3 · Data acquisition & validation
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `find_duplicate_keys`
 
-✅ Reference code: [`code/nb02.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb02.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def find_duplicate_keys(df, key):
@@ -28,7 +28,7 @@ looking destroys the evidence.
 
 ## Exercise 2 · `orphan_ids`
 
-✅ Reference code: [`code/nb02.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb02.py`](solutions.py) (`ex2`).
 
 ```python
 def orphan_ids(tables):
@@ -37,7 +37,7 @@ def orphan_ids(tables):
             for name in ("usage_weekly", "invoices", "tickets")}
 ```
 
-🔬 On the real data every set is empty: the extract is referentially intact.
+[expected] On the real data every set is empty: the extract is referentially intact.
 Record that as a finding (and as a test). It is exactly what breaks when a
 later export filters `customers` (e.g. "active only") but not the event tables.
 
@@ -49,7 +49,7 @@ IS NULL`.
 
 ## Exercise 3 · `freshness`
 
-✅ Reference code: [`code/nb02.py`](solutions.py) (`ex3`).
+[verified] Reference code: [`code/nb02.py`](solutions.py) (`ex3`).
 
 ```python
 def freshness(tables):
@@ -60,7 +60,7 @@ def freshness(tables):
     return pd.DataFrame.from_dict(rows, orient="index")
 ```
 
-`Series.min()`/`.max()` skip `NaT` by default. ✅ On the real data: sign-ups
+`Series.min()`/`.max()` skip `NaT` by default. [verified] On the real data: sign-ups
 2022-05-16 to 2024-10-31; usage 2023-01-02 to 2024-12-23 (week starts);
 invoices 2023-01-02 to 2024-12-29; tickets 2022-12-31 to 2024-12-29.
 
@@ -73,7 +73,7 @@ there is ("no usage rows newer than 8 days").
 
 ## Exercise 4 · The `-1` sentinel: decision memo (written)
 
-✍️ Open-ended; a strong memo contains the following.
+[open-ended] Open-ended; a strong memo contains the following.
 
 > `sessions = -1` appears in 199 usage rows. It is the logging pipeline's
 > marker for "count unknown", not "no activity": inactive weeks are not logged

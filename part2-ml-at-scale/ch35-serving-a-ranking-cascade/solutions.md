@@ -1,13 +1,13 @@
 # Solutions · Chapter 35 · Serving a ranking cascade
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `LRUCache`
 
-✅ Reference code: [`code/nb17.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb17.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 class LRUCache:
@@ -53,7 +53,7 @@ two threads interleaving `move_to_end` and `popitem` can corrupt the order.
 
 ## Exercise 2 · `apply_business_rules`
 
-✅ Reference code: [`code/nb17.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb17.py`](solutions.py) (`ex2`).
 
 One pass in rank order with three pieces of state: `seen` (ids), `per_cat`
 (counts), and `capped` (items skipped only because of the cap). Dedupe and
@@ -71,7 +71,7 @@ than a hard cap, or a cap only within the first screen.
 
 ## Exercise 3 · `with_fallback`
 
-✅ Reference code: [`code/nb17.py`](solutions.py) (`ex3`).
+[verified] Reference code: [`code/nb17.py`](solutions.py) (`ex3`).
 
 ```python
 _POOL = ThreadPoolExecutor(max_workers=8)
@@ -107,7 +107,7 @@ def with_fallback(primary_fn, fallback_fn, timeout_s):
 
 ## Exercise 4 · Latency budget for a 200 ms SLO (written)
 
-✍️ One reasonable answer (numbers are p99 budgets; they intentionally sum to
+[open-ended] One reasonable answer (numbers are p99 budgets; they intentionally sum to
 less than 200 because percentiles do not add and you need slack):
 
 | Stage | Budget (ms) | Why | Fallback when blown |

@@ -143,7 +143,7 @@ print("random scores     :", {k: round(v, 3) for k, v in quality(lambda X: rng.r
 # popularity: retrieval does real work).
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -203,7 +203,7 @@ print("MLP 128-64:", {k: round(v, 3) for k, v in q_mlp.items()})
 # We export with a *dynamic* batch dimension so one file serves batch 1 and
 # batch 1,024.
 #
-# > 💡 **Intuition.** PyTorch eager is a chef reading the cookbook aloud at every step:
+# > **Intuition.** PyTorch eager is a chef reading the cookbook aloud at every step:
 # > negligible for a banquet (batch 1,024), most of the time for one sandwich (batch 1).
 # > ONNX export prints the recipe as a card that any kitchen can follow without the
 # > narration. *Where it breaks down:* the card records only the path taken while tracing;
@@ -286,7 +286,7 @@ print("torch int8:", {k: round(v, 3) for k, v in q_torch8.items()})
 #
 # *What to notice:* zero maps to an integer exactly, and every other value moves by at most half a step (s/2 ≈ 0.007 here).
 #
-# > 💡 **Intuition.** Quantisation is measuring every weight with a ruler that has 256 marks
+# > **Intuition.** Quantisation is measuring every weight with a ruler that has 256 marks
 # > instead of an almost continuous one: individual readings move (here the logits moved by
 # > up to 0.47), but which item is longer than which mostly does not (Spearman 0.997).
 # > *Where it breaks down:* one huge outlier stretches the ruler, so all the ordinary
@@ -312,7 +312,7 @@ print("torch int8:", {k: round(v, 3) for k, v in q_torch8.items()})
 # learns the teacher's ordering among low-probability items; $T^2$ keeps the
 # gradient scale comparable across temperatures.
 #
-# > 💡 **Intuition.** A teacher who marks only right or wrong teaches less than one who says
+# > **Intuition.** A teacher who marks only right or wrong teaches less than one who says
 # > "this answer is 70% right, and that wrong one was a reasonable guess". Soft labels are
 # > the second teacher; temperature makes the teacher talk more about the near-misses.
 # > *Where it breaks down:* the student can only learn what its own inputs can express; a
@@ -494,7 +494,7 @@ else:
     print("GPU extension skipped (RUN_GPU_EXTENSION = False or no CUDA device)")
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1. Affine (asymmetric) int8 quantisation**
 #
@@ -575,7 +575,7 @@ print(f"6. fp32 MLP weights: {opt.n_params(mlp) * 4 / 1000:.1f} KB")
 # times T² are −0.150, −0.217, −0.241; 4. 0.80; 5. 1.18×, 9 ms, ceiling 1.43×; 6. 38.9 KB.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -599,4 +599,4 @@ print(f"6. fp32 MLP weights: {opt.n_params(mlp) * 4 / 1000:.1f} KB")
 # 5. Your ranker takes 45 % of the latency budget. List four ways to cut it, ordered by expected effort, and the risk of each.
 # 6. How would you roll out an optimised model safely (offline checks, shadow traffic, A/B), and which metrics would make you roll back?
 #
-# ➡️ **Next:** [`19_recsys_and_search_system_design.ipynb`](../ch37-recsys-and-search-system-design/notebook.ipynb) — put cascades, latency budgets and model costs together in two full system-design answers.
+# **Next chapter:** [`19_recsys_and_search_system_design.ipynb`](../ch37-recsys-and-search-system-design/notebook.ipynb) — put cascades, latency budgets and model costs together in two full system-design answers.

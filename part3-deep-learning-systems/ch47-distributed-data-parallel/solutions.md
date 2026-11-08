@@ -1,13 +1,13 @@
 # Solutions · Chapter 47 · Distributed data parallel
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `ring_allreduce_bytes`
 
-✅ Reference code: [`code/nb09.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb09.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def ring_allreduce_bytes(n_params, bytes_per, world_size):
@@ -29,7 +29,7 @@ those reduced chunks for another N−1 steps. Total sent per rank:
 
 ## Exercise 2 · `average_gradients`
 
-✅ Reference code: [`code/nb09.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb09.py`](solutions.py) (`ex2`).
 
 ```python
 def average_gradients(grads_per_rank):
@@ -54,7 +54,7 @@ its buffer).
 
 ## Exercise 3 · `shard_indices`
 
-✅ Reference code: [`code/nb09.py`](solutions.py) (`ex3`).
+[verified] Reference code: [`code/nb09.py`](solutions.py) (`ex3`).
 
 ```python
 def shard_indices(n, world_size, rank, epoch, seed, shuffle):
@@ -81,7 +81,7 @@ exactly why forgetting `set_epoch` repeats the order every epoch.
 
 ## Exercise 4 · Diagnosing a 5.5× speed-up on 8 GPUs
 
-✍️ Open-ended; a strong answer covers:
+[open-ended] Open-ended; a strong answer covers:
 
 **(a) Where the missing 2.5× goes, and how to measure each.**
 * *Communication not hidden*: profile one step (`torch.profiler` with CUDA
@@ -116,7 +116,7 @@ others wait at a `barrier()` that every rank calls).
 
 ## Checkpoint answers
 
-1. **One DDP step.** ✅ Forward on the local shard (no communication; DDP
+1. **One DDP step.** [verified] Forward on the local shard (no communication; DDP
    may broadcast buffers like BatchNorm running stats from rank 0). `backward()`:
    autograd hooks mark each gradient ready; when a ~25 MB bucket is complete DDP
    launches an asynchronous all-reduce on it while backward continues with
@@ -138,7 +138,7 @@ others wait at a `barrier()` that every rank calls).
    a 7B model on PCIe was ~34% efficient by our assumptions); (ii) the latency
    term grows with 2(N−1) steps; (iii) the slowest link/GPU sets the pace;
    (iv) large global batches eventually hurt optimisation (critical batch size).
-4. **`DistributedSampler`.** ✅ Shuffles with seed + epoch, pads to a multiple
+4. **`DistributedSampler`.** [verified] Shuffles with seed + epoch, pads to a multiple
    of world size by repeating indices, and gives rank r indices r, r+N, …
    Without `set_epoch`, every epoch uses the same order (9.4: identical lists).
    Padding exists so every rank runs the same number of steps, otherwise the
@@ -158,5 +158,5 @@ others wait at a `barrier()` that every rank calls).
    `model.no_sync()` so DDP all-reduces only once. Retune the learning rate for
    the larger batch (linear scaling + warm-up for SGD; for Adam, tune), check
    steps-per-epoch-based schedules, and use LAMB/LARS if you go much larger.
-   🔬 Whether 4,096 is beyond the critical batch size for this problem must be
+   [expected] Whether 4,096 is beyond the critical batch size for this problem must be
    measured.

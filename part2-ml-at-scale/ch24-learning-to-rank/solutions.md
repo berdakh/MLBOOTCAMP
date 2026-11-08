@@ -1,13 +1,13 @@
 # Solutions · Chapter 24 · Learning to rank
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `pairwise_accuracy`
 
-✅ Reference code: [`code/nb06.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb06.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def pairwise_accuracy(scores, labels, groups):
@@ -40,7 +40,7 @@ pair exists (that would silently drag an average down).
 
 ## Exercise 2 · `make_groups`
 
-✅ Reference code: [`code/nb06.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb06.py`](solutions.py) (`ex2`).
 
 ```python
 def make_groups(df, group_col):
@@ -64,7 +64,7 @@ contiguous, and LightGBM trains on garbage groups without an error.
 
 ## Exercise 3 · Clicks and purchases in one label (written)
 
-✍️ One defensible answer:
+[open-ended] One defensible answer:
 
 * **Graded label**: 0 = shown, not clicked; 1 = clicked; 3 = purchased
   (purchase implies click). LambdaMART uses gain 2^label − 1, so a purchase

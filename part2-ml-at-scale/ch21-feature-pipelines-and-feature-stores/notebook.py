@@ -80,7 +80,7 @@ print(f"{len(imps):,} impressions from {START}; train days {store.TRAIN_DAYS}, v
 # **Expected:** `2,446,900 impressions from 2025-03-03; train days range(0, 42), valid days range(42, 49)`.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -169,7 +169,7 @@ con.execute("SELECT * FROM user_snap WHERE user_id = 42 ORDER BY snap_day LIMIT 
 print(F.PIT_SQL)
 
 # %% [markdown]
-# > 💡 **Intuition.** A point-in-time join is reading the newspaper archive: to explain why a stock moved on 3 March, you may only use papers printed *before* 3 March. A same-day snapshot is the evening edition, printed after the event and stamped with that morning's date. *Where it breaks down:* newspapers carry dates you can trust; a feature table only has the timestamp your pipeline wrote, which is why you assert `snapshot_ts < ts` in code rather than trusting the name.
+# > **Intuition.** A point-in-time join is reading the newspaper archive: to explain why a stock moved on 3 March, you may only use papers printed *before* 3 March. A same-day snapshot is the evening edition, printed after the event and stamped with that morning's date. *Where it breaks down:* newspapers carry dates you can trust; a feature table only has the timestamp your pipeline wrote, which is why you assert `snapshot_ts < ts` in code rather than trusting the name.
 #
 # One trap. Snapshots only contain entities that were *active* in the window.
 # If user 7 was inactive last week, there is no day-`d` row for them, and the
@@ -308,7 +308,7 @@ F.build_snapshots(con, START, days=range(56))
 # %% [markdown]
 # **Expected:** `True`.
 #
-# > 💡 **Intuition.** A TTL is the use-by date on milk: after it, the value is thrown away and treated as missing, even if it is still in the fridge. Without it, an inactive user's three-week-old counts would be served as if they were yesterday's. *Where it breaks down:* milk goes bad gradually; a TTL is a hard cliff, so a value one second past it is discarded while one second before is trusted fully.
+# > **Intuition.** A TTL is the use-by date on milk: after it, the value is thrown away and treated as missing, even if it is still in the fridge. Without it, an inactive user's three-week-old counts would be served as if they were yesterday's. *Where it breaks down:* milk goes bad gradually; a TTL is a hard cliff, so a value one second past it is discarded while one second before is trusted fully.
 #
 # **Freshness** is how old the newest data in a served feature is. A daily
 # batch pipeline that runs at 02:00 serves features 2-26 hours old; if it
@@ -427,7 +427,7 @@ print(f"{len(day45):,} day-45 requests | online == offline for {1 - mismatch.mea
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · A window feature, cut off strictly before the snapshot.** In words: the value stamped at day $d$ sums the 7 *complete* days before $d$.
 #
@@ -462,7 +462,7 @@ print(f"{len(day45):,} day-45 requests | online == offline for {1 - mismatch.mea
 # * *Example:* a daily job that runs at 02:00 over data up to midnight serves values 2 to 26 hours old; if it fails for three days, 74 to 98 hours. Monitor it.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -485,4 +485,4 @@ print(f"{len(day45):,} day-45 requests | online == offline for {1 - mismatch.mea
 # 5. A product manager asks for real-time features. How do you decide whether freshness is worth the cost, and what would you measure first?
 # 6. You must backfill a new 30-day feature for two years of history. What makes a backfill correct, safe to re-run, and affordable?
 #
-# ➡️ **Next:** [`04_streaming_features.ipynb`](../ch22-streaming-features/notebook.ipynb) — compute features from a live, out-of-order event stream, and prove they match the batch definition.
+# **Next chapter:** [`04_streaming_features.ipynb`](../ch22-streaming-features/notebook.ipynb) — compute features from a live, out-of-order event stream, and prove they match the batch definition.

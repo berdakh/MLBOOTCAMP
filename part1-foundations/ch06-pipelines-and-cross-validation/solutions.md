@@ -1,13 +1,13 @@
 # Solutions · Chapter 6 · Pipelines & cross-validation
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `build_preprocessor`
 
-✅ Reference code: [`code/nb05.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb05.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def build_preprocessor(numeric, categorical):
@@ -44,7 +44,7 @@ often predictive (here: no tickets → no resolution time).
 
 ## Exercise 2 · `rolling_cv_scores`
 
-✅ Reference code: [`code/nb05.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb05.py`](solutions.py) (`ex2`).
 
 ```python
 def rolling_cv_scores(make_model_fn, df, n_folds):
@@ -69,7 +69,7 @@ one-line equivalent.
 
 ## Exercise 3 · Find the leak (written)
 
-✍️ Open-ended, but a complete answer finds all of these:
+[open-ended] Open-ended, but a complete answer finds all of these:
 
 | # | Line | Problem | Expected size |
 |---|---|---|---|

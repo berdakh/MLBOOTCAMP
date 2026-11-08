@@ -124,7 +124,7 @@ print("example:", train_df.loc[0, "text"][:120], "->", LABELS[train_df.loc[0, "l
 # is the most common way a fine-tuning result is quietly inflated.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -373,13 +373,13 @@ print(pd.DataFrame(ft.reliability_table(probs["finetuned"]["test"], y_test, N_BI
 #
 # *What to notice:* temperature scaling only slides the curve toward the diagonal; it cannot reorder predictions, so accuracy stays exactly the same.
 #
-# > 💡 **Intuition.** A weather forecaster is calibrated if it rains on about 70% of the days
+# > **Intuition.** A weather forecaster is calibrated if it rains on about 70% of the days
 # > they say "70%". Accuracy asks "did you call it right?"; calibration asks "can I trust your
 # > number?". *Where it breaks down:* a model that always predicts the base rate (25% for each of
 # > four balanced classes) is perfectly calibrated and useless; calibration complements accuracy,
 # > it does not replace it.
 #
-# > 💡 **Intuition.** The temperature is a single volume knob on the model's confidence: it
+# > **Intuition.** The temperature is a single volume knob on the model's confidence: it
 # > scales every logit by the same factor, so the order of the classes, and therefore the
 # > argmax, never changes. Worked example: logits $(2, 0)$ give $p = 0.88$ at $T = 1$, $0.73$ at
 # > $T = 2$ and $0.98$ at $T = 0.5$.
@@ -472,7 +472,7 @@ print("wrote", OUT / "metrics.json")
 # *Your answer (Exercise 3):* ...
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1. Softmax cross-entropy (NLL).**
 #
@@ -526,7 +526,7 @@ print("wrote", OUT / "metrics.json")
 # weight. Example: $P = 0.9$, $R = 0.8$ give $F_1 = 0.847$.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -551,4 +551,4 @@ print("wrote", OUT / "metrics.json")
 # 5. Your fine-tuned model is 1.5 points better than TF-IDF on a 500-example test set. Is that significant? How would you find out?
 # 6. Error analysis shows most mistakes are Business ↔ Sci/Tech. What are your next three actions, in order?
 #
-# ➡️ **Next:** [`06_parameter_efficient_fine_tuning.ipynb`](../ch44-parameter-efficient-fine-tuning/notebook.ipynb) — train 1 % of the parameters with LoRA and compare memory, time and accuracy against this full fine-tune.
+# **Next chapter:** [`06_parameter_efficient_fine_tuning.ipynb`](../ch44-parameter-efficient-fine-tuning/notebook.ipynb) — train 1 % of the parameters with LoRA and compare memory, time and accuracy against this full fine-tune.

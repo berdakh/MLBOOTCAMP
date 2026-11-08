@@ -102,7 +102,7 @@ print(text[:200])
 # revision so that everyone trains on the same bytes.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -165,13 +165,13 @@ print("round trip:", tok.decode(tok.encode("To be, or not to be")))
 #
 # *What to notice:* each row is a probability distribution over the past only; the upper triangle is never zero *before* the softmax, it is −∞, so it becomes exactly 0 *after* it.
 #
-# > 💡 **Intuition.** A soft library search. Your **query** is what you type; every earlier token
+# > **Intuition.** A soft library search. Your **query** is what you type; every earlier token
 # > has a **key** (its catalogue entry) and a **value** (its content). You get back a blend of
 # > contents, weighted by how well each key matched. The causal mask means you may only search
 # > books already on the shelf. *Where it breaks down:* the catalogue entries are learned, and
 # > every token is at once a reader (query) and a book (key and value).
 #
-# > 💡 **Why divide by √d? A worked example.** A dot product of two random vectors with $d$
+# > **Why divide by √d? A worked example.** A dot product of two random vectors with $d$
 # > independent unit-variance entries has standard deviation $\sqrt d$: 8 for $d = 64$. Scores
 # > spread over ±16 make the softmax almost one-hot, and its gradient almost zero. Dividing by
 # > $\sqrt{d}$ brings the spread back to about ±2.
@@ -220,7 +220,7 @@ grade.ex1(causal_self_attention)
 #
 # *What to notice:* the residual paths above the row never pass through a LayerNorm or a weight matrix, so the output is always 'input + corrections': that clean path is why pre-LN stacks train stably.
 #
-# > 💡 **Intuition.** The residual stream is a shared notebook passed down the stack. Each block
+# > **Intuition.** The residual stream is a shared notebook passed down the stack. Each block
 # > reads it (through LayerNorm), and *adds* a note; nothing is ever erased. Attention lets a
 # > token copy notes from earlier tokens, the MLP rewrites the token's own notes.
 
@@ -388,7 +388,7 @@ _ = (OUT / "samples.txt").write_text("\n".join(samples))
 #
 # *What to notice:* prefill is one big parallel pass; decode is a long series of tiny passes that each read the *whole* cache, which is why serving long contexts is limited by memory, not FLOPs.
 #
-# > 💡 **Intuition.** Without a cache, writing each new word means re-reading the whole book from
+# > **Intuition.** Without a cache, writing each new word means re-reading the whole book from
 # > page one. With a cache you keep a one-line note per page (its K and V) and only read the
 # > notes. *Where it breaks down:* the notes are not small: for a 7B model they take 0.5 MB per
 # > token, so the "notes" can outgrow the model on long contexts.
@@ -464,7 +464,7 @@ print(f"KV cache size at 512 tokens, batch 1, fp32: {prof.human_bytes(kv_bytes)}
 # *Your answer (Exercise 3):* ...
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1. Scaled dot-product attention.**
 #
@@ -569,7 +569,7 @@ print(f"KV cache, the 3.7 benchmark model (512 tokens, fp32): "
 # and 512 KiB for the toy model on the CPU budget (the number quoted in 3.7).
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -594,4 +594,4 @@ print(f"KV cache, the 3.7 benchmark model (512 tokens, fp32): "
 # 5. Explain the KV cache: what is stored, what computation it saves, what it costs in memory, and how multi-query/grouped-query attention reduce that cost.
 # 6. Why tie the input embedding and output projection weights? When might you not?
 #
-# ➡️ **Next:** [`04_pretrained_transformers_and_tokenization.ipynb`](../ch42-pretrained-transformers-and-tokenization/notebook.ipynb) — the same architecture at scale, pretrained: subword tokenizers, padding, pooling and batched inference with Hugging Face.
+# **Next chapter:** [`04_pretrained_transformers_and_tokenization.ipynb`](../ch42-pretrained-transformers-and-tokenization/notebook.ipynb) — the same architecture at scale, pretrained: subword tokenizers, padding, pooling and batched inference with Hugging Face.

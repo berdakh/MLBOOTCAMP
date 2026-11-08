@@ -1,13 +1,13 @@
 # Solutions · Chapter 22 · Streaming features
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `TumblingWindowCounter`
 
-✅ Reference code: [`code/nb04.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb04.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 class TumblingWindowCounter:
@@ -61,7 +61,7 @@ instead of all open windows on each event: `O(log n)` per close instead of
 
 ## Exercise 2 · `parity_report`
 
-✅ Reference code: [`code/nb04.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb04.py`](solutions.py) (`ex2`).
 
 The core is an outer merge with `indicator=True`:
 
@@ -90,7 +90,7 @@ then counts of `left_only` / `right_only`, and on `both` a match mask
 
 ## Exercise 3 · Re-delivered events after a restart (written)
 
-✍️ A strong answer, case by case:
+[open-ended] A strong answer, case by case:
 
 **(a) At-least-once, no dedup.** Four minutes of events are processed twice:
 the job's window state double-counts them, so "clicks in the last 10
@@ -128,13 +128,13 @@ duplicate rows per (key, window) in the feature log.
 
 ## Checkpoint answers
 
-1. **Event vs processing time.** ✅ Event time: when it happened at the
+1. **Event vs processing time.** [verified] Event time: when it happened at the
    source. Processing time: when the processor sees it. A "clicks in the last
    15 minutes" feature computed on arrival time puts a phone's buffered clicks
    from an hour ago into the current window: in our simulation, 15% of
    15-minute windows had different counts than the event-time definition.
    Training uses event time, so the model is served a different feature.
-2. **Watermark.** ✅ A watermark is the processor's assertion that events
+2. **Watermark.** [verified] A watermark is the processor's assertion that events
    with event time up to W have (almost) all arrived; windows ending at or
    before W can be emitted. Allowed lateness trades completeness against
    latency and state: in our run, 0 s lateness dropped 1,138 events (92% of
@@ -143,7 +143,7 @@ duplicate rows per (key, window) in the feature log.
    For a 15-minute feature, choose a lateness from the measured delay
    distribution (our p97 was about 13 s: a lateness of 15-60 s covers the
    bulk), plus a late policy for the tail.
-3. **Policies.** ✍️ Drop: simplest, slight undercount; fine where small bias
+3. **Policies.** [open-ended] Drop: simplest, slight undercount; fine where small bias
    is acceptable. Update: correct eventually (100% in our run with about 1,100
    corrections), needs upsert-capable sinks; consumers may have acted on the
    first value. Side output: keeps the streaming result fast and simple and
@@ -151,7 +151,7 @@ duplicate rows per (key, window) in the feature log.
    favour low latency with update semantics for later features/labels and side
    outputs for audit; a dashboard: update (or a batch recomputation that
    overwrites) so the numbers become exact.
-4. **Delivery semantics.** ✅ At-least-once: every event affects the result
+4. **Delivery semantics.** [verified] At-least-once: every event affects the result
    one or more times (duplicates after failures). Exactly-once in Flink/Spark:
    the *state* and committed offsets are consistent (each event affects the
    state once) via checkpoints; effects on external systems are exactly-once
@@ -159,7 +159,7 @@ duplicate rows per (key, window) in the feature log.
    the last checkpoint are written again on recovery. Idempotent operations
    (dedup by source event id, upserts keyed by window) make replays harmless;
    in our run dedup turned a 5%-inflated click count back into the exact one.
-5. **Train/serve equality for a streaming feature.** ✅ One definition (ideally
+5. **Train/serve equality for a streaming feature.** [verified] One definition (ideally
    one implementation, run in batch mode for backfills); log the served feature
    values with each request id; a daily parity job compares logged values and
    streaming outputs with the batch definition per key and window (missing
@@ -167,7 +167,7 @@ duplicate rows per (key, window) in the feature log.
    build training sets from the logged values or from an as-of join on window
    end times. Our parity check found 149 of 1,886 windows differing by at most
    2 clicks: exactly the dropped late events.
-6. **Session feature design.** ✍️ Source: client view events on Kafka with
+6. **Session feature design.** [open-ended] Source: client view events on Kafka with
    a client-assigned event id and event time, partitioned by user id (order per
    user). Job: session windows per user with a 30-minute gap, merging on
    out-of-order events; state = current session start, last event time, count

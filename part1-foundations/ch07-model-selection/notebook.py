@@ -88,7 +88,7 @@ print(f"train {len(train):,} rows, {int(train[LABEL].sum())} positives | "
 # a few hundred positive rows.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -162,7 +162,7 @@ comparison
 #
 # *What to notice:* in the customer bootstrap a resample can contain customer A twice and B not at all, exactly as a new sample of customers would; in the row bootstrap, A's three near-identical rows count as three independent pieces of evidence.
 #
-# > 💡 **Intuition.** The bootstrap asks "if I had collected a different
+# > **Intuition.** The bootstrap asks "if I had collected a different
 # > validation set of the same size from the same world, how much would my
 # > number move?", and answers by pretending the sample *is* the world.
 # > *Where it breaks down:* it only sees variation that is in the sample. It
@@ -224,7 +224,7 @@ print(f"rows tripled - cluster bootstrap width: {hi_c - lo_c:.4f}   (same as the
 # default**: it is never the wrong unit here, and you do not have to argue
 # about whether the correlation is small this time.
 #
-# > 🧠 **Research bridge.** Rows are trials, customers are subjects. You
+# > **Research bridge.** Rows are trials, customers are subjects. You
 # > would not report a cross-subject EEG result with a confidence interval that
 # > resamples trials, for exactly this reason.
 
@@ -252,7 +252,7 @@ plt.show()
 # both models are scored on the *same* rows, so most of the sampling noise is
 # shared and cancels in the difference.
 #
-# > 💡 **Intuition.** Two students sit the same exam. Whether the exam was easy
+# > **Intuition.** Two students sit the same exam. Whether the exam was easy
 # > moves both their marks; the *difference* between them barely depends on
 # > it. Comparing their marks on the same paper is the paired question;
 # > comparing their two separate "how good is this student" ranges is not.
@@ -363,7 +363,7 @@ best.round(4)
 # Note the `cv_std` column: the spread across folds (≈ 0.02) is larger than the
 # differences between most configurations.
 #
-# > 💡 **Intuition.** The best of 16 noisy scores is like the best of 16 dice
+# > **Intuition.** The best of 16 noisy scores is like the best of 16 dice
 # > rolls: it is high partly because you rolled 16 times. Expect the winner
 # > to score a little lower on fresh data. *Where it breaks down:* if one
 # > configuration really is better by more than the noise, it will still win
@@ -528,7 +528,7 @@ print(f"notebook compute time: {time.time() - T0:.0f} s")
 # **Expected:** about a minute on a laptop; up to two on a free Colab CPU.
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **Bootstrap percentile interval.** Draw $B$ resamples (of rows or of whole
 # customers) with replacement, recompute the metric $\hat\theta^{*}_b$ on each:
@@ -582,7 +582,7 @@ print(f"rows for +/-0.02 on a 5% rate: {1.96**2 * 0.05 * 0.95 / 0.02**2:.0f}")
 # formula (both ≈ 0.03), an interval about ±0.06 wide around $\hat p$, and 456 rows.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -604,4 +604,4 @@ print(f"rows for +/-0.02 on a 5% rate: {1.96**2 * 0.05 * 0.95 / 0.02**2:.0f}")
 # 4. Why did logistic regression beat gradient boosting on this data? Name a dataset property that would reverse it.
 # 5. You ran 16 configurations and report the best CV score. Why is that number optimistic, and what protects you from fooling yourself?
 #
-# ➡️ **Next:** [`07_thresholds_and_calibration.ipynb`](../ch08-thresholds-and-calibration/notebook.ipynb) — turn the selected model's scores into a decision: a threshold from stated costs, a call capacity, and probabilities you can trust.
+# **Next chapter:** [`07_thresholds_and_calibration.ipynb`](../ch08-thresholds-and-calibration/notebook.ipynb) — turn the selected model's scores into a decision: a threshold from stated costs, a call capacity, and probabilities you can trust.

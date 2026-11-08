@@ -95,7 +95,7 @@ from grading import ch02 as grade
 # [The problem: predicting churn](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/_handbook/00-the-churn-problem.md).
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -134,7 +134,7 @@ from grading import ch02 as grade
 #
 # *What to notice:* the four pins are mechanical (a hash, a file, a seed); the fifth, decisions, only exists if someone writes it down.
 #
-# > 💡 **Intuition.** A reproducible number is like a recipe that names the
+# > **Intuition.** A reproducible number is like a recipe that names the
 # > exact oven, flour batch and timer, not just "bake until done". Miss one and
 # > the cake still comes out, just not the same cake. *Where it breaks down:*
 # > a recipe can be followed by eye; a library default that changed between
@@ -279,12 +279,12 @@ print("seeds 0-4:", [round(float(experiment(s)), 4) for s in range(5)])
 # have not shown that one is better. Day 2 does this properly with confidence
 # intervals.
 #
-# > 🧠 **Research bridge.** This is the same discipline as reporting
+# > **Research bridge.** This is the same discipline as reporting
 # > cross-subject EEG results as mean ± spread over subjects rather than one
 # > lucky split. The habit transfers directly; the vocabulary changes.
 
 # %% [markdown]
-# > 💡 **Intuition.** A seed is like filming one roll of the dice so you can
+# > **Intuition.** A seed is like filming one roll of the dice so you can
 # > replay it. Replaying the film never tells you whether the dice are loaded:
 # > for that you need many rolls (many seeds, folds or bootstrap resamples).
 # > *Where it breaks down:* in ML the "dice" include data order, initialisation
@@ -320,7 +320,7 @@ print(hashlib.sha256(json.dumps(config, sort_keys=True).encode()).hexdigest()[:1
 #
 # *What to notice:* the id is computed from the config, not assigned, so the same experiment can never be filed under two names.
 #
-# > 💡 **Intuition.** A config hash is a fingerprint of the recipe card: same
+# > **Intuition.** A config hash is a fingerprint of the recipe card: same
 # > card, same fingerprint, however you shuffle the lines. *Where it breaks
 # > down:* it fingerprints only what is in the config. Data and code versions
 # > need their own pins, which is why the run record stores them too.
@@ -466,7 +466,7 @@ with tempfile.TemporaryDirectory() as tmp:
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **Churn compounds.** With a constant monthly churn rate $c$:
 #
@@ -493,7 +493,7 @@ with tempfile.TemporaryDirectory() as tmp:
 # "gain" of 0.005 from a new feature is half a seed's worth of noise.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -514,4 +514,4 @@ with tempfile.TemporaryDirectory() as tmp:
 # 4. Why keep code in `src/` rather than in notebooks, and why the *src layout* specifically?
 # 5. Why are trained models excluded from git, and how do they travel instead?
 #
-# ➡️ **Next:** [`02_data_acquisition_and_validation.ipynb`](../ch03-data-acquisition-and-validation/notebook.ipynb) — get the raw data, prove it is the right data, and find what is wrong with it.
+# **Next chapter:** [`02_data_acquisition_and_validation.ipynb`](../ch03-data-acquisition-and-validation/notebook.ipynb) — get the raw data, prove it is the right data, and find what is wrong with it.

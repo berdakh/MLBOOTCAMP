@@ -65,7 +65,7 @@ tables = bootstrap.load_clean()  # raw extract, verified and cleaned (notebook 0
 {name: df.shape for name, df in tables.items()}
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -192,7 +192,7 @@ SELECT
 #
 # *What to notice:* the bug is in the order of operations, not in any single clause; the same tables and the same SUM give the right answer once each table is collapsed to one row per key first.
 #
-# > 💡 **Intuition.** Fan-out is a multiplication table: 41 weeks along one
+# > **Intuition.** Fan-out is a multiplication table: 41 weeks along one
 # > side, 7 tickets along the other, and the join fills in all 287 cells.
 # > Any sum over that table counts each week 7 times. *Where it breaks down:*
 # > with a one-to-one or many-to-one join there is no table to fill, which is
@@ -338,7 +338,7 @@ ORDER BY week_start
 #
 # *What to notice:* the two frames differ only when a week is missing, which is exactly the case casual testing skips.
 #
-# > 💡 **Intuition.** `ROWS 3 PRECEDING` is "my last four diary entries";
+# > **Intuition.** `ROWS 3 PRECEDING` is "my last four diary entries";
 # > `RANGE 21 DAY PRECEDING` is "everything I wrote in the last four weeks".
 # > For someone who skips a week, the last four entries go back further.
 # > *Where it breaks down:* `RANGE` needs an ordering column you can subtract
@@ -380,7 +380,7 @@ sql("SELECT COUNT(*) AS accounts_active_at_T FROM population")
 # %% [markdown]
 # **Expected:** 2,246 accounts.
 #
-# > 💡 **Intuition.** A snapshot is a photo taken at midnight on day T. A
+# > **Intuition.** A snapshot is a photo taken at midnight on day T. A
 # > feature may only use what is in the photo; the label is what you learn
 # > by visiting again 30 days later. *Where it breaks down:* a photo is
 # > instant, but a usage week is a 7-day film: it is only "in the photo" once
@@ -489,7 +489,7 @@ for col in ["tenure_days", "sessions_4w", "failed_payments_90d", "churned_30d"]:
 # implementation for one case is one of the most useful tests you can write.
 # The repository's `tests/` do the same.
 #
-# > 🧠 **Research bridge.** "Week complete" is the same idea as a causal filter
+# > **Research bridge.** "Week complete" is the same idea as a causal filter
 # > in real-time EEG decoding: an epoch's features may only use samples up to
 # > the decision time. A zero-phase (forward-backward) filter applied offline
 # > quietly uses future samples - exactly like counting an unfinished week.
@@ -565,7 +565,7 @@ print(features.shape, features["snapshot_date"].nunique(), "snapshots,",
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **Fan-out row count.** Joining two one-to-many tables $U$ and $K$ to the same key:
 #
@@ -605,7 +605,7 @@ print(features.shape, features["snapshot_date"].nunique(), "snapshots,",
 # churners among 2,246 accounts: $\hat{\pi} = 129 / 2246 = 0.057$.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -628,4 +628,4 @@ print(features.shape, features["snapshot_date"].nunique(), "snapshots,",
 # 5. Write (aloud) the label definition for snapshot T, and say which column is allowed to look into the future and how far.
 # 6. How did you test that your SQL is right, and why compare to an independent implementation rather than eyeballing rows?
 #
-# ➡️ **Next:** [`04_leakage_safe_splits_and_baseline.ipynb`](../ch05-leakage-safe-splits-and-baseline/notebook.ipynb) — split the feature table without leaking the future, measure what leakage does, and set honest baselines.
+# **Next chapter:** [`04_leakage_safe_splits_and_baseline.ipynb`](../ch05-leakage-safe-splits-and-baseline/notebook.ipynb) — split the feature table without leaking the future, measure what leakage does, and set honest baselines.

@@ -70,7 +70,7 @@ np.set_printoptions(precision=4, suppress=True)
 rng = np.random.default_rng(0)
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -126,7 +126,7 @@ print("max |fast - slow|:", np.abs(fast - slow).max())
 #
 # *What to notice:* the best split separates the low group from the high group, where the summed SSE has its minimum; prefix sums make every point on the lower curve one subtraction.
 #
-# > 💡 **Intuition.** Prefix sums are a car's odometer: the distance between two towns is
+# > **Intuition.** Prefix sums are a car's odometer: the distance between two towns is
 # > the difference of two readings, not a fresh drive. Sorting once and reading the
 # > odometer at every gap prices all n − 1 splits at once. *Where it breaks down:* odometer
 # > readings that are huge and close together lose digits when subtracted (catastrophic
@@ -192,7 +192,7 @@ print(f"relative error vs numerical gradient: {relative_error(dW, numerical_grad
 #
 # *What to notice:* the weights always sum to 1 over the allowed keys, so a row with no allowed key has nothing to sum to; that is the NaN.
 #
-# > 💡 **Intuition.** A Python dict returns the one value whose key matches exactly;
+# > **Intuition.** A Python dict returns the one value whose key matches exactly;
 # > attention returns a *blend* of all values, weighted by how well each key matches the
 # > query. *Where it breaks down:* the weights sum to 1 even when no key matches well, so
 # > attention always returns *something*; a fully masked row is the case where there is
@@ -253,7 +253,7 @@ print("row 0 normalised within batch B:", bn_other[0])
 #
 # *What to notice:* everything in the left column depends on randomness or on the rest of the batch; the right column is deterministic, which is what serving needs.
 #
-# > 💡 **Intuition.** Training-mode batch norm grades on a curve: your score depends on who
+# > **Intuition.** Training-mode batch norm grades on a curve: your score depends on who
 # > else sat the exam that day. Eval mode grades against a fixed scale learned over the
 # > whole term. *Where it breaks down:* the fixed scale goes stale if serving traffic drifts
 # > away from training traffic; the running statistics are only as current as the training data.
@@ -293,7 +293,7 @@ def best_split(x, y):
 grade.ex1(best_split)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.**
+# > **Talk it through.**
 # > 1. *Clarify:* the criterion (SSE/variance for regression; Gini or entropy for classification), the threshold convention, minimum leaf size, missing values.
 # > 2. *Brute force:* try every threshold, recompute both SSEs: O(n²). Say it, then improve.
 # > 3. *Optimise:* sort by x, prefix sums of y and y², SSE of every prefix/suffix in O(1), mask out positions between equal x values.
@@ -330,7 +330,7 @@ def gbm_predict(model, X):
 grade.ex2(gbm_fit, gbm_predict)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.**
+# > **Talk it through.**
 # > 1. *The idea in one sentence:* boosting is gradient descent in function space; each tree approximates the negative gradient of the loss at the current predictions. For ½(y − F)², the negative gradient is the residual y − F.
 # > 2. *Why `init = mean(y)`:* it is the constant minimising squared loss; for log-loss it would be the log-odds of the base rate.
 # > 3. *Learning rate (shrinkage):* smaller lr needs more trees and generalises better; tune `n_estimators` with early stopping on a validation set.
@@ -341,7 +341,7 @@ grade.ex2(gbm_fit, gbm_predict)
 #
 # *What to notice:* each stump only ever sees what is still wrong (the residuals), and ν keeps any one stump from fixing too much at once.
 #
-# > 💡 **Intuition.** Boosting is golf: each stroke aims from where the ball is now, not
+# > **Intuition.** Boosting is golf: each stroke aims from where the ball is now, not
 # > from the tee, and shrinkage is choosing to putt gently. Many small corrections overshoot
 # > less than a few big ones. *Where it breaks down:* in golf you stop at the hole; boosting
 # > keeps chasing noise in the training residuals unless you stop on a validation set.
@@ -365,7 +365,7 @@ def mlp_grads(params, X, y):
 grade.ex3(mlp_grads)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.**
+# > **Talk it through.**
 # > 1. *Write the forward pass with named intermediates* (`z1, h, logits`): you need them in the backward pass. Say the shapes as you go.
 # > 2. *Backward in reverse:* `dlogits = (P − Y)/n` → `dW2 = hᵀ dlogits`, `db2 = Σ dlogits` → `dh = dlogits W2ᵀ` → `dz1 = dh ⊙ 1[z1 > 0]` → `dW1 = Xᵀ dz1`, `db1 = Σ dz1`.
 # > 3. *Verify:* a gradient check on a tiny network; mention the ReLU kink (avoid points with z1 ≈ 0).
@@ -392,7 +392,7 @@ def attention(Q, K, V, mask=None):
 grade.ex4(attention)
 
 # %% [markdown]
-# > 🗣️ **Talk it through.**
+# > **Talk it through.**
 # > 1. *Shapes:* scores `(..., Lq, Lk)` from `Q @ swapaxes(K, -1, -2)`; weights sum to 1 over the **key** axis (the last one).
 # > 2. *Why √d,* and why masking happens **before** the softmax (masking after and renormalising is equivalent only if you renormalise; zeroing after the softmax is a bug).
 # > 3. *Stability:* subtract the row max over allowed entries; handle a row max of −inf.
@@ -436,7 +436,7 @@ def inverted_dropout(x, p, training, rng):
 grade.ex6(inverted_dropout)
 
 # %% [markdown]
-# > 🗣️ **Talk it through (Exercises 5-6).**
+# > **Talk it through (Exercises 5-6).**
 # > 1. *Why biased vs unbiased:* the forward pass normalises the batch you have (biased); the running variance estimates the population variance (unbiased). Mixing them up is invisible in training and shifts eval outputs slightly.
 # > 2. *Momentum convention:* PyTorch's `momentum=0.1` weights the **new** batch by 0.1; Keras's `momentum=0.99` weights the **old** value by 0.99. Same idea, opposite parameter — say which you mean.
 # > 3. *Failure modes:* tiny batches (noisy statistics; use GroupNorm/LayerNorm), batch-dependent outputs in serving (forgot eval mode), distribution shift between train and serve (running stats stale), dropout left on at inference (noisy predictions).
@@ -471,7 +471,7 @@ grade.ex6(inverted_dropout)
 # a blank cell before moving on.
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1. SSE from sums, and the split gain**
 #
@@ -580,7 +580,7 @@ print(f"6. inverted dropout, p = 0.5, x = 2: mean output {draws.mean():.3f}")
 # running variance 1.133; 6. a mean output of 2.00 (±0.003).
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -607,4 +607,4 @@ print(f"6. inverted dropout, p = 0.5, x = 2: mean output {draws.mean():.3f}")
 # 5. Why is attention's cost quadratic in sequence length, and name two families of methods that reduce the time or memory cost.
 # 6. Without code: what is the gradient of softmax cross-entropy with respect to the logits, and why does it make training with label smoothing or soft targets straightforward?
 #
-# ➡️ **Next:** [`15_coding_patterns_1.ipynb`](../ch33-coding-patterns-1/notebook.ipynb) — Day 8: the classic coding round, pattern by pattern, with a protocol for talking through it.
+# **Next chapter:** [`15_coding_patterns_1.ipynb`](../ch33-coding-patterns-1/notebook.ipynb) — Day 8: the classic coding round, pattern by pattern, with a protocol for talking through it.

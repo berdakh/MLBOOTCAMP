@@ -1,13 +1,13 @@
 # Solutions · Chapter 26 · Two-tower retrieval & ANN
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `in_batch_softmax_loss`
 
-✅ Reference code: [`code/nb08.py`](solutions.py) (`ex1`), graded in CI (needs PyTorch).
+[verified] Reference code: [`code/nb08.py`](solutions.py) (`ex1`), graded in CI (needs PyTorch).
 
 ```python
 def in_batch_softmax_loss(user_emb, item_emb, log_q=None):
@@ -36,7 +36,7 @@ notebook divides the *user* embedding by τ before calling the loss).
 
 ## Exercise 2 · `recall_vs_exact`
 
-✅ Reference code: [`code/nb08.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb08.py`](solutions.py) (`ex2`).
 
 ```python
 def recall_vs_exact(approx_ids, exact_ids):
@@ -58,7 +58,7 @@ compare by *distance* threshold instead of ids.
 
 ## Exercise 3 · Why in-batch negatives over-penalise popular items (written)
 
-✍️ In your own words; one version with numbers:
+[open-ended] In your own words; one version with numbers:
 
 * Item A gets 1% of all clicks, item B 0.01%. With batches of 1,024 clicks,
   A appears in a batch about 10 times on average, so for every user in the

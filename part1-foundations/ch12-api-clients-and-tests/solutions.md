@@ -1,13 +1,13 @@
 # Solutions · Chapter 12 · API clients & tests
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `retrying_get`
 
-✅ Reference code: [`code/nb11.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb11.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 RETRYABLE = {429, 502, 503, 504}
@@ -57,7 +57,7 @@ last failure instead of raising; sleeping after the final attempt.
 
 ## Exercise 2 · `test_rejects_negative_sessions`
 
-✅ Reference code: [`code/nb11.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb11.py`](solutions.py) (`ex2`).
 
 ```python
 def test_rejects_negative_sessions(client):
@@ -86,7 +86,7 @@ def test_rejects_negative_sessions(client):
 
 ## Exercise 3 · CI vs staging (written)
 
-✍️ Open-ended. The organising idea: **CI** runs on every push, must be fast
+[open-ended] Open-ended. The organising idea: **CI** runs on every push, must be fast
 (minutes), deterministic and need no real infrastructure, so it uses small
 data, temporary registries and in-process clients. **Staging** is a
 production-like deployment (same container image, real network, real model
@@ -118,7 +118,7 @@ test.
 **1. What to retry.** Connection errors/timeouts (if the call is idempotent),
 429, 502, 503, 504, with bounded, backed-off attempts. Never 4xx: the request
 itself is wrong and will fail identically. Usually not 500: it is a bug.
-✅ Observed: two 503s then success on the 3rd call; a 422 reached the server
+[verified] Observed: two 503s then success on the 3rd call; a 422 reached the server
 exactly once.
 
 **2. Backoff with jitter.** Exponential backoff spaces retries out
@@ -129,7 +129,7 @@ failed at the same moment do not retry at the same moment (the
 
 **3. Timeouts.** Without one, a hung server holds the caller's thread,
 connection and user request indefinitely, and the hang propagates upstream.
-✅ The 0.5 s timeout fired after 0.50 s. Choose it from measured latency (a
+[verified] The 0.5 s timeout fired after 0.50 s. Choose it from measured latency (a
 few times the p99, notebook 13) and from the caller's own deadline. Set
 connect and read timeouts separately when they differ.
 
@@ -141,7 +141,7 @@ Operations: `test_not_ready_without_a_model`,
 
 **5. Mutation testing.** Deliberately introduce small bugs (mutants) and check
 that the suite fails for each. Surviving mutants show untested behaviour.
-✅ Two swapped features (`sessions_4w` ↔ `sessions_prev_4w`) still give valid
+[verified] Two swapped features (`sessions_4w` ↔ `sessions_prev_4w`) still give valid
 probabilities in [0, 1]; only the parity test caught it. `>` instead of `>=` was
 caught only by the boundary test. The survivor (4xx not counted in
 `/metrics`) shows the metrics endpoint is untested.

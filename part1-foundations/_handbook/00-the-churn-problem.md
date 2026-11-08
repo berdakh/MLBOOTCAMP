@@ -134,7 +134,7 @@ notebooks say so every time. In a real company, the only way to know whether
 the model *causes* customers to stay is an experiment: call a random half of
 the high-risk list and compare (Level 2, Day 6).
 
-> 💡 **Intuition.** A churn model is a smoke detector, not a firefighter. It
+> **Intuition.** A churn model is a smoke detector, not a firefighter. It
 > tells you where to look. Whether the house is saved depends on what you do
 > next, and a detector that rings for burnt toast all day gets switched off.
 
@@ -164,7 +164,7 @@ to now?"*
 | Industry | machine | fails (capstone 2: predictive maintenance) |
 | Education | student | drops a course |
 
-> 🧠 **Research bridge.** If you have done cross-subject evaluation on EEG,
+> **Research bridge.** If you have done cross-subject evaluation on EEG,
 > you already know the hardest part: the *unit* (subject there, customer here)
 > appears many times, so a random split of rows lets the model memorise the
 > unit instead of learning the pattern. Churn adds time on top: you must also

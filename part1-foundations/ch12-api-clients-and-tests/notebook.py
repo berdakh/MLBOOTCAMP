@@ -69,7 +69,7 @@ valid = split.valid  # validation rows only; the test period waits for notebook 
 # **Expected:** `versions ['v1', 'v2'], CURRENT=v1`.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -269,7 +269,7 @@ except httpx.ConnectError as exc:
 # Production clients add **jitter** (a random fraction of the delay) so that
 # clients that failed together do not retry together.
 #
-# > 💡 **Intuition.** Retrying is redialling a busy phone line: worth it
+# > **Intuition.** Retrying is redialling a busy phone line: worth it
 # > when the line is busy (503, 429), pointless when the number does not exist
 # > (404) or you are speaking the wrong language (422). Waiting a little longer
 # > between each redial stops a whole office from jamming the switchboard.
@@ -594,7 +594,7 @@ grade.ex2(test_rejects_negative_sessions)
 #
 # A test suite that passes tells you nothing until you know it can **fail**.
 #
-# > 💡 **Intuition.** Mutation testing is a fire drill for your tests: start a
+# > **Intuition.** Mutation testing is a fire drill for your tests: start a
 # > small, controlled fire and check that an alarm goes off. *Where it breaks
 # > down:* a drill only covers the fires you thought to start; a suite that
 # > kills every hand-made mutant can still miss a bug nobody imagined.
@@ -675,7 +675,7 @@ print(mutation_table.to_string(index=False))
 # Mutation testing turns "we have tests" into "we know which bugs our tests
 # catch".
 #
-# > 🧠 **Research bridge.** This is a positive control. In an EEG pipeline you
+# > **Research bridge.** This is a positive control. In an EEG pipeline you
 # > inject a known synthetic source and check that the localisation finds it;
 # > here you inject a known bug and check that the suite finds it. A test
 # > suite that has never failed is like a method that was never shown a
@@ -718,7 +718,7 @@ except httpx.ConnectError:
 # fails with a connection error.
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **Exponential backoff.** The wait before retry $n$ ($n = 0, 1, \dots$):
 #
@@ -752,7 +752,7 @@ except httpx.ConnectError:
 # For a 422, $q = 1$: retrying changes nothing.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -776,4 +776,4 @@ except httpx.ConnectError:
 # 5. What is mutation testing? Give an example of a bug that a "probabilities are in [0, 1]" test would miss and the test that catches it.
 # 6. Why is retrying a prediction safe, but retrying a payment request not, and what do you do about it?
 #
-# ➡️ **Next:** [`12_packaging_and_configuration.ipynb`](../ch13-packaging-and-configuration/notebook.ipynb) — package the service, configure it from the environment, and write the Dockerfile and CI workflow that run these tests.
+# **Next chapter:** [`12_packaging_and_configuration.ipynb`](../ch13-packaging-and-configuration/notebook.ipynb) — package the service, configure it from the environment, and write the Dockerfile and CI workflow that run these tests.

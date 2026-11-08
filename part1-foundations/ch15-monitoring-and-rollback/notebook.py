@@ -85,7 +85,7 @@ print("sandbox registry:", ops.root, "| versions", ops.versions(), "| CURRENT", 
 # **Expected:** `versions ['v1', 'v2'] | CURRENT v1`.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -187,7 +187,7 @@ by_month
 #
 # *What to notice:* every bin's term is positive (both factors have the same sign), and the outer bins, where the share moved most in relative terms, contribute most.
 #
-# > 💡 **Intuition.** PSI is a census that compares how many people live in
+# > **Intuition.** PSI is a census that compares how many people live in
 # > each neighbourhood this year versus the reference year. Big relative moves
 # > in any neighbourhood raise it. *Where it breaks down:* it only sees the
 # > bins it was given: a feature that changes *within* a bin (or is mostly one
@@ -269,7 +269,7 @@ plt.tight_layout()
 plt.show()
 
 # %% [markdown]
-# > 🧠 **Research bridge.** This is covariate shift between recording sessions
+# > **Research bridge.** This is covariate shift between recording sessions
 # > or subjects in EEG: amplitude statistics move, and you check whether
 # > the decoder still works on the new session. The same caution applies:
 # > a shift in the inputs is a reason to *check* performance, not proof that
@@ -478,7 +478,7 @@ alerts
 #
 # *What to notice:* in this section the gate was switched off, so the bad model reaches CURRENT; the canary comparison and the pointer rollback are what still save the day.
 #
-# > 💡 **Intuition.** A canary is a taste test on one table before the dish
+# > **Intuition.** A canary is a taste test on one table before the dish
 # > goes to the whole restaurant; rollback is taking the dish off the menu,
 # > not re-cooking it. *Where it breaks down:* with 30-day label delay the
 # > "taste" of ranking quality is only available on old, matured data, so a
@@ -680,7 +680,7 @@ grade.ex2(should_rollback)
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **Population Stability Index.** Cut the reference into bins (deciles here),
 # then compare the shares:
@@ -723,7 +723,7 @@ print("churnlab psi :", round(psi(reference_toy, current_toy, bins=5), 4))
 # **Expected:** terms 0.0405, 0.0112, 0, 0.0144, 0.0693, and PSI 0.1354 both ways.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -747,4 +747,4 @@ print("churnlab psi :", round(psi(reference_toy, current_toy, bins=5), 4))
 # 5. Walk through a rollback in this design: what changes on disk, what the service does, and how you verify it worked.
 # 6. Shadow, canary or blue/green for the next model version of this service? Justify, given the 30-day label delay.
 #
-# ➡️ **Next:** [`15_final_evaluation_and_docs.ipynb`](../ch16-final-evaluation-and-docs/notebook.ipynb) — Day 5: touch the test set once, report with uncertainty, and write the README and model card.
+# **Next chapter:** [`15_final_evaluation_and_docs.ipynb`](../ch16-final-evaluation-and-docs/notebook.ipynb) — Day 5: touch the test set once, report with uncertainty, and write the README and model card.

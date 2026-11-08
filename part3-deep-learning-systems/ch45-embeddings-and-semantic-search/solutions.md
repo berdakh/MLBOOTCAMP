@@ -1,13 +1,13 @@
 # Solutions · Chapter 45 · Embeddings & semantic search
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `bm25_scores`
 
-✅ Reference code: [`code/nb07.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb07.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def bm25_scores(query_tokens, doc_tokens_list, k1=1.2, b=0.75):
@@ -37,7 +37,7 @@ sparse matrix and answered a query in ~0.2 ms over 5,183 abstracts in the notebo
 
 ## Exercise 2 · `reciprocal_rank_fusion`
 
-✅ Reference code: [`code/nb07.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb07.py`](solutions.py) (`ex2`).
 
 ```python
 def reciprocal_rank_fusion(rankings, k=60):
@@ -57,7 +57,7 @@ Recall@100 0.954, vs 0.667 / 0.886 (BM25) and 0.622 / 0.919 (dense).
 
 ## Exercise 3 · Replacing BM25 product search with semantic search
 
-✍️ A strong plan:
+[open-ended] A strong plan:
 
 * **Offline evaluation.** Build a judged query set from logs (stratified: head, torso,
   tail queries; navigational queries with exact identifiers such as SKUs, model numbers,
@@ -70,7 +70,7 @@ Recall@100 0.954, vs 0.667 / 0.886 (BM25) and 0.622 / 0.919 (dense).
   48–64 byte codes cuts that to 2.4–3.2 GB at a recall cost you measure against exact
   search (as in 7.4); re-rank the ANN candidates with full vectors if needed.
 * **Re-embedding cost.** Every encoder change re-embeds 50M descriptions: at our CPU's
-  ~41 docs/s that is ~14 days on one machine; at 🔬 ~1–5k docs/s per GPU, hours on a
+  ~41 docs/s that is ~14 days on one machine; at [expected] ~1–5k docs/s per GPU, hours on a
   small GPU fleet. Plan versioned indexes (old and new side by side), backfills and
   queries embedded with the *same* model version as the index.
 * **Ship hybrid.** Keep BM25 for exact matching and fuse (RRF or a learned combination)

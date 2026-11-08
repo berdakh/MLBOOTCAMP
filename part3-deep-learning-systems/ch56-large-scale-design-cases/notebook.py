@@ -86,7 +86,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 NUMBERS: dict = {}  # every case's assumptions and derived numbers, saved at the end
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -221,7 +221,7 @@ NUMBERS["ads"] = {"assumptions": ads, "peak_ad_requests_per_s": ad_peak, "ads_sc
 # must be batched and probably distilled or cascaded (a light pre-ranker on
 # 1,000, the heavy model on 200), which is where notebooks 11–12 come in.
 #
-# > 💡 **Intuition.** Fleet sizing is booking restaurant tables for the dinner rush, not the daily
+# > **Intuition.** Fleet sizing is booking restaurant tables for the dinner rush, not the daily
 # > average, and leaving a few tables empty for the party that walks in unannounced (headroom). The
 # > "at least 2" rule is the second kitchen in case the first catches fire. *Where the analogy breaks
 # > down:* per-replica capacity must be *measured* at your latency target; a replica that does 50
@@ -426,7 +426,7 @@ NUMBERS["video"]["objective_sim"] = {k: top(v) for k, v in objectives.items()}
 # the retrieved passages *and the conversation so far*, so prompt tokens grow
 # with every turn:
 #
-# > 💡 **Intuition.** A model has no memory between calls, so each turn is like sending a letter that
+# > **Intuition.** A model has no memory between calls, so each turn is like sending a letter that
 # > must photocopy the whole correspondence so far. The sixth letter is the thickest, and you pay
 # > per page. *Where the analogy breaks down:* prompt caching (if offered) bills repeated pages at a
 # > discount, and summarising old turns trades cost for possible loss of detail.
@@ -516,7 +516,7 @@ NUMBERS["fraud"] = {"latency_stages_ms": fraud_stages, "fanout_slow_6": ds.fanou
 # features (and a model trained to expect them), and track the
 # missing-feature rate as a paged metric.
 #
-# > 💡 **Intuition.** Waiting for six friends before dinner starts: each is late only 1% of the time,
+# > **Intuition.** Waiting for six friends before dinner starts: each is late only 1% of the time,
 # > but the chance that *someone* is late is almost 6%, and with twenty friends 18%. The request is as
 # > slow as its slowest dependency. *Where the analogy breaks down:* the formula assumes independent
 # > delays; in practice slowness is correlated (one overloaded cache slows several calls at once),
@@ -591,7 +591,7 @@ print("wrote", (OUT / "case_numbers.json").relative_to(ART), "with cases:", list
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · Peak QPS.**
 #
@@ -656,7 +656,7 @@ print(f"prompt tokens by turn {P} | cost by hand {cost:.5f} | notebook "
 # values within about ±0.001; prompt tokens `[2360, 2620, 2880, 3140, 3400, 3660]` and `0.01143` both ways.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -679,4 +679,4 @@ print(f"prompt tokens by turn {P} | cost by hand {cost:.5f} | notebook "
 # 5. Declined transactions never get labels. How does that bias your next model, and what do you build to fix it?
 # 6. Pick one case and say, concretely, what a staff-level answer adds over a strong senior answer.
 #
-# ➡️ **Next:** [`19_ml_depth_and_research_discussion.ipynb`](../ch57-ml-depth-and-research-discussion/notebook.ipynb) — Day 10: the depth round. Optimisation, generalisation, transformers and recsys questions with small experiments, and how to critique a paper.
+# **Next chapter:** [`19_ml_depth_and_research_discussion.ipynb`](../ch57-ml-depth-and-research-discussion/notebook.ipynb) — Day 10: the depth round. Optimisation, generalisation, transformers and recsys questions with small experiments, and how to critique a paper.

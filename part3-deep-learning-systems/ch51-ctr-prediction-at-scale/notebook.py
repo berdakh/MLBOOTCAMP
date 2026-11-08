@@ -101,7 +101,7 @@ N_TEST = {"gpu": 400_000, "cpu": 100_000, "smoke": 20_000}[BUDGET.name]
 print(f"train impressions: {N_TRAIN:,} | test impressions: {N_TEST:,}")
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -179,7 +179,7 @@ print(f"distinct (field, value) pairs in train: {card.distinct_in_train.sum():,}
 # * **Calibration**: mean predicted / observed ratio, overall and per prediction bucket.
 #   Auctions multiply pCTR by the bid (13.6), so a model can win on AUC and still lose money.
 #
-# > 💡 **Intuition.** NE answers "how much better than a weather forecaster who always says the
+# > **Intuition.** NE answers "how much better than a weather forecaster who always says the
 # > average?". Log loss alone is hard to compare across products: predicting a 3% CTR is easier than
 # > predicting a 30% one, so raw log losses differ even for equally good models. Dividing by the
 # > "always the average" loss puts both on one scale. *Where the analogy breaks down:* NE still mixes
@@ -240,7 +240,7 @@ print(pd.DataFrame(table).round(4).to_string(index=False))
 #
 # *What to notice:* putting the field in the key keeps `C1 = nike` and `C2 = nike` apart; the collision is unavoidable but its rate is predictable.
 #
-# > 💡 **Intuition.** A cloakroom with a fixed number of hooks and a rule "hook = a function of your
+# > **Intuition.** A cloakroom with a fixed number of hooks and a rule "hook = a function of your
 # > name": no registration desk (vocabulary) is needed, and newcomers just work, but now and then two
 # > strangers share a hook. *Where the analogy breaks down:* in a model the shared hook (weight) is
 # > learned from both keys' clicks, and if one of them is frequent and the other rare, the rare one
@@ -380,7 +380,7 @@ print("T4 memory: 16 GB. A 1e9 x 64 fp32 table alone is 16x that.")
 #
 # *What to notice:* the embedding table holds almost all parameters; the cross layers multiply by `x0` at every layer, which is how they build explicit feature crosses.
 #
-# > 💡 **Intuition.** Logistic regression can learn "sports sites get clicks" and "this sneaker ad gets
+# > **Intuition.** Logistic regression can learn "sports sites get clicks" and "this sneaker ad gets
 # > clicks" but not "this sneaker ad *on sports sites* gets clicks": it can only add effects. A cross
 # > layer multiplies the current representation by the original features `x0`, so after one layer it
 # > holds pairwise products, after two triple products, like expanding a polynomial one degree at a
@@ -507,7 +507,7 @@ print(ctr.calibration_table(y_test, p_dcn_cal, n_bins=5).round(4).to_string(inde
 #
 # *What to notice:* downsampling changes the *odds* by exactly 1/w, so the fix is exact, and the ranking (AUC) is never affected.
 #
-# > 💡 **Intuition.** If you photograph a crowd but delete 9 out of every 10 people who did *not*
+# > **Intuition.** If you photograph a crowd but delete 9 out of every 10 people who did *not*
 # > click, the clickers look 10× more common in the photo than in the crowd. Knowing it was exactly
 # > 1 in 10 lets you undo it: multiply the odds back by `w`. *Where the analogy breaks down:* the
 # > correction is only exact if the deletion was random with a known, logged `w`; any other filtering
@@ -694,7 +694,7 @@ print("saved", OUT / "results.json")
 # *Your answer (Exercise 4):* ...
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · Logistic CTR model and log loss.**
 #
@@ -777,7 +777,7 @@ print(f"recalibrated {p_.round(4)} | ctr.recalibrate_downsampled {ctr.recalibrat
 # re-calibrated values `[0.03, 0.0909, 0.4737]` from both implementations, and an odds ratio of 10 for each.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -802,4 +802,4 @@ print(f"recalibrated {p_.round(4)} | ctr.recalibrate_downsampled {ctr.recalibrat
 # 5. You downsample negatives at rate `w`. Derive the re-calibration formula. What breaks if you forget it?
 # 6. Your conversion model under-predicts on the freshest traffic. Explain the cause and two ways to fix it, with their trade-offs.
 #
-# ➡️ **Next:** [`14_multitask_ranking_and_exploration.ipynb`](../ch52-multitask-ranking-and-exploration/notebook.ipynb) — from one probability to many: multi-task models for clicks and conversions, objective blending, auctions and exploration.
+# **Next chapter:** [`14_multitask_ranking_and_exploration.ipynb`](../ch52-multitask-ranking-and-exploration/notebook.ipynb) — from one probability to many: multi-task models for clicks and conversions, objective blending, auctions and exploration.

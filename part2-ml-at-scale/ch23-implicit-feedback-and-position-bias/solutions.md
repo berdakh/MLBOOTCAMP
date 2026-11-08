@@ -1,13 +1,13 @@
 # Solutions · Chapter 23 · Implicit feedback & position bias
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `estimate_propensities`
 
-✅ Reference code: [`code/nb05.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb05.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def estimate_propensities(random_imps):
@@ -39,7 +39,7 @@ the widths.
 
 ## Exercise 2 · `ips_ctr_estimate`
 
-✅ Reference code: [`code/nb05.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb05.py`](solutions.py) (`ex2`).
 
 ```python
 def ips_ctr_estimate(clicks, positions, propensities, clip=None):
@@ -63,7 +63,7 @@ differently; just be consistent (`min(1/θ, M)` ⇔ `1/max(θ, 1/M)`).
 
 ## Exercise 3 · The cost of exploration traffic (written)
 
-🔬 Numbers from our run (yours will be close):
+[expected] Numbers from our run (yours will be close):
 
 * Random traffic CTR ≈ 0.062 vs policy ≈ 0.141 per impression, i.e. about
   0.79 fewer clicks per exploration request (10 impressions).
@@ -71,7 +71,7 @@ differently; just be consistent (`min(1/θ, M)` ⇔ `1/max(θ, 1/M)`).
   requests per day ≈ **170 clicks lost per day**, out of about 6,000: roughly
   **3% of clicks** (and, proportionally, purchases).
 
-✍️ The case for keeping it, in the shape a PM can act on:
+[open-ended] The case for keeping it, in the shape a PM can act on:
 
 1. **What it buys.** The only unbiased estimate of position propensities, and
    therefore unbiased offline evaluation and training (5.5–5.6). Without it,

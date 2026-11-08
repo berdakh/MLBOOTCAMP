@@ -1,13 +1,13 @@
 # Solutions · Chapter 55 · ML platform design
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `feature_store_storage_gb`
 
-✅ Reference code: [`code/nb17.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb17.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def feature_store_storage_gb(entities, features, bytes_per, versions, replication):
@@ -29,7 +29,7 @@ key and index overhead on purpose; `ds.online_store_gb` adds them
 
 ## Exercise 2 · `gpu_cost`
 
-✅ Reference code: [`code/nb17.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb17.py`](solutions.py) (`ex2`).
 
 ```python
 def gpu_cost(hours, gpus, price):
@@ -48,7 +48,7 @@ which is Exercise 3.
 
 ## Exercise 3 · `utilization_waste`
 
-✅ Reference code: [`code/nb17.py`](solutions.py) (`ex3`).
+[verified] Reference code: [`code/nb17.py`](solutions.py) (`ex3`).
 
 ```python
 def utilization_waste(hours, gpus, price, utilization):
@@ -71,7 +71,7 @@ which one you mean.
 
 ## Exercise 4 · Written ADR
 
-✍️ Personal. A good ADR-002 for *"GPU quotas: strict per-team reservations vs
+[open-ended] Personal. A good ADR-002 for *"GPU quotas: strict per-team reservations vs
 a shared preemptible pool"* looks like this (assumptions labelled):
 
 * **Context.** 160 reserved GPUs across four teams, 48% idle in the
@@ -101,7 +101,7 @@ assumptions, and measurable revisit triggers.
 
 ## Checkpoint answers
 
-1. **Feature platform for 50 teams.** 🔬 The unit is a *feature group*: a
+1. **Feature platform for 50 teams.** [expected] The unit is a *feature group*: a
    transformation in code, an entity key, an event timestamp, an owner, a
    freshness SLO. The platform materialises the same definition to an
    offline columnar store (full history with event timestamps) and an online
@@ -113,14 +113,14 @@ assumptions, and measurable revisit triggers.
    snapshot; backfills recompute history with the same code and are
    versioned. Then name the contracts: who owns a feature, how it is
    deprecated, how consumers are tracked (lineage).
-2. **Online store sizing.** ✅ 200M × (400 × 4 B) = 320 GB raw; with 16-byte
+2. **Online store sizing.** [verified] 200M × (400 × 4 B) = 320 GB raw; with 16-byte
    keys, 1.5× overhead and 3 replicas ≈ **1.45 TB** (17.1). Halving it: keep
    only features read by a production model (usage-based GC; costs a
    governance process); fp16/int8 or bucketed values (costs precision; check
    the model is insensitive); a hot tier for recently active users with
    defaults or a slower tier for the rest (costs latency/quality for dormant
    users); 2 replicas instead of 3 (costs availability).
-3. **GPU bill doubled at 45% utilisation.** 🔬 Measure first: spend by team
+3. **GPU bill doubled at 45% utilisation.** [expected] Measure first: spend by team
    and job type; allocation-idle vs low-MFU (different fixes); interactive
    sessions left open; queue times. Policies: showback, idle reaping,
    guaranteed quota + preemptible burst pool, right-sizing small jobs to small
@@ -129,7 +129,7 @@ assumptions, and measurable revisit triggers.
    (scheduler), leadership (priorities when the pool is contended). The
    organisational agreement is the hard part and is what makes it a staff
    question.
-4. **Retrained model to 100%.** ✅ (arithmetic) Training job → candidate
+4. **Retrained model to 100%.** [verified] (arithmetic) Training job → candidate
    registered with snapshot id, code version, signature, eval report → CD
    gates: offline comparison against the champion on the same snapshot with
    intervals and slices, latency/memory test in the serving image → shadow →
@@ -139,14 +139,14 @@ assumptions, and measurable revisit triggers.
    while a doubling is visible in ~4 minutes. So the canary catches crashes,
    latency blow-ups and large regressions; small quality effects need the
    A/B test.
-5. **Delayed labels.** 🔬 Compare cohorts at **equal label maturity** (e.g.
+5. **Delayed labels.** [expected] Compare cohorts at **equal label maturity** (e.g.
    recall on predictions made 30 days ago vs the same metric for the
    previous model at its own 30-day mark), plot metrics by prediction date
    with a maturity curve, and rely on leading indicators meanwhile: input and
    score drift, early proxy labels, a small human-reviewed sample. With an
    exponential delay of mean 20 days only 30% of labels exist after a week,
    so a "drop" in last week's recall is expected.
-6. **Buy vs build a feature store.** 🔬 Buy when the requirements fit the
+6. **Buy vs build a feature store.** [expected] Buy when the requirements fit the
    product's documented limits, the team cannot staff a stateful on-call, and
    features are not your differentiator. Put a thin API in front so the
    decision is reversible (ADR-001). Reverse it when per-unit cost at your

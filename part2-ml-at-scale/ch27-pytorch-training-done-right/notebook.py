@@ -84,7 +84,7 @@ print(f"{len(imps):,} impressions loaded in {time.time() - t0:.0f} s | torch {to
 # data is generated), a few seconds after that.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -351,7 +351,7 @@ print(f"3 epochs in {time.time() - start:.1f} s")
 #   alive: the classic slow memory leak.
 
 # %% [markdown]
-# > 💡 **Intuition.** `model.eval()` puts the car in parking mode (it changes how the car *behaves*: dropout off, batch-norm statistics frozen); `torch.no_grad()` switches off the dashcam (nothing is *recorded* for a later replay, i.e. backprop). Validation wants both: parked, and not recording. *Where it breaks down:* a parked car cannot move, but a model in eval mode can still be trained, silently and wrongly, if you forget to switch back.
+# > **Intuition.** `model.eval()` puts the car in parking mode (it changes how the car *behaves*: dropout off, batch-norm statistics frozen); `torch.no_grad()` switches off the dashcam (nothing is *recorded* for a later replay, i.e. backprop). Validation wants both: parked, and not recording. *Where it breaks down:* a parked car cannot move, but a model in eval mode can still be trained, silently and wrongly, if you forget to switch back.
 
 # %% [markdown]
 # > **Exercise 1.** Package the loop as `train_one_epoch(model, loader, optimizer, loss_fn)`.
@@ -489,7 +489,7 @@ print("epoch 1 identical:", losses_a[:n_steps] == losses_d[:n_steps],
 # step size so the last epochs refine rather than bounce. Schedules in PyTorch are
 # stepped either per epoch or per optimizer step; `tk.warmup_cosine` is per **step**.
 #
-# > 💡 **Intuition.** Warmup is not flooring the accelerator on a cold engine: Adam's running averages start empty, so its first few step sizes are guesses. Cosine decay is easing off the pedal as you approach the parking space. *Where it breaks down:* an engine warms up in minutes regardless; how many warmup steps a model needs depends on the batch size and the optimiser, so treat it as a hyper-parameter, not a constant.
+# > **Intuition.** Warmup is not flooring the accelerator on a cold engine: Adam's running averages start empty, so its first few step sizes are guesses. Cosine decay is easing off the pedal as you approach the parking space. *Where it breaks down:* an engine warms up in minutes regardless; how many warmup steps a model needs depends on the batch size and the optimiser, so treat it as a hyper-parameter, not a constant.
 #
 # **Gradient clipping** rescales the gradient when its global norm exceeds a
 # threshold. It protects against rare huge gradients (a bad batch, a spike in
@@ -559,7 +559,7 @@ plt.show()
 #
 # *What to notice:* the loop at the top has state in four places (weights, optimizer moments, scheduler position, random generators). The green box saves all four; the red box saves one, which is why its curve departs below.
 #
-# > 💡 **Intuition.** A checkpoint is a saved game: you need not only where your character stands (the weights) but the inventory (Adam's moments), the quest log (the scheduler's step) and the dice (every random generator). Load only the position and the game continues, just not *your* game. *Where it breaks down:* a game reloads instantly; a checkpoint is worth saving only as often as losing the work in between would hurt.
+# > **Intuition.** A checkpoint is a saved game: you need not only where your character stands (the weights) but the inventory (Adam's moments), the quest log (the scheduler's step) and the dice (every random generator). Load only the position and the game continues, just not *your* game. *Where it breaks down:* a game reloads instantly; a checkpoint is worth saving only as often as losing the work in between would hurt.
 
 # %%
 CKPT = OUT / "click_mlp.pt"
@@ -802,7 +802,7 @@ else:
     print("GPU extension skipped (RUN_GPU_EXTENSION=False or no CUDA device).")
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · Binary cross-entropy on a logit, and its value at initialisation.** In words: the negative log of the probability the model gave to the true label; the best constant predictor scores the label entropy.
 #
@@ -897,7 +897,7 @@ print(f"5. clip: norm before {norm_before.item():.1f}, gradient after {clip_p.gr
 # **Expected:** 1–2: each pair agrees to six decimals, entropy 0.3995; 3: `equal: True` (both about `[0.899, -1.898]`); 4: a maximum difference of about 1e-16, learning rates 0.500 and 0.525; 5: norm 5.0 and a gradient of about `[0.6, 0.8]`.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -922,4 +922,4 @@ print(f"5. clip: norm before {norm_before.item():.1f}, gradient after {clip_p.gr
 # 5. Two runs with the same seed give different results on a GPU. Name the possible sources and how you would make them repeatable, and when bitwise repeatability is not worth its cost.
 # 6. Your model's loss won't go down. Describe your first 15 minutes of debugging, in order.
 #
-# ➡️ **Next:** [`10_sequence_models_for_user_behavior.ipynb`](../ch28-sequence-models-for-user-behavior/notebook.ipynb) — the same loop, applied to a model that reads a user's click history in order.
+# **Next chapter:** [`10_sequence_models_for_user_behavior.ipynb`](../ch28-sequence-models-for-user-behavior/notebook.ipynb) — the same loop, applied to a model that reads a user's click history in order.

@@ -88,7 +88,7 @@ print(f"train {len(train):,} rows | valid {len(valid):,} rows (test week untouch
 # one clearly labelled "oracle" in 5.6).
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -147,7 +147,7 @@ by_pos.round(3)
 #
 # *What to notice:* the left panel is the drop you just measured on random traffic (pure examination); the right panel is its mirror image, the weight IPS gives a click at each position. The dashed tops are what a clip at 4 throws away.
 #
-# > 💡 **Intuition.** A shop window: items at eye level get looked at, items near the floor rarely do. Counting sales per shelf tells you mostly *where* things were, not how good they are. *Tiny example:* an item with relevance 0.4 at position 0 gets clicked 40% of the time; the same item at position 9 ($\theta_9 = 0.13$) only $0.13 \times 0.4 = 5\%$. *Where it breaks down:* real shoppers also stop after finding what they wanted (a cascade), so examination of position 5 depends on what was at positions 0–4, which the PBM ignores.
+# > **Intuition.** A shop window: items at eye level get looked at, items near the floor rarely do. Counting sales per shelf tells you mostly *where* things were, not how good they are. *Tiny example:* an item with relevance 0.4 at position 0 gets clicked 40% of the time; the same item at position 9 ($\theta_9 = 0.13$) only $0.13 \times 0.4 = 5\%$. *Where it breaks down:* real shoppers also stop after finding what they wanted (a cascade), so examination of position 5 depends on what was at positions 0–4, which the PBM ignores.
 
 # %% [markdown]
 # ## 5.2 · The paradox: the old ranker wins on logged clicks
@@ -190,7 +190,7 @@ paradox.round(3)
 # wins there, because clicks still concentrate at the top). Two practical
 # rules follow:
 #
-# > 💡 **Intuition.** Judging a new seating plan for a concert by the applause recorded under the old plan: the people who clapped loudest sat in the front rows, so any plan that moves them back "loses applause", however good it is. *Where it breaks down:* applause has no exact correction; clicks do, if you know how much each seat (position) is examined, which is what the rest of this notebook estimates.
+# > **Intuition.** Judging a new seating plan for a concert by the applause recorded under the old plan: the people who clapped loudest sat in the front rows, so any plan that moves them back "loses applause", however good it is. *Where it breaks down:* applause has no exact correction; clicks do, if you know how much each seat (position) is examined, which is what the rest of this notebook estimates.
 #
 # * never compare a new ranker against the logging policy on that policy's clicks;
 # * NDCG on clicks is only (roughly) fair between two *new* rankers, and only
@@ -320,7 +320,7 @@ print("wrote", out_path.relative_to(ART))
 # 1/0.126 ≈ 8), which adds variance. **Clipping** the weight at some cap M
 # reduces variance and adds bias (towards under-counting low-position clicks).
 #
-# > 💡 **Intuition.** A survey where young people answer only 1 time in 8 and older people every time: weight each young answer by 8 and the totals describe everyone again. IPS does the same with "examined 1 time in 8". *Where it breaks down:* if a group answers 1 time in 1,000, one answer carries a weight of 1,000 and a single respondent swings the result; that is the variance clipping trades away.
+# > **Intuition.** A survey where young people answer only 1 time in 8 and older people every time: weight each young answer by 8 and the totals describe everyone again. IPS does the same with "examined 1 time in 8". *Where it breaks down:* if a group answers 1 time in 1,000, one answer carries a weight of 1,000 and a single respondent swings the result; that is the variance clipping trades away.
 #
 # > **Exercise 2.** Write `ips_ctr_estimate(clicks, positions, propensities, clip)`:
 # > the mean over impressions of `click * min(1 / propensities[position], clip)`
@@ -551,7 +551,7 @@ pd.DataFrame(coefs).T
 # *Your answer:*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · The position-based click model.** In words: a click happens only if the position is examined *and* the item is relevant, and the two are independent.
 #
@@ -602,7 +602,7 @@ print(f"IPS clipped at 4   {(clicks_sim * np.minimum(w, 4)).mean():.3f}")
 # **Expected:** raw CTR about 0.097 (the mean of θ_p is 0.32, so examination hides two thirds of the relevance), IPS about 0.300, clipped about 0.24 (biased down). With 200,000 impressions the IPS estimate is within about ±0.005 of the truth; rerun with 2,000 and watch its spread grow.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -625,4 +625,4 @@ print(f"IPS clipped at 4   {(clicks_sim * np.minimum(w, 4)).mean():.3f}")
 # 5. Clipping IPS weights: what does it trade, and how would you choose the cap?
 # 6. A colleague adds "the previous model's score" as a feature and offline AUC on clicks jumps. What is your concern, and how would you check it?
 #
-# ➡️ **Next:** [`06_learning_to_rank.ipynb`](../ch24-learning-to-rank/notebook.ipynb) — from pointwise click models to learning-to-rank objectives (LambdaMART), with point-in-time features and request-grouped evaluation.
+# **Next chapter:** [`06_learning_to_rank.ipynb`](../ch24-learning-to-rank/notebook.ipynb) — from pointwise click models to learning-to-rank objectives (LambdaMART), with point-in-time features and request-grouped evaluation.

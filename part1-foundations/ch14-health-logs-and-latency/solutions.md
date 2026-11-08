@@ -1,13 +1,13 @@
 # Solutions · Chapter 14 · Health, logs & latency
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `percentiles` (nearest rank)
 
-✅ Reference code: [`code/nb13.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb13.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 import math
@@ -41,7 +41,7 @@ is the nearest-rank definition.
 
 ## Exercise 2 · `summarize_logs`
 
-✅ Reference code: [`code/nb13.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb13.py`](solutions.py) (`ex2`).
 
 ```python
 def summarize_logs(records):
@@ -70,7 +70,7 @@ def summarize_logs(records):
 
 ## Exercise 3 · An SLO and an alert (written)
 
-✍️ Personal. A strong answer is specific and justified. For example:
+[open-ended] Personal. A strong answer is specific and justified. For example:
 
 > **Who calls it:** the customer-success tool, when an account manager opens a
 > customer page, plus a nightly batch job. The interactive caller needs an
@@ -135,7 +135,7 @@ after a rollback the workers can disagree about the model version. Use a
 restart (or one worker per container) to switch all of them, and a shared
 metrics system.
 
-🔬 The measured numbers above (p95 ≈ 20–25 ms single-client, ~65 req/s with
+[expected] The measured numbers above (p95 ≈ 20–25 ms single-client, ~65 req/s with
 one worker, per-row cost ≈ 13 ms at batch size 1 vs ≈ 0.05 ms at 1000) are from
 the course's verification machine, a shared 4-vCPU Intel Xeon @ 2.10 GHz under
 other load. Yours will differ.

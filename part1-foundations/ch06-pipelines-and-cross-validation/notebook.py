@@ -81,7 +81,7 @@ split.summary().loc[["train", "valid"]]
 # The test row is deliberately not shown.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -115,7 +115,7 @@ split.summary().loc[["train", "valid"]]
 #
 # *What to notice:* the right-hand row has no step that could be re-implemented by hand, so there is nothing to get wrong between evaluation and serving.
 #
-# > 💡 **Intuition.** A pipeline is a sealed recipe card with the measurements
+# > **Intuition.** A pipeline is a sealed recipe card with the measurements
 # > already filled in from the training kitchen (this median, this mean, these
 # > categories). Whoever cooks later follows the card; nobody re-measures.
 # > *Where it breaks down:* the card is only as honest as the kitchen it was
@@ -262,13 +262,13 @@ pd.DataFrame(rows).round(3)
 # So "per-customer historical churn rate" is not a feature here at all: its
 # entire apparent value was the current row's label.
 #
-# > 💡 **Intuition.** A target encoding that includes the current row is an
+# > **Intuition.** A target encoding that includes the current row is an
 # > exam where each answer sheet already shows the student's own mark. The
 # > score is perfect and measures nothing. *Where it breaks down:* target
 # > encoding is legitimate when computed out-of-fold from **past, closed**
 # > labels only; the leak is the inclusion, not the technique.
 #
-# > 🧠 **Research bridge.** This is the tabular cousin of normalising EEG
+# > **Research bridge.** This is the tabular cousin of normalising EEG
 # > epochs with statistics computed over all subjects (small leak), versus
 # > selecting channels or frequency bands by their correlation with the label
 # > on the full dataset before cross-validating (large leak). The second kind
@@ -392,7 +392,7 @@ grade.ex1(build_preprocessor)
 #
 # *What to notice:* the fit window grows fold by fold and never contains a month later than the one being validated; the gap cell is the embargo from notebook 04, applied inside CV.
 #
-# > 💡 **Intuition.** Rolling-origin CV is a weather forecaster replaying
+# > **Intuition.** Rolling-origin CV is a weather forecaster replaying
 # > history: "using only what I knew on 1 March, how good was my forecast for
 # > March and April?", then again from 1 May. *Where it breaks down:* early
 # > folds train on less data than the final model will, so their scores are
@@ -527,7 +527,7 @@ print(f"notebook compute time: {time.time() - T0:.0f} s")
 # about twice as long.
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **Standardisation** (fitted on train only):
 #
@@ -590,7 +590,7 @@ print(f"p at eta=-2.9: {1 / (1 + np.exp(2.9)):.3f};  at eta=-1.9: {1 / (1 + np.e
 # agree to four decimals; 0.052 and 0.130.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -612,4 +612,4 @@ print(f"p at eta=-2.9: {1 / (1 + np.exp(2.9)):.3f};  at eta=-1.9: {1 / (1 + np.e
 # 4. Your rolling CV says 0.186 and the next period scores 0.163. Is the model broken? What would you look at?
 # 5. What does `handle_unknown="ignore"` do, and what should you monitor because of it?
 #
-# ➡️ **Next:** [`06_model_selection.ipynb`](../ch07-model-selection/notebook.ipynb) — compare models with confidence intervals and a search budget, and find out whether the trees really lose.
+# **Next chapter:** [`06_model_selection.ipynb`](../ch07-model-selection/notebook.ipynb) — compare models with confidence intervals and a search budget, and find out whether the trees really lose.

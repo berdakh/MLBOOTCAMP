@@ -80,7 +80,7 @@ print(f"{len(imps):,} impressions, {len(items):,} items, {len(users):,} users")
 # dataset is generated on first use: about 10 s here, up to a minute on Colab).
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -119,7 +119,7 @@ print(f"{len(imps):,} impressions, {len(items):,} items, {len(users):,} users")
 #
 # *What to notice:* the shuffle in the middle is the only step that crosses the network, and the combiner decides how much goes into it.
 #
-# > 💡 **Intuition.** A combiner is counting votes at each polling station and phoning in the totals, instead of trucking every ballot to the capital. *Where it breaks down:* totals add up, but "the median voter's age" does not: a polling station cannot pre-compute its share of a median, which is why holistic aggregates are expensive.
+# > **Intuition.** A combiner is counting votes at each polling station and phoning in the totals, instead of trucking every ballot to the capital. *Where it breaks down:* totals add up, but "the median voter's age" does not: a polling station cannot pre-compute its share of a median, which is why holistic aggregates are expensive.
 
 # %%
 def map_shuffle_reduce(df: pd.DataFrame, key: str, n_mappers: int = 4, n_reducers: int = 8,
@@ -201,7 +201,7 @@ print(f"top seller: {share.iloc[0]:.1%} of impressions | top 5: {share.iloc[:5].
 #
 # *What to notice:* the job's time is the *tallest* bar, not the average. Salting makes the bars even, and a tiny second stage adds the partial counts back up.
 #
-# > 💡 **Intuition.** Skew is a supermarket where a celebrity's fans all queue at checkout 3 while the other lanes sit idle. Salting hands each fan a ticket number (`hash(user) % S`) that sends them to one of S lanes; at closing, the S lane totals are added. Because a fan always gets the same ticket, nobody is counted twice. *Where it breaks down:* if you do not know which key is hot, salting every key multiplies the work for all the small ones.
+# > **Intuition.** Skew is a supermarket where a celebrity's fans all queue at checkout 3 while the other lanes sit idle. Salting hands each fan a ticket number (`hash(user) % S`) that sends them to one of S lanes; at closing, the S lane totals are added. Because a fan always gets the same ticket, nobody is counted twice. *Where it breaks down:* if you do not know which key is hot, salting every key multiplies the work for all the small ones.
 
 # %%
 N_REDUCERS, S = 64, 16
@@ -430,7 +430,7 @@ print(f"after dedup: {len(dedup):,} rows; identical to the clean log:",
 # * **Reservoir sampling**: a uniform sample of fixed size `k` from a stream of
 #   unknown length, in one pass.
 #
-# > 💡 **Intuition (HyperLogLog).** If a friend flips coins all day and tells you only "my longest run of heads was 10", you can guess they flipped about $2^{10}$ times. HLL hashes every value to random-looking bits and remembers, per bucket, the longest run of leading zeros: a few bytes per bucket, whatever the number of values. *Where it breaks down:* one bucket is a very noisy guess (a lucky early run); HLL averages $m$ buckets, which is where the $1.04/\sqrt{m}$ error below comes from.
+# > **Intuition (HyperLogLog).** If a friend flips coins all day and tells you only "my longest run of heads was 10", you can guess they flipped about $2^{10}$ times. HLL hashes every value to random-looking bits and remembers, per bucket, the longest run of leading zeros: a few bytes per bucket, whatever the number of values. *Where it breaks down:* one bucket is a very noisy guess (a lucky early run); HLL averages $m$ buckets, which is where the $1.04/\sqrt{m}$ error below comes from.
 #
 # Measure accuracy against speed on the impression table (each timing is the
 # best of 3 runs).
@@ -564,7 +564,7 @@ grade.ex2(partitioned_count)
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · Partitioning by hash.** In words: a key always goes to the same reducer, and keys spread evenly *if* no key is hot.
 #
@@ -626,7 +626,7 @@ print("k/n =", 5 / 20, "| simulated min/max over the 20 items:", freq.min().roun
 # **Expected:** every item's frequency within about ±0.01 of 0.25 (roughly 0.24–0.26), the first items and the last alike.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -650,4 +650,4 @@ print("k/n =", 5 / 20, "| simulated min/max over the 20 items:", freq.min().roun
 # 5. Your click count jumped 3% overnight with no product change. How do you check for duplicate delivery, and how do you deduplicate correctly and deterministically?
 # 6. When is HyperLogLog acceptable and when is it not? Why are HLL sketches mergeable, and what does that let you build?
 #
-# ➡️ **Next:** [`03_feature_pipelines_and_feature_stores.ipynb`](../ch21-feature-pipelines-and-feature-stores/notebook.ipynb) — use these joins to build features that are correct at prediction time, offline and online.
+# **Next chapter:** [`03_feature_pipelines_and_feature_stores.ipynb`](../ch21-feature-pipelines-and-feature-stores/notebook.ipynb) — use these joins to build features that are correct at prediction time, offline and online.

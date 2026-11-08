@@ -1,13 +1,13 @@
 # Solutions · Chapter 37 · Recommendation & search system design
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `embedding_memory_gb`
 
-✅ Reference code: [`code/nb19.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb19.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def embedding_memory_gb(n, dim, bytes_per):
@@ -23,7 +23,7 @@ copies: ×3), index structures (HNSW links), and replicas.
 
 ## Exercise 2 · `qps`
 
-✅ Reference code: [`code/nb19.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb19.py`](solutions.py) (`ex2`).
 
 ```python
 def qps(dau, req_per_user, peak):
@@ -38,7 +38,7 @@ significant figure: "about 30,000 QPS at peak".
 
 ## Exercise 3 · Written design (prompt 1, 2 or 6)
 
-✍️ Personal. Check your answer against this list:
+[open-ended] Personal. Check your answer against this list:
 
 * **10 steps signposted**, ~40 minutes when presented, the deep parts in
   candidate generation, ranking and serving.

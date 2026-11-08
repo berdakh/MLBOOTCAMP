@@ -84,7 +84,7 @@ print(pop[["activity", "base_ctr"]].describe().round(3).T[["mean", "std", "min",
 # ShopStream's logs.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -230,7 +230,7 @@ print(f"pooled-CTR difference, request-randomised: true SD across experiments {a
 # changes (usually the user), and compute variance **at that unit**: a
 # per-user metric with a t-test, or a pooled ratio with the delta method (notebook 12).
 #
-# > 💡 **Intuition.** Treating 1,000 impressions from 50 users as 1,000 independent
+# > **Intuition.** Treating 1,000 impressions from 50 users as 1,000 independent
 # > data points is like polling 50 people 20 times each and reporting 1,000 opinions:
 # > a person's answers largely repeat, so the honest sample size is much closer to 50.
 # > *Where it breaks down:* repeated impressions are not exact copies, so the effective
@@ -261,7 +261,7 @@ fpr.rename("false_positive_rate").to_frame().to_csv(OUT / "aa_tests.csv")
 #
 # *What to notice:* power is the green area of the right curve beyond the line; it grows when δ moves the curves apart or when more users make both curves narrower.
 #
-# > 💡 **Intuition.** Detecting a lift is hearing a whisper in a noisy room. The
+# > **Intuition.** Detecting a lift is hearing a whisper in a noisy room. The
 # > whisper is δ; the noise is the standard error, which falls only like 1/√n. A whisper
 # > half as loud needs four times the listeners. *Where it breaks down:* the "noise"
 # > also depends on the metric (σ), which is why CUPED (notebook 12) can lower it without
@@ -375,7 +375,7 @@ print(f"bootstrap 95% CI [{lo:+.5f}, {hi:+.5f}] ({time.time() - start:.1f} s for
 # chance, something between assignment and logging is broken, and **any**
 # metric difference is suspect, because the missing users are rarely missing at random.
 #
-# > 💡 **Intuition.** An SRM is a survey where, in one arm only, unhappy customers hang
+# > **Intuition.** An SRM is a survey where, in one arm only, unhappy customers hang
 # > up before answering. The answers you do get look happier, and no amount of
 # > statistics on the answers can tell you that. *Where it breaks down:* a mismatch can
 # > also be harmless (a bot filter applied evenly but noisily); you only know after
@@ -475,7 +475,7 @@ plt.show()
 #
 # *What to notice:* the day-5 crossing is pure noise; a sequential boundary demands much stronger evidence early, so the same walk would never have stopped.
 #
-# > 💡 **Intuition.** Peeking is rolling a die every morning and stopping the first time
+# > **Intuition.** Peeking is rolling a die every morning and stopping the first time
 # > it shows a six: run long enough and you always "find" one. *Where it breaks down:*
 # > successive looks are correlated (day 6 contains day 5's data), so the inflation grows
 # > more slowly than for independent rolls: about 0.2 after 14 looks, not 1 − 0.95¹⁴ ≈ 0.51.
@@ -543,7 +543,7 @@ print(pd.DataFrame(summary).T.round(3).to_string())
 # exploratory and labelled as such. Notebook 12 turns that into launch criteria.
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # A revision sheet: the formulas behind this notebook, each with a tiny worked example. The code cell after it checks every example numerically.
 #
@@ -624,7 +624,7 @@ print("5. Bonferroni rejects", (p_demo <= 0.05 / len(p_demo)).astype(int),
 # 5. Bonferroni `[1 1 0 0 0]`, BH `[1 1 1 0 0]`, and 0.58.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -647,4 +647,4 @@ print("5. Bonferroni rejects", (p_demo <= 0.05 / len(p_demo)).astype(int),
 # 5. A stakeholder wants to check results daily and stop when significant. Explain the risk with a number, and offer two alternatives.
 # 6. A launch review shows 3 of 25 metrics significantly up. How do you decide whether the launch is a win?
 #
-# ➡️ **Next:** [`12_advanced_experimentation.ipynb`](../ch30-advanced-experimentation/notebook.ipynb) — make experiments cheaper (CUPED, interleaving), analyse ratio metrics correctly, and decide what to launch.
+# **Next chapter:** [`12_advanced_experimentation.ipynb`](../ch30-advanced-experimentation/notebook.ipynb) — make experiments cheaper (CUPED, interleaving), analyse ratio metrics correctly, and decide what to launch.

@@ -1,13 +1,13 @@
 # Solutions · Chapter 36 · Model optimisation for inference
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `parity`
 
-✅ Reference code: [`code/nb18.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb18.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def parity(a, b, atol):
@@ -34,7 +34,7 @@ fp16, distillation), use rank-based checks instead (18.3).
 
 ## Exercise 2 · `distillation_loss`
 
-✅ Reference code: [`code/nb18.py`](solutions.py) (`ex2`); the module's
+[verified] Reference code: [`code/nb18.py`](solutions.py) (`ex2`); the module's
 `opt.distillation_loss` is the same.
 
 ```python
@@ -53,14 +53,14 @@ multiplying by `T²` keeps the soft and hard terms comparable when you tune
 `T`. `alpha = 0` is plain click training; `alpha = 1, T = 1` is regression
 on the teacher's probabilities.
 
-**Observed.** 🔬 Distilled 16-unit student: cascade NDCG@10 0.858 vs 0.843
+**Observed.** [expected] Distilled 16-unit student: cascade NDCG@10 0.858 vs 0.843
 on clicks only (teacher 0.875), +0.015 to +0.021 over seeds 0–2.
 
 ---
 
 ## Exercise 3 · Optimisation plan for a 45 ms transformer ranker (written)
 
-✍️ A strong answer is ordered by expected gain per unit of effort and risk,
+[open-ended] A strong answer is ordered by expected gain per unit of effort and risk,
 with a measurement gate at every step:
 
 1. **Profile first.** Where do the 45 ms go: per-candidate cost (300 × the

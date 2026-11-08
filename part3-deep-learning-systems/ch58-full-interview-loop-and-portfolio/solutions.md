@@ -1,13 +1,13 @@
 # Solutions · Chapter 58 · Full interview loop & portfolio
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `loop_score`
 
-✅ Reference code: [`code/nb20.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb20.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def loop_score(scores_by_round, weights):
@@ -41,7 +41,7 @@ with five signals outweighing one with three. `min(sorted(...), key=...)`
 breaks ties alphabetically because `min` returns the first minimum it meets.
 With the notebook's EXAMPLE attempt and illustrative weights this gives an
 overall of **2.77** and *verification* (2.0 in all four coding rounds) as the
-weakest signal ✅.
+weakest signal [verified].
 
 **What the number is not.** Real hiring decisions are not a weighted mean:
 a single round with a strong negative signal can decide the outcome, and
@@ -52,7 +52,7 @@ different interviewers calibrate differently. Use `by_round` and
 
 ## Exercise 2 · `project_brief`
 
-✅ Reference code: [`code/nb20.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb20.py`](solutions.py) (`ex2`).
 
 ```python
 TBD = "TBD — fill from your run"
@@ -87,7 +87,7 @@ def project_brief(project):
 With notebook 19's `depth_demos.json` in the same artifact directory, the
 third brief quotes the val losses at LR 3e-2 (2.751 without warmup, 2.261
 with) and the 20%-noise test accuracies (0.813 final, 0.9277 early-stopped),
-each with its split ✅ (checked by running the notebook with this solution).
+each with its split [verified] (checked by running the notebook with this solution).
 In a fresh runtime every value is TBD, which is the correct output.
 
 The `ValueError` for a value without a split is the code version of the
@@ -99,7 +99,7 @@ description before publishing.
 
 ## Exercise 3 · "Tell me about yourself"
 
-✍️ Personal. Structure and a calibrated example (bracketed parts are yours
+[open-ended] Personal. Structure and a calibrated example (bracketed parts are yours
 to fill with measured facts; do not invent them):
 
 > "I'm an ML engineer with a research background in EEG decoding and signal
@@ -122,17 +122,17 @@ a forward-looking reason, no complaints about past roles.
 
 ## Checkpoint answers
 
-1. **Tell me about yourself.** ✍️ See 20-3. Interviewers usually probe the
+1. **Tell me about yourself.** [open-ended] See 20-3. Interviewers usually probe the
    most impressive number first ("how was that evaluated?") and the
    transition ("why leave research?"). Prepare a 30-second answer to both.
-2. **Coding: mid vs senior when both solve it.** 🔬 Generic signals: the
+2. **Coding: mid vs senior when both solve it.** [expected] Generic signals: the
    senior candidate reaches the efficient approach without hints and says
    why it is optimal, writes clean code with edge cases handled unprompted,
    tests with cases chosen to break the code (empty, duplicates, extremes),
    states complexity precisely, and handles the follow-up (a changed
    constraint, concurrency, scale) by adapting the design rather than
    restarting.
-3. **Staff vs senior in design (ads).** 🔬 Two concrete additions: (a) a
+3. **Staff vs senior in design (ads).** [expected] Two concrete additions: (a) a
    marketplace view with long-term advertiser ROI/retention metrics and
    *budget-split* experiments because user-split tests leak through shared
    advertiser budgets; (b) organisational contracts: which team owns
@@ -140,19 +140,19 @@ a forward-looking reason, no complaints about past roles.
    pacing changes are sequenced and rolled back, and what to build first.
    Numbers that drive decisions (e.g. 3,969 ranker replicas → cascade and
    distillation first) also read as staff.
-4. **Verification as the weakest signal.** ✍️ Plan: for two weeks, in every
+4. **Verification as the weakest signal.** [open-ended] Plan: for two weeks, in every
    coding and ML-coding practice, write two tests *before* running the code
    (one edge case, one property or reference comparison), say them aloud, and
    log them; do two ML-coding prompts that require a reference check
    (attention vs `scaled_dot_product_attention`, LoRA merge equivalence).
    Evidence it worked: `verification` ≥ 3 in the next two logged loops on
    fresh prompts, and no interviewer-prompted "how would you test this?".
-5. **Strongest project in three minutes.** ✍️ Problem and user (20 s); the
+5. **Strongest project in three minutes.** [open-ended] Problem and user (20 s); the
    one number with its split and interval (20 s); the architecture and
    where it is hard (60 s); the main trade-off with the alternative and
    evidence (40 s); limits and next step (40 s). Every number from your own
    run.
-6. **Serving cost at 1,000 QPS.** 🔬 Arithmetic with assumptions stated:
+6. **Serving cost at 1,000 QPS.** [expected] Arithmetic with assumptions stated:
    measure per-replica throughput at the target p99 (e.g., say a T4 replica
    sustains R requests/s at batch B within the latency SLO, notebook 12);
    replicas = ⌈1,000 / (R × (1 − headroom))⌉, at least 2, more for zones

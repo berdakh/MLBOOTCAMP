@@ -1,6 +1,6 @@
 # Glossary
 
-The course dictionary for Levels 1–3: every term from every notebook's "📖 Words to know" table, merged into one A–Z, with links to where each is taught. Where a term has a research counterpart, it is given in brackets. For the maths, see the [equation sheet](equations.md); for pictures, the [diagram index](figures.md).
+The course dictionary for Levels 1–3: every term from every notebook's "Key terms" table, merged into one A–Z, with links to where each is taught. Where a term has a research counterpart, it is given in brackets. For the maths, see the [equation sheet](equations.md); for pictures, the [diagram index](figures.md).
 
 **Lost?** Start with the plain-language tables below, then look the word up in the A–Z. Every analogy is a crutch, not a definition; where one can mislead, the table says so.
 

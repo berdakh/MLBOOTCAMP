@@ -133,7 +133,7 @@ print("relevant abstract:", corpus[next(iter(test_qrels[q0]))][:200], "...")
 # embedding model.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -450,12 +450,12 @@ print("wrote", OUT / "retrieval_results.json")
 #
 # *What to notice:* this notebook built the blue box; notebook 08 adds the yellow one. Stage 1 is optimised for recall because anything it misses is gone for good.
 #
-# > 💡 **Intuition.** BM25 matches *spelling*, a dense model matches *meaning*. "PrP" in a claim and
+# > **Intuition.** BM25 matches *spelling*, a dense model matches *meaning*. "PrP" in a claim and
 # > "PrP" in an abstract is a sure hit for BM25 and just another token for a general embedding
 # > model; "methionine restriction may activate miRNAs" vs "microRNAs in stress responses" is the
 # > reverse. A hybrid asks both and lets agreement win.
 #
-# > 💡 **Intuition.** HNSW is like asking for directions in an unfamiliar country: first take
+# > **Intuition.** HNSW is like asking for directions in an unfamiliar country: first take
 # > the motorway to the right region (the sparse top layer), then main roads, then side streets
 # > (the dense bottom layer). `efSearch` is how many alternative routes you keep in mind; more
 # > routes, better answer, slower trip.
@@ -472,7 +472,7 @@ print("wrote", OUT / "retrieval_results.json")
 # *Your answer (Exercise 3):* ...
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1. BM25.**
 #
@@ -525,7 +525,7 @@ print("wrote", OUT / "retrieval_results.json")
 # nearly a tie, so consistent agreement is worth as much as one first place.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -548,4 +548,4 @@ print("wrote", OUT / "retrieval_results.json")
 # 5. Why does reciprocal rank fusion work without score normalisation, and when could it hurt?
 # 6. Design: semantic search over a company's internal documents for an LLM assistant. Name the retrieval stages, the evaluation set you would build, and the online metrics you would watch.
 #
-# ➡️ **Next:** [`08_contrastive_training_and_reranking.ipynb`](../ch46-contrastive-training-and-reranking/notebook.ipynb) — fine-tune this bi-encoder contrastively on in-domain pairs and add a cross-encoder re-ranker.
+# **Next chapter:** [`08_contrastive_training_and_reranking.ipynb`](../ch46-contrastive-training-and-reranking/notebook.ipynb) — fine-tune this bi-encoder contrastively on in-domain pairs and add a cross-encoder re-ranker.

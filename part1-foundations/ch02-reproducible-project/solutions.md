@@ -1,13 +1,13 @@
 # Solutions · Chapter 2 · A reproducible ML project
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `config_hash`
 
-✅ Reference code: [`code/nb01.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb01.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def config_hash(config: dict) -> str:
@@ -38,7 +38,7 @@ the chance of a collision is negligible, but say how you would detect one
 
 ## Exercise 2 · `record_run`
 
-✅ Reference code: [`code/nb01.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb01.py`](solutions.py) (`ex2`).
 
 The key decisions:
 
@@ -59,7 +59,7 @@ The key decisions:
 
 ## Exercise 3 · Three ways a re-run could differ (written)
 
-✍️ Personal. A strong answer names **specific** mechanisms and the pin that
+[open-ended] Personal. A strong answer names **specific** mechanisms and the pin that
 prevents each:
 
 | What changed | Pin that prevents it |

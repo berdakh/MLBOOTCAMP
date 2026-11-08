@@ -126,7 +126,7 @@ def new_classifier():
 # with the `gpu` budget).
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -192,7 +192,7 @@ print(f"\na 7B model in fp32 + AdamW, full fine-tuning: {prof.human_bytes(16 * n
 #
 # *What to notice:* the adapter path is a thin detour (k → r → d) around a big frozen block; because B starts at zero the detour adds nothing at first, so training starts exactly at the pretrained model.
 #
-# > 💡 **Intuition.** Instead of repainting a 768 × 768 mural (590k pixels) you paint on a
+# > **Intuition.** Instead of repainting a 768 × 768 mural (590k pixels) you paint on a
 # > transparent overlay described by 8 "brush strokes" in each direction (12k numbers). Fine-tuning
 # > changes turn out to be simple enough for such an overlay, and $B = 0$ means the overlay starts
 # > fully transparent. *Where it breaks down:* when the task needs genuinely new knowledge (a new
@@ -274,7 +274,7 @@ del reference
 #
 # *What to notice:* each step up multiplies what you train and store; the question this section answers is whether the accuracy climbs with it on this budget.
 #
-# > 💡 **Intuition.** One base model is a shared engine; adapters are small plug-in cartridges, one
+# > **Intuition.** One base model is a shared engine; adapters are small plug-in cartridges, one
 # > per task or customer. You can swap a cartridge in milliseconds and keep a thousand of them on
 # > disk for the price of a few copies of the engine (6.6).
 
@@ -554,7 +554,7 @@ print(f"1,000 customer-specific models: full copies {1000 * full_bytes / 2**30:.
 # *Your answer (Exercise 3):* ...
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1. The LoRA layer.**
 #
@@ -597,7 +597,7 @@ print(f"1,000 customer-specific models: full copies {1000 * full_bytes / 2**30:.
 # in 6.5 the merged logits match to ~1e-6.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -620,4 +620,4 @@ print(f"1,000 customer-specific models: full copies {1000 * full_bytes / 2**30:.
 # 5. Merged vs unmerged adapters at serving time: latency, flexibility, and how you would serve 1,000 per-customer adapters.
 # 6. LoRA matches full fine-tuning on your benchmark but users report worse results on long inputs. What could explain it and how would you investigate?
 #
-# ➡️ **Next:** [`07_embeddings_and_semantic_search.ipynb`](../ch45-embeddings-and-semantic-search/notebook.ipynb) — from classifying text to *retrieving* it: lexical, dense and hybrid search, evaluated properly.
+# **Next chapter:** [`07_embeddings_and_semantic_search.ipynb`](../ch45-embeddings-and-semantic-search/notebook.ipynb) — from classifying text to *retrieving* it: lexical, dense and hybrid search, evaluated properly.

@@ -107,7 +107,7 @@ print(f"{len(text):,} characters, vocab {tok.vocab_size}")
 # **Expected:** 1,115,394 characters, vocab 65 (the same corpus as notebook 03).
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -243,7 +243,7 @@ RESULTS["warmup"] = warm_rows
 # the 0.3–0.5 gaps at high LR are not.) Runtime ~1 minute on 2 idle CPU threads
 # (up to ~6 minutes when our build machine was heavily shared).
 #
-# > 💡 **Intuition.** Adam divides each step by a running estimate of the gradient's size. In the
+# > **Intuition.** Adam divides each step by a running estimate of the gradient's size. In the
 # > first few steps that estimate is built from a handful of gradients, so it can be badly wrong and
 # > the effective step erratic, while the freshly initialised network is at its most fragile. Warmup
 # > is driving slowly out of the car park until the instruments have warmed up. *Where the analogy
@@ -345,7 +345,7 @@ RESULTS["batch_scaling"] = bs_rows
 # Training ImageNet in 1 Hour"* (Goyal et al., 2017); what you measured is a
 # toy version of its argument and of its limits.
 #
-# > 💡 **Intuition.** A batch k times larger gives a gradient estimate with about k times less
+# > **Intuition.** A batch k times larger gives a gradient estimate with about k times less
 # > variance, so you can afford k times bigger steps, but you also take k times fewer of them in a
 # > fixed number of epochs. Linear scaling keeps the distance travelled per epoch the same. *Where the
 # > analogy breaks down:* once the gradient noise is already small (past the critical batch size),
@@ -411,7 +411,7 @@ RESULTS["label_noise"] = noise_rows
 # usefully, though they understate true accuracy. For EEG, where labels
 # come from cues the subject may not have followed, this is directly relevant.
 #
-# > 💡 **Intuition.** A student cramming an answer key with 20% typos first learns the subject
+# > **Intuition.** A student cramming an answer key with 20% typos first learns the subject
 # > (patterns shared by many questions), then memorises the typos one by one. Stop them early and
 # > you get the subject without the typos. *Where the analogy breaks down:* "early" is chosen on a
 # > validation set that has the same typos, so it ranks checkpoints correctly but understates their
@@ -516,7 +516,7 @@ print("wrote", (OUT / "depth_demos.json").relative_to(ART), "sections:", list(RE
 #
 # ### A FICTIONAL abstract with planted flaws
 #
-# > ⚠️ **Fictional.** This abstract was written for this exercise. No such
+# > **Fictional.** This abstract was written for this exercise. No such
 # > paper, model or dataset exists; any resemblance to real work is accidental.
 #
 # > *SpectraFormer: calibration-free motor-imagery decoding for new BCI users.*
@@ -613,7 +613,7 @@ grade.ex2(critique_flags)
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · Warmup + cosine schedule** (Exercise 1).
 #
@@ -686,7 +686,7 @@ print(f"attention scores at T = 2,048: {12 * 12 * 2048**2 * 2 / 1e9:.2f} GB")
 # minimum-norm solution); `1.21` GB.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -709,4 +709,4 @@ print(f"attention scores at T = 2,048: {12 * 12 * 2048**2 * 2 / 1e9:.2f} GB")
 # 5. What is the memory and compute complexity of self-attention in sequence length, and what do FlashAttention-style kernels and a KV cache each change?
 # 6. Critique the fictional SpectraFormer abstract in 90 seconds, flaws in order of how much they inflate the headline number.
 #
-# ➡️ **Next:** [`20_full_interview_loop_and_portfolio.ipynb`](../ch58-full-interview-loop-and-portfolio/notebook.ipynb) — run a full, timed loop against leveling rubrics and package your Level 1–3 work as a portfolio.
+# **Next chapter:** [`20_full_interview_loop_and_portfolio.ipynb`](../ch58-full-interview-loop-and-portfolio/notebook.ipynb) — run a full, timed loop against leveling rubrics and package your Level 1–3 work as a portfolio.

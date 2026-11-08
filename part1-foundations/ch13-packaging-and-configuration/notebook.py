@@ -27,7 +27,7 @@
 # `ci-example.yml`, `README.md`), the same files that are committed in the repository's `deploy/`
 # folder, and `artifacts/serve_logs/` with the captured output of the service you start.
 #
-# > ⚙️ **Optional external extension — not runnable in Colab, not executed in our verification.**
+# > **Optional external extension — not runnable in Colab, not executed in our verification.**
 # > Colab cannot run Docker, and nothing in this course builds an image or deploys to a
 # > host. You will *write and explain* the Dockerfile and CI workflow here. Building and
 # > running the image on your own machine is described in `deploy/README.md`.
@@ -74,7 +74,7 @@ registry = bootstrap.ensure_registry()
 # first time, loaded instantly after that).
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -142,7 +142,7 @@ except metadata.PackageNotFoundError:
 # **exact** versions one environment was built and verified with. Libraries
 # publish ranges; deployable services and reproducible results need a lock.
 #
-# > 💡 **Intuition.** A range is "any 2-litre pot will do" in a recipe; a lock
+# > **Intuition.** A range is "any 2-litre pot will do" in a recipe; a lock
 # > file is the exact pot, model number and all, that the recipe was tested
 # > in. Cookbooks print ranges; a restaurant that must serve the same dish
 # > every night uses the lock. *Where it breaks down:* a lock freezes security
@@ -195,7 +195,7 @@ print(f"\n{lock_table['matches'].sum()} of {len(lock_table)} packages match the 
 #
 # *What to notice:* the three environments share everything except a few variables, and the only two outcomes are "start with typed, frozen settings" or "do not start at all".
 #
-# > 💡 **Intuition.** The image is a rental car; environment variables are the
+# > **Intuition.** The image is a rental car; environment variables are the
 # > seat and mirror settings each driver adjusts. Same car, same engine, no
 # > welding. *Where it breaks down:* a wrong mirror setting is visible at
 # > once; a wrong threshold is not, which is why the settings must be
@@ -248,7 +248,7 @@ for label, env in [("threshold", {"CHURN_THRESHOLD_OVERRIDE": "1.5"}),
 # already excludes `.env` files and `*.key`; the `.dockerignore` below does the
 # same for the image.
 #
-# > 🧠 **Research bridge.** This is the experiment-config habit from notebook 01
+# > **Research bridge.** This is the experiment-config habit from notebook 01
 # > applied to a running service: one object, built once, recorded. The
 # > difference is the source: a config file you edit becomes environment
 # > variables someone else sets.
@@ -346,7 +346,7 @@ print(f"{len(DOCKERFILE.splitlines())} lines")
 # worker per container and more replicas; on a single VM, roughly one worker
 # per CPU core.
 #
-# > 💡 **Intuition.** Baking the model in is printing the map into the car's
+# > **Intuition.** Baking the model in is printing the map into the car's
 # > manual; loading from the registry is a satnav that downloads the current
 # > map at start-up. The manual never fails to load but is out of date the
 # > day a road changes. *Where it breaks down:* a satnav that cannot reach its
@@ -633,7 +633,7 @@ An invalid value stops the process at start-up with exit code 2 and a
 `configuration error: ...` line on stderr. Secrets never go in this table, the
 image or the repository: inject them from your platform's secret store.
 
-## 3 · ⚙️ Optional external extension: build and run the image
+## 3 · Optional external extension: build and run the image
 
 Not runnable in Colab, and **not executed in the course's verification**. You
 need Docker on your own machine.
@@ -653,7 +653,7 @@ its own `/metrics`, and a reload reaches only the worker that receives it.
 Restart the container (or run one worker per container) to switch every
 worker together.
 
-## 4 · ⚙️ Optional external extension: deploy to a host
+## 4 · Optional external extension: deploy to a host
 
 Not part of the course and not verified. Any platform that runs a container
 image works (a VM with Docker, Cloud Run, Azure Container Apps, Fly.io,
@@ -927,7 +927,7 @@ print("\ngenerated files match deploy/:", all_match)
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -951,4 +951,4 @@ print("\ngenerated files match deploy/:", all_match)
 # 5. Bake the model into the image or load it from a registry: give one strong argument for each.
 # 6. Where do secrets come from in this design, and name two places they must never appear.
 #
-# ➡️ **Next:** [`13_health_logs_and_latency.ipynb`](../ch14-health-logs-and-latency/notebook.ipynb) — the service runs; now find out whether it is healthy, what it logs, and how fast it really is.
+# **Next chapter:** [`13_health_logs_and_latency.ipynb`](../ch14-health-logs-and-latency/notebook.ipynb) — the service runs; now find out whether it is healthy, what it logs, and how fast it really is.

@@ -113,7 +113,7 @@ print("the original data are released under CC0 (see https://huggingface.co/data
 # the Jigsaw competition and WILDS, we binarise both at 0.5.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -189,7 +189,7 @@ print(f"TF-IDF {X_train.shape[1]:,} features, trained in {time.perf_counter() - 
 #
 # *What to notice:* a shift of the subgroup's *non-toxic* scores (the dashed bump moving right) lowers BPSN but leaves BNSP high: exactly the pattern measured below.
 #
-# > 💡 **Intuition.** Think of a smoke detector that also beeps at toast. Subgroup AUC asks "inside the
+# > **Intuition.** Think of a smoke detector that also beeps at toast. Subgroup AUC asks "inside the
 # > kitchen, does it tell smoke from toast?"; BPSN asks "is kitchen toast scored below real smoke in
 # > the rest of the house?" If not, the *room* (the identity mention) is triggering it. BNSP asks the
 # > reverse: "is real kitchen smoke scored above harmless air elsewhere?" *Where the analogy breaks
@@ -260,7 +260,7 @@ RESULTS["jigsaw_final_metric"] = round(final, 4)
 # legal to use), and equalising one error rate generally un-equalises others: when base rates differ,
 # you cannot equalise FPR, FNR and calibration at once (Kleinberg et al., 2016; Chouldechova, 2017).
 #
-# > 💡 **Intuition.** One threshold is one height bar for everyone; if one group's benign comments are
+# > **Intuition.** One threshold is one height bar for everyone; if one group's benign comments are
 # > systematically scored higher, the same bar catches more of them. Moving the bar per group can
 # > equalise false positives, but then the toxic comments of that group must clear a higher bar and
 # > more slip through. *Where the analogy breaks down:* with different base rates, no choice of bars
@@ -481,7 +481,7 @@ print(mi.round(3).to_string(index=False))
 #
 # *What to notice:* clipping bounds what any single record can contribute (at most C); the noise is scaled to that bound, so it hides any one record's contribution.
 #
-# > 💡 **Intuition.** A vote where each person's ballot can move the result by at most one unit
+# > **Intuition.** A vote where each person's ballot can move the result by at most one unit
 # > (clipping), and the official count is then reported with random jitter of a few units (noise):
 # > looking at the result, you cannot tell whether any particular person voted. More voters (a larger
 # > batch) make the same jitter matter less. *Where the analogy breaks down:* training repeats this
@@ -582,7 +582,7 @@ print("saved", OUT / "results.json")
 # *Your answer (Exercise 3):* ...
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · AUC as a probability, and the three bias AUCs.**
 #
@@ -659,7 +659,7 @@ print(f"std of the noise on the mean gradient: measured {np.std(noise_only):.5f}
 # deviation within ~1% of `0.00781`.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -683,4 +683,4 @@ print(f"std of the noise on the mean gradient: measured {np.std(noise_only):.5f}
 # 5. Explain DP-SGD step by step. What do the clipping norm and the noise multiplier control, and what does ε mean?
 # 6. Design question: you are launching a comment-moderation model for a new country. What fairness, robustness and privacy checks go into the launch review?
 #
-# ➡️ **Next:** [`16_evaluating_llm_systems_and_guardrails.ipynb`](../ch54-evaluating-llm-systems-and-guardrails/notebook.ipynb) — the same evaluation discipline for systems built on language models: eval sets, judges, prompt injection and guardrails.
+# **Next chapter:** [`16_evaluating_llm_systems_and_guardrails.ipynb`](../ch54-evaluating-llm-systems-and-guardrails/notebook.ipynb) — the same evaluation discipline for systems built on language models: eval sets, judges, prompt injection and guardrails.

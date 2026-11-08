@@ -69,7 +69,7 @@ split = bootstrap.ensure_split()
 # regression, which won on validation PR-AUC in notebook 06).
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -113,7 +113,7 @@ split = bootstrap.ensure_split()
 #
 # *What to notice:* the three exits are ordered from "your fault" to "our fault, try later"; only the last one is worth retrying (notebook 11).
 #
-# > 💡 **Intuition.** The schema is a bouncer with a guest list at the door:
+# > **Intuition.** The schema is a bouncer with a guest list at the door:
 # > a wrong name never reaches the bar (the model), and the bouncer tells you
 # > exactly what was wrong with your ticket. *Where it breaks down:* the
 # > bouncer checks the form, not the truth: a well-formed request with
@@ -230,7 +230,7 @@ print(r.status_code, r.text)
 # | Should a client retry? | **never** - it will fail identically | maybe, which multiplies load |
 # | Does it page the on-call engineer? | no (it is a 4xx) | often yes (5xx rate alerts) |
 #
-# > 💡 **Intuition.** A 422 is a returned letter stamped "street name
+# > **Intuition.** A 422 is a returned letter stamped "street name
 # > missing"; a 500 is a letter that vanished in the sorting office. The first
 # > tells the sender what to fix; the second makes everyone investigate the
 # > post office. *Where it breaks down:* a 4xx can still be the service's
@@ -356,7 +356,7 @@ print("with response_model:   ", sorted(leaky_client.post("/predict", json=body)
 # The fix is an **app factory**: a function that takes configuration and
 # returns a fresh app. Everything the app needs is created *inside* it.
 #
-# > 💡 **Intuition.** A module-level app is a restaurant that cooks its one
+# > **Intuition.** A module-level app is a restaurant that cooks its one
 # > dish the moment you walk past the building; a factory is a kitchen that
 # > cooks when you order, to your order. *Where it breaks down:* in
 # > production there is usually exactly one app per process, so the factory's
@@ -386,7 +386,7 @@ for t in (0.3, 0.5):
 # its own configuration. That is exactly what tests need: one app per test,
 # with a temporary registry.
 #
-# > 🧠 **Research bridge.** You already do this with models: `make_model(cfg)`
+# > **Research bridge.** You already do this with models: `make_model(cfg)`
 # > returns a fresh network instead of a global `model` that every experiment
 # > mutates. An app factory is the same idea applied to the service.
 
@@ -612,7 +612,7 @@ grade.ex2(make_schema_v2)
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -636,4 +636,4 @@ grade.ex2(make_schema_v2)
 # 5. What is the difference between `/health` and `/ready`, and between a 413, a 422 and a 503?
 # 6. Name two backwards-compatible and two breaking changes to an API contract.
 #
-# ➡️ **Next:** [`10_consistent_serving.ipynb`](../ch11-consistent-serving/notebook.ipynb) — make sure the API returns exactly the scores the notebook computed, and load models safely.
+# **Next chapter:** [`10_consistent_serving.ipynb`](../ch11-consistent-serving/notebook.ipynb) — make sure the API returns exactly the scores the notebook computed, and load models safely.

@@ -90,7 +90,7 @@ print("calculators:", ", ".join(n for n, f in vars(ds).items()
 # about 250 lines of arithmetic, and every function says what it assumes.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -166,7 +166,7 @@ print("calculators:", ", ".join(n for n, f in vars(ds).items()
 # | **Ownership** | Every feature group has an owning team, an on-call, a freshness SLO, a deprecation path; consumers are tracked (lineage) | Without owners, a 5,000-feature store becomes unmaintainable and nobody dares delete anything |
 # | **Privacy and deletion** | Entity-keyed storage makes "delete user X" a keyed delete; offline history must honour it too | Retention is a cost lever *and* a compliance requirement |
 #
-# > 💡 **Intuition.** A feature store is one recipe cooked in two kitchens: a slow, large batch kitchen
+# > **Intuition.** A feature store is one recipe cooked in two kitchens: a slow, large batch kitchen
 # > that prepares every past meal for training, and a fast counter that serves today's meal in
 # > milliseconds. Training/serving skew is the two kitchens following slightly different recipes.
 # > *Where the analogy breaks down:* streaming features are computed *as events arrive*, so even with
@@ -385,7 +385,7 @@ for rel in (0.5, 1.0):
 # catches *crashes and large* regressions, and small effects are left to the
 # A/B test. Say this out loud: it shows you know what each stage can and cannot catch.
 #
-# > 💡 **Intuition.** A 1% canary is a smoke alarm, not a thermometer: it reliably notices a fire (a
+# > **Intuition.** A 1% canary is a smoke alarm, not a thermometer: it reliably notices a fire (a
 # > crash, a doubling of errors within minutes) but cannot tell whether the room got one degree
 # > warmer (a +2% effect needs far more traffic and time). *Where the analogy breaks down:* the
 # > required sample grows with $1/\Delta^2$, so halving the effect you want to see quadruples the
@@ -422,7 +422,7 @@ print("labels visible:       ", "  ".join(f"{ds.label_maturity(k, mean_delay):>4
 # input drift, score drift, early proxy labels (a disputed transaction before
 # the chargeback), and a small labelled sample from human review.
 #
-# > 💡 **Intuition.** Grading an exam while students are still handing in papers: yesterday's batch
+# > **Intuition.** Grading an exam while students are still handing in papers: yesterday's batch
 # > always looks like it has fewer correct answers, simply because fewer papers are in. Compare two
 # > models only on papers that have had the same time to arrive. *Where the analogy breaks down:*
 # > label delay can depend on the case itself (big frauds are reported faster), so "same maturity"
@@ -578,7 +578,7 @@ print(adr)
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · Online feature-store size.**
 #
@@ -645,7 +645,7 @@ print(f"label maturity after 7 days (mean delay 20): by hand {1 - math.exp(-7 / 
 # number printed in 17.3), and `0.295`.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -668,4 +668,4 @@ print(f"label maturity after 7 days (mean delay 20): by hand {1 - math.exp(-7 / 
 # 5. Labels arrive 3–6 weeks after predictions. How does your monitoring platform tell a real performance drop from label immaturity?
 # 6. When would you buy a managed feature store instead of building one, and what would make you reverse that decision?
 #
-# ➡️ **Next:** [`18_large_scale_design_cases.ipynb`](../ch56-large-scale-design-cases/notebook.ipynb) — the platform's customers: four product designs (ads, video, an LLM assistant, fraud) with numbers, deep dives and failure modes.
+# **Next chapter:** [`18_large_scale_design_cases.ipynb`](../ch56-large-scale-design-cases/notebook.ipynb) — the platform's customers: four product designs (ads, video, an LLM assistant, fraud) with numbers, deep dives and failure modes.

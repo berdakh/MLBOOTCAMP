@@ -1,13 +1,13 @@
 # Solutions · Chapter 29 · A/B testing fundamentals
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `sample_size_per_arm`
 
-✅ Reference code: [`code/nb11.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb11.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def sample_size_per_arm(p0, mde_abs, alpha=0.05, power=0.8):
@@ -18,7 +18,7 @@ def sample_size_per_arm(p0, mde_abs, alpha=0.05, power=0.8):
 
 `(1.96 + 0.84)² ≈ 7.85` is worth memorising: for 10% → 11%,
 `7.85 × (0.09 + 0.0979) / 0.0001 ≈ 14,749` per arm. The notebook simulated
-2,000 experiments at that size and measured a power of 0.805 (✅).
+2,000 experiments at that size and measured a power of 0.805 ([verified]).
 
 **Variants you may meet.** Some texts use the pooled variance `2 p̄(1-p̄)`
 under the null for the `z_{α/2}` term; the numbers differ by well under 1%
@@ -29,7 +29,7 @@ fact: `n ∝ 1/δ²`.
 
 ## Exercise 2 · `srm_pvalue`
 
-✅ Reference code: `ex2`.
+[verified] Reference code: `ex2`.
 
 ```python
 def srm_pvalue(n_a, n_b, expected_ratio=0.5):
@@ -42,7 +42,7 @@ By hand: `χ² = Σ (observed − expected)² / expected`, 1 degree of freedom,
 `p = stats.chi2.sf(χ², 1)`. Equivalent to a two-sided z-test of the
 proportion `n_a / N` against `expected_ratio`.
 
-**Sense of scale.** 50,400 / 49,600 (a 50.4% share) gives p ≈ 0.011 (✅ computed); the same
+**Sense of scale.** 50,400 / 49,600 (a 50.4% share) gives p ≈ 0.011 ([verified] computed); the same
 50.4% share of 2 million users gives p ≈ 1e-29. SRM checks become extremely sensitive at
 scale, which is what you want: at 2 million users, a 0.4-point imbalance is
 4,000 users that something lost or added.
@@ -51,7 +51,7 @@ scale, which is what you want: at 2 million users, a 0.4-point imbalance is
 
 ## Exercise 3 · `aa_false_positive_rate`
 
-✅ Reference code: `ex3`.
+[verified] Reference code: `ex3`.
 
 ```python
 def aa_false_positive_rate(n_experiments, n_users_per_arm, n_looks, alpha=0.05, p=0.1, seed=0):
@@ -69,7 +69,7 @@ def aa_false_positive_rate(n_experiments, n_users_per_arm, n_looks, alpha=0.05, 
 The trick is to simulate **conversions per batch**, not individual users:
 `binomial(per_look, p)` per arm per look, then `cumsum` gives the cumulative
 counts every look sees. 4,000 experiments × 10 looks run in milliseconds.
-Measured (✅): 0.047 with one look, 0.198 with ten looks, 0.009 at α = 0.01.
+Measured ([verified]): 0.047 with one look, 0.198 with ten looks, 0.009 at α = 0.01.
 
 Why it rises: the cumulative z-statistics at successive looks are strongly
 correlated but not identical, a random walk that gets several chances to
@@ -84,7 +84,7 @@ independent impressions, but impressions from one user share that user's
 propensity to click (and heavy users contribute many). The true variance of the
 pooled CTR is larger, so the CI is **too narrow** and the test fires too often.
 Show it with an A/A test: the notebook measured a 50% false-positive rate for
-the naive test vs 4% for a user-level test (✅), with the naive SE 2.8x too
+the naive test vs 4% for a user-level test ([verified]), with the naive SE 2.8x too
 small. Fix: per-user metric + t-test, or the delta method for the pooled ratio (notebook 12).
 
 **2. Request / user / cluster.** *Request*: when the treatment has no memory
@@ -99,7 +99,7 @@ interference: a treatment that sends more buyers to some sellers takes them from
 control's sellers, biasing the comparison (and fewer units mean more variance).
 
 **3. 5% baseline, +0.25 pp.** `7.85 × (0.05·0.95 + 0.0525·0.9475) / 0.0025² ≈
-122,000` users per arm (✅ `ex1(0.05, 0.0025)` = 122,121). Half the effect →
+122,000` users per arm ([verified] `ex1(0.05, 0.0025)` = 122,121). Half the effect →
 about **4x**: 482,856 per arm. Then discuss: run longer, use variance
 reduction (CUPED), a more sensitive metric, or accept a larger MDE.
 
@@ -107,10 +107,10 @@ reduction (CUPED), a more sensitive metric, or accept a larger MDE.
 interpret the lift. Look for the cause: assignment vs logging mismatch, bot
 filtering, redirects or crashes in one arm, a client version that fails to
 log, users excluded post-assignment. Fix and rerun. Section 11.6 showed an A/A
-test with a lazy-logging bug producing a +2% "lift" at p ≈ 1e-10 (✅).
+test with a lazy-logging bug producing a +2% "lift" at p ≈ 1e-10 ([verified]).
 
 **5. Daily peeking.** With 14 daily looks and stop-at-first-significance, the
-A/A false-positive rate was 0.23 instead of 0.05 (✅ measured). Alternatives:
+A/A false-positive rate was 0.23 instead of 0.05 ([verified] measured). Alternatives:
 (a) a fixed horizon from a power calculation, looking only at guardrails for
 safety; (b) a sequential design: group-sequential boundaries with alpha
 spending (O'Brien–Fleming), or always-valid p-values / confidence sequences

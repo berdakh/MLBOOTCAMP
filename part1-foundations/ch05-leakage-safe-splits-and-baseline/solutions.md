@@ -1,13 +1,13 @@
 # Solutions · Chapter 5 · Leakage-safe splits & a baseline
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `time_split_with_embargo`
 
-✅ Reference code: [`code/nb04.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb04.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def time_split_with_embargo(df, train_end, valid_end, gap_days):
@@ -36,7 +36,7 @@ Use a strict inequality for the zero-gap case, or require `gap_days >= 1`.
 
 ## Exercise 2 · `leakage_problems`
 
-✅ Reference code: [`code/nb04.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb04.py`](solutions.py) (`ex2`).
 
 ```python
 def leakage_problems(train, test, label_horizon_days, group_col=None):
@@ -61,7 +61,7 @@ shared customers across periods are correct for the next-month question.
 
 ## Exercise 3 · `rule_scores`
 
-✅ Reference code: [`code/nb04.py`](solutions.py) (`ex3`). Validation PR-AUC
+[verified] Reference code: [`code/nb04.py`](solutions.py) (`ex3`). Validation PR-AUC
 0.118 (positive rate 0.052), against 0.1245 for the 5-feature logistic
 regression and 0.061 for the yes/no hand rule.
 
@@ -76,7 +76,7 @@ def rule_scores(df):
 **Why it works.** A continuous score gives a full ranking; PR-AUC rewards
 putting the likely churners first. `-log(sessions_trend)` is high when usage
 fell (last 4 weeks vs the 4 before), the strongest single signal on this data
-(✅ ≈ 0.105 alone). The weights were chosen by reasoning, not fitted; if you
+([verified] ≈ 0.105 alone). The weights were chosen by reasoning, not fitted; if you
 tune them on validation you have trained a model on validation, so then hold
 out something else.
 
@@ -87,7 +87,7 @@ check single features first, it tells you where the signal is.
 
 ## Exercise 4 · The cross-subject EEG analogy (written)
 
-✍️ A strong answer:
+[open-ended] A strong answer:
 
 | This project | EEG/BCI equivalent | Right when |
 |---|---|---|
@@ -124,7 +124,7 @@ feature timestamps against the snapshot. The notebook measured 0.12 → 0.99
 from two leaky columns *with a perfectly time-ordered split*: split checks see
 row membership, not what a column encodes.
 
-**4. Random split, small inflation.** 🔬 This run: random rows 0.128-0.152 vs
+**4. Random split, small inflation.** [expected] This run: random rows 0.128-0.152 vs
 time 0.1245. Features are already point-in-time (the SQL removed the big leak),
 the 5-feature linear model cannot memorise customers, and the synthetic
 business is fairly stationary. It is still wrong: it answers a question nobody

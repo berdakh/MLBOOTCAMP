@@ -1,13 +1,13 @@
 # Solutions · Chapter 40 · Training efficiency & memory
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `training_memory_bytes`
 
-✅ Reference code: [`code/nb02.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb02.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 STATE_BYTES = {"sgd": 0, "sgd_momentum": 4, "adam": 8, "adamw": 8}
@@ -32,7 +32,7 @@ None of these include activations, the CUDA context or fragmentation.
 
 ## Exercise 2 · `accumulated_step`
 
-✅ Reference code: [`code/nb02.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb02.py`](solutions.py) (`ex2`).
 
 ```python
 def accumulated_step(model, batches, loss_fn):
@@ -62,7 +62,7 @@ memory saving); returning a tensor instead of a float.
 
 ## Exercise 3 · Fitting a 1.3B model on a T4
 
-✍️ (a) Weights + gradients + AdamW state: 1.3e9 × 16 B ≈ **20.8 GB** in fp32,
+[open-ended] (a) Weights + gradients + AdamW state: 1.3e9 × 16 B ≈ **20.8 GB** in fp32,
 1.3e9 × 18 B ≈ **23.4 GB** with autocast. That is more than the T4's 16 GB *before any
 activation*.
 
@@ -85,19 +85,19 @@ specific term.
 
 ## Checkpoint answers
 
-1. 🔬 **7B with AdamW.** fp32: 7e9 × 16 B = **112 GB**; with autocast ≈ 126 GB
+1. [expected] **7B with AdamW.** fp32: 7e9 × 16 B = **112 GB**; with autocast ≈ 126 GB
    (18 B/param); ZeRO-style fp16 + fp32 master: 112 GB. Mixed precision
    shrinks **activations** (fp16 intermediates) and speeds up matmuls; it does
    not shrink the fp32 optimizer state. That is why large-model training shards the state
    (ZeRO/FSDP) or uses PEFT.
 
-2. ✅ **Activations** ≈ batch × seq × layers × (c·hidden + heads·seq) values: linear in
+2. [verified] **Activations** ≈ batch × seq × layers × (c·hidden + heads·seq) values: linear in
    batch, hidden and layers; linear in seq for most tensors and **quadratic** for
    attention probabilities unless a fused (flash) attention kernel is used. Measured in 2.2:
    18.0 MB per layer, matching `16h + a·s` values per token, plus 9.9 MB for logits and
    embeddings; activations were 5.8× the weights+grads+optimizer state for a 0.93M-parameter model.
 
-3. ✅ **Accumulation** is exactly equivalent when the loss is a mean over
+3. [verified] **Accumulation** is exactly equivalent when the loss is a mean over
    independent examples and micro-batches are weighted by their share (2.3: difference
    5.6e-09, i.e. rounding). It is not equivalent with BatchNorm (per-micro-batch
    statistics), with per-token losses over variable lengths if weighted per example,
@@ -105,7 +105,7 @@ specific term.
    counts micro-steps instead of optimizer steps. Cost: k sequential passes, so
    less parallelism; the same FLOPs, but the GPU is less efficient with small batches.
 
-4. ✅ **Checkpointing** keeps only block inputs in forward and recomputes the
+4. [verified] **Checkpointing** keeps only block inputs in forward and recomputes the
    block in backward. Saves most activation memory (2.4: 82.0 → 13.9 MB, −83%)
    at the cost of one extra forward pass (2.4: +23% to +40% step time on CPU;
    ~+30% is the usual figure). Place them at transformer-block boundaries (cheap to store
@@ -113,7 +113,7 @@ specific term.
    or every k-th for a middle ground; avoid recomputing very expensive ops if memory allows
    (selective checkpointing: keep attention outputs, recompute the MLP).
 
-5. ✍️ **Growing memory.** Log `torch.cuda.memory_allocated()` per step to confirm
+5. [open-ended] **Growing memory.** Log `torch.cuda.memory_allocated()` per step to confirm
    a leak (grows) vs a peak (flat + spike). Look for tensors kept across steps:
    `total_loss += loss` instead of `.item()`, lists of outputs/predictions without
    `.detach().cpu()`, metrics computed on tensors with graphs, a growing cache
@@ -122,7 +122,7 @@ specific term.
    `gc.get_objects()` filtered for tensors. 2.6 showed the effect: 0 B vs 102.6 MB of
    activations still alive after 5 steps.
 
-6. 🔬 **`torch.compile`** captures Python into FX graphs (TorchDynamo), then
+6. [expected] **`torch.compile`** captures Python into FX graphs (TorchDynamo), then
    generates fused kernels (Inductor → Triton on GPU, C++ on CPU), optionally CUDA
    graphs (`mode="reduce-overhead"`). Speed-ups come from fusing memory-bound ops
    and removing Python/launch overhead, so they are large for overhead- or

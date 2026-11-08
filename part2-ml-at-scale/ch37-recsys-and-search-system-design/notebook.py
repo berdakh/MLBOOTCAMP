@@ -72,7 +72,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 SECONDS_PER_DAY = 86_400
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -263,7 +263,7 @@ ann.round(3)
 # 100M items you shard (each shard holds 5–20M vectors), search shards in
 # parallel and merge, and the slowest shard sets your tail latency.
 #
-# > 💡 **Intuition.** Exact search reads every book spine in the library. IVF walks to the
+# > **Intuition.** Exact search reads every book spine in the library. IVF walks to the
 # > few shelves whose labels match best (`nprobe` = how many shelves); HNSW follows a chain
 # > of "see also" notes from book to book. *Where it breaks down:* a book shelved just across
 # > a boundary is missed, which is why recall is below 1 and grows with `nprobe` or
@@ -510,7 +510,7 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 #
 # *What to notice:* the two retrievers fail in opposite ways (exact terms versus vocabulary mismatch), which is the reason to run both.
 #
-# > 💡 **Intuition.** Lexical retrieval is a book's index: exact, fast and blind to synonyms.
+# > **Intuition.** Lexical retrieval is a book's index: exact, fast and blind to synonyms.
 # > Semantic retrieval is a librarian who knows that "couch" means "sofa", but may hand you
 # > a similar model when you asked for one exact part number. *Where it breaks down:* real
 # > systems blur the two (synonym expansion in BM25, keyword features in the neural model);
@@ -582,7 +582,7 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1. Peak QPS**
 #
@@ -628,7 +628,7 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # *Example:* IDF 2.0, three occurrences, an average-length document: $2.0 \cdot 3 \cdot 2.2 / (3 + 1.2) = 3.14$; ten occurrences give only 3.9.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -651,4 +651,4 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # 5. How would you A/B test a new feed ranker in a marketplace where treatment and control compete for the same inventory?
 # 6. Walk through what you monitor after launching a new ranker, and the three alerts you would page on.
 #
-# ➡️ **Next:** [`20_final_evaluation_and_mock_loop.ipynb`](../ch38-final-evaluation-and-mock-loop/notebook.ipynb) — open the test week once, with a pre-registered plan, then run a full timed mock loop.
+# **Next chapter:** [`20_final_evaluation_and_mock_loop.ipynb`](../ch38-final-evaluation-and-mock-loop/notebook.ipynb) — open the test week once, with a pre-registered plan, then run a full timed mock loop.

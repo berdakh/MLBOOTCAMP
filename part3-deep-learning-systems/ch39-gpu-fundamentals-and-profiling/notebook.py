@@ -93,7 +93,7 @@ IS_CUDA = DEVICE.type == "cuda"
 print(f"torch {torch.__version__} | device {DEVICE} | CPU threads {torch.get_num_threads()}")
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -208,7 +208,7 @@ print(f"{n}x{n} matmul on {DEVICE}: without sync {naive * 1e3:.3f} ms | with syn
 #
 # *What to notice:* the red bracket ends long before the GPU has done any of the work; only a `synchronize` before the second clock read makes the green bracket cover the kernels.
 #
-# > 💡 **Intuition.** Launching a kernel is like a waiter handing an order to the kitchen: the
+# > **Intuition.** Launching a kernel is like a waiter handing an order to the kitchen: the
 # > waiter (the CPU) is back at your table in seconds, the food (the result) arrives later.
 # > Timing the waiter tells you nothing about the cooking; `synchronize` is waiting at the pass
 # > until every order is out. *Where it breaks down:* a CUDA stream cooks strictly in order, one
@@ -292,7 +292,7 @@ for r in mm_rows:
 #
 # *What to notice:* an operation's position on the x-axis is fixed by its maths, before you run anything; everything left of the dashed ridge line cannot go faster than bandwidth allows, however many FLOPs the chip has.
 #
-# > 💡 **Intuition.** A factory with a fast assembly line (compute) fed by a narrow conveyor belt
+# > **Intuition.** A factory with a fast assembly line (compute) fed by a narrow conveyor belt
 # > (memory). If each part needs one screw (`x + y`), the line waits for the belt; if each part
 # > needs hundreds of operations (a big matmul), the belt keeps up and the line is the limit.
 # > *Where it breaks down:* caches let a kernel reuse bytes for free, so the intensity a kernel
@@ -493,7 +493,7 @@ print(PROFILE_TABLE)
 #
 # *What to notice:* nothing about the model changed; the second timeline wins only because loading happens *while* the GPU trains, so the train loop never waits.
 #
-# > 💡 **Intuition.** With `num_workers=0` the chef chops the vegetables, then cooks, then chops
+# > **Intuition.** With `num_workers=0` the chef chops the vegetables, then cooks, then chops
 # > again. Workers are kitchen assistants chopping the next order while the chef cooks. Adding
 # > assistants helps until chopping keeps pace with cooking, and not after. *Where it breaks
 # > down:* each assistant needs its own copy of the dataset object and time to start up.
@@ -542,7 +542,7 @@ for workers in (0, 1, 2):
 # over 95% of the time (an arithmetic consequence of the numbers above, not a measurement).
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # A revision sheet for this notebook. Each formula: the maths, what it says in words, and a
 # tiny worked example.
@@ -616,7 +616,7 @@ for name, intensity in [("x + y (fp32)", 1 / 12), ("LayerNorm (~1)", 1.0), ("mat
 # at the 8.1 TFLOP/s peak (compute-bound).
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -642,4 +642,4 @@ for name, intensity in [("x + y (fp32)", 1 / 12), ("LayerNorm (~1)", 1.0), ("mat
 # 5. What do `num_workers`, `prefetch_factor`, `pin_memory` and `non_blocking=True` each do? When does adding workers stop helping?
 # 6. A training step has thousands of tiny kernels and the GPU is idle between them. What is this bottleneck called and what are three ways to reduce it?
 #
-# ➡️ **Next:** [`02_training_efficiency_and_memory.ipynb`](../ch40-training-efficiency-and-memory/notebook.ipynb) — now that you can measure time, measure memory: what fills a GPU during training and how to fit more into it.
+# **Next chapter:** [`02_training_efficiency_and_memory.ipynb`](../ch40-training-efficiency-and-memory/notebook.ipynb) — now that you can measure time, measure memory: what fills a GPU during training and how to fit more into it.

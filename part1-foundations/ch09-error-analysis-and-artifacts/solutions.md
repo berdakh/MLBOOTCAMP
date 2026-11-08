@@ -1,13 +1,13 @@
 # Solutions · Chapter 9 · Error analysis & artifacts
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `tenure_bucket`
 
-✅ Reference code: [`code/nb08.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb08.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 TENURE_EDGES = [0, 30, 90, 180, 365, 730, np.inf]
@@ -27,7 +27,7 @@ reports and plots.
 
 ## Exercise 2 · `worst_slices`
 
-✅ Reference code: [`code/nb08.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb08.py`](solutions.py) (`ex2`).
 
 ```python
 def worst_slices(report, metric, min_rows, n):
@@ -43,7 +43,7 @@ indexing and `sort_values` return new frames, so the input is untouched.
 
 ## Exercise 3 · `write_model_card`
 
-✅ Reference code: [`code/nb08.py`](solutions.py) (`ex3`). The essentials:
+[verified] Reference code: [`code/nb08.py`](solutions.py) (`ex3`). The essentials:
 
 ```python
 lines = [f"# Model card · {meta['model_name']} {meta['version']}", "",
@@ -66,7 +66,7 @@ ethics) still need a human, and they are the parts reviewers read most.
 
 ## Exercise 4 · The discount request (written)
 
-✍️ Personal. A strong reply covers:
+[open-ended] Personal. A strong reply covers:
 
 > "The model card lists pricing and discount decisions under *not intended
 > for*, for three reasons. First, the score was validated for choosing whom
@@ -100,7 +100,7 @@ rate, so compare lift or ROC-AUC); whether the slice has data problems (the
 
 **2. False negatives.** Most look like true negatives: normal usage, no
 cancellation tickets, no payment failures, low scores. Around half of them
-were "healthy" on every available signal 🔬, so no model on these features
+were "healthy" on every available signal [expected], so no model on these features
 can rank them above the many healthy customers who stay; that error needs
 new information (renewal dates, champion activity, ticket text). The rest
 have weak signals and might move with better features or more data. We know

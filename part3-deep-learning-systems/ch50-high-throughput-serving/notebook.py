@@ -113,7 +113,7 @@ print(f"served model: {n_params / 1e6:.1f}M parameters ({n_params * 4 / 1e6:.0f}
 # **Expected:** `served model: 33.9M parameters (135 MB fp32)`.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -138,7 +138,7 @@ print(f"served model: {n_params / 1e6:.1f}M parameters ({n_params * 4 / 1e6:.0f}
 # reuses each weight B times for the same memory traffic, so until the batch is large
 # enough to become compute-bound, **a bigger batch costs almost no extra time**.
 #
-# > 💡 **Intuition.** A bus that leaves with 1 passenger or with 32 costs almost the same to drive:
+# > **Intuition.** A bus that leaves with 1 passenger or with 32 costs almost the same to drive:
 # > the fuel (reading every weight from memory) is paid per trip, not per passenger. Batching fills
 # > the bus. *Where the analogy breaks down:* past a certain size the "engine" (arithmetic) becomes
 # > the bottleneck and each extra passenger does cost time; on a T4 that happens at batches of
@@ -349,7 +349,7 @@ print(f"({time.time() - t0:.0f} s)")
 #
 # *What to notice:* capacity is where a curve crosses the SLO line, well before the vertical asymptote; Little's law links the load, the latency and how many requests are in flight.
 #
-# > 💡 **Intuition (Little's law).** A café with 15 customers inside, each staying 3 minutes, must be
+# > **Intuition (Little's law).** A café with 15 customers inside, each staying 3 minutes, must be
 # > serving 5 customers a minute: in-flight = rate × time. In a closed-loop test the number of clients
 # > *is* the number in flight, so throughput × mean latency ≈ concurrency; adding clients beyond the
 # > server's capacity can only raise latency. *Where the analogy breaks down:* it holds for averages
@@ -463,7 +463,7 @@ _ = (OUT / "generation.json").write_text(json.dumps({"device": str(DEVICE), "new
 #
 # *What to notice:* the red cells are paid-for decode steps that produce nothing; continuous batching finishes the same eight requests in 10 steps instead of 14.
 #
-# > 💡 **Intuition.** Static batching is a restaurant that seats a table of four together and will not
+# > **Intuition.** Static batching is a restaurant that seats a table of four together and will not
 # > seat anyone else until the slowest diner finishes dessert. Continuous batching gives each freed
 # > chair to the next person in the queue straight away. *Where the analogy breaks down:* a new
 # > request first needs a prefill pass over its prompt, which costs more than one decode step, so
@@ -538,7 +538,7 @@ print(f"64 sequences: tokens actually stored {sum(used):,} | reserved contiguous
 #
 # *What to notice:* paging removes the reserved-but-unused tail of every sequence, so more sequences fit and batches grow; the formula at the bottom is the per-token cost being paged.
 #
-# > 💡 **Intuition.** Contiguous allocation is booking a 1,024-seat row for every party "in case
+# > **Intuition.** Contiguous allocation is booking a 1,024-seat row for every party "in case
 # > everyone comes"; paging hands out tables of 16 seats as people actually arrive, wherever there is
 # > room, and keeps a seating chart (the block table). *Where the analogy breaks down:* the attention
 # > kernel must follow the seating chart on every step, so paging needs special kernels; it is not free.
@@ -599,7 +599,7 @@ for name, rps, price in cases:
 # *Your answer (Exercise 3):* ...
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · Batching throughput.**
 #
@@ -668,7 +668,7 @@ print(f"KV bytes per token, GPT-2 fp16: formula {2 * 12 * 12 * 64 * 2:,} | S.kv_
 # latency, which a few slow requests pull up); `0.00045` twice; `36,864` twice.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -692,4 +692,4 @@ print(f"KV bytes per token, GPT-2 fp16: formula {2 * 12 * 12 * 64 * 2:,} | S.kv_
 # 5. What is continuous batching, and why does it beat static batching for generation? What does paged attention add?
 # 6. Estimate the cost per 1,000 requests for a service, and name three ways to halve it.
 #
-# ➡️ **Next:** [`13_ctr_prediction_at_scale.ipynb`](../ch51-ctr-prediction-at-scale/notebook.ipynb) — from serving to the models behind ads and feeds: sparse features, embedding tables and calibrated click-through-rate prediction at scale.
+# **Next chapter:** [`13_ctr_prediction_at_scale.ipynb`](../ch51-ctr-prediction-at-scale/notebook.ipynb) — from serving to the models behind ads and feeds: sparse features, embedding tables and calibrated click-through-rate prediction at scale.

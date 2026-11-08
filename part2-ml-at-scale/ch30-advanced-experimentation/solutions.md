@@ -1,13 +1,13 @@
 # Solutions · Chapter 30 · Advanced experimentation
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `cuped_adjust`
 
-✅ Reference code: [`code/nb12.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb12.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def cuped_adjust(y, x):
@@ -30,13 +30,13 @@ by default): θ is then off by `n/(n-1)`, a negligible error at large n but the 
 asks for consistency. Dividing by zero for constant `x` (new users with no
 pre-period): return `y`.
 
-Measured in 12.1 (✅): ρ = 0.71, variance ratio 0.50 vs predicted 0.49.
+Measured in 12.1 ([verified]): ρ = 0.71, variance ratio 0.50 vs predicted 0.49.
 
 ---
 
 ## Exercise 2 · `delta_method_ratio_var`
 
-✅ Reference code: `ex2`.
+[verified] Reference code: `ex2`.
 
 ```python
 def delta_method_ratio_var(num, den):
@@ -53,14 +53,14 @@ equivalent: compute the per-user **linearised** values
 `ℓ_i = (c_i − R n_i) / μn` with `R = c̄/n̄`; then `Var(R̂) ≈ var(ℓ)/N`, which also plugs
 straight into CUPED (regress `ℓ` on a pre-period covariate).
 
-Measured in 12.2 (✅): delta SE 0.00168, bootstrap SE 0.00170, true SD over
+Measured in 12.2 ([verified]): delta SE 0.00168, bootstrap SE 0.00170, true SD over
 400 A/A experiments 0.00169, naive binomial SE 0.00061.
 
 ---
 
 ## Exercise 3 · `team_draft_interleave`
 
-✅ Reference code: `ex3`.
+[verified] Reference code: `ex3`.
 
 ```python
 def team_draft_interleave(list_a, list_b, rng):
@@ -99,7 +99,7 @@ thanks to the coin flips.
 
 ## Exercise 4 · Launch memo (written)
 
-✍️ Personal. A strong memo, under the notebook's criteria:
+[open-ended] Personal. A strong memo, under the notebook's criteria:
 
 * **Decision: do not ship as is.** The primary metric is positive and
   significant (+1.8%, CI +0.6% to +3.0%), and the SRM check passes (p = 0.21), but the
@@ -127,7 +127,7 @@ thanks to the coin flips.
 **1. CUPED for a PM.** "We subtract from each user's result the part we could
 already predict from their behaviour before the test, so the test only has to
 see through the unpredictable part. Same answer, fewer users." Expected reduction:
-variance × (1 − ρ²); ρ = 0.71 for clicks per user here, which halves the variance (✅).
+variance × (1 − ρ²); ρ = 0.71 for clicks per user here, which halves the variance ([verified]).
 Fails when the covariate barely predicts the metric (new users, per-user CTR with
 ρ ≈ 0.35 here, rare conversions), or worse, when the "pre-period" covariate is
 affected by treatment (bias).
@@ -137,12 +137,12 @@ randomisation is by user, and clicks within a user are correlated; and pooled
 CTR is a ratio of two random sums, not a mean of i.i.d. values. The delta method
 linearises `R = c̄ / n̄` around the means and gives its variance from per-*user*
 sums, valid at the randomisation unit. Validate it with A/A tests (false-positive rate ≈ α:
-measured 0.043 vs 0.507 for the naive test, ✅) and against a user-level bootstrap.
+measured 0.043 vs 0.507 for the naive test, [verified]) and against a user-level bootstrap.
 
 **3. +11% in one of 30 segments.** With 30 segments, one or two extreme
 estimates are expected from noise; small segments are the noisiest. Section 12.3
 showed a uniform true +2% effect produce segment estimates from +0.1% to +5.4%
-with half of them "significant" (✅). Ask: was the segment pre-registered? Does
+with half of them "significant" ([verified]). Ask: was the segment pre-registered? Does
 it survive multiple-testing correction? Is there a mechanism? If it is still
 interesting, run a new experiment targeted at that segment, with its own pre-registered metric. Do not launch on it.
 
@@ -150,7 +150,7 @@ interesting, run a new experiment targeted at that segment, with its own pre-reg
 best unused item; clicks are credited to the picking team. It needs far fewer
 users because each user compares both rankers on the same request, so
 between-user variance (activity, propensity to click) cancels: the notebook
-measured about 900 users for 80% power vs about 20,000 for an A/B test (✅,
+measured about 900 users for 80% power vs about 20,000 for an A/B test ([verified],
 about 22x). It cannot measure whole-page or long-term effects: revenue,
 retention, latency, diversity of the final page, or effects when the two
 rankers' items interact (e.g. a page of near-duplicates).
@@ -158,7 +158,7 @@ rankers' items interact (e.g. a page of near-duplicates).
 **5. Wins offline, loses online.** (a) **Position bias/feedback loop:** logged clicks
 are concentrated where the old policy put items, so offline NDCG rewards
 imitating the old policy: 12.5 showed the logging policy at 0.76 NDCG vs true
-relevance at 0.68, while online CTR was the reverse (✅). (b) **Distribution
+relevance at 0.68, while online CTR was the reverse ([verified]). (b) **Distribution
 shift/selection:** offline data only contains items the old policy showed; a
 new ranker surfacing unseen items gets no credit or blame for them. Others: a metric
 mismatch (clicks vs purchases), novelty effects, latency. Fixes: IPS-weighted

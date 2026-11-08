@@ -38,11 +38,11 @@ notebook_src/NN_slug.py   ->  tools/nbbuild.py  ->  notebooks/NN_slug.ipynb
    **Expected:** line stating what the learner should see (ranges, not
    exact floats, unless the value is deterministic).
 6. **Exercises** - see below. 2-4 per notebook.
-7. **Troubleshooting** - a `## 🛟 Troubleshooting` table: symptom → cause → fix,
+7. **Troubleshooting** - a `## Troubleshooting` table: symptom → cause → fix,
    for the failures a learner will actually hit in *this* notebook.
 8. **Checkpoint** - `## Checkpoint`: 4-6 questions a learner should answer
    aloud without notes. They are interview-style on purpose.
-9. **Next** - `➡️ **Next:** [`NN_slug.ipynb`](NN_slug.ipynb) — one line why.
+9. **Next** - `**Next chapter:** [`NN_slug.ipynb`](NN_slug.ipynb) — one line why.
 
 Diagrams are embedded from the raw GitHub URL so they also render in Colab:
 `<img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/docs/assets/diagrams/NAME.svg" alt="..." width="100%">`
@@ -65,13 +65,13 @@ grade.ex1(leakage_free_split)
   keeps every grader's interface identical: `grade.exK(fn)`.
 * `grade` is `churnlab.grading.nbNN`, imported in the notebook's catch-up cell.
   Each `exK` builds small tests and calls `churnlab.checks.run_check`, which
-  prints ✅ / ❌ (with a hint) / ⏳ TODO and **never raises** - so the notebook
+  prints [verified] / (with a hint) / [TODO] and **never raises** - so the notebook
   always runs top to bottom with unfinished exercises.
 * Written (non-code) exercises have no grader; say *"Write your answer in the
   cell below"* and provide a markdown cell.
 * Every exercise needs a solution in `solutions/NN_slug.md` under a heading
-  `## NN-K · short title`, marked ✅ (verified by running), 🔬 (expected; depends
-  on a run) or ✍️ (personal / open-ended).
+  `## NN-K · short title`, marked [verified] (verified by running), [expected] (expected; depends
+  on a run) or [open-ended] (personal / open-ended).
 * Code solutions live in `solutions/code/nbNN.py` as functions named `exK`
   with the same signature as the stub. `tests/test_solutions.py` runs every
   grader against its solution - a grader that rejects its own solution fails CI.

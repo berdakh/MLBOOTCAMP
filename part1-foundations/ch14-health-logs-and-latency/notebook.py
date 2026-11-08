@@ -70,7 +70,7 @@ print(len(payloads), "request bodies from validation rows; first:", payloads[0][
 # **Expected:** `versions ['v1', 'v2'], CURRENT=v1` and 1000 request bodies.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -142,7 +142,7 @@ for path in ("/health", "/ready"):
 #
 # *What to notice:* the two failures lead to opposite actions, so they must ask different questions; a restart cannot fix a missing model file.
 #
-# > 💡 **Intuition.** Liveness is "is the shop's owner breathing?"; readiness
+# > **Intuition.** Liveness is "is the shop's owner breathing?"; readiness
 # > is "is the shop open?". You call an ambulance for the first, and simply
 # > send customers elsewhere for the second. *Where it breaks down:* a process
 # > can be alive and answering `/health` while stuck on every real request
@@ -241,7 +241,7 @@ print("sensitive keys found        :", sorted(logged_keys & sensitive) or "none"
 #
 # *What to notice:* the mean sits to the right of the median and far to the left of p95; neither average describes the requests users remember.
 #
-# > 💡 **Intuition.** Latency percentiles are queue times at a supermarket:
+# > **Intuition.** Latency percentiles are queue times at a supermarket:
 # > the median shopper waits two minutes, but the one in twenty stuck behind a
 # > price check waits ten, and that is the one who writes the review. *Where
 # > it breaks down:* a p99 from 200 requests rests on the 2 slowest; report the
@@ -524,7 +524,7 @@ grade.ex2(summarize_logs)
 # \text{per-row cost} = \frac{t_{\text{fixed}}}{n} + t_{\text{row}}
 # $$
 #
-# > 💡 **Intuition.** Batching is a bus instead of 1,000 taxis: the fare to
+# > **Intuition.** Batching is a bus instead of 1,000 taxis: the fare to
 # > start the journey is paid once. *Where it breaks down:* everyone on the
 # > bus arrives when the last passenger is processed, so batching raises the
 # > latency of each individual answer; it is for throughput, not for a user
@@ -643,7 +643,7 @@ plt.show()
 #   on p95.
 # * For *throughput*, batching (13.4) beats concurrency by a wide margin.
 #
-# > 🧠 **Research bridge.** You have met this trade-off in PyTorch:
+# > **Research bridge.** You have met this trade-off in PyTorch:
 # > `DataLoader(num_workers=...)` uses processes, not threads, for the same
 # > GIL reason, and inference throughput comes from batching. A web service is
 # > the same problem with HTTP in front.
@@ -662,7 +662,7 @@ plt.show()
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **Percentile.** For $N$ sorted latencies $x_{(1)} \le \dots \le x_{(N)}$, the
 # $q$-th percentile is (nearest-rank form)
@@ -717,7 +717,7 @@ print(f"Little's law: 16 in flight at 200 req/s -> W = {16 / 200 * 1000:.0f} ms"
 # 80 ms.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -741,4 +741,4 @@ print(f"Little's law: 16 in flight at 200 req/s -> W = {16 / 200 * 1000:.0f} ms"
 # 5. Your service is CPU-bound and p95 doubles at peak traffic. Name three things you could change, and the cost of each.
 # 6. What does `--workers 4` change, and what does it break for in-memory metrics and model reloads?
 #
-# ➡️ **Next:** [`14_monitoring_and_rollback.ipynb`](../ch15-monitoring-and-rollback/notebook.ipynb) — the service is healthy; now check whether the *model* still is, and practise undoing a bad deploy.
+# **Next chapter:** [`14_monitoring_and_rollback.ipynb`](../ch15-monitoring-and-rollback/notebook.ipynb) — the service is healthy; now check whether the *model* still is, and practise undoing a bad deploy.

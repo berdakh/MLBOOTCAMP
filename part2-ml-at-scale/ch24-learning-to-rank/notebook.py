@@ -78,7 +78,7 @@ print(f"{len(imps):,} impressions (days 0-48) | fitted eta {eta_hat:.3f} | {time
 # (notebook 05 explains both). `true_p` is used only to grade rankings.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -104,7 +104,7 @@ print(f"{len(imps):,} impressions (days 0-48) | fitted eta {eta_hat:.3f} | {time
 # Scores are never compared across groups, so a model may be badly
 # calibrated and still rank perfectly.
 #
-# > 💡 **Intuition.** A ranker is a judge at a swimming gala who only places swimmers *within their heat*. Whether heat 3 was faster than heat 7 does not matter, so a score of 0.9 in one request and 0.2 in another can both mean "first place". *Where it breaks down:* some systems do compare across groups (an ads auction mixes candidates from several models, a threshold decides whether to show anything); then calibration matters again.
+# > **Intuition.** A ranker is a judge at a swimming gala who only places swimmers *within their heat*. Whether heat 3 was faster than heat 7 does not matter, so a score of 0.9 in one request and 0.2 in another can both mean "first place". *Where it breaks down:* some systems do compare across groups (an ads auction mixes candidates from several models, a threshold decides whether to show anything); then calibration matters again.
 #
 # Each logged request here has exactly 10 shown items and binary click
 # labels. Many requests have no click at all:
@@ -211,7 +211,7 @@ print(f"features of day {cut} unchanged when later days are removed: {same}")
 #
 # *What to notice:* the three columns differ in *what is compared* (one item, a pair, a pair weighted by the list metric). The numbers under the rule are the whole idea of LambdaRank: the same mistake costs 30× more at the top.
 #
-# > 💡 **Intuition.** Grading a ranked shortlist of job candidates: swapping your 1st and 2nd choice changes who gets the offer; swapping 9th and 10th changes nothing anyone acts on. RankNet charges both swaps the same; LambdaRank charges each by how much the *metric* would change. *Where it breaks down:* NDCG's discount is a modelling choice, not a law; if users scroll deep (a long product grid), the bottom matters more than the metric says.
+# > **Intuition.** Grading a ranked shortlist of job candidates: swapping your 1st and 2nd choice changes who gets the offer; swapping 9th and 10th changes nothing anyone acts on. RankNet charges both swaps the same; LambdaRank charges each by how much the *metric* would change. *Where it breaks down:* NDCG's discount is a modelling choice, not a law; if users scroll deep (a long product grid), the bottom matters more than the metric says.
 #
 # The quantity RankNet optimises is easy to state and is a good diagnostic.
 #
@@ -493,7 +493,7 @@ print("saved:", sorted(p.name for p in (ART / "level2").glob("ltr_*")))
 # *Your answer:*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · DCG and NDCG.** In words: add up each item's gain, discounted by the log of its rank, and divide by the best possible order's value.
 #
@@ -563,7 +563,7 @@ print(f"4. |dNDCG| rank 2 vs 1: {swap(2, 1):.3f} | rank 10 vs 9: {swap(10, 9):.3
 # **Expected:** NDCG@10 = 0.6241 three times (sklearn uses linear gain, identical for 0/1 labels); RankNet loss 0.8544 and a gradient of −0.5744 both ways; |ΔNDCG| 0.369 vs 0.012.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -586,4 +586,4 @@ print(f"4. |dNDCG| rank 2 vs 1: {swap(2, 1):.3f} | rank 10 vs 9: {swap(10, 9):.3
 # 5. Should position be a feature? Describe two ways to use it in training, what you set at serving, and how you would know it helped.
 # 6. Your LambdaMART and logistic regression are within 0.002 NDCG offline. Which do you ship, and what else would you measure before deciding?
 #
-# ➡️ **Next:** [`07_candidate_generation.ipynb`](../ch25-candidate-generation/notebook.ipynb) — the ranker can only order what it is given: build and measure the retrieval stage that picks a few hundred candidates out of the whole catalogue.
+# **Next chapter:** [`07_candidate_generation.ipynb`](../ch25-candidate-generation/notebook.ipynb) — the ranker can only order what it is given: build and measure the retrieval stage that picks a few hundred candidates out of the whole catalogue.

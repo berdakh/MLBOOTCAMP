@@ -88,7 +88,7 @@ def test_every_checkpoint_is_answered(ch):
 
 def test_solution_files_use_confidence_markers():
     text = "".join(c.solutions_md.read_text(encoding="utf-8") for c in CHAPTERS)
-    for marker in ("✅", "🔬", "✍️"):
+    for marker in ("[verified]", "[expected]", "[open-ended]"):
         assert marker in text
 
 

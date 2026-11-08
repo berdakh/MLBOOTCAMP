@@ -103,7 +103,7 @@ print(f"validation: {len(y):,} rows, {y.sum()} churners, PR-AUC {average_precisi
 # churners among 6,956 rows (three monthly snapshots).
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -135,7 +135,7 @@ print(f"validation: {len(y):,} rows, {y.sum()} churners, PR-AUC {average_precisi
 #
 # *What to notice:* the ROC plot looks healthy (0.73) while the PR plot shows that precision drops towards the 5% floor quickly; the PR view is the one that matches "how many of our calls are useful".
 #
-# > 💡 **Intuition.** The PR curve is a restaurant menu: every dish (threshold)
+# > **Intuition.** The PR curve is a restaurant menu: every dish (threshold)
 # > comes with a price (calls made) and a portion (churners reached). You do
 # > not pick the "best" dish, you pick the one your budget and appetite fit.
 # > *Where it breaks down:* a menu has fixed prices; here the precision of a
@@ -191,7 +191,7 @@ table.round(3)
 #
 # *What to notice:* the curve is flat near its top, so the exact threshold matters less than the ratio of costs that put the top there.
 #
-# > 💡 **Intuition.** Each call is a $30 lottery ticket that pays $150 with
+# > **Intuition.** Each call is a $30 lottery ticket that pays $150 with
 # > probability p. Buy the ticket when its expected payout beats its price:
 # > $150p > 30(1 - p)$. *Where it breaks down:* "p" must be a real
 # > probability (calibrated, section 7.6), and the $150 hides a save rate
@@ -290,7 +290,7 @@ sensitivity
 # * **top-k per snapshot**: each month, call the 40 highest scores. Volume is
 #   exact by construction. This is the usual production rule.
 #
-# > 💡 **Intuition.** A threshold is "everyone taller than 1.90 m makes the
+# > **Intuition.** A threshold is "everyone taller than 1.90 m makes the
 # > team"; top-k is "the 40 tallest make it". With a fixed squad size only the
 # > second fills it every season. *Where it breaks down:* top-k always fills
 # > the quota, even in a month where nobody is really at risk; pair it with a
@@ -415,7 +415,7 @@ print(json.dumps(policy, indent=2))
 #
 # *What to notice:* the two models rank almost identically (PR-AUC 0.163 vs 0.161), yet only one of them can be used with the 1/6 rule.
 #
-# > 💡 **Intuition.** Calibration is a weather forecaster's honesty: on the
+# > **Intuition.** Calibration is a weather forecaster's honesty: on the
 # > days they say "20% rain", it should rain on about one in five. Ranking is
 # > their skill at telling wetter days from drier ones. A forecaster can be
 # > skilled and dishonest (always doubling the number). *Where it breaks
@@ -544,7 +544,7 @@ plt.show()
 # model sits far to the right of it (it predicts ≈ 5-10× the true rate).
 # Log axes keep the many low-score bins readable.
 #
-# > 🧠 **Research bridge.** A BCI decoder with good balanced accuracy can still
+# > **Research bridge.** A BCI decoder with good balanced accuracy can still
 # > produce confidences that mean nothing, and an adaptive system that acts on
 # > "p > 0.9" then misbehaves. Same lesson: ranking quality and probability
 # > quality are separate properties, measured separately.
@@ -566,7 +566,7 @@ print(f"notebook compute time: {time.time() - T0:.0f} s")
 # **Expected:** under a minute.
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **Precision, recall, F1** at a threshold:
 #
@@ -652,7 +652,7 @@ print(f"EV at t=0.5: ${tp * VALUE_TP - fp * COST_FP:.0f};  p* = {COST_FP / (VALU
 # 0.1620, identical both ways; EV \$120 and $p^{*} = 0.1667$.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -674,4 +674,4 @@ print(f"EV at t=0.5: ${tp * VALUE_TP - fp * COST_FP:.0f};  p* = {COST_FP / (VALU
 # 4. Does calibration change PR-AUC? ROC-AUC? The best threshold? Why?
 # 5. Where must the calibration map be fitted in a time-ordered problem, and what goes wrong if you fit it on validation?
 #
-# ➡️ **Next:** [`08_error_analysis_and_artifacts.ipynb`](../ch09-error-analysis-and-artifacts/notebook.ipynb) — find where the model fails, then package it with metadata, a registry and a model card.
+# **Next chapter:** [`08_error_analysis_and_artifacts.ipynb`](../ch09-error-analysis-and-artifacts/notebook.ipynb) — find where the model fails, then package it with metadata, a registry and a model card.

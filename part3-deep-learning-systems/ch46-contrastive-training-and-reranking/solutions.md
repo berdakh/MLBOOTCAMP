@@ -1,13 +1,13 @@
 # Solutions · Chapter 46 · Contrastive training & re-ranking
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `info_nce_loss`
 
-✅ Reference code: [`code/nb08.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb08.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def info_nce_loss(q, d, temperature=0.05):
@@ -26,7 +26,7 @@ softmax over cosines is nearly flat and gradients are tiny.
 
 ## Exercise 2 · `mine_hard_negatives`
 
-✅ Reference code: [`code/nb08.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb08.py`](solutions.py) (`ex2`).
 
 ```python
 def mine_hard_negatives(ranked_ids, positives, n, skip_top=0):
@@ -44,7 +44,7 @@ the top 3.
 
 ## Exercise 3 · Fixing a RAG assistant's retrieval
 
-✍️ A strong answer:
+[open-ended] A strong answer:
 
 * **First measure where it fails.** Build a judged set from real questions (and the
   documents that answer them); compute Recall@k of the current first stage at the depth
@@ -52,7 +52,7 @@ the top 3.
   Recall@5 low, it is an *ordering* problem (re-ranker); if Recall@100 is low, it is a
   *first-stage* problem (fine-tuning, hybrid, chunking).
 * **(a) Fine-tune the bi-encoder on logged pairs.** Effect: Recall@k and nDCG can rise
-  substantially in-domain (🔬 a few points or more with enough pairs; our tiny CPU run
+  substantially in-domain ([expected] a few points or more with enough pairs; our tiny CPU run
   showed no significant change: +0.006 nDCG@10, CI −0.004 to +0.016). Costs: training, and
   **re-embedding 20M documents** for every model version (plan versioned indexes). Risks:
   click logs are position-biased (users click what was shown on top), unclicked ≠
@@ -61,7 +61,7 @@ the top 3.
 * **(b) Add a cross-encoder re-ranker.** Effect: better ordering of the top k when the
   re-ranker matches the domain; it cannot improve recall beyond the first stage's depth.
   Cost: depth × a forward pass per query (in our CPU runs 24–41 ms per pair, 1.2–1.9 s for 50;
-  🔬 tens of ms on a GPU), a GPU fleet at high QPS. Risk: **domain mismatch**; the
+  [expected] tens of ms on a GPU), a GPU fleet at high QPS. Risk: **domain mismatch**; the
   MS MARCO re-ranker *lowered* SciFact nDCG@10 in our run (0.840 → 0.757 at depth 50 on 30
   queries). Fine-tune it on in-domain pairs before trusting it.
 * **(c) Hybrid first stage.** Cheap (BM25 index + RRF), robust for identifiers, names,

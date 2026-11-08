@@ -79,7 +79,7 @@ print(f"day 42: {len(day):,} impressions, {day.clicked.sum():,} clicks, {day.req
 # 42 (the first validation day).
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -119,7 +119,7 @@ print(f"events older than an event already received: {behind.mean():.0%}; "
 stream[["event_id", "category", "clicked", "event_ts", "arrival_ts"]].head(4)
 
 # %% [markdown]
-# > 💡 **Intuition.** Event time is the postmark; processing time is the day the letter lands in your mailbox. Sorting letters by delivery day puts a card posted on Monday but delayed by a strike next to Thursday's post. *Where it breaks down:* postmarks are stamped by the post office; event timestamps come from phones whose clocks can be wrong, so real pipelines also sanity-check event times.
+# > **Intuition.** Event time is the postmark; processing time is the day the letter lands in your mailbox. Sorting letters by delivery day puts a card posted on Monday but delayed by a strike next to Thursday's post. *Where it breaks down:* postmarks are stamped by the post office; event timestamps come from phones whose clocks can be wrong, so real pipelines also sanity-check event times.
 #
 # **Expected:** median delay about 2 s, p90 about 5 s, p99 in the tens of
 # minutes; about 65% of events arrive after a later-timestamped event (a
@@ -269,7 +269,7 @@ print(f"sessions: streaming {n_stream:,} | batch {int(new_session.sum()):,}")
 #
 # *What to notice:* every dot is below the no-delay line (events always arrive after they happen). The watermark trails the latest event time by the allowed lateness; the red event happened early but arrived after the watermark passed it.
 #
-# > 💡 **Intuition.** A watermark is the teacher's "pencils down, I'm collecting the papers" for each window: after it, a late paper is either refused (drop), set aside for regrading (side output) or accepted with a corrected grade sent out later (update). *Where it breaks down:* a teacher knows how many students are in the room; a stream processor never knows how many events are still on their way, so the watermark is a heuristic promise, not a fact.
+# > **Intuition.** A watermark is the teacher's "pencils down, I'm collecting the papers" for each window: after it, a late paper is either refused (drop), set aside for regrading (side output) or accepted with a corrected grade sent out later (update). *Where it breaks down:* a teacher knows how many students are in the room; a stream processor never knows how many events are still on their way, so the watermark is a heuristic promise, not a fact.
 
 # %% [markdown]
 # > **Exercise 1.** Implement `TumblingWindowCounter(window_seconds,
@@ -381,7 +381,7 @@ print(f"update:      {corrections:,} corrected results emitted after the first |
 #   transactions; Spark checkpoints with idempotent sinks). It is about the
 #   *effect* on state and sinks, not about the network delivering once.
 #
-# > 💡 **Intuition.** "Add 1 to the counter" is a toggle switch: press it twice and you are somewhere else. "Mark event 8812 as counted" is a light switch labelled ON: press it twice and the light is still just on. Deduplicating by event id turns the first kind of update into the second. *Where it breaks down:* the switch needs a stable label; an id minted by the processor differs between the original and the retry.
+# > **Intuition.** "Add 1 to the counter" is a toggle switch: press it twice and you are somewhere else. "Mark event 8812 as counted" is a light switch labelled ON: press it twice and the light is still just on. Deduplicating by event id turns the first kind of update into the second. *Where it breaks down:* the switch needs a stable label; an id minted by the processor differs between the original and the retry.
 #
 # The cheapest robust defence works under at-least-once: make the update
 # **idempotent** by deduplicating on the event id. Re-deliver 5% of the
@@ -504,7 +504,7 @@ grade.ex2(parity_report)
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1 · Which tumbling window an event belongs to.** In words: round the event time down to a multiple of the window size.
 #
@@ -539,7 +539,7 @@ grade.ex2(parity_report)
 # * *Example:* $g = 30$ min, sessions $[10{:}00, 10{:}20]$ and $[10{:}55, 11{:}05]$; a late event at 10:40 is within 30 min of both, so all three merge into $[10{:}00, 11{:}05]$. That is the "bridging" case from 4.2.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -562,4 +562,4 @@ grade.ex2(parity_report)
 # 5. How do you make sure a streaming feature in production equals the feature the model was trained on? Describe the parity test and what you log.
 # 6. Design the pipeline for "number of items a user viewed in the current session" for a feed ranker: windows, state, latency budget, failure handling.
 #
-# ➡️ **Next:** [`05_implicit_feedback_and_position_bias.ipynb`](../ch23-implicit-feedback-and-position-bias/notebook.ipynb) — Day 3: clicks are biased by position; learn to measure and correct it.
+# **Next chapter:** [`05_implicit_feedback_and_position_bias.ipynb`](../ch23-implicit-feedback-and-position-bias/notebook.ipynb) — Day 3: clicks are biased by position; learn to measure and correct it.

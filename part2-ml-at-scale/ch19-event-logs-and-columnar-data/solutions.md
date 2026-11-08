@@ -1,13 +1,13 @@
 # Solutions · Chapter 19 · Event logs & columnar data
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `user_hash_sample`
 
-✅ Reference code: [`code/nb01.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb01.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def user_hash_sample(user_ids, pct, salt=""):
@@ -51,7 +51,7 @@ and never mix two.
 
 ## Exercise 2 · Daily CTR by position over the partitioned log
 
-✅ Reference code: [`code/nb01.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb01.py`](solutions.py) (`ex2`).
 
 ```sql
 SELECT day, position,
@@ -89,7 +89,7 @@ across engines: put partition filters in the `WHERE` of the scan.
 
 ## Exercise 3 · Specifying a carousel's impression log (written)
 
-✍️ A strong answer contains most of these.
+[open-ended] A strong answer contains most of these.
 
 **Fields** (one row per item shown):
 
@@ -128,7 +128,7 @@ and you are left with A/B tests for every idea. Second-best answer:
 
 ## Checkpoint answers
 
-1. **Feed impression log.** ✍️ Non-negotiable: unique impression id, request
+1. **Feed impression log.** [open-ended] Non-negotiable: unique impression id, request
    id, user/session ids, item id, position, event timestamp in UTC, model
    version and experiment variant, outcomes keyed to the impression id.
    Most often forgotten: the logging propensity (or enough to recompute it:
@@ -136,14 +136,14 @@ and you are left with A/B tests for every idea. Second-best answer:
    them, off-policy evaluation of a new ranker on old logs is not possible.
    Never loggable: whether the user examined the item; a non-click is
    ambiguous.
-2. **Parquet vs CSV.** ✅ Columnar: a query reads only the columns it needs
+2. **Parquet vs CSV.** [verified] Columnar: a query reads only the columns it needs
    (2 of 10 columns read in ~0.05 s vs 0.25 s for all, in our run). Typed,
    compressed encodings (dictionary, run-length, delta) shrank the file ~6×
    (165 MB → 25 MB). Row-group min/max statistics let a filter skip row groups
    (1 of 20 for a `request_id` range). The schema travels with the data
    (`read_csv` returned `ts` as strings). CSV is still fine for tiny
    hand-edited files and for interchange with tools that read nothing else.
-3. **Pruning vs pushdown.** ✅ Partition pruning removes whole files/folders
+3. **Pruning vs pushdown.** [verified] Partition pruning removes whole files/folders
    using the partition column in the path, before opening anything (DuckDB:
    `File Filters`, `Scanning Files: 7/56`). Predicate pushdown pushes a filter
    into the reader, which skips row groups using footer statistics and avoids
@@ -153,7 +153,7 @@ and you are left with A/B tests for every idea. Second-best answer:
    always (date for logs), with moderate cardinality. Too fine (user id,
    minute) creates millions of tiny files: listing and per-file overhead
    dominate, and the statistics become useless.
-4. **5 TB on 16 GB.** 🔬 Use an engine that streams and spills (DuckDB on one
+4. **5 TB on 16 GB.** [expected] Use an engine that streams and spills (DuckDB on one
    machine for a few hundred GB; Spark/BigQuery for 5 TB). Read only the needed
    columns from Parquet, prune to the 30-day partitions, aggregate per user
    (fixed-size state per group: counts, sums), and write the small result.
@@ -162,12 +162,12 @@ and you are left with A/B tests for every idea. Second-best answer:
    spill partitions to disk. Watch for holistic aggregates (exact distinct
    counts, medians): in our run exact `count(DISTINCT)` failed at 64 MB where
    counts and sums succeeded. Use sketches (HLL) or two-stage distinct.
-5. **1% of rows and NDCG.** ✅ Row sampling keeps ~0.1 of the 10 rows of a
+5. **1% of rows and NDCG.** [verified] Row sampling keeps ~0.1 of the 10 rows of a
    request, so a per-request metric is computed on lists that are almost
    empty: in our run "requests with a click" fell from 0.76 to 0.20 under a
    10% row sample. NDCG is just as broken. Sample whole requests (or users,
    if the analysis is per user or an A/B test), with a stable hash of the id.
-6. **Why hashing.** ✅ A hash of the id is a pure function: the same user
+6. **Why hashing.** [verified] A hash of the id is a pure function: the same user
    gets the same decision in every job, every day, in SQL or Python, with no
    state to store, and samples are nested (5% ⊂ 10%). `random()` changes with
    order, seed and population. A salt makes different studies' samples

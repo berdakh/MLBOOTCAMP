@@ -113,7 +113,7 @@ print(f"loaded in {time.time() - t0:.0f} s | {type(bert).__name__}: {count_param
 # the masked-language-modelling head, which `AutoModel` (the bare encoder) does not use.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -238,12 +238,12 @@ print("gpt2, left-padded attention mask:\n", left["attention_mask"])
 #
 # *What to notice:* the tokenizer and the pooling step are outside the model, and both can silently break it: a different tokenizer gives different ids, a mask-unaware mean gives a different vector.
 #
-# > 💡 **Intuition.** Subword tokenisation works like a box of Lego: a fixed set of common pieces
+# > **Intuition.** Subword tokenisation works like a box of Lego: a fixed set of common pieces
 # > (frequent words kept whole, rare words built from smaller bricks) can build any word. *Where
 # > it breaks down:* the piece boundaries are statistical, not linguistic (`2024` → `202`, `##4`),
 # > which is one reason models are bad at arithmetic and spelling.
 #
-# > 💡 **Intuition.** Mean pooling is a vote of every token in the room; the attention mask makes
+# > **Intuition.** Mean pooling is a vote of every token in the room; the attention mask makes
 # > sure the empty seats (padding) do not vote. A worked example: hidden values 2 and 4 for two
 # > real tokens and 100 for a pad give a masked mean of 3 and a naive mean of 35.3.
 
@@ -518,7 +518,7 @@ for model_id, rev in [(BERT_ID, BERT_REV), (GPT2_ID, GPT2_REV)]:
 # *Your answer (Exercise 3):* ...
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1. Mask-aware mean pooling.**
 #
@@ -562,7 +562,7 @@ for model_id, rev in [(BERT_ID, BERT_REV), (GPT2_ID, GPT2_REV)]:
 # positions: 25%.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -587,4 +587,4 @@ for model_id, rev in [(BERT_ID, BERT_REV), (GPT2_ID, GPT2_REV)]:
 # 5. How do you load a third-party model safely and reproducibly in production?
 # 6. Your classifier's accuracy dropped after a dependency upgrade, with no code change. What could have changed in the tokenizer or model loading, and how would you have caught it?
 #
-# ➡️ **Next:** [`05_fine_tuning_a_classifier.ipynb`](../ch43-fine-tuning-a-classifier/notebook.ipynb) — put a head on this encoder and fine-tune it, against a linear probe and a TF-IDF baseline.
+# **Next chapter:** [`05_fine_tuning_a_classifier.ipynb`](../ch43-fine-tuning-a-classifier/notebook.ipynb) — put a head on this encoder and fine-tune it, against a linear probe and a TF-IDF baseline.

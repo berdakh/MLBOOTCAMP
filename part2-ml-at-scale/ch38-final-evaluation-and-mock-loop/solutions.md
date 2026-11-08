@@ -1,13 +1,13 @@
 # Solutions · Chapter 38 · Final evaluation & mock loop
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `bootstrap_ci_grouped`
 
-✅ Reference code: [`code/nb20.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb20.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def bootstrap_ci_grouped(values, groups, n_boot, seed):
@@ -37,7 +37,7 @@ row bootstrap on clustered data); a new RNG per replicate seeded `seed + i`
 
 ## Exercise 2 · Three-minute walkthrough (written)
 
-✍️ Personal. A model script, with the numbers from our runs (use yours):
+[open-ended] Personal. A model script, with the numbers from our runs (use yours):
 
 > *Problem.* A marketplace home feed: 10,000 users, 4,000 items, eight weeks
 > of logged feed requests; the goal is to put the items each user would

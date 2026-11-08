@@ -1,13 +1,13 @@
 # Solutions · Chapter 11 · Consistent serving
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `parity_check`
 
-✅ Reference code: [`code/nb10.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb10.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def parity_check(model, http_client, rows_df):
@@ -23,7 +23,7 @@ def parity_check(model, http_client, rows_df):
             "n_decision_flips": int(np.sum((p_off >= threshold) != flag_api))}
 ```
 
-🔬 With the served model you should see `max_abs_diff` ≈ 5e-7 (the API rounds
+[expected] With the served model you should see `max_abs_diff` ≈ 5e-7 (the API rounds
 to six decimals) and `0` flips. The grader then passes an offline model whose
 scores are shifted up slightly; your check must report a difference of the
 size of the shift and at least one flip.
@@ -48,7 +48,7 @@ works, but is 300 requests where one is enough).
 
 ## Exercise 2 · `fixed_serve_preprocess`
 
-✅ Reference code: [`code/nb10.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb10.py`](solutions.py) (`ex2`).
 
 ```python
 def fixed_serve_preprocess(customers, stats):
@@ -79,7 +79,7 @@ in *that* batch, so the column count changes with the input).
 
 ## Exercise 3 · Skew a stored-row parity test cannot catch (written)
 
-✍️ Open-ended. The parity test replays rows from the **offline** feature
+[open-ended] Open-ended. The parity test replays rows from the **offline** feature
 table, so it can only find differences *after* the feature values exist. Any
 difference in how the feature values themselves are produced online is
 invisible to it. Strong answers name a mechanism and a detection/prevention:
@@ -105,12 +105,12 @@ compare.
 
 **1. Skew.** Any difference between how inputs are prepared in training and
 in serving. Nothing raises: the model gets numbers of the right shape and
-returns valid probabilities, just different ones. ✅ In this notebook, three
+returns valid probabilities, just different ones. [verified] In this notebook, three
 plausible bugs flipped 531 of 6,956 validation decisions with no error.
 
 **2. Three re-implementation bugs.** Column order (positional arrays),
 imputation value (0 vs median), a missing transform step (a forgotten
-`log1p`). ✅ Column order was the most destructive here (≈ 590 flips, PR-AUC
+`log1p`). [verified] Column order was the most destructive here (≈ 590 flips, PR-AUC
 0.158 → 0.068) and the hardest to see in review because every line looks
 right. The forgotten `log1p` is the most *insidious*: ≈ 100 flips while PR-AUC
 barely moved (0.158 → 0.157), so an aggregate metric would not reveal it.
@@ -129,7 +129,7 @@ the contract (here, 6-decimal rounding), and decisions must match exactly.
 **5. Loading.** `load_bundle` verifies the SHA-256 of `model.joblib` against
 metadata and compares the recorded scikit-learn major.minor version with the
 running one (warning by default, error in strict mode); `ModelHolder` checks
-the feature list. ✅ It does **not** protect `metadata.json` itself: editing it
+the feature list. [verified] It does **not** protect `metadata.json` itself: editing it
 (e.g. the threshold) went undetected. On failure the service keeps running,
 answers `/health` 200, `/ready` and `/predict` 503 with the reason, and keeps
 serving the previous model if one was loaded.

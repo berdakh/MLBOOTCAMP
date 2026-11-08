@@ -1,7 +1,7 @@
 # Solutions · Chapter 16 · Final evaluation & documentation
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 Numbers quoted below are from the run recorded when the notebook was built
 (fresh artifact directory, CPU). Yours should match to about the third
@@ -12,7 +12,7 @@ anything else matters.
 
 ## Exercise 1 · `final_report`
 
-✅ Reference code: [`code/nb15.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb15.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def final_report(y, scores, threshold, groups, seed=0):
@@ -48,7 +48,7 @@ row-bootstrap one. On TaskFlow the same thing happens less dramatically
 
 ## Exercise 2 · `results_markdown`
 
-✅ Reference code: [`code/nb15.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb15.py`](solutions.py) (`ex2`).
 
 ```python
 def results_markdown(report):
@@ -69,7 +69,7 @@ mechanically: every decimal in the README must appear in `final_report.json`.
 
 ## Exercise 3 · Your 60-second pitch (written)
 
-✍️ Personal. A strong pitch, using the numbers from the recorded run (yours
+[open-ended] Personal. A strong pitch, using the numbers from the recorded run (yours
 may differ slightly):
 
 > "I built an end-to-end churn prediction project for a fictional
@@ -94,7 +94,7 @@ limitation or next step. About 150 words ≈ 60 seconds.
 
 ## Exercise 4 · Three limitations and your answers (written)
 
-✍️ Personal. A strong answer:
+[open-ended] Personal. A strong answer:
 
 | Limitation the interviewer raises | What you say |
 |---|---|
@@ -119,7 +119,7 @@ Order matters because every decision taken after seeing test results makes
 the test number optimistic (forking paths); a plan written first, with a
 timestamp and hash, makes the report an estimate rather than a selection.
 
-**2. Test > validation.** 🔬 Test PR-AUC ≈ 0.197 vs validation ≈ 0.163, but the
+**2. Test > validation.** [expected] Test PR-AUC ≈ 0.197 vs validation ≈ 0.163, but the
 test positive rate is higher (≈ 0.059 vs ≈ 0.052), and PR-AUC rises with the base
 rate. Normalised by the base rate (≈ 3.3 vs ≈ 3.1) and on ROC-AUC (0.740 vs
 0.733) the two periods are close, and the intervals overlap. So: performance

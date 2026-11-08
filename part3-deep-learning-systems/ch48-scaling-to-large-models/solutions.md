@@ -1,13 +1,13 @@
 # Solutions · Chapter 48 · Scaling to large models
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run or hardware · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run or hardware · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `zero_memory_per_gpu`
 
-✅ Reference code: [`code/nb10.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb10.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def zero_memory_per_gpu(n_params, world_size, stage):
@@ -36,7 +36,7 @@ with prefetching), communication buckets, the CUDA context and fragmentation.
 
 ## Exercise 2 · `train_flops_and_days`
 
-✅ Reference code: [`code/nb10.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb10.py`](solutions.py) (`ex2`).
 
 ```python
 def train_flops_and_days(n_params, tokens, gpu_tflops, mfu, n_gpus):
@@ -56,7 +56,7 @@ if you recompute the whole forward), so HFU > MFU for the same run.
 
 ## Exercise 3 · `optimal_checkpoint_interval`
 
-✅ Reference code: [`code/nb10.py`](solutions.py) (`ex3`).
+[verified] Reference code: [`code/nb10.py`](solutions.py) (`ex3`).
 
 ```python
 import math
@@ -75,7 +75,7 @@ a flat optimum (60 and 80 min both +17%).
 
 ## Exercise 4 · Planning a 13B run
 
-✍️ / 🔬 One reasonable answer (all assumptions stated):
+[open-ended] / [expected] One reasonable answer (all assumptions stated):
 
 **(a) Compute-optimal?** 260B / 13B = 20 tokens per parameter: exactly the
 Chinchilla rule of thumb. If the model will be served heavily, consider
@@ -109,7 +109,7 @@ state in the checkpoint so resumption does not repeat or skip data.
 
 ## Checkpoint answers
 
-1. **7B memory.** ✅ 16 bytes/param × 7e9 = 112 GB of model state with
+1. **7B memory.** [verified] 16 bytes/param × 7e9 = 112 GB of model state with
    mixed-precision Adam (plus activations). On 64 GPUs: ZeRO-1 29.3 GB,
    ZeRO-2 15.5 GB, ZeRO-3 1.75 GB per GPU (10.1). Stage 3 pays ~1.5× the
    communication of DDP (parameters all-gathered in forward and again in

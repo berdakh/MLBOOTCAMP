@@ -69,7 +69,7 @@ from grading import ch05 as grade
 features = bootstrap.ensure_features()
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -116,7 +116,7 @@ split.summary()
 #
 # *What to notice:* the row that gets dropped has a perfectly valid snapshot date; it is its *label window* that reaches into the validation period.
 #
-# > 💡 **Intuition.** The embargo is the rule that an exam question cannot be
+# > **Intuition.** The embargo is the rule that an exam question cannot be
 # > graded with an answer that is only revealed during next week's exam.
 # > *Where it breaks down:* nothing is "revealed" to the model directly; the
 # > leak is that training rows and validation rows share the same future
@@ -282,7 +282,7 @@ print(f"prior (constant score) AP = {average_precision_score(y_toy, np.full(5, 0
 # **Expected:** ROC-AUC 0.6667 and AP 0.7500 both ways, and a constant score
 # giving AP 0.40, exactly the positive rate (2 of 5).
 #
-# > 💡 **Intuition.** ROC-AUC asks "pick one churner and one loyal customer at
+# > **Intuition.** ROC-AUC asks "pick one churner and one loyal customer at
 # > random: who is ranked higher?" With 95% loyal customers, most of those
 # > pairs are easy, so the number looks good. PR-AUC asks "as I walk down the
 # > list from the top, how many of my calls reach a churner?", which is the
@@ -373,7 +373,7 @@ comparison
 #
 # *What to notice:* the leaks that live in the **features** (target, temporal) are enormous and invisible to any split check; the ones that live in the **procedure** (random split, preprocessing fitted on everything) are small on this data. Notebook 05 measures the target and preprocessing leaks.
 #
-# > 🧠 **Research bridge.** You already know this from EEG/BCI: within-subject
+# > **Research bridge.** You already know this from EEG/BCI: within-subject
 # > vs cross-subject evaluation answer different questions, and a
 # > leave-one-subject-out score is not comparable to a within-session one. The
 # > translation is in Exercise 4.
@@ -476,7 +476,7 @@ grade.ex3(rule_scores)
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **Embargo condition.** A row with snapshot $T$ and label horizon $h$ may train a
 # model validated from $t_v$ only if
@@ -516,7 +516,7 @@ grade.ex3(rule_scores)
 # comparable to it.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -538,4 +538,4 @@ grade.ex3(rule_scores)
 # 4. On this data the random split did not inflate the score much. Why, and why is it still the wrong split?
 # 5. Why is the prior's PR-AUC equal to the positive rate, and why report a hand rule at all?
 #
-# ➡️ **Next:** [`05_pipelines_and_cross_validation.ipynb`](../ch06-pipelines-and-cross-validation/notebook.ipynb) — put preprocessing inside the model and cross-validate in time, so Day 2's comparisons are trustworthy.
+# **Next chapter:** [`05_pipelines_and_cross_validation.ipynb`](../ch06-pipelines-and-cross-validation/notebook.ipynb) — put preprocessing inside the model and cross-validate in time, so Day 2's comparisons are trustworthy.

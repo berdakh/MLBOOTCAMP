@@ -1,13 +1,13 @@
 # Solutions · Chapter 10 · FastAPI & contracts
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `make_app`
 
-✅ Reference code: [`code/nb09.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb09.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 class DoubleRequest(BaseModel):
@@ -57,7 +57,7 @@ looks for.
 
 ## Exercise 2 · `make_schema_v2`
 
-✅ Reference code: [`code/nb09.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb09.py`](solutions.py) (`ex2`).
 
 ```python
 from churnlab.schemas import CustomerFeatures
@@ -92,7 +92,7 @@ model trained with NPS later. Contract and model are versioned separately.
 
 ## Exercise 3 · Which contract changes break clients? (written)
 
-✍️ Open-ended. Assume clients are written against today's schema.
+[open-ended] Open-ended. Assume clients are written against today's schema.
 
 | # | Change | Breaking? | Why |
 |---|---|---|---|
@@ -111,7 +111,7 @@ period, and measure who still calls the old one before removing it.
 ## Checkpoint answers
 
 **1. Misspelled field.** `"sesions_4w": 3` returns **422** with two errors:
-`sesions_4w` → `extra_forbidden`, `sessions_4w` → `missing` (✅ observed in
+`sesions_4w` → `extra_forbidden`, `sessions_4w` → `missing` ([verified] observed in
 section 9.7). Without `extra="forbid"`, the typo is silently dropped; for a
 required field you still get a 422 (missing), but for an *optional* field
 (e.g. `features_used_4w` misspelled) the request succeeds and the pipeline

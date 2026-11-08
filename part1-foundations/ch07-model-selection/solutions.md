@@ -1,13 +1,13 @@
 # Solutions · Chapter 7 · Model selection
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `decide`
 
-✅ Reference code: [`code/nb06.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb06.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def decide(y, scores_a, scores_b, groups):
@@ -39,7 +39,7 @@ evidence.
 
 ## Exercise 2 · `budgeted_search`
 
-✅ Reference code: [`code/nb06.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb06.py`](solutions.py) (`ex2`).
 
 ```python
 def budgeted_search(param_grid_list, evaluate_fn, budget, seed=0):
@@ -71,7 +71,7 @@ configs after cheap evaluations.
 
 ## Exercise 3 · "Why didn't you use XGBoost?" (written)
 
-✍️ Personal. A strong 60-second answer, with numbers from the notebook (🔬
+[open-ended] Personal. A strong 60-second answer, with numbers from the notebook ([expected]
 yours may differ slightly):
 
 > "I did try gradient-boosted trees: sklearn's `HistGradientBoosting`, which

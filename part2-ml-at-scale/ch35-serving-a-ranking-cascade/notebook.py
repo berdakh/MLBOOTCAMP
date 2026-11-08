@@ -80,7 +80,7 @@ print("train days", store.TRAIN_DAYS, "| valid days", store.VALID_DAYS, "| test 
 # 10–40 s the first time, while the data is generated; a second or two after).
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -113,7 +113,7 @@ print("train days", store.TRAIN_DAYS, "| valid days", store.VALID_DAYS, "| test 
 #
 # *What to notice:* a quarter of the budget is reserved for work outside the four stages; 17.7 shows why that slice is not optional.
 #
-# > 💡 **Intuition.** A cascade is a hiring funnel: a seconds-long CV screen for
+# > **Intuition.** A cascade is a hiring funnel: a seconds-long CV screen for
 # > everyone, phone screens for a few hundred, onsite interviews for ten. Nobody can
 # > afford onsites for every applicant. *Where it breaks down:* a funnel never rescues a
 # > candidate rejected at the CV screen, and neither does a ranker: retrieval sets the
@@ -355,7 +355,7 @@ print("hit rate by capacity:", hit_rates)
 #
 # *What to notice:* both operations touch only the dictionary entry and the two ends of the list, which is why each is O(1).
 #
-# > 💡 **Intuition.** A cache is keeping the tools you used today on your desk instead of
+# > **Intuition.** A cache is keeping the tools you used today on your desk instead of
 # > in the shed: the desk is small, so the tool you have not touched longest goes back.
 # > *Where it breaks down:* a hammer on the desk is still a hammer, but a cached feature
 # > can be stale; the TTL is how long you trust it.
@@ -627,7 +627,7 @@ budget.round(1)
 # * Spend the budget where it buys quality: the ranker, usually. Retrieval
 #   and features should be boring and fast.
 #
-# > 💡 **Intuition.** Fan-out is waiting for ten friends before dinner starts: dinner is as
+# > **Intuition.** Fan-out is waiting for ten friends before dinner starts: dinner is as
 # > late as the latest friend, and with ten friends someone is usually late. *Where it
 # > breaks down:* friends' delays are independent; shard delays often are not (a shared
 # > overloaded network makes them all slow together), which can be better or much worse.
@@ -647,7 +647,7 @@ budget.round(1)
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1. Little's law**
 #
@@ -704,7 +704,7 @@ budget.round(1)
 # *Example:* if 17 of a user's 20 truly best items are among the ~320 candidates, recall = 0.85; no ranker can recover the other 3.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -728,4 +728,4 @@ budget.round(1)
 # 5. Your p99 latency doubled after a deploy but p50 did not move. List likely causes and how you would find the culprit stage.
 # 6. Product asks for "at most 3 items per category". What does it cost, how would you measure whether it is worth it, and where in the cascade does it belong?
 #
-# ➡️ **Next:** [`18_model_optimization_for_inference.ipynb`](../ch36-model-optimization-for-inference/notebook.ipynb) — make the ranker itself cheaper: ONNX, quantisation and distillation, with accuracy measured against latency.
+# **Next chapter:** [`18_model_optimization_for_inference.ipynb`](../ch36-model-optimization-for-inference/notebook.ipynb) — make the ranker itself cheaper: ONNX, quantisation and distillation, with accuracy measured against latency.

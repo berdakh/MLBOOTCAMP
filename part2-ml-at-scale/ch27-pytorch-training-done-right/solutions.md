@@ -1,13 +1,13 @@
 # Solutions · Chapter 27 · PyTorch training done right
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `train_one_epoch`
 
-✅ Reference code: [`code/nb09.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb09.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def train_one_epoch(model, loader, optimizer, loss_fn):
@@ -41,7 +41,7 @@ batch would otherwise distort.
 
 ## Exercise 2 · `expected_initial_loss`
 
-✅ Reference code: `ex2`.
+[verified] Reference code: `ex2`.
 
 ```python
 def expected_initial_loss(pos_rate):
@@ -54,7 +54,7 @@ def expected_initial_loss(pos_rate):
 The best constant prediction under log-loss is the base rate itself, and its loss
 is the binary entropy. For ShopStream's 0.137 click rate that is 0.40 nats; for
 a 1% ads CTR, 0.056. The notebook measured 0.395 with the output bias set to
-`logit(p)` and 0.625 without it (✅). The edge cases use the convention
+`logit(p)` and 0.625 without it ([verified]). The edge cases use the convention
 `0 · log 0 = 0`: a dataset with no positives has zero entropy.
 
 **For softmax over C classes** the same reasoning gives `log C` for balanced
@@ -64,7 +64,7 @@ classes, or the entropy of the class prior in general.
 
 ## Exercise 3 · Find the bug
 
-✅ Answer: **C, D, E**.
+[verified] Answer: **C, D, E**.
 
 * **C** (line 16): `nn.CrossEntropyLoss` expects **logits**; it applies log-softmax
   itself. Feeding it probabilities squashes the "logits" into [0, 1], so the
@@ -82,7 +82,7 @@ model is built), **G** (`CrossEntropyLoss` takes `long` class indices, so `long`
 correct), **H** (3e-3 with Adam is fine for this model, as section 9.3 shows; the
 stuck loss has another cause).
 
-**Measured effect of each fix** (✅ our run, same seed, 3 epochs, train loss / valid AUC
+**Measured effect of each fix** ([verified] our run, same seed, 3 epochs, train loss / valid AUC
 after the last epoch; the time-split variant trains on days 28–41, validates on 42–48):
 
 | Variant | train loss | valid AUC |
@@ -133,7 +133,7 @@ RNG state (Python, NumPy, torch CPU, CUDA, the sampler's generator, and
 DataLoader workers' seeds, which derive from that generator); the AMP
 `GradScaler` state when using mixed precision. Write atomically (temp file +
 rename). The notebook showed a weights-only resume diverging from epoch 3 while the
-full one matched bitwise (✅).
+full one matched bitwise ([verified]).
 
 **5. Same seed, different GPU results.** Non-deterministic kernels (atomic adds
 in scatter/index_add, some cuDNN convolution algorithms, cuBLAS workspace),

@@ -84,7 +84,7 @@ print(f"{len(imps):,} impressions loaded, ranker trained ({time.time() - t0:.0f}
 # **Expected:** `2,446,900 impressions loaded, ranker trained` after 15–60 s.
 
 # %% [markdown]
-# ## 📖 Words to know
+# ## Key terms
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
@@ -171,7 +171,7 @@ pd.DataFrame(valid_results)
 #
 # *What to notice:* the dashed path is the one thing the procedure forbids; everything else exists to make it detectable.
 #
-# > 💡 **Intuition.** Pre-registration is calling your shot in pool: "eight ball, corner
+# > **Intuition.** Pre-registration is calling your shot in pool: "eight ball, corner
 # > pocket" before you hit. Sinking a ball you did not call does not count, however good
 # > it looked. *Where it breaks down:* a plan cannot anticipate everything; when you must
 # > deviate, write a new, dated plan with the reason, and report both.
@@ -221,7 +221,7 @@ print("sha256:", prereg_sha)
 # implemented here rather than imported. Using *train-day* random traffic
 # keeps the test week untouched.
 #
-# > 💡 **Intuition.** IPS is a survey where people near the door are asked far more often
+# > **Intuition.** IPS is a survey where people near the door are asked far more often
 # > than people at the back: to estimate the whole room, weight each answer by 1 / (the
 # > chance that person was asked). A click at a rarely examined position speaks for many
 # > unseen ones. *Where it breaks down:* a tiny propensity means a huge weight, so one
@@ -361,7 +361,7 @@ pd.DataFrame({name: {lens: np.nanmean(v) for lens, v in d.items()} for name, d i
 # unit of resampling is the **user**. A row-level bootstrap would give
 # intervals that are too narrow.
 #
-# > 💡 **Intuition.** Five answers from one household are mostly one household's opinion.
+# > **Intuition.** Five answers from one household are mostly one household's opinion.
 # > Resample households (users), not answers (requests), or the interval pretends you asked
 # > five times as many people. *Where it breaks down:* if users interact (a marketplace, a
 # > social graph), even users are not independent, and the cluster must be bigger still.
@@ -613,7 +613,7 @@ progress
 # *Your answer here.*
 
 # %% [markdown]
-# ## 🧮 Key equations
+# ## Key equations
 #
 # **1. Position-based click model and propensities**
 #
@@ -653,7 +653,7 @@ progress
 # *Example:* unit variances with correlation 0.9: $1 + 1 - 1.8 = 0.2$ instead of 2, an interval $\sqrt{10} \approx 3.2$× narrower than comparing two separate intervals.
 
 # %% [markdown]
-# ## 🛟 Troubleshooting
+# ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
@@ -676,7 +676,7 @@ progress
 # 5. Your retrieval recall@100 is 0.63 against true relevance but 0.30 against logged clicks. Which do you report, and why do they differ?
 # 6. Give your 3-minute project walkthrough. Then: what is the weakest part of your evaluation?
 #
-# ➡️ **Next:** Level 2 is complete. Continue with
+# **Next chapter:** Level 2 is complete. Continue with
 # [Level 3 — Deep learning systems at scale](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/README.md):
 # GPUs, mixed precision, transformers and fine-tuning, with the same habits of
 # measuring every claim.

@@ -1,13 +1,13 @@
 # Solutions · Chapter 4 · SQL for ML
 
-Try each exercise before reading its answer. Markers: ✅ verified by running ·
-🔬 expected, depends on your run · ✍️ personal / open-ended.
+Try each exercise before reading its answer. Markers: [verified] verified by running ·
+[expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `weekly_change_sql`
 
-✅ Reference code: [`code/nb03.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`code/nb03.py`](solutions.py) (`ex1`), graded in CI.
 
 ```sql
 SELECT customer_id, week_start, sessions,
@@ -37,7 +37,7 @@ one you chose.
 
 ## Exercise 2 · `latest_invoice_sql(as_of)`
 
-✅ Reference code: [`code/nb03.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`code/nb03.py`](solutions.py) (`ex2`).
 
 ```python
 def latest_invoice_sql(as_of: str) -> str:
@@ -67,7 +67,7 @@ with `?` placeholders) to avoid SQL injection.
 
 ## Exercise 3 · `tickets_30d_sql(snapshot)`
 
-✅ Reference code: [`code/nb03.py`](solutions.py) (`ex3`).
+[verified] Reference code: [`code/nb03.py`](solutions.py) (`ex3`).
 
 ```sql
 WITH active AS (
@@ -101,7 +101,7 @@ on the left makes about 30 customers disagree with the package at 2024-02-01.
 
 ## Exercise 4 · The fan-out bug (written)
 
-✍️ A strong answer:
+[open-ended] A strong answer:
 
 * **Cause.** Joining a table to two (or more) one-to-many tables on the same
   key returns every combination of their rows. Each row of one is repeated
