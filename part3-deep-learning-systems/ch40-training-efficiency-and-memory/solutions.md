@@ -19,7 +19,7 @@ def training_memory_bytes(n_params, optimizer, mixed_precision):
     return int((4 + 4 + STATE_BYTES[key] + (2 if mixed_precision else 0)) * n_params)
 ```
 
-**Check against measurement.** In 2.1 the summed tensors after one AdamW step
+**Check against measurement.** In 40.1 the summed tensors after one AdamW step
 were exactly 16.00 bytes/param (3.5 + 3.5 + 7.1 MB for 929,536 parameters).
 
 **Variants an interviewer may ask for.** Plain-SGD inference-only: 4 B/param
@@ -50,7 +50,7 @@ def accumulated_step(model, batches, loss_fn):
 `(1/N) Σ_all ℓ_j = Σ_i (n_i/N) · mean_{j∈i} ℓ_j`. Gradients are linear, so
 backpropagating each weighted micro-batch loss and letting `.grad` add up
 gives exactly the big-batch gradient (up to floating-point summation order;
-2.3 measured a 5.6e-09 difference). Dividing by the number of micro-batches
+40.3 measured a 5.6e-09 difference). Dividing by the number of micro-batches
 is only right when all have the same size.
 
 **Common mistakes.** Not clearing old gradients first; dividing by
@@ -93,12 +93,12 @@ specific term.
 
 2. [verified] **Activations** ≈ batch × seq × layers × (c·hidden + heads·seq) values: linear in
    batch, hidden and layers; linear in seq for most tensors and **quadratic** for
-   attention probabilities unless a fused (flash) attention kernel is used. Measured in 2.2:
+   attention probabilities unless a fused (flash) attention kernel is used. Measured in 40.2:
    18.0 MB per layer, matching `16h + a·s` values per token, plus 9.9 MB for logits and
    embeddings; activations were 5.8× the weights+grads+optimizer state for a 0.93M-parameter model.
 
 3. [verified] **Accumulation** is exactly equivalent when the loss is a mean over
-   independent examples and micro-batches are weighted by their share (2.3: difference
+   independent examples and micro-batches are weighted by their share (40.3: difference
    5.6e-09, i.e. rounding). It is not equivalent with BatchNorm (per-micro-batch
    statistics), with per-token losses over variable lengths if weighted per example,
    with randomness that differs (dropout masks), or when the learning-rate schedule
@@ -106,8 +106,8 @@ specific term.
    less parallelism; the same FLOPs, but the GPU is less efficient with small batches.
 
 4. [verified] **Checkpointing** keeps only block inputs in forward and recomputes the
-   block in backward. Saves most activation memory (2.4: 82.0 → 13.9 MB, −83%)
-   at the cost of one extra forward pass (2.4: +23% to +40% step time on CPU;
+   block in backward. Saves most activation memory (40.4: 82.0 → 13.9 MB, −83%)
+   at the cost of one extra forward pass (40.4: +23% to +40% step time on CPU;
    ~+30% is the usual figure). Place them at transformer-block boundaries (cheap to store
    the residual stream, expensive inside); checkpoint every block for the biggest saving,
    or every k-th for a middle ground; avoid recomputing very expensive ops if memory allows
@@ -119,14 +119,14 @@ specific term.
    `.detach().cpu()`, metrics computed on tensors with graphs, a growing cache
    (e.g. a dict keyed by step), hooks storing activations. Confirm with
    `torch.cuda.memory._record_memory_history()` + the memory visualiser, or
-   `gc.get_objects()` filtered for tensors. 2.6 showed the effect: 0 B vs 102.6 MB of
+   `gc.get_objects()` filtered for tensors. 40.6 showed the effect: 0 B vs 102.6 MB of
    activations still alive after 5 steps.
 
 6. [expected] **`torch.compile`** captures Python into FX graphs (TorchDynamo), then
    generates fused kernels (Inductor → Triton on GPU, C++ on CPU), optionally CUDA
    graphs (`mode="reduce-overhead"`). Speed-ups come from fusing memory-bound ops
    and removing Python/launch overhead, so they are large for overhead- or
-   memory-bound models and small when big matmuls dominate (2.5 on CPU: 0.95–1.09×).
+   memory-bound models and small when big matmuls dominate (40.5 on CPU: 0.95–1.09×).
    Risks: compile time (≈25 s here on first compile, minutes for big models),
    recompilation on new shapes, graph breaks that silently fall back to eager,
    harder debugging and stack traces, version-specific bugs. Keep an eager

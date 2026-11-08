@@ -242,7 +242,7 @@ def ex5(answers):
 
     result_holder: dict = {}
     result = run_check("Exercise 5 · evaluation · answers", test,
-                       hint="the right answers are not shown here; notebooks 04-07 cover each scenario")
+                       hint="the right answers are not shown here; Chapters 5-8 cover each scenario")
     result.score = result_holder.get("score")
     return result
 
@@ -291,16 +291,16 @@ def ex6(make_model):
 # ---------------------------------------------------------------------------
 
 AREAS = {
-    # area: (how it is measured, notebooks to prioritise)
-    "Python": ("exercise 1", ["01", "05", "11", "16"]),
-    "pandas": ("exercise 2", ["02", "03", "16"]),
-    "SQL": ("exercise 3", ["02", "03", "16"]),
-    "Testing": ("exercise 4", ["01", "05", "11", "16"]),
-    "Evaluation": ("exercise 5", ["04", "05", "06", "07"]),
-    "APIs": ("exercise 6", ["09", "10", "11"]),
-    "Deployment": ("self-rating", ["12", "13", "14"]),
-    "Monitoring": ("self-rating", ["12", "13", "14"]),
-    "Communication": ("self-rating", ["15", "17"]),
+    # area: (how it is measured, chapters to prioritise)
+    "Python": ("exercise 1", ["2", "6", "12", "17"]),
+    "pandas": ("exercise 2", ["3", "4", "17"]),
+    "SQL": ("exercise 3", ["3", "4", "17"]),
+    "Testing": ("exercise 4", ["2", "6", "12", "17"]),
+    "Evaluation": ("exercise 5", ["5", "6", "7", "8"]),
+    "APIs": ("exercise 6", ["10", "11", "12"]),
+    "Deployment": ("self-rating", ["13", "14", "15"]),
+    "Monitoring": ("self-rating", ["13", "14", "15"]),
+    "Communication": ("self-rating", ["16", "18"]),
 }
 
 _EXERCISE_AREA = {"1": "Python", "2": "pandas", "3": "SQL", "4": "Testing", "5": "Evaluation", "6": "APIs"}
@@ -349,7 +349,7 @@ def _rated_status(ratings: list[int]) -> str:
 
 
 def summary(results, self_ratings: dict | None = None, path: Path | None = None) -> dict:
-    """Print an area -> status -> notebooks table and write ``diagnostic.json``.
+    """Print an area -> status -> chapters table and write ``diagnostic.json``.
 
     ``results`` is the list of CheckResults returned by ``ex1`` ... ``ex6``
     (re-running a check cell may append a newer result; the last one wins).
@@ -388,7 +388,7 @@ def summary(results, self_ratings: dict | None = None, path: Path | None = None)
                      "notebooks": notebooks})
 
     order = {"priority": 0, "not attempted": 1, "not rated": 1, "review": 2, "strong": 3}
-    print(f"{'area':<14}{'measured by':<13}{'result':<10}{'status':<15}prioritise notebooks")
+    print(f"{'area':<14}{'measured by':<13}{'result':<10}{'status':<15}prioritise chapters")
     print("-" * 72)
     for row in rows:
         print(f"{row['area']:<14}{row['measured_by']:<13}{row['result']:<10}{row['status']:<15}"
@@ -402,9 +402,9 @@ def summary(results, self_ratings: dict | None = None, path: Path | None = None)
                     focus.append(nb)
     print()
     if focus:
-        print("Spend extra time on notebooks (most urgent first):", ", ".join(focus))
+        print("Spend extra time on chapters (most urgent first):", ", ".join(focus))
     else:
-        print("No weak area detected: do the bootcamp in order and push the optional extensions.")
+        print("No weak area detected: work through Part I in order, then the optional extensions.")
 
     record = {
         "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

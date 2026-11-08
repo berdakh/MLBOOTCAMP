@@ -113,17 +113,17 @@ print(text[:200])
 # | Embedding | a learned vector looked up for each token id (and each position) | `tok_emb`, `pos_emb`, 64 numbers each on CPU |
 # | Query, key, value | three vectors per token: what it is looking for, what it offers, what it hands over | `x @ w_qkv` split in three (Exercise 1) |
 # | Attention head | one independent attention computation on a slice of the channels | 4 heads of 16 channels each |
-# | Causal mask | −∞ added to scores of future positions so a token cannot see what comes after it | the perturbation test in 3.3 |
+# | Causal mask | −∞ added to scores of future positions so a token cannot see what comes after it | the perturbation test in 41.3 |
 # | Residual stream | the running vector each block reads from and adds its output to | `x = x + Attention(LayerNorm(x))` |
 # | LayerNorm | rescales each token's vector to mean 0 and variance 1, then applies a learned scale and shift | pre-LN: inside each branch |
 # | Logits | unnormalised scores, one per vocabulary entry; softmax turns them into probabilities | `(B, T, 65)` from the model |
 # | Cross-entropy / perplexity | average −log probability of the correct next token / its exponential | ln 65 ≈ 4.17 at init → perplexity 65 |
-# | Temperature, top-k | divide logits by τ before softmax / keep only the k most likely tokens | τ = 0.8, k = 10 in 3.6 |
-# | KV cache | stored keys and values of past tokens, so each new token is computed once | 2–5× faster generation in 3.7 |
+# | Temperature, top-k | divide logits by τ before softmax / keep only the k most likely tokens | τ = 0.8, k = 10 in 41.6 |
+# | KV cache | stored keys and values of past tokens, so each new token is computed once | 2–5× faster generation in 41.7 |
 # | Weight tying | the output layer reuses the input embedding matrix | `weights tied: True` |
 
 # %% [markdown]
-# ## 3.1 · Characters as tokens
+# ## 41.1 · Characters as tokens
 #
 # A character-level tokenizer keeps the focus on the model: the vocabulary is
 # the set of distinct characters (65 here). Real models use subword
@@ -144,7 +144,7 @@ print("round trip:", tok.decode(tok.encode("To be, or not to be")))
 # **Expected:** vocabulary 65 (newline, space, punctuation, letters), 1,003,854
 # training and 111,540 validation tokens, and a perfect round trip.
 #
-# ## 3.2 · Causal self-attention
+# ## 41.2 · Causal self-attention
 #
 # For each position `t`, attention computes a weighted average of *value*
 # vectors, weighted by how well the position's *query* matches each *key*:
@@ -196,7 +196,7 @@ def causal_self_attention(x, w_qkv, w_out, n_heads):
 grade.ex1(causal_self_attention)
 
 # %% [markdown]
-# ## 3.3 · The decoder
+# ## 41.3 · The decoder
 #
 # `tg.TinyGPT` (open [`src/scaleml/tinygpt.py`](../../src/scaleml/tinygpt.py)) is:
 #
@@ -268,7 +268,7 @@ assert before < 1e-5 < after, "causal mask broken!"
 # **Expected:** a change of exactly 0 (or ~1e-7) before position 32 and a clearly non-zero
 # change (~0.8 in our run) from position 32 on.
 #
-# ## 3.4 · The loss at initialisation
+# ## 41.4 · The loss at initialisation
 #
 # A freshly initialised model with small weights outputs nearly uniform
 # probabilities over the vocabulary, so its cross-entropy should be about
@@ -290,7 +290,7 @@ print(f"unigram baseline (character frequencies, no context): {unigram:.3f} on v
 # **Expected:** about 4.19 vs ln 65 = 4.174, and a unigram baseline of about 3.3:
 # a model must beat that to have learned anything about context.
 #
-# ## 3.5 · Training
+# ## 41.5 · Training
 #
 # We train with `scaleml.train.train` (read [`src/scaleml/train.py`](../../src/scaleml/train.py)):
 # AdamW, linear warm-up then cosine decay, gradient clipping at 1.0, and fp16
@@ -335,7 +335,7 @@ print("saved", OUT / "tinygpt.pt")
 # enough to sample, not to *resume* training (that also needs the optimizer and
 # scheduler state; see `scaleml.train.save_checkpoint`).
 #
-# ## 3.6 · Sampling: temperature and top-k
+# ## 41.6 · Sampling: temperature and top-k
 #
 # The model outputs logits for the next token. To generate, divide them by a
 # **temperature** τ (τ < 1 sharpens the distribution, τ > 1 flattens it, τ → 0 is
@@ -374,7 +374,7 @@ _ = (OUT / "samples.txt").write_text("\n".join(samples))
 # breaks, short words, many misspelt. Temperature 1.5 without top-k is noticeably
 # more garbled (rare characters, broken words). The exact text depends on your run.
 #
-# ## 3.7 · The KV cache
+# ## 41.7 · The KV cache
 #
 # Generating token `t+1` without a cache re-runs the model on all `t` previous
 # tokens, although their keys and values have not changed (causal masking means
@@ -569,7 +569,7 @@ print(f"KV cache, the 3.7 benchmark model (512 tokens, fp32): "
 # %% [markdown]
 # **Expected:** differences of ~1e-7 or smaller for attention, LayerNorm and cross-entropy;
 # perplexity at init about 66 (≈ the vocabulary size: a uniform guess); 2.0 GiB for the 7B cache
-# and 512 KiB for the toy model on the CPU budget (the number quoted in 3.7).
+# and 512 KiB for the toy model on the CPU budget (the number quoted in 41.7).
 
 # %% [markdown]
 # ## Troubleshooting
@@ -579,10 +579,10 @@ print(f"KV cache, the 3.7 benchmark model (512 tokens, fp32): "
 # | `ModuleNotFoundError: churnlab` / `scaleml` | setup cell not run | run the first code cell |
 # | "Could not download Trelis/tiny-shakespeare" and a tiny corpus | no internet / Hub outage | re-run when online; the fallback only keeps the code runnable |
 # | Loss at init far above ln(vocab) | weights initialised too large; missing `1/√d` | check `_init` and the attention scale |
-# | Training loss drops far below ~1.0 within a few hundred steps | causal mask leaks the future, or `y` not shifted by one | run the perturbation test in 3.3 |
+# | Training loss drops far below ~1.0 within a few hundred steps | causal mask leaks the future, or `y` not shifted by one | run the perturbation test in 41.3 |
 # | `ValueError: sequence length ... exceeds block_size` | prompt + generation longer than the context with `use_cache=True` and a manual loop | crop to the last `block_size` tokens (as `generate` does) |
 # | Loss becomes `nan` on a T4 | fp16 overflow with a too-high LR | lower `LR`; GradScaler skips inf steps but cannot fix a diverging run |
-# | Cached and uncached generations differ | position offset or mask wrong in the cached path | compare logits step by step as in 3.7 |
+# | Cached and uncached generations differ | position offset or mask wrong in the cached path | compare logits step by step as in 41.7 |
 # | Sampling gives the same text every time | temperature 0 (greedy) or a fixed generator seed | expected; vary the seed or temperature |
 
 # %% [markdown]

@@ -145,16 +145,16 @@ print("relevant abstract:", corpus[next(iter(test_qrels[q0]))][:200], "...")
 # | idf | inverse document frequency: rare terms count more than common ones | "prion" vs "protein" |
 # | BM25 | a word-matching score with saturating term counts and length normalisation | nDCG@10 0.667 on SciFact |
 # | Dense retrieval / bi-encoder | embed queries and documents separately into vectors, search by similarity | `all-MiniLM-L6-v2`, 384 dimensions |
-# | L2 normalisation | scaling each vector to length 1, so dot product = cosine | all norms 1.0000 in 7.3 |
+# | L2 normalisation | scaling each vector to length 1, so dot product = cosine | all norms 1.0000 in 45.3 |
 # | ANN | approximate nearest-neighbour search: trade a little recall for much less latency | HNSW, recall@10 0.975 at efSearch 64 |
 # | HNSW | a layered graph of vectors that a query walks greedily toward its neighbours | `IndexHNSWFlat`, `M`, `efSearch` |
 # | nDCG@10 | how well the top 10 is ordered, 1.0 = every relevant document on top | BEIR's headline metric |
 # | Recall@100 | the share of relevant documents found anywhere in the top 100 | what a re-ranker can at best recover |
-# | RRF | reciprocal rank fusion: combine rankings by summing 1 / (k + rank) | the hybrid in 7.6 |
+# | RRF | reciprocal rank fusion: combine rankings by summing 1 / (k + rank) | the hybrid in 45.6 |
 # | Hybrid retrieval | combining lexical and dense results | best on both metrics here |
 
 # %% [markdown]
-# ## 7.1 · Retrieval metrics
+# ## 45.1 · Retrieval metrics
 #
 # For each query, a system returns a ranked list; the **qrels** say which documents are
 # relevant (here a grade of 1; graded qrels use 0–3).
@@ -170,7 +170,7 @@ print("relevant abstract:", corpus[next(iter(test_qrels[q0]))][:200], "...")
 # Unjudged documents count as non-relevant, so these metrics are lower bounds; Chapter 46
 # returns to that ("false negatives").
 #
-# ## 7.2 · Lexical retrieval: BM25
+# ## 45.2 · Lexical retrieval: BM25
 #
 # BM25 scores a document by the query terms it contains, with two corrections over raw
 # counts: **term-frequency saturation** (the 10th "protein" adds less than the 1st, controlled
@@ -236,7 +236,7 @@ print("BM25 on a 1,200-doc sub-corpus:", R.evaluate_run(run_sub, test_qrels))
 # simpler. The same BM25 on the 1,200-document sub-corpus scores 0.770 / 0.937: removing
 # distractors inflates the metric by 10 nDCG points. Never compare numbers across corpora.
 #
-# ## 7.3 · Dense retrieval: a bi-encoder
+# ## 45.3 · Dense retrieval: a bi-encoder
 #
 # A **bi-encoder** maps queries and documents *independently* to vectors, so documents are
 # embedded once, offline, and a query costs one encoder call plus a nearest-neighbour search.
@@ -277,7 +277,7 @@ print(f"{np.mean(np.array(n_tok) >= DOC_LEN):.0%} of documents were truncated at
 # in our verification runs). Embedding is the offline cost of dense retrieval and is paid
 # again for the *whole corpus* every time the encoder changes (Chapter 46).
 #
-# ## 7.4 · Exact vs approximate nearest neighbours with FAISS
+# ## 45.4 · Exact vs approximate nearest neighbours with FAISS
 #
 # * **`IndexFlatIP`**: exact; compares the query with every vector ($O(N d)$ per query). Perfect
 #   recall; fine up to a few million vectors on a GPU, or when latency is not critical.
@@ -348,7 +348,7 @@ for r in ann_rows:
 # graph adds ~`2·M` neighbour ids per vector) and build time; IVF-PQ indexes compress vectors
 # (product quantisation) for billion-scale collections at a further recall cost.
 #
-# ## 7.5 · Lexical vs dense: where each is better
+# ## 45.5 · Lexical vs dense: where each is better
 #
 # Averages hide structure. Compare the two systems query by query.
 
@@ -372,7 +372,7 @@ for name, i in [("BM25 wins most", int(np.argmax(nd_bm25 - nd_dense))), ("dense 
 # shares rare, exact terms with its abstract (gene names, drug names, numbers); dense is better
 # when the claim paraphrases the abstract. That complementarity is why hybrids work.
 #
-# ## 7.6 · Hybrid retrieval: reciprocal rank fusion
+# ## 45.6 · Hybrid retrieval: reciprocal rank fusion
 #
 # BM25 scores are unbounded; cosine similarities live in [−1, 1]: adding them needs a
 # per-query normalisation that is fragile. **Reciprocal rank fusion** (RRF, Cormack et al.

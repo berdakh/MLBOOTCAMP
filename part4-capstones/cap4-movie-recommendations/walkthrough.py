@@ -1479,7 +1479,7 @@ for it in r1["items"][:5]:
 
 # %%
 def results_markdown() -> str:
-    lines = [f"Release: `{RELEASE}`" + (f", random sample of {USER_SAMPLE} users (seed {SEED})" if USER_SAMPLE else "")
+    lines = [("Data: SYNTHETIC SAMPLE (not MovieLens)" if SAMPLE else f"Release: `{RELEASE}`") + (f", random sample of {USER_SAMPLE} users (seed {SEED})" if USER_SAMPLE else "")
              + f"; label: rating >= {POS_THRESHOLD}; split: time-aware leave-last-out (test = each user's last "
              f"positive), {len(TEST.users)} users; full ranking over {N_ITEMS:,} movies; 95% bootstrap CIs over users.",
              "", "| Model | Recall@10 | NDCG@10 | NDCG@10 − recent popularity | Coverage | Mean popularity |",

@@ -131,9 +131,9 @@ print("example:", train_df.loc[0, "text"][:120], "->", LABELS[train_df.loc[0, "l
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
-# | TF-IDF | word counts re-weighted so that words frequent in one text but rare overall count most | the 8k uni- and bigram baseline in 5.1 |
-# | Linear probe | a linear classifier trained on frozen embeddings; tests what the encoder already knows | 0.858 test accuracy in 5.2 |
-# | Fine-tuning | continuing to train a pretrained model, usually all of it, on your task | 40 AdamW steps at lr 5e-5 in 5.3 |
+# | TF-IDF | word counts re-weighted so that words frequent in one text but rare overall count most | the 8k uni- and bigram baseline in 43.1 |
+# | Linear probe | a linear classifier trained on frozen embeddings; tests what the encoder already knows | 0.858 test accuracy in 43.2 |
+# | Fine-tuning | continuing to train a pretrained model, usually all of it, on your task | 40 AdamW steps at lr 5e-5 in 43.3 |
 # | Catastrophic forgetting | a too-large learning rate overwrites what pre-training learned | why 5e-5, not 1e-3 |
 # | Warmup | starting the learning rate near 0 and raising it over the first steps | 10% of steps, then cosine decay |
 # | Early stopping | keeping the weights from the best validation epoch and stopping when it stops improving | `EarlyStopping(patience=...)` |
@@ -145,7 +145,7 @@ print("example:", train_df.loc[0, "text"][:120], "->", LABELS[train_df.loc[0, "l
 # | Confusion matrix | a table of true class vs predicted class counts | Business → Sci/Tech is the largest error |
 
 # %% [markdown]
-# ## 5.1 · Baseline 1: TF-IDF + logistic regression
+# ## 43.1 · Baseline 1: TF-IDF + logistic regression
 #
 # Word and bigram counts, re-weighted by inverse document frequency, into a linear
 # classifier. It trains in seconds on a CPU, serves in microseconds, and is the number any
@@ -186,7 +186,7 @@ print(f"TF-IDF + LR (C={best_C}): test {results['tfidf_lr']} | fit {timings['tfi
 # under a second of fitting. With 17k training examples (`gpu` budget) TF-IDF + LR typically
 # reaches ~0.89–0.90 on AG News.
 #
-# ## 5.2 · Baseline 2: a linear probe on frozen DistilBERT embeddings
+# ## 43.2 · Baseline 2: a linear probe on frozen DistilBERT embeddings
 #
 # Keep the pretrained encoder **frozen**, embed every text once (mask-aware mean pooling,
 # Chapter 42), and train only a logistic regression on top. This tells you how much of
@@ -225,7 +225,7 @@ print(f"linear probe: validation acc {probe.score(emb['val'], y_val):.3f} | test
 # layer already beats TF-IDF on this small training set, because the representation was
 # learned from far more text than our 1,275 examples.
 #
-# ## 5.3 · Full fine-tuning
+# ## 43.3 · Full fine-tuning
 #
 # `AutoModelForSequenceClassification` puts a freshly initialised head (`pre_classifier`
 # → ReLU → dropout → `classifier`, on the `[CLS]` position for DistilBERT) on the pretrained
@@ -316,7 +316,7 @@ print(pd.DataFrame(cm, index=LABELS, columns=LABELS))
 # mostly confuses **Business** with **Sci/Tech** (technology companies) and **World** with
 # **Business** (economics and politics), while **Sports** is nearly separable.
 #
-# ## 5.4 · Calibration: do the probabilities mean anything?
+# ## 43.4 · Calibration: do the probabilities mean anything?
 #
 # A classifier is **calibrated** if, among the examples where it says 0.9, about 90 % are
 # right. Calibration matters whenever a probability is *used*: thresholds for automation vs
@@ -425,7 +425,7 @@ print(f"test NLL {temp['test_nll_before']:.3f} -> {temp['test_nll_after']:.3f} |
 # recipe is the same: fit $T$ on validation, check ECE and NLL on test, and re-fit after
 # every retrain.
 #
-# ## 5.5 · Error analysis
+# ## 43.5 · Error analysis
 #
 # Aggregate metrics say *how much*; error analysis says *what to do next*. Two views: the
 # most frequent confusions (which class pairs, with examples), and the most confident

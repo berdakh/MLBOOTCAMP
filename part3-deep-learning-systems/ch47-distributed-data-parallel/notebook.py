@@ -132,8 +132,8 @@ def show(proc, keep=("rank", "epoch", "resumed", "attempt", "bandwidth", "size",
 # | Process group / backend | the set of processes that talk to each other / the library that moves the bytes | gloo on CPU, NCCL on GPUs |
 # | Collective | an operation every rank must call, in the same order | `all_reduce`, `broadcast`, `all_gather`, `barrier` |
 # | All-reduce | every rank contributes a tensor and every rank receives the sum (or max, …) | sum = 10 for 1 + 2 + 3 + 4 |
-# | Reduce-scatter / all-gather | the two halves of a ring all-reduce: sum one chunk each / share every chunk with all | 9.2, 9.6 |
-# | DDP | PyTorch's data parallelism: replicas on every rank, gradients averaged during backward | `DistributedDataParallel` in 9.3 |
+# | Reduce-scatter / all-gather | the two halves of a ring all-reduce: sum one chunk each / share every chunk with all | 47.2, 47.6 |
+# | DDP | PyTorch's data parallelism: replicas on every rank, gradients averaged during backward | `DistributedDataParallel` in 47.3 |
 # | Gradient bucket | a group of gradients all-reduced together as soon as they are ready | ~25 MB, `bucket_cap_mb` |
 # | DistributedSampler | gives each rank a disjoint, equal-sized slice of the (shuffled) dataset | `set_epoch(epoch)` reshuffles |
 # | torchrun | the launcher that starts one process per GPU and sets RANK, WORLD_SIZE, … | `torchrun --standalone --nproc_per_node=4` |
@@ -141,7 +141,7 @@ def show(proc, keep=("rank", "epoch", "resumed", "attempt", "bandwidth", "size",
 # | Straggler | one slow rank that every other rank has to wait for at each collective | a ring is as fast as its slowest link |
 
 # %% [markdown]
-# ## 9.1 · Processes, ranks and the process group
+# ## 47.1 · Processes, ranks and the process group
 #
 # Data parallelism uses **one process per GPU**. Each process:
 #
@@ -261,10 +261,10 @@ for i, r4 in enumerate(coll["allreduce"]):
 # that grows with the number of ranks (2(N−1) ring steps) and, here, with four processes
 # competing for four shared cores. Large messages approach a bandwidth limit, and 4 ranks
 # are slower than 2 because each rank sends 2(N−1)/N = 1.5× instead of 1× the data. **On real GPUs** NCCL over NVLink moves hundreds of GB/s and over PCIe or
-# Ethernet 10–50 GB/s (datasheet figures, used as assumptions in 9.6; not measured).
+# Ethernet 10–50 GB/s (datasheet figures, used as assumptions in 47.6; not measured).
 
 # %% [markdown]
-# ## 9.2 · Data parallelism = averaging gradients
+# ## 47.2 · Data parallelism = averaging gradients
 #
 # With a mean loss over a batch of B examples split into N equal shards of B/N,
 #
@@ -350,7 +350,7 @@ print(f"uneven shards (8 + 24): max difference = {err:.1e}  <- plain averaging i
 # **Expected:** differences around 1e-8 (floating-point summation order) for 2 and 4 equal
 # shards, and a visibly larger difference (our run: 6.3e-02) for the uneven 8 + 24 split.
 #
-# ## 9.3 · A real data-parallel training script
+# ## 47.3 · A real data-parallel training script
 #
 # The script below trains a small MLP classifier on synthetic data with **2 processes**,
 # in one of three modes:
@@ -513,7 +513,7 @@ for mode in ("none", "manual", "ddp"):
 # printed loss is rank 0's own shard (there is no global loss without communication). Each
 # launch takes ~5–10 s on CPU, mostly process start-up.
 #
-# Now the claim of 9.2, end to end: **2-rank training = 1-process training on the
+# Now the claim of 47.2, end to end: **2-rank training = 1-process training on the
 # concatenated batch.** The reference run below uses one process, rank 0's initial
 # weights (seed 100), and at every step the union of the two ranks' mini-batches, read
 # from `DistributedSampler` objects constructed for rank 0 and rank 1 (no process group
@@ -574,7 +574,7 @@ for mode, params in runs.items():
 # micro-batch), and checks that every parameter received a gradient
 # (`find_unused_parameters`).
 #
-# ## 9.4 · `DistributedSampler`: sharding, `set_epoch` and padding
+# ## 47.4 · `DistributedSampler`: sharding, `set_epoch` and padding
 #
 # `DistributedSampler` gives each rank a disjoint slice of a (shuffled) index list. The
 # shuffle is seeded with `seed + epoch`, and the epoch is whatever you last passed to
@@ -646,7 +646,7 @@ for name, d in (("with set_epoch   ", GEN / "run_ddp"), ("WITHOUT set_epoch", ou
 # `same order every epoch: True`. In both cases the two ranks share **0** indices within an
 # epoch (256 examples split 128 / 128).
 #
-# ## 9.5 · When a rank dies: failures and elastic restarts
+# ## 47.5 · When a rank dies: failures and elastic restarts
 #
 # A job on 1,000 GPUs fails often (a GPU falls off the bus, a node reboots, NCCL times out),
 # so failure handling is part of the design, not an afterthought:
@@ -724,7 +724,7 @@ if restart_params is not None and runs.get("ddp") is not None:
 # this notebook (and most production code) uses `torchrun`.
 
 # %% [markdown]
-# ## 9.6 · Communication cost: when does DDP stop scaling?
+# ## 47.6 · Communication cost: when does DDP stop scaling?
 #
 # Per step, each GPU computes forward + backward on its shard (time `T_compute`, constant
 # if the per-GPU batch is fixed) and then all-reduces the gradients:
@@ -845,7 +845,7 @@ print("generated files:", sorted(p.name for p in GEN.iterdir()))
 # $$
 #
 # In words: the share of the step spent on useful compute; $o$ is the fraction of communication
-# hidden behind backward. Example (9.6): $T_{\text{compute}} = 250$ ms, $T_{\text{comm}} = 210$ ms,
+# hidden behind backward. Example (47.6): $T_{\text{compute}} = 250$ ms, $T_{\text{comm}} = 210$ ms,
 # $o = 0.5$: $E = 250 / 355 = 0.70$.
 #
 # **5. Global batch size.**

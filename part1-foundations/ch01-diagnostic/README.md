@@ -276,21 +276,20 @@ Three cautions apply when you read your profile.
 
 ## 1.8 From a profile to a reading plan
 
-The profile prints, for each area, the labs to prioritise. **The labs are
-printed with their original two-digit numbers** (`01`, `02`, ...); add one to
-obtain the chapter number. The table gives the translation.
+The profile prints, for each area, the chapters to prioritise. The table
+below repeats that mapping and adds a form of extra practice for each area.
 
-| Area | Labs printed by the profile | Chapters to prioritise | Extra practice |
-|---|---|---|---|
-| Python | 01, 05, 11, 16 | 2, 6, 12, 17 | rebuild one `churnlab` module from a blank file each week |
-| pandas | 02, 03, 16 | 3, 4, 17 | translate each SQL drill into pandas as well |
-| SQL | 02, 03, 16 | 3, 4, 17 | daily 20–30 minute SQL drills (Chapter 17) |
-| Testing | 01, 05, 11, 16 | 2, 6, 12, 17 | write the tests first for each capstone module |
-| Evaluation | 04, 05, 06, 07 | 5, 6, 7, 8 | explain one result per week aloud, with its interval |
-| APIs | 09, 10, 11 | 10, 11, 12 | — |
-| Deployment | 12, 13, 14 | 13, 14, 15 | — |
-| Monitoring | 12, 13, 14 | 13, 14, 15 | — |
-| Communication | 15, 17 | 16, 18 | every checkpoint, answered aloud |
+| Area | Chapters to prioritise | Extra practice |
+|---|---|---|
+| Python | 2, 6, 12, 17 | rebuild one `churnlab` module from a blank file each week |
+| pandas | 3, 4, 17 | translate each SQL drill into pandas as well |
+| SQL | 3, 4, 17 | daily 20–30 minute SQL drills (Chapter 17) |
+| Testing | 2, 6, 12, 17 | write the tests first for each capstone module |
+| Evaluation | 5, 6, 7, 8 | explain one result per week aloud, with its interval |
+| APIs | 10, 11, 12 | — |
+| Deployment | 13, 14, 15 | — |
+| Monitoring | 13, 14, 15 | — |
+| Communication | 16, 18 | every checkpoint, answered aloud |
 
 <img src="../../figures/roadmap.svg" alt="Roadmap of Part I: reproducible projects, evaluation, serving, operations and demonstration, followed by the capstones" width="100%">
 
@@ -370,7 +369,7 @@ the quick one.
 4. Each graded exercise contains specific traps; a failure message names the case that failed.
 5. The profile turns results into a status per area (table in Section 1.6, Equation 1.1 for self-ratings).
 6. Time counts: an item passed over time is half a pass (Equation 1.2).
-7. The profile prints two-digit lab numbers; add one to obtain the chapter number.
+7. The profile names the chapters to prioritise for each weak area.
 8. Low scores in SQL and testing are typical for researchers and are what Part I is designed to address.
 9. A retake is a pre-test / post-test comparison; judge it on speed and on written answers to limit the practice effect.
 

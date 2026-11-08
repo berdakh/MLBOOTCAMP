@@ -112,7 +112,7 @@ Then measure again: the next bottleneck becomes visible only after this one is g
 1. [verified] **Timing without sync.** CUDA calls are asynchronous: `model(x)` enqueues
    kernels and returns, so the measurement is Python + launch time. Fix: warm up,
    then `torch.cuda.synchronize()` before starting and before stopping the clock
-   (or CUDA events), repeat, report the median. In 1.2 the CPU numbers were
+   (or CUDA events), repeat, report the median. In 39.2 the CPU numbers were
    equal with and without sync because CPU ops are synchronous; that is exactly
    why the bug survives code that was first tested on a laptop.
 
@@ -148,7 +148,7 @@ Then measure again: the next bottleneck becomes visible only after this one is g
    parallel. `prefetch_factor`: batches queued per worker ahead of use.
    `pin_memory`: batches returned in page-locked memory so copies can be
    asynchronous DMA. `non_blocking=True`: the copy is enqueued and the CPU continues.
-   Workers stop helping when the loader already outpaces the step (in 1.7, 2
+   Workers stop helping when the loader already outpaces the step (in 39.7, 2
    workers brought one epoch from 1.86 s to 0.80–0.83 s against a 0.60 s floor), when
    you run out of cores (2 on Colab), or when the shared resource is I/O or memory
    bandwidth.

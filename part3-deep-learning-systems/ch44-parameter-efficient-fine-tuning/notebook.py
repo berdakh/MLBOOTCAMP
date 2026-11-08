@@ -135,18 +135,18 @@ def new_classifier():
 # |---|---|---|
 # | PEFT | parameter-efficient fine-tuning: train a small number of new or selected parameters | LoRA, adapters, prefix tuning |
 # | Frozen parameter | a weight that is used in the forward pass but never updated | all 66M DistilBERT weights under LoRA |
-# | LoRA | learn a low-rank correction B·A next to a frozen weight matrix | `LoRALinear` in 6.2 |
+# | LoRA | learn a low-rank correction B·A next to a frozen weight matrix | `LoRALinear` in 44.2 |
 # | Rank r | the inner size of B and A; how many independent directions the update can use | r = 8 |
 # | α (alpha) | a scale for the update, applied as α / r so changing r does not change its size | α = 16, so α / r = 2 |
 # | Target modules | which Linear layers receive adapters | `q_lin`, `v_lin` |
-# | Adapter | the small set of trained weights that turns a base model into a task model | the 2.83 MB safetensors file in 6.6 |
+# | Adapter | the small set of trained weights that turns a base model into a task model | the 2.83 MB safetensors file in 44.6 |
 # | Merge | folding B·A into W after training so serving is as fast as the base model | `merge_and_unload()` |
 # | QLoRA | LoRA on a base model stored in 4 bits | a 7B base in ~3.5 GB |
 # | modules_to_save | layers `peft` trains fully alongside the adapters | the new classification head |
 # | Multi-adapter serving | one base model in memory, a different adapter per request or tenant | S-LoRA, vLLM multi-LoRA |
 
 # %% [markdown]
-# ## 6.1 · Where fine-tuning memory goes
+# ## 44.1 · Where fine-tuning memory goes
 #
 # Training memory = weights + gradients + optimiser state + activations (Chapter 40).
 # With AdamW in fp32 that is 4 + 4 + 8 = **16 bytes per trained parameter**, plus 4 bytes per
@@ -174,7 +174,7 @@ print(f"\na 7B model in fp32 + AdamW, full fine-tuning: {prof.human_bytes(16 * n
 # 7B model the difference decides whether training fits on one GPU at all: 104 GB vs 13 GB of
 # weights (QLoRA goes further and stores the frozen base in 4 bits, ~3.5 GB).
 #
-# ## 6.2 · LoRA from scratch
+# ## 44.2 · LoRA from scratch
 #
 # Hu et al. (2021) observed that the weight *change* during fine-tuning has low intrinsic
 # rank. LoRA therefore freezes the pretrained $W \in \mathbb{R}^{d_{out} \times d_{in}}$ and
@@ -259,7 +259,7 @@ del reference
 # and 593,668 in the new head (`pre_classifier` 768 × 768 and `classifier` 768 × 4, with biases,
 # which must be trained because they start random). Max logit difference at initialisation: 0.0e+00.
 #
-# ## 6.3 · Linear probe vs LoRA vs full fine-tuning, on one budget
+# ## 44.3 · Linear probe vs LoRA vs full fine-tuning, on one budget
 #
 # Same data, same sequence length, same number of steps for the three trained variants
 # (one epoch at batch 32 on the CPU budget). What changes is *what* is trained and the
@@ -279,7 +279,7 @@ del reference
 #
 # > **Intuition.** One base model is a shared engine; adapters are small plug-in cartridges, one
 # > per task or customer. You can swap a cartridge in milliseconds and keep a thousand of them on
-# > disk for the price of a few copies of the engine (6.6).
+# > disk for the price of a few copies of the engine (44.6).
 
 # %%
 from sklearn.linear_model import LogisticRegression
@@ -400,7 +400,7 @@ _ = (OUT / "peft_comparison.json").write_text(json.dumps({"device": describe(DEV
 #   `nn.Linear` does not need its *input* saved, because no weight gradient is computed, yet the
 #   backward pass still runs through every layer and the attention/GELU/LayerNorm activations
 #   stay. The frozen weights still have to be stored. At 67M parameters the saving is modest;
-#   at 7B it is the difference between fitting and not fitting (6.1).
+#   at 7B it is the difference between fitting and not fitting (44.1).
 # * **Time**: LoRA skips the weight-gradient matmuls of frozen layers (about half of the
 #   backward FLOPs, a third of the step) and the AdamW update of 67M parameters, but still
 #   computes activation gradients through every layer. On our CPU a step was ~1.6× faster;
@@ -413,7 +413,7 @@ _ = (OUT / "peft_comparison.json").write_text(json.dumps({"device": describe(DEV
 # gap of a few hundred MB in LoRA's favour at batch 64 (activations dominate both), and
 # LoRA epochs roughly 20–35 % faster (not measured in our verification runs).
 #
-# ## 6.4 · The same with `peft`
+# ## 44.4 · The same with `peft`
 #
 # Hugging Face `peft` implements LoRA (and many relatives: DoRA, IA³, prefix tuning) for any
 # `transformers` model. The configuration maps one-to-one onto what we built:
@@ -455,7 +455,7 @@ print(f"max |logit difference| ours vs peft with the same weights: {gap:.1e}")
 # by 593,668 because `modules_to_save` keeps a trainable **copy** of the head next to the
 # frozen original. With identical weights the outputs agree exactly (max difference 0.0 in our run).
 #
-# ## 6.5 · Merging adapters: zero serving overhead
+# ## 44.5 · Merging adapters: zero serving overhead
 #
 # After training, $W' = W + \frac{\alpha}{r} BA$ is an ordinary weight matrix of the original
 # shape. Folding it in removes the two extra matmuls per adapted layer, so a merged model
@@ -508,7 +508,7 @@ print(f"peft merge_and_unload -> {type(peft_merged).__name__}, max |logit differ
 # 768-wide ones. The overhead shows up as extra kernel launches per layer, which matters more for
 # small batches on a GPU and for many adapted layers in a large model.
 #
-# ## 6.6 · Serving many adapters on one base model
+# ## 44.6 · Serving many adapters on one base model
 #
 # An adapter is tiny. Save only the LoRA and head weights and compare with a full copy of the model:
 
@@ -539,7 +539,7 @@ print(f"1,000 customer-specific models: full copies {1000 * full_bytes / 2**30:.
 #   once for the whole batch, then a batched, *gathered* low-rank matmul where each row uses its
 #   own tenant's $A$, $B$. Throughput stays close to the base model's while serving thousands
 #   of adapters; adapters live in CPU memory and are paged into the GPU on demand.
-# * **Merge** only when one adapter serves almost all the traffic (6.5).
+# * **Merge** only when one adapter serves almost all the traffic (44.5).
 #
 # The trade-off, as one would state it in a design discussion: merged = fastest per request, one task per
 # replica; unmerged multi-adapter = slightly slower kernels, but one fleet for every tenant and
@@ -547,7 +547,7 @@ print(f"1,000 customer-specific models: full copies {1000 * full_bytes / 2**30:.
 
 # %% [markdown]
 # > **Exercise 3.** A product team asks you to fine-tune a 7B-parameter LLM for 40 enterprise
-# > customers, each with 2–20k labelled examples, on T4/A10-class GPUs (16–24 GB). Using 6.1's
+# > customers, each with 2–20k labelled examples, on T4/A10-class GPUs (16–24 GB). Using 44.1's
 # > memory arithmetic, decide between full fine-tuning, LoRA and QLoRA; choose which modules to
 # > adapt and a starting rank; and describe how you would serve the 40 variants (merged vs
 # > multi-adapter) and evaluate whether LoRA lost quality against full fine-tuning. Write your
@@ -597,7 +597,7 @@ print(f"1,000 customer-specific models: full copies {1000 * full_bytes / 2**30:.
 #
 # In words: after training, fold the update into a weight of the original shape: zero extra
 # latency, but one task per merged copy. Example: two extra matmuls per adapted layer disappear;
-# in 6.5 the merged logits match to ~1e-6.
+# in 44.5 the merged logits match to ~1e-6.
 
 # %% [markdown]
 # ## Troubleshooting

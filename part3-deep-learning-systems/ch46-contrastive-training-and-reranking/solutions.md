@@ -89,7 +89,7 @@ the top 3.
    query; de-duplicate near-identical documents.
 3. A cross-encoder needs one forward pass per (query, document) pair and has nothing to
    precompute, so scoring a corpus of N documents costs N passes per query: infeasible
-   beyond a few hundred. Choose the depth from a quality-vs-latency table like 8.4's: the
+   beyond a few hundred. Choose the depth from a quality-vs-latency table like 46.4's: the
    smallest depth after which nDCG stops rising (bounded by the first stage's
    Recall@depth), within the latency budget.
 4. **Before deploying a better bi-encoder:** re-embed and re-index the whole corpus with the

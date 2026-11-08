@@ -72,7 +72,7 @@ model on `t` tokens: attention O(t²·d) and projections/MLP O(t·d²) per step,
 **O(n³·d)** attention and **O(n²·d²)** for the rest in total. **With a cache**, step
 `t` processes one token: projections/MLP O(d²) and attention over `t` cached keys
 O(t·d), so **O(n·d²)** + **O(n²·d)** in total. The cache removes a whole factor of `n`
-from both terms. (Measured in 3.7 on CPU: the cache was 2.1–2.2× faster at 64 tokens and
+from both terms. (Measured in 41.7 on CPU: the cache was 2.1–2.2× faster at 64 tokens and
 3.5–5.0× at 256–500 tokens.)
 
 (c) **Cost:** memory, `2 × layers × n × d` values per sequence (K and V), growing
@@ -105,7 +105,7 @@ KV cache quantisation, paged attention to avoid fragmentation, sliding-window at
    it trains at all.
 
 3. [verified] A leaky mask (the model sees the token it must predict) or targets not
-   shifted by one (`y == x`). Test: the perturbation test from 3.3 (change token
+   shifted by one (`y == x`). Test: the perturbation test from 41.3 (change token
    `t`, logits before `t` must not change), check `y[:, :-1] == x[:, 1:]`, compare
    with the unigram baseline (3.347 here) and a known-good reference: a character model
    reaching 0.05 on Shakespeare is not plausible (ours: 1.83 validation after 1,500 steps).
@@ -116,7 +116,7 @@ KV cache quantisation, paged attention to avoid fragmentation, sliding-window at
    the model's confidence; top-p is the common default for open-ended text, top-k (or a
    small k with low τ) when you want tight control; greedy/beam for tasks with a single
    correct answer. Greedy repeats because once a phrase is the most likely continuation of
-   itself, the loop is self-reinforcing (3.6: "the stand the stand…"). Repetition penalties
+   itself, the loop is self-reinforcing (41.6: "the stand the stand…"). Repetition penalties
    and sampling break it.
 
 5. [expected] Stores, per layer, the K and V vectors of every token processed so far;

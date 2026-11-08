@@ -101,20 +101,20 @@ print(f"torch {torch.__version__} | device {DEVICE} | CPU threads {torch.get_num
 # | Term | Plain meaning | Example here |
 # |---|---|---|
 # | Kernel | one function the GPU runs on thousands of threads; every PyTorch op launches at least one | `a @ b` launches one matrix-multiply (GEMM) kernel |
-# | Asynchronous launch | the CPU puts a kernel in a queue and carries on without waiting for the result | the "without sync" time in 1.2 is only the launch |
+# | Asynchronous launch | the CPU puts a kernel in a queue and carries on without waiting for the result | the "without sync" time in 39.2 is only the launch |
 # | Synchronize | make the CPU wait until every queued GPU kernel has finished | `torch.cuda.synchronize()`, inside `timer` and `prof.benchmark` |
 # | FLOP/s | floating-point operations (multiplies, adds) per second: the speed of arithmetic | a T4 peaks near 8 TFLOP/s in fp32, 65 in fp16 |
 # | Memory bandwidth | how many bytes per second can move between GPU memory and its cores | ~320 GB/s on a T4 |
 # | Arithmetic intensity | FLOPs done per byte moved to or from memory | `x + y`: 1/12; a 1024 × 1024 matmul: ~170 |
 # | Memory-bound / compute-bound | limited by moving bytes / limited by doing arithmetic | elementwise add / large matmul |
 # | Roofline | the plot of attainable FLOP/s against arithmetic intensity | ridge point ≈ 25 FLOP/byte for a T4 in fp32 |
-# | Tensor Core | a unit that multiplies small fp16 matrices many times faster than ordinary cores | why fp16 autocast speeds up a T4 (1.5) |
-# | Profiler | a tool that records which operations took the time | the `torch.profiler` table in 1.6 |
+# | Tensor Core | a unit that multiplies small fp16 matrices many times faster than ordinary cores | why fp16 autocast speeds up a T4 (39.5) |
+# | Profiler | a tool that records which operations took the time | the `torch.profiler` table in 39.6 |
 # | Pinned memory | page-locked host RAM the GPU can copy from directly, in the background | `pin_memory=True` + `non_blocking=True` |
-# | Worker / prefetch | a background process that prepares the next batches while the model trains | `num_workers=2` in 1.7 |
+# | Worker / prefetch | a background process that prepares the next batches while the model trains | `num_workers=2` in 39.7 |
 
 # %% [markdown]
-# ## 1.1 · How a GPU executes your code
+# ## 39.1 · How a GPU executes your code
 #
 # A CPU has a few (2 on Colab, 8–64 on a workstation) powerful cores, each
 # optimised to finish *one* thread fast: big caches, branch prediction,
@@ -148,7 +148,7 @@ print(f"torch {torch.__version__} | device {DEVICE} | CPU threads {torch.get_num
 #   memory. Operations that do little arithmetic per byte (elementwise ops,
 #   LayerNorm, softmax) cannot use that compute: they are **memory-bound**.
 #
-# ## 1.2 · Host ↔ device transfers and asynchronous execution
+# ## 39.2 · Host ↔ device transfers and asynchronous execution
 #
 # Data must be copied from host RAM to GPU memory over PCIe before a kernel can
 # use it. A normal ("pageable") host tensor is first copied by the driver into
@@ -237,7 +237,7 @@ grade.ex1(time_fn)
 # is the same function, plus a `min_seconds` option that keeps repeating very
 # fast operations until enough time has been measured.
 #
-# ## 1.3 · Throughput: TFLOP/s of a matmul
+# ## 39.3 · Throughput: TFLOP/s of a matmul
 #
 # An `n × n` by `n × n` matrix multiply computes `n²` outputs, each a dot
 # product of length `n` (`n` multiplies and `n` adds): **2n³ FLOPs**. Divide by
@@ -276,7 +276,7 @@ for r in mm_rows:
 # 10–100× lower: the GPU is mostly idle and you are measuring launch overhead.
 # (Not measured in our verification runs, CPU only.)
 #
-# ## 1.4 · Arithmetic intensity and the roofline
+# ## 39.4 · Arithmetic intensity and the roofline
 #
 # **Arithmetic intensity** = FLOPs performed ÷ bytes moved to and from memory.
 # The **roofline model** says achievable FLOP/s =
@@ -346,7 +346,7 @@ print("wrote", OUT / "benchmarks.json")
 # FlashAttention is fast: attention's softmax is memory-bound, and FlashAttention
 # never writes the `seq × seq` matrix to GPU memory.
 #
-# ## 1.5 · fp16 autocast on a T4
+# ## 39.5 · fp16 autocast on a T4
 #
 # T4 Tensor Cores only run fp16 (and int8): fp32 matmuls use the much slower
 # CUDA cores. `torch.autocast(device_type="cuda", dtype=torch.float16)` runs
@@ -383,7 +383,7 @@ else:
 # verification runs). The autocast time includes casting the fp32 inputs to
 # fp16 on every call; in a real model the weights are cast once per forward.
 #
-# ## 1.6 · Profiling a training step with `torch.profiler`
+# ## 39.6 · Profiling a training step with `torch.profiler`
 #
 # Timers tell you *how long*; a profiler tells you *where*. `torch.profiler`
 # records every op (with `record_shapes=True`, its input shapes), its CPU time
@@ -478,7 +478,7 @@ print(PROFILE_TABLE)
 # %% [markdown]
 # *Your answer (Exercise 4):* ...
 #
-# ## 1.7 · The input pipeline: is the GPU waiting for data?
+# ## 39.7 · The input pipeline: is the GPU waiting for data?
 #
 # In the table above, the GPU worked for 1.2 s out of ~9.7 s. The rest of the time it
 # waited for the `DataLoader`. This is the most common real-world bottleneck,
@@ -591,7 +591,7 @@ for workers in (0, 1, 2):
 # $$
 #
 # In words: without workers, loading and compute add up; with $k$ workers they overlap and the
-# slower of the two sets the pace. Example (1.7): $12 \times (96 + 50)$ ms ≈ 1.75 s with no
+# slower of the two sets the pace. Example (39.7): $12 \times (96 + 50)$ ms ≈ 1.75 s with no
 # workers; with 2 workers $12 \times \max(48, 50)$ ms = 0.6 s, plus worker start-up (we measured
 # 0.8 s).
 #
@@ -627,7 +627,7 @@ for name, intensity in [("x + y (fp32)", 1 / 12), ("LayerNorm (~1)", 1.0), ("mat
 # | `describe` shows `cpu` in Colab | runtime type is CPU | Runtime → Change runtime type → T4 GPU, then Run all |
 # | GPU timings are microseconds and do not grow with size | missing `torch.cuda.synchronize()` | time with `scaleml.device.timer` / `prof.benchmark` |
 # | First measurement much slower than the rest | CUDA context creation, cuDNN/cuBLAS autotuning, allocator growth | warm up; report the median of repeats |
-# | `RuntimeError: CUDA out of memory` in 1.3 | n=8192 needs 3 × 256 MB plus workspace; another notebook holds GPU memory | restart the runtime or drop 8192 from `SIZES` |
+# | `RuntimeError: CUDA out of memory` in 39.3 | n=8192 needs 3 × 256 MB plus workspace; another notebook holds GPU memory | restart the runtime or drop 8192 from `SIZES` |
 # | DataLoader with workers hangs or errors in a notebook | dataset defined in the notebook under the `spawn` start method (macOS/Windows), or a worker crashed | define the dataset in a module (like `SlowDataset`); set `num_workers=0` to see the real traceback |
 # | Profiler table empty for CUDA columns | profiled on CPU or forgot `ProfilerActivity.CUDA` | check `DEVICE`; add the activity |
 # | `gpuGetDeviceCount failed` printed by the profiler on a CPU runtime | the CUDA build of PyTorch probing for a GPU | harmless; ignore |

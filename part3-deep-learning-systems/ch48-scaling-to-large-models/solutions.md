@@ -24,7 +24,7 @@ def zero_memory_per_gpu(n_params, world_size, stage):
 ```
 
 **Numbers (7B, 8 GPUs):** DDP 112 GB, ZeRO-1 38.5 GB, ZeRO-2 26.2 GB,
-ZeRO-3 14.0 GB per GPU (printed in 10.1). ZeRO-1/2 plateau at 4Ψ/2Ψ bytes
+ZeRO-3 14.0 GB per GPU (printed in 48.1). ZeRO-1/2 plateau at 4Ψ/2Ψ bytes
 because the fp16 parameters (and gradients) stay replicated.
 
 **What the formula leaves out.** Activations (often the largest term; reduce
@@ -46,7 +46,7 @@ def train_flops_and_days(n_params, tokens, gpu_tflops, mfu, n_gpus):
 ```
 
 **Sanity checks.** 6 × 175e9 × 300e9 = 3.15e23 FLOPs, matching the
-3.14e23 the GPT-3 paper reports. The 6 was measured in 10.4 as 6.33
+3.14e23 the GPT-3 paper reports. The 6 was measured in 48.4 as 6.33
 FLOPs/token/parameter for a small TinyGPT (attention adds a bit).
 **MFU vs HFU:** MFU counts only the model's 6ND FLOPs; *hardware* FLOPs
 utilisation also counts recomputation from activation checkpointing (8ND
@@ -67,7 +67,7 @@ def optimal_checkpoint_interval(checkpoint_cost_s, mtbf_s):
 
 **Where it comes from.** Waste per unit time ≈ C/τ (writing) + τ/(2M) (on
 average half an interval of work lost per failure). Setting the derivative
-−C/τ² + 1/(2M) to zero gives τ* = √(2CM). The 10.6 simulation (job MTBF 9.4 h,
+−C/τ² + 1/(2M) to zero gives τ* = √(2CM). The 48.6 simulation (job MTBF 9.4 h,
 C = 5 min) found its best interval at 80 min against Young's 75 min, with
 a flat optimum (60 and 80 min both +17%).
 
@@ -111,7 +111,7 @@ state in the checkpoint so resumption does not repeat or skip data.
 
 1. **7B memory.** [verified] 16 bytes/param × 7e9 = 112 GB of model state with
    mixed-precision Adam (plus activations). On 64 GPUs: ZeRO-1 29.3 GB,
-   ZeRO-2 15.5 GB, ZeRO-3 1.75 GB per GPU (10.1). Stage 3 pays ~1.5× the
+   ZeRO-2 15.5 GB, ZeRO-3 1.75 GB per GPU (48.1). Stage 3 pays ~1.5× the
    communication of DDP (parameters all-gathered in forward and again in
    backward, gradients reduce-scattered), more latency-sensitive collectives
    per layer, and complexity (wrapping policy, prefetching, checkpoint format).
@@ -124,12 +124,12 @@ state in the checkpoint so resumption does not repeat or skip data.
    and micro-batching complexity. Large runs combine all three (3D).
 3. **Bubble.** With p stages and m micro-batches, the schedule takes
    (m + p − 1) slots per pass while each stage is busy for m of them, so the
-   idle fraction is (p − 1)/(m + p − 1) (10.3 simulated 0.429 for p = m = 4).
+   idle fraction is (p − 1)/(m + p − 1) (48.3 simulated 0.429 for p = m = 4).
    Make it small with m ≫ p (more micro-batches → larger global batch or
    smaller micro-batches with lower GPU efficiency), 1F1B scheduling to bound
    activation memory, and interleaved stages (more communication).
 4. **7B on 1T tokens on 256 A100s.** 6 × 7e9 × 1e12 = 4.2e22 FLOPs; at
-   312 TFLOP/s × 40% MFU × 256 GPUs ≈ 15 days (10.4). The MFU is the most
+   312 TFLOP/s × 40% MFU × 256 GPUs ≈ 15 days (48.4). The MFU is the most
    uncertain input (it can be 25% or 55% depending on the parallelism,
    sequence length and kernels), followed by downtime from failures.
 5. **Chinchilla.** Earlier practice (following Kaplan et al.) grew models much
@@ -140,7 +140,7 @@ state in the checkpoint so resumption does not repeat or skip data.
    cost depends on model size: a smaller model trained on more tokens is cheaper
    to serve for the same quality, and serving dominates lifetime compute.
 6. **fp16 vs bf16.** fp16 has a 5-bit exponent: max 65,504 and normal values
-   down to 6e-5, so small gradients underflow to zero (10.7: 10.2% of the entries
+   down to 6e-5, so small gradients underflow to zero (48.7: 10.2% of the entries
    without scaling) and large activations overflow. Loss scaling shifts
    gradients into range. bf16 has fp32's 8-bit exponent, so no underflow and no
    scaling, at the cost of precision (eps 7.8e-3). On `inf`/`nan` the dynamic

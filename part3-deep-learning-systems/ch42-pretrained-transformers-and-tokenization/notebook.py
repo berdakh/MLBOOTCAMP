@@ -129,12 +129,12 @@ print(f"loaded in {time.time() - t0:.0f} s | {type(bert).__name__}: {count_param
 # | Hidden state | the contextual vector the encoder outputs for each token | `last_hidden_state`, `(batch, seq, 768)` |
 # | Pooling | turning per-token vectors into one vector per text | CLS (position 0) vs mask-aware mean |
 # | Cosine similarity | the angle-based similarity of two vectors, from −1 to 1 | 0.89 vs 0.69 for related vs unrelated pairs |
-# | Length bucketing | grouping texts of similar length into the same batch to cut padding | 59% → 17% waste in 4.5 |
+# | Length bucketing | grouping texts of similar length into the same batch to cut padding | 59% → 17% waste in 42.5 |
 # | Safetensors | a weight format that stores only tensors, so loading cannot run code | `use_safetensors=True` |
 # | Revision pinning | loading a model at a fixed commit so files cannot change under you | `revision=BERT_REV` |
 
 # %% [markdown]
-# ## 4.1 · Subword tokenisation
+# ## 42.1 · Subword tokenisation
 #
 # Word-level vocabularies cannot cover new words; character-level ones make
 # sequences long. Subword tokenizers split rare words into frequent pieces:
@@ -182,7 +182,7 @@ for name, tk in [("distilbert", bert_tok), ("gpt2", gpt2_tok)]:
 # ordinary news English is cheap. The common rule of thumb "1 token ≈ ¾ of a word"
 # comes from mixed web text.
 #
-# ## 4.2 · Batches: padding, attention masks, truncation
+# ## 42.2 · Batches: padding, attention masks, truncation
 #
 # A batch must be a rectangle. Shorter sequences are **padded** with a pad token,
 # and the **attention mask** (1 = real token, 0 = padding) tells the model to ignore
@@ -220,7 +220,7 @@ print("gpt2, left-padded attention mask:\n", left["attention_mask"])
 # with id 0 (`[PAD]`) and their masks end in zeros. The GPT-2 mask has its zeros on the
 # **left**. Try `max_length=8` to see truncation cut the longest row and still end it with `[SEP]`.
 #
-# ## 4.3 · The forward pass, hidden states and pooling
+# ## 42.3 · The forward pass, hidden states and pooling
 #
 # `AutoModel` returns the encoder without a task head: `last_hidden_state` is
 # `(batch, seq, 768)`, one contextual vector per token. With
@@ -337,7 +337,7 @@ for pooling in ("cls", "mean"):
 # from models *trained* for similarity (Chapters 45–46), and why a classifier on top of CLS
 # works only after fine-tuning (Chapter 43).
 #
-# ## 4.4 · Inference throughput: batch size and sequence length
+# ## 42.4 · Inference throughput: batch size and sequence length
 #
 # Throughput (sequences/s) rises with batch size until the hardware is saturated,
 # then flattens while latency per batch keeps growing. Cost per sequence grows
@@ -378,7 +378,7 @@ for r in grid:
 # 128 tokens fills it), with attention's quadratic cost becoming visible at 512 tokens
 # (not measured in our verification runs).
 #
-# ## 4.5 · Padding waste: dynamic padding and length bucketing
+# ## 42.5 · Padding waste: dynamic padding and length bucketing
 #
 # Real text lengths vary widely. Every pad token costs the same compute as a
 # real one, so the batching strategy can matter more than any model optimisation.
@@ -472,7 +472,7 @@ def bucket_by_length(lengths, batch_size):
 grade.ex2(bucket_by_length)
 
 # %% [markdown]
-# ## 4.6 · Loading models safely: model cards, licences, safetensors, revisions
+# ## 42.6 · Loading models safely: model cards, licences, safetensors, revisions
 #
 # Before using a pretrained model in a product, read its **model card**: intended
 # use, training data, known biases and limitations, evaluation, and **licence**.

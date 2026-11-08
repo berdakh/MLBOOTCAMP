@@ -17,7 +17,7 @@ def mean_pool(last_hidden, attention_mask):
 
 **Why.** Padded positions still have hidden states (the model computes them;
 the mask only stops *other* tokens from attending to them), so `mean(dim=1)`
-averages garbage that depends on how much padding the batch needed. In 4.3 the
+averages garbage that depends on how much padding the batch needed. In 42.3 the
 naive mean of the same sentence had cosine 0.85 with its unpadded self; the masked
 mean matched to 6e-07. `clamp` avoids 0/0 for an empty row. Under fp16, do the sum in
 fp32 (`.float()`) for long sequences.
@@ -37,7 +37,7 @@ def bucket_by_length(lengths, batch_size):
 **Why it is (near-)optimal.** With a fixed number of full batches, grouping
 neighbours in sorted order minimises Σ (max − length) within each batch: any batch
 mixing a short and a long text can swap the short one with a longer text from a
-batch of shorter texts without increasing either batch's maximum. Measured in 4.5:
+batch of shorter texts without increasing either batch's maximum. Measured in 42.5:
 padding fell from 50% (dynamic padding in data order) to 17%, and time from 8.4–8.8 s to 5.0 s.
 
 **For training**, do not use the globally sorted order as is: shuffle, sort within
@@ -63,7 +63,7 @@ excludes that variant on purpose.
    retrieval: use a sentence-embedding model trained with the pooling it expects
    (check its card), and evaluate recall@k on labelled queries (Chapter 45).
 3. **Pad to 512 (cost).** Most documents are far shorter; padding to 512 wastes
-   most of the compute (4.5: 59% wasted at max 128 on short news texts, 2.1–2.7× slower than
+   most of the compute (42.5: 59% wasted at max 128 on short news texts, 2.1–2.7× slower than
    sorted dynamic padding). Use `padding=True` plus length bucketing; restore the
    original order afterwards.
 4. **Truncation.** Check `truncation=True` is set and how many documents exceed the
@@ -89,7 +89,7 @@ excludes that variant on purpose.
    covering any word, and keep sequences short. WordPiece: fixed vocabulary chosen by
    likelihood, `##` continuation pieces, typically lower-cased with an `[UNK]` token;
    byte-level BPE: merges over bytes, lossless and never unknown, `Ġ` marks spaces.
-   Failure modes seen in 4.1: numbers split arbitrarily (`202`, `##4` vs `Ġ2024`), which hurts
+   Failure modes seen in 42.1: numbers split arbitrarily (`202`, `##4` vs `Ġ2024`), which hurts
    arithmetic; acronyms split oddly (`bc`, `##is`); non-English text and code use many
    more tokens per character (higher cost, shorter effective context).
 
@@ -100,14 +100,14 @@ excludes that variant on purpose.
 
 3. [verified] CLS when the model was trained to put a summary there (BERT's NSP, or after
    fine-tuning a classifier on it); mean pooling for models trained with it
-   (sentence-transformers) and as a more robust default for off-the-shelf encoders: in 4.3,
+   (sentence-transformers) and as a more robust default for off-the-shelf encoders: in 42.3,
    mean pooling separated related from unrelated pairs ~3× more clearly (gap 0.20 vs 0.06).
    Mask-aware because padding states otherwise leak in and make the embedding depend on the
    batch (cosine 0.85 between the same sentence padded and unpadded).
 
 4. [expected] Throughput depends on total token positions (including padding) × per-token
    cost, and on hardware utilisation. Maximise it with: length bucketing + dynamic
-   padding (4.5: 2.1–2.7× on CPU); the largest batch that fits; fp16/bf16 (Tensor Cores) or int8
+   padding (42.5: 2.1–2.7× on CPU); the largest batch that fits; fp16/bf16 (Tensor Cores) or int8
    (Chapter 49); truncating to the length you actually need; a smaller/distilled model;
    fused attention kernels; overlapping tokenisation (CPU workers) with inference; many GPUs in
    parallel (embarrassingly parallel). Do the arithmetic: 100M docs × ~200 tokens =

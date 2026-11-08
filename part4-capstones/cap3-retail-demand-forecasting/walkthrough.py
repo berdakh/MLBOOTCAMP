@@ -535,7 +535,7 @@ panel = q(f"""
                                                 INTERVAL 7 DAY) t(w)),
        products AS (SELECT DISTINCT StockCode FROM sales),
        wk AS (SELECT StockCode, date_trunc('week', InvoiceDate) AS week, SUM(Quantity) AS units,
-                     SUM(Quantity * Price) / SUM(Quantity) AS avg_price
+                     ROUND(SUM(Quantity * Price) / SUM(Quantity), 4) AS avg_price
               FROM sales GROUP BY 1, 2),
        rt AS (SELECT StockCode, date_trunc('week', InvoiceDate) AS week, SUM(returned) AS returned FROM returns GROUP BY 1, 2)
   SELECT p.StockCode, w.week, COALESCE(wk.units, 0) AS units, wk.avg_price, COALESCE(rt.returned, 0) AS returned

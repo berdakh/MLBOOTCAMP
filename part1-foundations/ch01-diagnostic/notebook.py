@@ -382,9 +382,8 @@ self_ratings = {
 # `artifacts/diagnostic.json`. Statuses: **strong** (passed / rated ≥ 3),
 # **review** (close), **priority** (failed or rated < 2), **not attempted**.
 #
-# The profile prints lab numbers in their original two-digit form (`01`,
-# `02`, ...). Add one to obtain the chapter number: lab `04` is Chapter 5,
-# lab `11` is Chapter 12. The [chapter text](README.md) has the full table.
+# The profile lists, for each area, the chapters to prioritise. The
+# [chapter text](README.md) explains the mapping and suggests extra practice.
 
 # %%
 profile = grade.summary(results, self_ratings)

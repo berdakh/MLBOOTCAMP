@@ -10,21 +10,21 @@
 #
 # "Design the home feed" and "design product search" are the two most common
 # ML system design prompts at large consumer companies, and they reward the
-# same thing: a structured walk from the product goal to a cascade you can
-# put numbers on, with the failure modes named before the interviewer asks.
-# This notebook gives you two complete worked answers, the arithmetic behind
-# them, and six practice prompts with what a strong answer must cover.
+# same thing: a structured progression from the product goal to a cascade with
+# stated numbers, with the failure modes named before the interviewer asks.
+# This lab gives two complete worked designs, the arithmetic behind
+# them, and six practice prompts with what a complete answer must cover.
 #
 # After this lab you should be able to:
 #
 # 1. run the Part I design framework on recommendation and search problems, adding the cascade-specific steps;
 # 2. do the capacity arithmetic out loud: QPS, candidates per stage, scoring load, embedding and index memory;
-# 3. ground ANN choices in a measured recall–latency curve rather than folklore;
+# 3. base ANN choices on a measured recall–latency curve rather than on rules of thumb;
 # 4. design a home feed and a product search system end to end, including position bias, freshness, experimentation and monitoring;
 # 5. recognise the failure modes that sink otherwise good answers.
 #
 # **Outputs:** `artifacts/level2/design/ann_tradeoff.csv` and
-# `artifacts/level2/design/capacity_home_feed.csv`, plus your written design
+# `artifacts/level2/design/capacity_home_feed.csv`, plus a written design
 # (Exercise 3).
 
 # %% [markdown]
@@ -113,8 +113,8 @@ SECONDS_PER_DAY = 86_400
 # | 9 | **Monitoring** | 3 | Fallback rates, feature freshness, score distributions, coverage, online–offline gaps |
 # | 10 | **Risks** | 2 | Feedback loops, popularity bias, filter bubbles, abuse (fake engagement), privacy |
 #
-# Say the step names out loud as you go. A clear map lets the interviewer
-# steer you to the part they want to probe, which is usually 5–7.
+# State the step names aloud while proceeding. A clear map lets the interviewer
+# steer the discussion to the part they want to probe, which is usually 5–7.
 
 # %% [markdown]
 # ## 37.1 · The back-of-envelope toolkit
@@ -139,7 +139,7 @@ grade.ex1(embedding_memory_gb)
 # > **Exercise 2.** Write `qps(dau, req_per_user, peak)`: **peak** queries per
 # > second for `dau` daily active users making `req_per_user` requests a day,
 # > with `peak` the ratio of peak to average traffic. Return a float. Then,
-# > *without running anything*, say the answer for 50M DAU × 20 requests ×
+# > *without running anything*, state the answer for 50M DAU × 20 requests ×
 # > peak 2.5 to one significant figure.
 
 # %%
@@ -153,8 +153,8 @@ grade.ex2(qps)
 # %% [markdown]
 # The helpers below cover the rest: ANN index memory by index type, and
 # servers needed at a target utilisation. Every *input* to them in this
-# notebook is an **assumption stated for the design**; in a real design you
-# would measure the per-core throughput (as in Chapters 35 and 36).
+# lab is an **assumption stated for the design**; in a real design the
+# per-core throughput would be measured (as in Chapters 35 and 36).
 
 # %%
 def gb(n_bytes: float) -> float:
@@ -197,9 +197,9 @@ print(f"100M items x 128 dims: flat fp32 {ann_index_gb(100_000_000, 128):.1f} GB
 # %% [markdown]
 # ## 37.2 · Measure, don't guess: the ANN recall–latency curve
 #
-# "We'll use HNSW" is not an answer; "we'll pick the index and its search
-# parameter from a recall@10 vs latency curve at our target p99" is. Here is
-# that curve for 100,000 clustered 64-dim unit vectors, single-threaded,
+# "We will use HNSW" is not an answer; "we will choose the index and its search
+# parameter from a recall@10 vs latency curve at our target p99" is. The next cell
+# measures that curve for 100,000 clustered 64-dim unit vectors, single-threaded,
 # against exact search as ground truth. (The vectors are synthetic and
 # harder than random ones of the same size: clusters overlap.)
 
@@ -258,27 +258,27 @@ ann.round(3)
 # (nprobe 64); HNSW M=16 from about 0.04 ms at recall 0.72 (efSearch 16) to
 # about 0.3 ms at recall 0.96 (efSearch 256), with a build about 10× slower
 # than IVF's. On this data IVF wins at every recall level; on other data
-# HNSW often does. That is the point: **measure on your vectors**.
+# HNSW often does. The conclusion is to **measure on the system's own vectors**.
 #
-# How to scale the numbers in your head: exact search cost grows linearly with
+# How to scale the numbers mentally: exact search cost grows linearly with
 # `n` (100M items would be ~1 s per query single-threaded: impossible), while
 # IVF cost grows with `n × nprobe / nlist` and HNSW roughly with `log n`. At
-# 100M items you shard (each shard holds 5–20M vectors), search shards in
-# parallel and merge, and the slowest shard sets your tail latency.
+# 100M items the index is sharded (each shard holds 5–20M vectors), shards are
+# searched in parallel and merged, and the slowest shard sets the tail latency.
 #
 # > **Intuition.** Exact search reads every book spine in the library. IVF walks to the
 # > few shelves whose labels match best (`nprobe` = how many shelves); HNSW follows a chain
 # > of "see also" notes from book to book. *Where it breaks down:* a book shelved just across
 # > a boundary is missed, which is why recall is below 1 and grows with `nprobe` or
-# > `efSearch`, at a latency cost you must measure.
+# > `efSearch`, at a latency cost that must be measured.
 
 # %% [markdown]
 # ## 37.3 · Worked design A: the home feed of a 50M-DAU marketplace
 #
 # *Prompt: "Design the home-feed recommendations for a marketplace app with
 # 50 million daily active users."* Every number below is an **assumption for
-# the design**, stated as you would state it aloud ("tell me if that's
-# off").
+# the design**, stated aloud as it would be in an interview ("tell me if that is
+# wrong").
 #
 # ### 1. Clarify
 #
@@ -287,7 +287,7 @@ ann.round(3)
 # * Catalogue: 100M active listings, ~2M new per day (marketplaces churn fast:
 #   items sell out). 200M monthly active users.
 # * Latency: p99 ≤ 200 ms at the client, server ≤ 150 ms.
-# * Out of scope (say so): ads blending, notifications, search.
+# * Out of scope (stated explicitly): ads blending, notifications, search.
 #
 # ### 2. Metrics
 #
@@ -396,7 +396,7 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # * **Feature reads dominate.** 14.5M item-feature reads per second is why
 #   item features live in a **local in-memory cache** on ranker hosts (hot
 #   items repeat across users) and only the user row is a remote read.
-# * **The heavy ranker is the cost centre:** halving its rows (a better
+# * **The heavy ranker is the main cost:** halving its rows (a better
 #   pre-ranker) or its per-row cost (distillation, Chapter 36) is worth ~19
 #   servers. That is the business case for Chapter 36.
 # * **The item index needs sharding or compression:** 77 GB of HNSW goes to
@@ -514,12 +514,12 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # *What to notice:* the two retrievers fail in opposite ways (exact terms versus vocabulary mismatch), which is the reason to run both.
 #
 # > **Intuition.** Lexical retrieval is a book's index: exact, fast and blind to synonyms.
-# > Semantic retrieval is a librarian who knows that "couch" means "sofa", but may hand you
-# > a similar model when you asked for one exact part number. *Where it breaks down:* real
+# > Semantic retrieval is a librarian who knows that "couch" means "sofa", but may hand over
+# > a similar model when one exact part number was requested. *Where it breaks down:* real
 # > systems blur the two (synonym expansion in BM25, keyword features in the neural model);
 # > the split is a starting point, not a law.
 #
-# **8. Experimentation.** Interleaving is the workhorse for search ranking
+# **8. Experimentation.** Interleaving is the main tool for search ranking
 # (sensitive, needs little traffic); A/B by user for launches; human-rated
 # side-by-side evaluations for relevance changes that engagement metrics
 # cannot see (e.g. fixing offensive results for a rare query).
@@ -534,11 +534,11 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # %% [markdown]
 # ## 37.5 · Practice prompts
 #
-# Do one per day, timed (40 minutes, out loud, recorded). Use the 10 steps.
+# Do one per day, timed (40 minutes, aloud, recorded), using the 10 steps.
 # The right column is what an interviewer's rubric typically looks for
-# beyond the framework; check yourself against it afterwards, not before.
+# beyond the framework; check the answer against it afterwards, not before.
 #
-# | # | Prompt | A strong answer covers |
+# | # | Prompt | A complete answer covers |
 # |---|---|---|
 # | 1 | **Short-video feed** ("For You", 500M DAU) | watch-time and completion as labels (and their bias toward long videos), sequence models over recent views, fast feedback (minutes) and online learning, freshness and creator cold start, exploration budget, integrity filters before ranking |
 # | 2 | **Ads click-through prediction** for a feed | **calibration** matters (bids × pCTR in an auction), log loss not just AUC, delayed conversions, sample/negative down-sampling and recalibration, advertiser budget pacing, auction effects on metrics |
@@ -567,17 +567,16 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # box; a senior answer also *prioritises* (what to build first and why),
 # quantifies trade-offs, anticipates organisational and operational issues
 # (who owns the feature store, how a launch is rolled back, on-call load),
-# and says what evidence would change the design.
+# and states what evidence would change the design.
 #
 # > **Exercise 3 (written design).** Pick prompt 1, 2 or 6 from 37.5. In a
 # > Markdown cell, write a design in the 10-step structure, at most one page,
 # > with at least: a capacity table (peak QPS, candidates per stage, scoring
-# > rows/s, embedding memory, computed with your Exercise 1–2 functions or the
+# > rows/s, embedding memory, computed with the Exercise 1–2 functions or the
 # > helpers above, each input labelled as an assumption), a per-stage latency
 # > budget, two candidate sources with their failure modes, the training
-# > labels and how you correct their bias, the online experiment, and the two
-# > risks you consider most serious. Then time yourself presenting it in 10
-# > minutes.
+# > labels and how their bias is corrected, the online experiment, and the two
+# > most serious risks. Then present it, timed, in 10 minutes.
 # >
 # > Write your answer in the cell below.
 
@@ -638,8 +637,8 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # | `ImportError: faiss` | `faiss-cpu` not installed | re-run the setup cell |
 # | ANN timings far from the Expected line | shared/slower CPU (Colab) | compare *ratios* between rows; the curve's shape is the lesson |
 # | HNSW build takes minutes | more threads contending, or a larger `n` | keep `n = 100_000`; `faiss.omp_set_num_threads(2)` |
-# | Your capacity numbers differ by 1,000× from the Expected line | GB vs MB, or per day vs per second | write units next to every number; 86,400 s per day |
-# | Exercise 1 off by ~7 % | used 2³⁰ (GiB) instead of 10⁹ | the exercise asks for decimal GB; say which one you use in interviews |
+# | Capacity numbers differ by 1,000× from the Expected line | GB vs MB, or per day vs per second | write units next to every number; 86,400 s per day |
+# | Exercise 1 off by ~7 % | used 2³⁰ (GiB) instead of 10⁹ | the exercise asks for decimal GB; state which unit is used in interviews |
 # | The design takes 70 minutes | depth everywhere | 2–3 minutes per step, then go deep where the interviewer points |
 
 # %% [markdown]
@@ -650,7 +649,7 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # 1. Design the candidate generation for a home feed: which sources, how many candidates each, how you would measure each source's value, and how new items get in.
 # 2. Estimate the peak QPS, ranker load and embedding memory for a feed with 100M DAU, 30 requests/user/day, 1,000 ranked candidates per request and 256-dim item embeddings for 500M items. Which number changes your architecture?
 # 3. In product search, when do lexical and semantic retrieval each fail, and how do you combine them?
-# 4. Your search ranker is trained on clicks. Explain position bias, how you would estimate it, and two ways to correct for it in training and evaluation.
+# 4. A search ranker is trained on clicks. Explain position bias, how you would estimate it, and two ways to correct for it in training and evaluation.
 # 5. How would you A/B test a new feed ranker in a marketplace where treatment and control compete for the same inventory?
 # 6. Walk through what you monitor after launching a new ranker, and the three alerts you would page on.
 #

@@ -14,8 +14,8 @@ def embedding_memory_gb(n, dim, bytes_per):
     return float(n * dim * bytes_per / 1e9)
 ```
 
-300M users × 128 dims × 4 bytes = 153.6 GB; in fp16, 76.8 GB. Say whether
-you mean GB (10⁹) or GiB (2³⁰ = 7.4 % larger); both are fine if stated.
+300M users × 128 dims × 4 bytes = 153.6 GB; in fp16, 76.8 GB. State whether
+GB (10⁹) or GiB (2³⁰ = 7.4 % larger); both are fine if stated.
 Remember the extras: optimizer state during training (Adam keeps 2 more
 copies: ×3), index structures (HNSW links), and replicas.
 
@@ -38,7 +38,7 @@ significant figure: "about 30,000 QPS at peak".
 
 ## Exercise 3 · Written design (prompt 1, 2 or 6)
 
-[open-ended] Personal. Check your answer against this list:
+[open-ended] Personal. Check the answer against this list:
 
 * **10 steps signposted**, ~40 minutes when presented, the deep parts in
   candidate generation, ranking and serving.

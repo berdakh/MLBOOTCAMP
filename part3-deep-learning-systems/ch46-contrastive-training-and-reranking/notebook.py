@@ -171,20 +171,20 @@ print(f"(embedding the corpus took {embed_s:.0f} s: paid again after every train
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
-# | Contrastive learning | training by pulling matching pairs together and pushing other pairs apart | (claim, abstract) pairs in 8.2 |
+# | Contrastive learning | training by pulling matching pairs together and pushing other pairs apart | (claim, abstract) pairs in 46.2 |
 # | Positive pair | a query and a document known to be relevant to it | every judged pair in the train qrels |
 # | In-batch negatives | the other queries' positives in the same batch, used as negatives for free | 15 negatives per query at batch 16 |
 # | Hard negative | a document a retriever ranks high that is not labelled relevant | BM25's top unlabelled hit, after `SKIP_TOP` |
 # | False negative | a 'negative' that is actually relevant but was never judged | 15% of mined negatives are another claim's positive |
 # | InfoNCE | the contrastive loss: cross-entropy over similarity scores, target = the true pair | Exercise 1 |
 # | Temperature τ | divides the cosine similarities before the softmax; small τ = sharp | τ = 0.05 (scale 20) |
-# | Cross-encoder | one transformer reads query and document together and outputs a score | `ms-marco-MiniLM-L-6-v2` in 8.4 |
+# | Cross-encoder | one transformer reads query and document together and outputs a score | `ms-marco-MiniLM-L-6-v2` in 46.4 |
 # | Re-ranking depth | how many first-stage candidates the re-ranker scores | top 50 |
-# | Bootstrap CI | a confidence interval from re-sampling the test queries many times | the 95% intervals in 8.3 |
-# | Distillation | training a cheap model to imitate an expensive one's scores | cross-encoder → bi-encoder (8.5) |
+# | Bootstrap CI | a confidence interval from re-sampling the test queries many times | the 95% intervals in 46.3 |
+# | Distillation | training a cheap model to imitate an expensive one's scores | cross-encoder → bi-encoder (46.5) |
 
 # %% [markdown]
-# ## 8.1 · Contrastive learning with in-batch negatives
+# ## 46.1 · Contrastive learning with in-batch negatives
 #
 # A bi-encoder is trained so that a query's embedding is closer to its relevant document than
 # to other documents. With a batch of $B$ (query, positive) pairs, every *other* query's
@@ -231,7 +231,7 @@ def info_nce_loss(q, d, temperature=0.05):
 grade.ex1(info_nce_loss)
 
 # %% [markdown]
-# ## 8.2 · Fine-tuning the bi-encoder on SciFact train queries
+# ## 46.2 · Fine-tuning the bi-encoder on SciFact train queries
 #
 # Training pairs: (claim, relevant abstract) for every judged pair in the **train** qrels. The
 # documents come from the full corpus; the test queries are never seen. We train with the
@@ -314,7 +314,7 @@ del enc_inbatch
 # 20 steps in 31–68 s (two runs; the slower one on a shared machine); the logged loss falls from ~0.42 to ~0.17 (the base model already separates
 # most in-batch pairs: random negatives are easy); test nDCG@10 0.765, Recall@100 0.983.
 #
-# ## 8.3 · Hard negatives mined with BM25
+# ## 46.3 · Hard negatives mined with BM25
 #
 # Random in-batch negatives are mostly *easy* (an abstract about astrophysics vs a claim about
 # T cells): the loss is already near zero for them and they teach little. **Hard negatives**
@@ -409,7 +409,7 @@ for name, m in metrics.items():
 # workflow is the important part: train on train queries, measure on held-out queries, report
 # a confidence interval over queries.
 #
-# ## 8.4 · Cross-encoder re-ranking
+# ## 46.4 · Cross-encoder re-ranking
 #
 # A **cross-encoder** feeds `[CLS] query [SEP] document [SEP]` through one transformer and
 # outputs a relevance score. Query and document tokens attend to each other in every layer,
@@ -499,14 +499,14 @@ for r in rows:
 # passages; SciFact pairs scientific *claims* with abstracts that support **or refute** them,
 # a different notion of relevance. An off-the-shelf re-ranker is a hypothesis to test on your
 # own judged queries, not a guaranteed gain; fine-tuning it on in-domain pairs (the train qrels,
-# exactly as in 8.2) is the usual fix. Latency grows linearly with depth.
+# exactly as in 46.2) is the usual fix. Latency grows linearly with depth.
 #
 # **On a T4 you should see** the re-ranker score a 50-candidate batch in a few tens of
 # milliseconds with fp16 (well under 1 ms per pair), i.e. 20–50× faster than our CPU; the quality
 # question is the same and must be measured on all 300 test queries (not measured in our
 # verification runs).
 #
-# ## 8.5 · The two-stage trade-off
+# ## 46.5 · The two-stage trade-off
 #
 # | | Bi-encoder (stage 1) | Cross-encoder (stage 2) |
 # |---|---|---|
@@ -516,7 +516,7 @@ for r in rows:
 # | Quality | good recall, coarse ordering | best ordering of a short list, if trained in-domain |
 # | Retraining cost | re-embed the whole corpus | none for the corpus |
 #
-# The re-ranking depth is the dial: for a re-ranker that helps (measure it, as 8.4 shows),
+# The re-ranking depth is the dial: for a re-ranker that helps (measure it, as 46.4 shows),
 # quality rises with depth only while the first stage still has relevant documents to surface
 # (its Recall@depth is the ceiling), and latency rises linearly. Stated with numbers: *at a 100 ms p99 budget with ~1 ms per
 # pair on a GPU, a 50-deep re-rank fits; at 1,000 QPS that is 50,000 pair inferences per

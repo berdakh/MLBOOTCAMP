@@ -133,16 +133,16 @@ print(f"{N_PARAMS:,} parameters | batch {B} x seq {T}")
 # | Optimizer state | extra numbers the optimizer keeps per parameter between steps | AdamW's two moments m and v: 8 bytes per parameter |
 # | Activations | intermediate tensors from the forward pass that backward needs, kept until it uses them | 82 MB for one batch here, 5.8× the model state |
 # | Mixed precision (autocast) | running matmuls in fp16/bf16 while keeping sensitive values in fp32 | `torch.autocast`; halves activations, not model state |
-# | Micro-batch | one of the small pieces a large batch is split into | 4 micro-batches of 8 in 2.3 |
+# | Micro-batch | one of the small pieces a large batch is split into | 4 micro-batches of 8 in 40.3 |
 # | Gradient accumulation | adding the gradients of several micro-batches before one optimizer step | `TrainConfig(grad_accum_steps=k)` |
-# | Activation checkpointing | keeping only some activations and recomputing the rest during backward | 82 MB → 14 MB in 2.4, for ~+30% time |
-# | Peak vs leak | a single step that needs too much memory vs memory that grows every step | accumulating `loss` instead of `loss.item()` (2.6) |
+# | Activation checkpointing | keeping only some activations and recomputing the rest during backward | 82 MB → 14 MB in 40.4, for ~+30% time |
+# | Peak vs leak | a single step that needs too much memory vs memory that grows every step | accumulating `loss` instead of `loss.item()` (40.6) |
 # | Caching allocator | PyTorch keeps freed GPU memory reserved for reuse instead of returning it | `memory_reserved` > `memory_allocated` |
-# | Kernel fusion | merging several elementwise ops into one kernel so the data is read once | what `torch.compile` does (2.5) |
+# | Kernel fusion | merging several elementwise ops into one kernel so the data is read once | what `torch.compile` does (40.5) |
 # | OOM | out of memory: an allocation larger than what is free on the device | `torch.OutOfMemoryError` |
 
 # %% [markdown]
-# ## 2.1 · What fills memory during training
+# ## 40.1 · What fills memory during training
 #
 # During a training step, four things live in device memory:
 #
@@ -227,7 +227,7 @@ print(f"bytes/param: {sum(got.values()) / N_PARAMS:.2f}")
 # output layer shares the embedding matrix, and `model.parameters()` yields it
 # once, so it is counted (and optimised) once.
 #
-# ## 2.2 · Activations: estimate, then measure
+# ## 40.2 · Activations: estimate, then measure
 #
 # Activations are harder to count by hand, but they can be measured on any
 # device: autograd calls a *pack hook* for every tensor it saves for backward.
@@ -314,7 +314,7 @@ print("wrote", OUT / "memory_report.json")
 # `memory_reserved` is higher still: the caching allocator keeps freed blocks for reuse.
 # That is normal and not a leak.
 #
-# ## 2.3 · Gradient accumulation: a big batch in small pieces
+# ## 40.3 · Gradient accumulation: a big batch in small pieces
 #
 # If batch 256 does not fit but batch 32 does, run 8 micro-batches, calling
 # `backward()` on each **without zeroing** (gradients add up in `.grad`), then
@@ -379,7 +379,7 @@ def accumulated_step(model, batches, loss_fn):
 grade.ex2(accumulated_step)
 
 # %% [markdown]
-# ## 2.4 · Activation checkpointing: trade compute for memory
+# ## 40.4 · Activation checkpointing: trade compute for memory
 #
 # Checkpointing a block means: in forward, keep only the block's *input* and
 # discard its internal activations; in backward, run the block's forward again
@@ -452,7 +452,7 @@ print(f"memory saved: {1 - results['checkpointed']['saved'] / results['plain']['
 # `model.gradient_checkpointing_enable()`) or every k-th block, and spend the
 # freed memory on a larger batch or longer sequences.
 #
-# ## 2.5 · `torch.compile`
+# ## 40.5 · `torch.compile`
 #
 # `torch.compile(model)` traces the Python code into a graph (TorchDynamo),
 # then generates fused kernels for it (TorchInductor: Triton on GPU, C++/OpenMP on
@@ -499,7 +499,7 @@ else:
 # shapes (e.g. variable sequence lengths) triggers recompilation; pad to a few
 # fixed lengths or use `dynamic=True`.
 #
-# ## 2.6 · An OOM debugging playbook
+# ## 40.6 · An OOM debugging playbook
 #
 # When `torch.OutOfMemoryError: CUDA out of memory` occurs, proceed in this order:
 #
@@ -510,8 +510,8 @@ else:
 #    start of each step. If it *grows* step after step, something keeps tensors
 #    alive (below). If it is flat and one step spikes, it is a peak: reduce it.
 # 3. **Reduce the peak**, cheapest first: smaller micro-batch + gradient
-#    accumulation (2.3) → mixed precision (halves activations) → shorter sequences
-#    or truncation → activation checkpointing (2.4) → smaller/8-bit optimizer
+#    accumulation (40.3) → mixed precision (halves activations) → shorter sequences
+#    or truncation → activation checkpointing (40.4) → smaller/8-bit optimizer
 #    state, LoRA (Chapter 44) → sharding (FSDP/ZeRO, Chapter 48).
 # 4. **Evaluation OOM but training fine?** Missing `torch.no_grad()` /
 #    `torch.inference_mode()`, so eval builds graphs; or eval batch size set larger.
@@ -573,7 +573,7 @@ for keep in (False, True):
 # %% [markdown]
 # > **Exercise 3.** You are fine-tuning a 1.3B-parameter decoder with AdamW on one 16 GB T4
 # > at sequence length 1024 and it runs out of memory at batch size 1. (a) Using the table in
-# > 2.1, how much memory do weights + gradients + optimizer state need, in fp32 and with
+# > 40.1, how much memory do weights + gradients + optimizer state need, in fp32 and with
 # > autocast? (b) Can *any* combination of the techniques in this notebook make full
 # > fine-tuning fit? (c) What would you do instead? Write your answer in the cell below.
 
@@ -643,7 +643,7 @@ for keep in (False, True):
 # $$
 #
 # In words: backward costs about two forwards; recomputing adds one more. Example: +33% in
-# theory; we measured +23% to +40% in 2.4, for 83% less saved activation memory.
+# theory; we measured +23% to +40% in 40.4, for 83% less saved activation memory.
 #
 # The next cell checks equation 4 against `torch.optim.AdamW` for three steps on a toy problem.
 
@@ -678,7 +678,7 @@ print("max |manual - torch.optim.AdamW| after 3 steps:", (theta - w.detach()).ab
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
 # | `ModuleNotFoundError: churnlab` / `scaleml` | setup cell not run | run the first code cell |
-# | `torch.OutOfMemoryError: CUDA out of memory` | peak over 15 GB; or a previous cell's model still on the GPU | follow 2.6; `del model, opt; gc.collect(); torch.cuda.empty_cache()`; restart the runtime |
+# | `torch.OutOfMemoryError: CUDA out of memory` | peak over 15 GB; or a previous cell's model still on the GPU | follow 40.6; `del model, opt; gc.collect(); torch.cuda.empty_cache()`; restart the runtime |
 # | Memory grows every step | storing tensors with graphs (`loss`, outputs) | `.item()`, `.detach()`, `torch.no_grad()` in eval |
 # | Accumulated gradients differ from the big batch | dividing by the number of micro-batches with unequal sizes; BatchNorm; dropout with different random masks | weight by `n_i / N`; compare in `eval()` mode or with dropout off |
 # | `torch.compile` errors (`InductorError`, missing `cl`/`gcc`, Triton errors) | no C++ compiler on CPU; unsupported GPU or Python code | `TRY_COMPILE = False`; the eager model is unchanged |

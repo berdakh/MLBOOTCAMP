@@ -56,7 +56,7 @@ exact in the dtype you merged in.
 
 [open-ended] A good answer:
 
-* **Memory arithmetic (6.1).** Full fine-tuning in fp32 + AdamW: 16 B/param ≈ 112 GB
+* **Memory arithmetic (44.1).** Full fine-tuning in fp32 + AdamW: 16 B/param ≈ 112 GB
   (104 GiB) plus activations: impossible on 16–24 GB. LoRA with a frozen fp16 base:
   ~14 GB of weights + a few hundred MB of adapters and their optimiser state +
   activations: tight on 16 GB, feasible on 24 GB with gradient checkpointing and short
@@ -87,7 +87,7 @@ exact in the dtype you merged in.
    is non-zero. `α/r` keeps the update magnitude roughly independent of `r`, so changing
    the rank does not require re-tuning the learning rate.
 2. **Memory saved / not saved.** Saved: gradients and optimiser state of frozen weights
-   (16 → 4 B/param for them), and the saved inputs of frozen linear layers (in 6.3 we
+   (16 → 4 B/param for them), and the saved inputs of frozen linear layers (in 44.3 we
    measured activations 739 → 505 MB). Not saved: the frozen weights themselves and most
    activations (attention, GELU, LayerNorm, the backward pass through every layer).
    QLoRA cuts the frozen weights to 4 bits; gradient checkpointing cuts activations by
@@ -101,7 +101,7 @@ exact in the dtype you merged in.
    many tasks share one embedding service, or when labelled data is tiny. LoRA when the
    representation must adapt but memory, storage or many-task serving matter. Full FT
    when you have lots of data, a big domain shift, and the budget, or need the last point.
-5. **Merged vs unmerged.** Merged: no extra latency (in 6.5 the difference was within
+5. **Merged vs unmerged.** Merged: no extra latency (in 44.5 the difference was within
    noise on CPU: 790–890 vs 800–810 ms per batch), but one task per model copy. Unmerged: small overhead, any number of
    adapters per base, hot-swap and roll back independently. For 1,000 customers: a shared
    base fleet with batched multi-adapter kernels (S-LoRA/Punica/vLLM), adapters (~3 MB

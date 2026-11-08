@@ -39,7 +39,7 @@ def average_gradients(grads_per_rank):
             for i in range(len(grads_per_rank[0]))]
 ```
 
-**Check.** In 9.2, averaging 2 or 4 equal shards' gradients matched the
+**Check.** In 47.2, averaging 2 or 4 equal shards' gradients matched the
 full-batch gradient to ~3e-08; an uneven 8 + 24 split was off by 6.3e-02,
 because a plain mean of per-shard *mean* gradients weights each shard
 equally rather than each example. With unequal shards, weight rank r by
@@ -122,7 +122,7 @@ others wait at a `barrier()` that every rank calls).
    launches an asynchronous all-reduce on it while backward continues with
    earlier layers (overlap). At the end of backward DDP waits for all buckets
    and divides by world size. `optimizer.step()` is local and identical on all
-   ranks. Weights were broadcast once from rank 0 at construction. 9.3 showed
+   ranks. Weights were broadcast once from rank 0 at construction. 47.3 showed
    the replicas bit-identical and ≈6e-08 from single-process training.
 2. **Why it is equivalent.** The mean-loss gradient over the full batch equals
    the mean of per-shard mean gradients when shards are equal in size, and all
@@ -134,21 +134,21 @@ others wait at a `barrier()` that every rank calls).
 3. **Ring all-reduce volume.** 2(N−1)/N × S per GPU (Exercise 1). It tends to 2S,
    so per-GPU traffic barely grows with N. DDP still stops scaling because
    (i) compute per GPU stays fixed while communication does not shrink, so
-   large models (GB of gradients) are communication-bound on slow links (9.6:
+   large models (GB of gradients) are communication-bound on slow links (47.6:
    a 7B model on PCIe was ~34% efficient by our assumptions); (ii) the latency
    term grows with 2(N−1) steps; (iii) the slowest link/GPU sets the pace;
    (iv) large global batches eventually hurt optimisation (critical batch size).
 4. **`DistributedSampler`.** [verified] Shuffles with seed + epoch, pads to a multiple
    of world size by repeating indices, and gives rank r indices r, r+N, …
-   Without `set_epoch`, every epoch uses the same order (9.4: identical lists).
+   Without `set_epoch`, every epoch uses the same order (47.4: identical lists).
    Padding exists so every rank runs the same number of steps, otherwise the
    ranks with more data would wait forever in an all-reduce. It duplicates up
    to N−1 examples, which matters for evaluation metrics.
 5. **Crash vs hang.** A crash: the process exits non-zero; peers get errors
-   (`Connection closed by peer` in 9.5) or are killed by the torchrun agent,
+   (`Connection closed by peer` in 47.5) or are killed by the torchrun agent,
    which reports the root-cause rank and exit code; the job exits non-zero.
    Recover by relaunching (scheduler requeue or `--max-restarts`) and resuming
-   from the last checkpoint (9.5 resumed with a parameter difference of 0.0). A
+   from the last checkpoint (47.5 resumed with a parameter difference of 0.0). A
    hang: GPUs at 0% (or 100% spinning in NCCL), no new log lines, no exit. Detect with
    heartbeats/step-time alarms, the NCCL watchdog and a deliberate process-group
    `timeout`; get stack traces with `py-spy dump` on each rank; usual causes are

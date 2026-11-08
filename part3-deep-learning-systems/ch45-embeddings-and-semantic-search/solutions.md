@@ -68,7 +68,7 @@ Recall@100 0.954, vs 0.667 / 0.886 (BM25) and 0.622 / 0.919 (dense).
 * **Index and memory.** 50M × 384 × 4 B = 77 GB of float32 vectors (+ HNSW graph,
   ~50M × 2M × 4 B ≈ 13 GB at M = 32): needs sharding or a big-memory host. IVF-PQ with
   48–64 byte codes cuts that to 2.4–3.2 GB at a recall cost you measure against exact
-  search (as in 7.4); re-rank the ANN candidates with full vectors if needed.
+  search (as in 45.4); re-rank the ANN candidates with full vectors if needed.
 * **Re-embedding cost.** Every encoder change re-embeds 50M descriptions: at our CPU's
   ~41 docs/s that is ~14 days on one machine; at [expected] ~1–5k docs/s per GPU, hours on a
   small GPU fleet. Plan versioned indexes (old and new side by side), backfills and

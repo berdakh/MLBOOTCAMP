@@ -109,9 +109,9 @@ GB = 1e9
 # | Ψ (psi) | the number of model parameters, in memory formulas | 7B: Ψ = 7 × 10⁹ |
 # | Model state | weights + gradients + optimizer state (not activations) | 16Ψ bytes for mixed-precision Adam |
 # | ZeRO stage 1/2/3 | shard optimizer state / + gradients / + parameters across data-parallel GPUs | 7B on 8 GPUs: 38.5 / 26.2 / 14.0 GB |
-# | FSDP | PyTorch's fully sharded data parallel: ZeRO-3, gathering each layer just in time | `fully_shard` in the 10.1 demo |
-# | Tensor parallelism | splitting the matrices of one layer across GPUs | column- then row-parallel MLP in 10.2 |
-# | Pipeline parallelism | putting consecutive groups of layers on different GPUs | 4 stages in 10.3 |
+# | FSDP | PyTorch's fully sharded data parallel: ZeRO-3, gathering each layer just in time | `fully_shard` in the 48.1 demo |
+# | Tensor parallelism | splitting the matrices of one layer across GPUs | column- then row-parallel MLP in 48.2 |
+# | Pipeline parallelism | putting consecutive groups of layers on different GPUs | 4 stages in 48.3 |
 # | Micro-batch / bubble | a slice of the batch fed through the pipeline / the idle time while it fills and drains | 3/7 idle at p = m = 4 |
 # | 3D parallelism | tensor × pipeline × data parallelism combined | TP inside a node, PP across nodes, DP across replicas |
 # | MFU | model FLOPs utilisation: useful FLOP/s divided by the hardware peak | ~40% for well-tuned large runs |
@@ -121,7 +121,7 @@ GB = 1e9
 # | bf16 | a 16-bit format with fp32's exponent range and less precision | A100/H100 training; no scaler needed |
 
 # %% [markdown]
-# ## 10.1 · Memory per GPU: DDP vs ZeRO-1/2/3 (FSDP)
+# ## 48.1 · Memory per GPU: DDP vs ZeRO-1/2/3 (FSDP)
 #
 # The standard accounting (ZeRO paper, Rajbhandari et al. 2020) for **mixed-precision
 # Adam**, with Ψ parameters:
@@ -319,7 +319,7 @@ if fsdp_report:
 # start-up. If it fails on an older PyTorch, the message above says why; everything else in
 # the notebook is independent of it.
 #
-# ## 10.2 · Tensor parallelism: split a layer across devices
+# ## 48.2 · Tensor parallelism: split a layer across devices
 #
 # ZeRO shards *storage* but still computes each layer on one GPU with the full weights
 # (gathered just in time). **Tensor parallelism** (Megatron-LM, Shoeybi et al. 2019) splits
@@ -382,7 +382,7 @@ print(f"per device: {fc.weight.numel() // 2 + proj.weight.numel() // 2:,} MLP we
 # is kept **inside a node** (typically 2–8 GPUs). Sequence parallelism and context
 # parallelism split the sequence dimension in a similar spirit.
 #
-# ## 10.3 · Pipeline parallelism and the bubble
+# ## 48.3 · Pipeline parallelism and the bubble
 #
 # **Pipeline parallelism** puts consecutive groups of layers ("stages") on different
 # devices. A batch is split into *m* micro-batches; stage *s* works on micro-batch *i* while
@@ -445,7 +445,7 @@ for p, m in [(4, 4), (4, 16)]:
 # node (e.g. 8-way), pipeline parallelism across a few nodes, and data parallelism (often
 # with ZeRO-1 or FSDP) across the replicas. Total GPUs = TP × PP × DP.
 #
-# ## 10.4 · Compute budgets: FLOPs ≈ 6·N·D
+# ## 48.4 · Compute budgets: FLOPs ≈ 6·N·D
 #
 # Training a dense transformer with N parameters on D tokens costs about **6·N·D** FLOPs
 # (Kaplan et al. 2020): 2N per token for the forward pass (a multiply and an add per
@@ -525,7 +525,7 @@ for name, n, d, gpu, tf, mfu, g, src in examples:
 # Multiply GPU-days by an hourly price to get a cost. The "GPT-3 on A100" numbers are a
 # what-if: GPT-3 was trained on V100s.
 #
-# ## 10.5 · Scaling laws: how big a model for a given budget?
+# ## 48.5 · Scaling laws: how big a model for a given budget?
 #
 # Published empirical results (cite them as such; do not extrapolate them blindly):
 #
@@ -567,7 +567,7 @@ for c in (1e19, 1e21, 1e23, 5.9e23, 1e25):
 # model, say whether it is under- or over-trained relative to 20 tokens/param, and why that
 # may be deliberate.
 #
-# ## 10.6 · Fault tolerance: how often to checkpoint?
+# ## 48.6 · Fault tolerance: how often to checkpoint?
 #
 # A job on n nodes fails n times as often as one node (independent failures):
 # MTBF_job = MTBF_node / n. Meta's Llama 3 paper (Dubey et al. 2024) reports 419
@@ -651,7 +651,7 @@ RESULTS["checkpointing"] = {"job_mtbf_h": M_S / 3600, "young_min": tau_young / 6
 # in-memory redundancy (checkpoint to a peer's RAM), hot spare nodes to cut R, and fast
 # failure *detection* (a hang that waits 30 min for a timeout adds 30 min to R).
 #
-# ## 10.7 · Mixed precision numerics: fp16 vs bf16, and loss scaling
+# ## 48.7 · Mixed precision numerics: fp16 vs bf16, and loss scaling
 #
 # Half precision halves memory and speeds up matmuls on Tensor Cores, but its *range*
 # and *precision* differ:
