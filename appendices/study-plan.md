@@ -126,7 +126,7 @@ Consult it after building your own version, not before; see
 Stages 1 and 2 prepare for roles centred on modelling at most companies. For
 machine learning engineering roles at large technology companies, continue
 with Parts II and III. Both are dense; some sessions will take longer than
-three hours, and it is more important to identify honestly what remains
+three hours, and it is more important to identify accurately what remains
 uncertain, using each part's final chapter, than to finish on schedule.
 
 | Session | Chapters | Content |

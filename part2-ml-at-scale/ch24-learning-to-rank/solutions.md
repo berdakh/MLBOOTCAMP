@@ -129,8 +129,8 @@ propensities; (e) noise: bootstrap intervals.
 **5. Position as a feature.** (a) Train with the logged position as a
 feature, serve with a constant (position 0); (b) a separate shallow
 "position tower" (bias term) added to the logit in training and dropped at
-serving; or no feature plus IPS weights. You know it helped only by an
-unbiased evaluation: IPS/random-traffic offline metrics or an A/B test. In
+serving; or no feature plus IPS weights. Whether it helped can be established
+only by an unbiased evaluation: IPS/random-traffic offline metrics or an A/B test. In
 6.6 the position feature took 64% of the gain yet changed the ranking by
 almost nothing, because no other feature correlated with position.
 

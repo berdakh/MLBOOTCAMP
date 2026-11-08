@@ -11,8 +11,8 @@
 # Chapter 45 showed a general-purpose embedding model performing worse than BM25 on scientific claims.
 # The two standard fixes are (1) **fine-tune the bi-encoder** on in-domain (query, relevant
 # document) pairs with a contrastive loss, and (2) add a **cross-encoder re-ranker** that reads
-# query and document together for the top candidates. Both are core to every production search
-# and RAG stack, and both come with a cost you must be able to quantify.
+# query and document together for the top candidates. Both are standard parts of production search
+# and retrieval-augmented generation (RAG) systems, and both have costs that must be quantified.
 #
 # After this lab you should be able to:
 #

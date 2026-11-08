@@ -321,7 +321,7 @@ per arm; at least one full weekly cycle; not stopping early when the result
 first looks significant (or using a sequential method designed for it);
 variance reduction with pre-experiment covariates (CUPED) to shorten the test.
 
-### The treatment wins on the primary metric. What else do you check before acting?
+### The treatment is significantly better on the primary metric. What else do you check before acting?
 
 A complete answer covers: a sample ratio mismatch check; guardrail metrics
 (latency, errors, revenue, retention); novelty and primacy effects over time;
@@ -481,7 +481,7 @@ what you learned, including if you were wrong.
 ### Tell me about a project that failed.
 
 Research mapping: an approach that did not beat the baseline, or a dataset that
-turned out unusable. A complete answer covers: an honest account; when and how
+turned out unusable. A complete answer covers: an accurate account; when and how
 you recognised it; what you salvaged (a negative result, a tool, a cleaned
 dataset); what you would do differently, such as an earlier baseline or an
 earlier check of data quality.

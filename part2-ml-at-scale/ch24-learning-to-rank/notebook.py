@@ -289,9 +289,9 @@ print("same request on both sides:", len(set(train_df["request_id"]) & set(valid
 # The evaluation helper below reports, per model:
 #
 # * **NDCG@10 truth** and **true exp. clicks**: graded against the hidden
-#   relevance (notebook 05). These decide which model is better.
+#   relevance (Chapter 23). These decide which model is better.
 # * **NDCG@10 / MRR on clicks, policy traffic**: what a team without the
-#   truth would report. Biased towards the logged order (notebook 05).
+#   truth would report. Biased towards the logged order (Chapter 23).
 # * **NDCG@10 on clicks, random traffic**: much less biased *between two new
 #   rankers* (the logged order is random there), but small and noisy.
 
