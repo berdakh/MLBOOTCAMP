@@ -6,7 +6,7 @@
 # %% [markdown]
 # # Capstone 4 · Movie recommendations (MovieLens) — guided walkthrough
 #
-# **CPU only · about 3–6 minutes on ml-latest-small · the brief is [README.md](README.md)**
+# **CPU only · about 2 minutes of compute on ml-latest-small (plus the download) · the brief is [README.md](README.md)**
 #
 # This notebook is a complete worked solution of the capstone's minimum viable
 # product: a top-10 recommender for returning MovieLens users, evaluated with a

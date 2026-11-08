@@ -1,12 +1,23 @@
-# Capstone 4 · Top-10 movie recommendations on MovieLens, evaluated in time
+# Capstone 4 · Movie recommendations (MovieLens)
+
+*Top-10 movie recommendations on MovieLens, evaluated in time.*
 
 **Recommended order: 4th** · MVP ≈ 4–5 days at 3 h/day · CPU only
 
-A public-data demonstration inspired by recommendation and feed-ranking
-problems on large platforms. It uses the MovieLens research datasets
-published by GroupLens; it is not work for, or endorsed by, Meta, Amazon,
-Netflix or any other platform, and — because of the dataset's licence — it
-must stay a **non-commercial** demonstration.
+**Guided solution:** [walkthrough.ipynb](walkthrough.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part4-capstones/cap4-movie-recommendations/walkthrough.ipynb)
+— a complete worked solution of the MVP below (framing, download and audit,
+time-aware split with leakage checks, popularity baselines, item-kNN, EASE and
+implicit ALS, bootstrap confidence intervals, cold-start slices, a tested
+FastAPI service, and a results table generated from the run). Attempt each
+step yourself first. The walkthrough was verified on the course build machine
+only with its synthetic offline sample (that machine cannot reach
+`files.grouplens.org`); the real-data run has not been executed there.
+
+This is a public-data demonstration inspired by recommendation and
+feed-ranking problems on large platforms. It uses the MovieLens research
+datasets published by GroupLens. It is not work for, or endorsed by, Meta,
+Amazon, Netflix or any other platform, and because of the dataset's licence it
+must remain a **non-commercial** demonstration.
 
 
 ---
@@ -25,7 +36,7 @@ worth testing online, not what wins online.
 ## Why this project
 
 * **Ranking metrics** (Recall@K, NDCG@K) and how they differ from rating
-  prediction (RMSE) — a classic interview probe.
+  prediction (RMSE), a standard interview question.
 * **A time-aware split** that does not let the model see the future, and a
   demonstration that random splits inflate scores.
 * **A popularity baseline that is hard to beat**, and the discipline of
@@ -94,10 +105,12 @@ not deploy the API as part of a product.
 
 * **Unit of prediction:** a (user, request time) pair → a ranked list of 10
   movie IDs.
-* **Feedback definition:** treat **any rating as an interaction** (implicit
-  feedback: "the user chose to engage with this movie"). For a secondary
-  analysis, define **relevant = rating ≥ 4.0** and recompute metrics.
-  State both; they answer different questions.
+* **Feedback definition:** two defensible choices. (a) **Any rating is an
+  interaction** (implicit feedback: "the user chose to engage with this
+  movie"). (b) **Relevant = rating ≥ 4.0** ("the user engaged and liked it").
+  Report both; they answer different questions. The guided solution uses (b)
+  as the primary label, because recommending movies users rate 1–2 stars is
+  not success, and reports (a) as a secondary analysis.
 * **Candidates:** all movies that existed in the data before the request
   time and that the user has not already rated.
 * **Label:** the held-out interaction(s) of that user (see protocol).
@@ -134,7 +147,8 @@ not deploy the API as part of a product.
 
 **Time-aware leave-last-out (primary).**
 
-* Sort each user's interactions by timestamp (ties broken deterministically).
+* Sort each user's interactions by timestamp (ties broken deterministically,
+  e.g. by `movieId`).
 * **Test:** each user's **last** interaction. **Validation:** the
   second-to-last. **Training:** everything earlier.
 * **Make it time-aware, not just per-user:** a plain leave-last-out lets the
@@ -300,13 +314,39 @@ the trade-off: freshness vs latency vs cost.
 - [ ] Metrics unit-tested on hand-computed examples
 - [ ] Popularity, recent-popularity, item-kNN baselines and at least one model on identical users
 - [ ] Results table: Recall@10, NDCG@10, coverage, mean popularity, with CIs — **TBD — fill from your run**
+  (step 10 of the walkthrough generates this table from the computed numbers)
 - [ ] Random vs time-aware split comparison — **TBD — fill from your run**
 - [ ] Cold-start user/item slices
 - [ ] API with precomputed candidates, fallback strategy reported in responses, validation tests
 - [ ] Limitations: ratings ≠ consumption, survivorship, non-commercial licence
 - [ ] CI green on a tiny synthetic interactions fixture (no download)
 
-## Stretch: connect to the bootcamp's churnlab patterns
+## Results
+
+Filled by step 10 of the [walkthrough](walkthrough.ipynb), which generates the
+markdown from the real-data run and saves it to
+`artifacts/cap4/results_table.md`. Never copy numbers printed in the synthetic
+sample mode.
+
+| Model | Recall@10 (95% CI) | NDCG@10 (95% CI) | NDCG@10 − recent popularity | Coverage | Mean popularity |
+|---|---|---|---|---|---|
+| Global popularity | TBD — fill from your run | TBD — fill from your run | TBD — fill from your run | TBD | TBD |
+| Recent popularity | TBD — fill from your run | TBD — fill from your run | — | TBD | TBD |
+| Item-kNN | TBD — fill from your run | TBD — fill from your run | TBD — fill from your run | TBD | TBD |
+| EASE / ALS | TBD — fill from your run | TBD — fill from your run | TBD — fill from your run | TBD | TBD |
+
+Split: time-aware leave-last-out (test = each user's last positive); release,
+checksum and user sample: TBD — fill from your run.
+
+## Related chapters
+
+[Chapter 5](../../part1-foundations/ch05-leakage-safe-splits-and-baseline/README.md) (leakage-safe splits),
+[Chapter 23](../../part2-ml-at-scale/ch23-implicit-feedback-and-position-bias/README.md) (implicit feedback),
+[Chapter 25](../../part2-ml-at-scale/ch25-candidate-generation/README.md) (candidate generation),
+[Chapter 24](../../part2-ml-at-scale/ch24-learning-to-rank/README.md) (learning to rank, for the re-ranker extension) and
+[Chapter 37](../../part2-ml-at-scale/ch37-recsys-and-search-system-design/notebook.ipynb) (recommender system design).
+
+## Stretch: connect to the course's churnlab patterns
 
 * **Registry:** version the model *and* its precomputed tables together, so a
   promotion swaps both atomically and a rollback restores both —

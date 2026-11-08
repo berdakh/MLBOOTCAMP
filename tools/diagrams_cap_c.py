@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from svgkit import Canvas, diagram  # noqa: F401
-
+from svgkit import Canvas, diagram
 
 # ---------------------------------------------------------------------------
 # Capstone 4 - movie recommendations (MovieLens). Names start with "cap4-".

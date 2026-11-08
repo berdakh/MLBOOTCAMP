@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `warmup_cosine_lr`
 
-[verified] Reference code: [`code/nb19.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def warmup_cosine_lr(step, base_lr, warmup_steps, total_steps, min_lr=0.0):
@@ -34,7 +34,7 @@ fine-tuning.
 
 ## Exercise 2 · `critique_flags`
 
-[verified] Reference code: [`code/nb19.py`](solutions.py) (`ex2`): `{"A", "B", "C", "D", "E"}`.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`): `{"A", "B", "C", "D", "E"}`.
 
 * **A (real).** A random *trial* split puts every subject (and every session)
   in both training and test, so the model can learn subject-specific
@@ -134,8 +134,8 @@ evaluation unit that matches the claim.
 2. **Batch 64 → 2,048.** [expected] Scale the LR (linear for SGD as a starting
    point, often √k for Adam), add or lengthen warmup, keep the total number
    of *examples* (not steps) and re-tune the schedule length; check
-   per-replica batch statistics (BatchNorm) and use gradient clipping. You
-   know you are past the critical batch size when doubling the batch no
+   per-replica batch statistics (BatchNorm) and use gradient clipping. One
+   knows the critical batch size has been passed when doubling the batch no
    longer roughly halves the steps to reach a target loss, or when stability
    becomes seed-dependent. In our toy run, linear scaling to batch 2,048
    gave 0.55–0.75 accuracy across seeds against 0.92 for √k.
@@ -165,4 +165,4 @@ evaluation unit that matches the claim.
 6. **SpectraFormer in 90 seconds.** [expected] In order of likely inflation:
    (A) random trial split vs a new-user claim; (B) tuning on test and (D)
    best-of-five seeds; (C) under-tuned baselines; (E) global normalisation.
-   Then the decisive experiment from 19-3.
+   Then the decisive experiment from Exercise 3.

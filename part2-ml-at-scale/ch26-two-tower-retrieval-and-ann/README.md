@@ -1,6 +1,6 @@
 # Chapter 26 · Two-tower retrieval & ANN
 
-*Part II · Prerequisites: Chapters 25 and 27 (or equivalent PyTorch experience) · Estimated time: reading ~55 min, lab ~90 min · Compute: CPU (training takes under a minute)*
+*Part II · Prerequisites: Chapter 25 and basic PyTorch · Estimated time: reading ~55 min, lab ~90 min · Compute: CPU (training takes under a minute)*
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch26-two-tower-retrieval-and-ann/notebook.ipynb) · [Lab: notebook.ipynb](notebook.ipynb) · [Solutions](solutions.md)
 

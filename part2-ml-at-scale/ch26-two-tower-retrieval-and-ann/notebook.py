@@ -6,26 +6,29 @@
 # %% [markdown]
 # # Chapter 26 · Two-tower retrieval & ANN
 #
-# **Day 4 · ~90 minutes · CPU core (training takes under a minute)**
+# **Part II · Chapter 26 · about 90 minutes · CPU (training takes under a minute)**
 #
-# The two-tower model is the default first-stage retriever at large
-# companies (YouTube, Google Play, Pinterest, Instagram, TikTok all describe
-# variants): one network embeds the user, another embeds the item, and
-# retrieval is a nearest-neighbour search in the item index. It generalises
-# matrix factorisation with features, which is what makes it work for new
-# users and items, but it has a well-known popularity bias that you must
-# correct. Then the index has to answer in a millisecond, which is an
+# The two-tower model is the most common first-stage retriever in large
+# systems (YouTube, Google Play, Pinterest, Instagram and TikTok have all
+# described variants): one network embeds the user, another embeds the item,
+# and retrieval is a nearest-neighbour search in the item index. It
+# generalises matrix factorisation with features, which is what makes it work
+# for new users and items, but it has a well-known popularity bias that must
+# be corrected. The index must then answer within a millisecond, which is an
 # approximate-search problem with its own trade-offs.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. build a two-tower model in PyTorch with id, history and categorical features;
 # 2. train it with in-batch softmax negatives and explain, then correct, their sampling bias (logQ correction);
-# 3. compare it with notebook 07's ALS on recall@50/100, popularity bias and cold-start users;
+# 3. compare it with the ALS model of Chapter 25 on recall@50/100, popularity bias and cold-start users;
 # 4. index the item embeddings with FAISS: exact (`IndexFlatIP`), `IndexIVFFlat` and `IndexHNSWFlat`, and read a recall–latency–parameter table;
 # 5. sketch the serving cascade around it: what is precomputed, what runs per request, and the latency budget.
 #
-# **You will produce:** `artifacts/level2/two_tower_item_emb.npy` (item embeddings) and `artifacts/level2/ann_benchmark.csv`.
+# **Outputs of this lab:** `artifacts/level2/two_tower_item_emb.npy` (item embeddings) and `artifacts/level2/ann_benchmark.csv`.
+
+# %% [markdown]
+# Read first: [Chapter 26 text](README.md) — the two-tower model, in-batch negatives and the logQ correction, approximate nearest-neighbour search and the serving cascade, explained in full.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -93,8 +96,8 @@ print(f"train clicks {len(train_clicks):,} | eval users {len(eval_users):,} (col
 # %% [markdown]
 # **Expected:** about 244,000 training clicks, about 7,700 evaluation users
 # of whom about 270 are cold (no training clicks), in under a minute. The
-# ALS model is notebook 07's, retrained here (a few seconds) so this
-# notebook does not depend on 07 having run.
+# ALS model is that of Chapter 25, retrained here (a few seconds) so that
+# this lab does not depend on the Chapter 25 lab having run.
 
 # %% [markdown]
 # ## Key terms
@@ -130,10 +133,10 @@ print(f"train clicks {len(train_clicks):,} | eval users {len(eval_users):,} (col
 # The towers never see each other's inputs, so **item vectors can be
 # precomputed and indexed**, and per request only the user tower runs
 # (one small forward pass), followed by a nearest-neighbour search. That
-# separation is the point of the architecture, and its main limitation (no
+# separation is the purpose of the architecture, and its main limitation (no
 # user×item feature crosses; those belong in the ranker).
 #
-# Design choices worth defending in an interview:
+# Design choices, and the reasons for them (often asked in interviews):
 #
 # * **history mean** shares the item id embedding table between the towers
 #   (fewer parameters, new users with a few clicks get a meaningful vector);
@@ -204,9 +207,9 @@ print(f"parameters: {sum(p.numel() for p in TwoTower().parameters()):,}")
 # every user against every item in the batch: a B × B matrix of logits. The
 # diagonal holds the positives; the other B − 1 items in each row act as
 # negatives, for free (no extra item-tower passes). The loss is a softmax
-# cross-entropy per row: "pick your clicked item out of the batch".
+# cross-entropy per row: "pick the clicked item out of the batch".
 #
-# The catch: the negatives are not uniform over the catalogue. An item
+# The difficulty: the negatives are not uniform over the catalogue. An item
 # appears in a batch in proportion to how often it is clicked, its sampling
 # probability **q_i**. So popular items are used as negatives far more often,
 # and the model learns to push them down. Mathematically, in-batch softmax
@@ -219,7 +222,7 @@ print(f"parameters: {sum(p.numel() for p in TwoTower().parameters()):,}")
 #
 # *What to notice:* only the dot product connects the two towers, so item vectors can be computed once and indexed. Every off-diagonal cell is a negative that costs nothing extra, and a popular item fills many of those cells.
 #
-# > **Intuition.** In-batch training is a speed-dating evening: each person must pick their date out of everyone who happens to be in the room. A celebrity turns up at every event, so they are "not picked" by almost everyone and the model learns that celebrities are unattractive. Subtracting $\log q_i$ is telling the model "this person was in the room 50 times more often than average; discount the rejections accordingly". *Where it breaks down:* $q_i$ is estimated from click counts, so a brand-new item has a noisy $q_i$, and its correction is noisy too.
+# > **Intuition.** In-batch training resembles a social event at which each person must pick their partner out of everyone who happens to be present. A well-known person attends every event, so they are "not picked" by almost everyone and the model learns that well-known people are unattractive. Subtracting $\log q_i$ is telling the model "this person was in the room 50 times more often than average; discount the rejections accordingly". *Where it breaks down:* $q_i$ is estimated from click counts, so a brand-new item has a noisy $q_i$, and its correction is noisy too.
 #
 # > **Exercise 1.** Write `in_batch_softmax_loss(user_emb, item_emb, log_q=None)`:
 # > tensors of shape [B, d] and [B, d] (row b of each is a positive pair),
@@ -285,7 +288,7 @@ tt_logq = train_two_tower(logq_correction=True)
 # 2-core CPU (the variation is the machine, not the code). The loss falls
 # from about 6.24 to about 5.92 for the plain model and from about 6.35 to
 # 5.93 with logQ; the two losses are on different scales (the logQ logits
-# include −log q), so do not compare them with each other. For scale:
+# include −log q), so they should not be compared with each other. For scale:
 # log(1024) ≈ 6.93 is the loss of a model that guesses uniformly. A GPU is not needed at this size: the batch is a 1024 ×
 # 1024 matrix.
 
@@ -323,7 +326,7 @@ table.round(3)
 # | two-tower, no correction | about 0.24 | about 0.42 | about 0.04 | about 3.6 |
 # | two-tower + logQ | **about 0.41** | **about 0.74** | **about 0.26** | about 5.3 |
 #
-# Three lessons:
+# Three conclusions:
 #
 # 1. **Without the correction the two-tower model is worse than ALS**, and
 #    the popularity column shows why: it retrieves unpopular items (mean
@@ -334,12 +337,12 @@ table.round(3)
 #    tower add information the click matrix alone does not have.
 # 3. **Cold users** get a real vector from their segment, device and country:
 #    recall about 0.25 vs ALS's 0.02 (and above global popularity's 0.18 in
-#    notebook 07).
+#    Chapter 25).
 #
 # New items, on the other hand, are still rare in the logQ model's lists
 # (about 0.45 per list of 100): their id embedding is untrained and the
 # category/price embeddings alone do not lift them into the top 100. A
-# content-based fallback and an exploration quota (notebook 07) are still
+# content-based fallback and an exploration quota (Chapter 25) are still
 # needed; richer content features (text, image) would help the item tower.
 
 # %%
@@ -353,7 +356,7 @@ print("saved two_tower_item_emb.npy", ie_logq.shape)
 # Serving = "find the 100 item vectors with the largest dot product with
 # u". With 4,000 items, exact search is a 4,000 × 32 matrix–vector product:
 # microseconds. With 100 million items it is 3.2 billion multiply-adds per
-# request, far too slow, so we trade a little recall for a lot of speed:
+# request, far too slow, so a little recall is traded for a large gain in speed:
 #
 # * **`IndexFlatIP`**: exact brute force. The reference for recall.
 # * **`IndexIVFFlat`**: k-means the vectors into `nlist` cells; at query time
@@ -363,17 +366,17 @@ print("saved two_tower_item_emb.npy", ie_logq.shape)
 #   entry point. Recall and latency grow with `efSearch`; build is slower,
 #   memory higher (graph links), queries very fast.
 #
-# Our catalogue is too small for ANN to matter, so we build a synthetic
+# The ShopStream catalogue is too small for ANN to matter, so we build a synthetic
 # **100,000-item** index: each vector is a real learned item embedding plus
 # noise, re-normalised (so its structure resembles the real one), and query
 # with 2,000 real user embeddings. Timings are from this machine; on Colab's
-# CPU expect the same *ratios* but different absolute numbers.
+# CPU the *ratios* should be similar and the absolute numbers different.
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-ann-tradeoff.svg" alt="ANN recall against latency for IVF (nprobe) and HNSW (efSearch), and exact search" width="100%">
 #
-# *What to notice:* every index is a curve, not a point: the knob (`nprobe`, `efSearch`) moves you along it. The shape matches the table you are about to compute; read your own numbers off the cell below.
+# *What to notice:* every index is a curve, not a point: the parameter (`nprobe`, `efSearch`) moves along it. The shape matches the table computed below; the actual numbers come from the cell below.
 #
-# > **Intuition.** IVF is a library with sections: walk to the 4 sections whose signs best match your topic and search only those shelves (`nprobe = 4`). HNSW is asking for directions: take the motorway to roughly the right town, then smaller and smaller streets (`efSearch` is how many routes you keep open). *Where it breaks down:* a good book can sit in a neighbouring section that you did not visit; that missing share is exactly the "recall vs exact" you will measure.
+# > **Intuition.** IVF resembles a library with sections: walk to the 4 sections whose signs best match the topic and search only those shelves (`nprobe = 4`). HNSW resembles asking for directions: take the motorway to roughly the right town, then smaller and smaller streets (`efSearch` is how many routes are kept open). *Where it breaks down:* a good book can sit in a neighbouring section that was not visited; that missing share is exactly the "recall vs exact" measured below.
 #
 # > **Exercise 2.** Write `recall_vs_exact(approx_ids, exact_ids)`: two
 # > integer arrays of shape [n_queries, k] (FAISS output, where −1 means "no
@@ -454,7 +457,7 @@ ann.round(4)
 # index. Two-tower **user** vectors are not item vectors: they live in a
 # different region of the sphere. Greedy graph search, built on item–item
 # neighbourhoods, needs a wider beam to find the right region from such
-# queries. Check it:
+# queries. We check this:
 
 # %%
 item_queries = np.ascontiguousarray(base[rng.integers(0, N_BIG, 2000)])
@@ -472,7 +475,7 @@ print(f"item->item queries: HNSW efSearch=128 recall {rt.recall_vs_exact(approx_
 # **Expected:** the best user→item cosine is only about 0.6, while items have
 # neighbours at about 0.99. With item→item queries ("more like this") HNSW
 # reaches about 0.998 recall at `efSearch=128`, against about 0.90 for
-# user→item queries at the same setting (IVF is at about 0.998 for both). Lesson for design rounds: **benchmark ANN with your real query
+# user→item queries at the same setting (IVF is at about 0.998 for both). The lesson for design interviews: **benchmark ANN with the real query
 # distribution**. For user→item retrieval, IVF-style partitioning (or
 # ScaNN, or graph indexes built for out-of-distribution queries) is often the
 # safer choice; and an IVF index's `nprobe` gives a clean recall–latency knob
@@ -496,34 +499,35 @@ print("saved ann_benchmark.csv")
 # train two-tower on clicks (logQ) ───┐          request ─► features: user history, context        ~5 ms
 # item tower over the catalogue  ──► ANN index   user tower forward pass (CPU, ~0.2 ms)             ~2 ms
 #   (new items: embed on upload,     (IVF/HNSW)  ANN search: top 500                                ~5 ms
-#    incremental add)                      ▲     + co-visitation, fresh, popularity (07), merge    ~5 ms
+#    incremental add)                      ▲     + co-visitation, fresh, popularity (Ch 25), merge ~5 ms
 # co-visitation tables, popularity ────────┘     ranker features for 500 candidates (feature store) ~20 ms
-# ranker (LambdaMART / DNN, notebook 06)  ──────► rank 500 → top 50                                 ~20 ms
+# ranker (LambdaMART / DNN, Chapter 24)   ──────► rank 500 → top 50                                 ~20 ms
 #                                                business rules, diversity, ads blending             ~5 ms
 #                                                log impressions WITH positions + exploration flag  (async)
 # ```
 #
-# Points interviewers listen for:
+# Points that interviewers look for:
 #
 # * **Precompute everything that does not depend on the request**: item
 #   embeddings, the index, co-visitation tables, item features.
 # * **Version together**: the user tower and the index must come from the same
 #   training run. A user vector from model v7 searched in an index of v6 item
-#   vectors is silent garbage. Swap index and model atomically.
+#   vectors produces meaningless results without any error. Swap index and
+#   model atomically.
 # * **Logging closes the loop**: positions, the candidate source and
-#   exploration flags are what notebook 05's debiasing needs next month.
+#   exploration flags are what the debiasing of Chapter 23 needs next month.
 # * **Degrade gracefully**: if the ANN service times out, serve popularity +
-#   co-visitation candidates; never an empty feed (notebook 17).
+#   co-visitation candidates; never an empty feed (Chapter 35).
 
 # %% [markdown]
-# > **Exercise 3.** Explain in your own words, with a small numeric example,
+# > **Exercise 3.** Explain, with a small numeric example,
 # > why in-batch negatives over-penalise popular items, why subtracting
 # > log q_i during training (and not at serving) fixes it, and one situation
-# > where you might *want* to keep part of the popularity penalty. Write
-# > your answer in the cell below.
+# > where part of the popularity penalty might *deliberately* be kept. Write
+# > the answer in the cell below.
 
 # %% [markdown]
-# *Your answer:*
+# *Your answer here.*
 
 # %% [markdown]
 # ## Key equations
@@ -596,13 +600,13 @@ print(f"a model that knows nothing, batch 1024: log(1024) = {np.log(1024):.3f}")
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
 # 1. Draw the two-tower architecture. Why can't it use user×item cross features, and where do those go instead?
 # 2. In-batch negatives: why are they cheap, what bias do they introduce, and how does the logQ correction fix it? Name one alternative negative-sampling strategy and its trade-off.
-# 3. Your two-tower model's recall@100 is below plain matrix factorisation. List the first five things you check.
+# 3. A two-tower model's recall@100 is below plain matrix factorisation. List the first five things to check.
 # 4. IVF vs HNSW vs product quantisation: how does each work, and which knobs trade recall for latency or memory?
-# 5. How do you get a brand-new item into the index within minutes, and what must stay consistent between the user tower and the index?
-# 6. Your ANN index loses 3% recall@100 vs exact search. How do you decide whether that matters?
+# 5. How can a brand-new item be added to the index within minutes, and what must stay consistent between the user tower and the index?
+# 6. An ANN index loses 3% recall@100 vs exact search. How can one decide whether that matters?
 #
-# **Next chapter:** [`09_pytorch_training_done_right.ipynb`](../ch27-pytorch-training-done-right/notebook.ipynb) — Day 5: the training loop itself, done properly: data loaders, checkpoints and resume, determinism, schedules, and debugging a model that will not learn.
+# **Next chapter:** [Chapter 27 · PyTorch training done right](../ch27-pytorch-training-done-right/notebook.ipynb) — the training loop itself, done properly: data loaders, checkpoints and resume, determinism, schedules, and debugging a model that does not learn.

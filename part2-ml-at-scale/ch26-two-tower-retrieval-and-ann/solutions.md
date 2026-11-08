@@ -1,13 +1,13 @@
 # Solutions · Chapter 26 · Two-tower retrieval & ANN
 
-Try each exercise before reading its answer. Markers: [verified] verified by running ·
+Attempt each exercise before reading its answer. Markers: [verified] verified by running ·
 [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `in_batch_softmax_loss`
 
-[verified] Reference code: [`code/nb08.py`](solutions.py) (`ex1`), graded in CI (needs PyTorch).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI (needs PyTorch).
 
 ```python
 def in_batch_softmax_loss(user_emb, item_emb, log_q=None):
@@ -26,7 +26,7 @@ checks the values, so it fails).
 
 **Common mistakes.** Building the target with `torch.ones`/one-hot and MSE;
 converting to NumPy (breaks gradients); applying the temperature twice (the
-notebook divides the *user* embedding by τ before calling the loss).
+lab divides the *user* embedding by τ before calling the loss).
 
 **Push further.** Accidental hits: if item j equals the positive of row b
 (same item twice in the batch), mask logit (b, j) with −∞;
@@ -36,7 +36,7 @@ notebook divides the *user* embedding by τ before calling the loss).
 
 ## Exercise 2 · `recall_vs_exact`
 
-[verified] Reference code: [`code/nb08.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def recall_vs_exact(approx_ids, exact_ids):
@@ -58,7 +58,7 @@ compare by *distance* threshold instead of ids.
 
 ## Exercise 3 · Why in-batch negatives over-penalise popular items (written)
 
-[open-ended] In your own words; one version with numbers:
+[open-ended] One version with numbers:
 
 * Item A gets 1% of all clicks, item B 0.01%. With batches of 1,024 clicks,
   A appears in a batch about 10 times on average, so for every user in the
@@ -67,7 +67,7 @@ compare by *distance* threshold instead of ids.
   regardless of whether users like it less.
 * The sampled softmax then estimates p(i | u) / q_i (q_i = the item's chance
   of being sampled): it learns "how much more than its base rate does u
-  like i", a PMI-like score. Ranking by it buries popular items (notebook:
+  like i", a PMI-like score. Ranking by it buries popular items (lab:
   mean log-popularity of retrieved items 3.6 vs 5.3 corrected; recall on
   clicks 0.24 vs 0.41).
 * Subtracting log q_i from item i's logit **during training** makes the
@@ -75,7 +75,7 @@ compare by *distance* threshold instead of ids.
   s(u, i) ∝ log p(i | u): the score itself is the unbiased one. At serving
   there is no sampling, so nothing to correct: use s(u, i) directly.
   Subtracting it again at serving would re-introduce the penalty.
-* When to keep some penalty: when you *want* discovery, diversity or
+* When to keep some penalty: when discovery is *wanted*, diversity or
   long-tail exposure (a "discover" surface, marketplace fairness to small
   sellers, or to counter a feedback loop where popular items get more
   popular). Then use a partial correction, log q_i scaled by α ∈ (0, 1), and
@@ -114,12 +114,12 @@ excluding/including previously clicked items differently from the baseline;
 then features: are history and categorical features actually populated?
 
 **4. IVF / HNSW / PQ.** IVF: k-means into `nlist` cells, search the `nprobe`
-nearest cells; knobs `nlist`, `nprobe` (recall vs latency). HNSW: layered
-proximity graph, greedy beam search; knobs `M` (memory, build time,
+nearest cells; parameters `nlist`, `nprobe` (recall vs latency). HNSW: layered
+proximity graph, greedy beam search; parameters `M` (memory, build time,
 recall), `efConstruction` (build quality), `efSearch` (recall vs latency).
 PQ: split vectors into m sub-vectors, quantise each with a small codebook,
 store codes (e.g. 16 bytes per vector), compute approximate distances with
-lookup tables; knobs m and bits (memory vs accuracy); combine as IVF-PQ and
+lookup tables; parameters m and bits (memory vs accuracy); combine as IVF-PQ and
 re-rank the shortlist exactly.
 
 **5. New items in minutes.** The item tower uses content features, so a
@@ -132,7 +132,7 @@ versioned index per model.
 
 **6. −3% recall vs exact.** Measure end to end: does it change the *final*
 ranked list and online metrics? Often the lost items are deep in the top
-100 and the ranker would not have shown them. Check what you buy with it
+100 and the ranker would not have shown them. Check what is gained in exchange
 (latency, cost), whether the loss is uniform or concentrated (new items,
 small categories, cold users: fairness and freshness issues), and run an
 A/B or at least an offline replay of the full cascade with exact vs ANN

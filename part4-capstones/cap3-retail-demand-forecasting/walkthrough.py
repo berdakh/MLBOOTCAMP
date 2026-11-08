@@ -845,7 +845,7 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 
 
 def fit_gbm(rows: pd.DataFrame, loss: str = "poisson") -> HistGradientBoostingRegressor:
-    model = HistGradientBoostingRegressor(loss=loss, learning_rate=0.05, max_iter=400, max_leaf_nodes=31,
+    model = HistGradientBoostingRegressor(loss=loss, learning_rate=0.05, max_iter=300, max_leaf_nodes=31, early_stopping=False,
                                           min_samples_leaf=40, l2_regularization=1.0, random_state=SEED)
     return model.fit(rows[FEATURES], rows["y"])
 
