@@ -70,3 +70,28 @@ def test_every_diagram_is_used():
     corpus = "\n".join(texts)
     unused = sorted(f for f in figures if not re.search(re.escape(f), corpus))
     assert not unused, f"figures not embedded anywhere: {unused}"
+
+
+# --- The book's structure -------------------------------------------------------
+
+from book import chapters  # noqa: E402
+
+CHAPTER_SECTIONS = ("## Learning objectives", "## Key terms", "## Summary", "## Further reading")
+
+
+@pytest.mark.parametrize("ch", chapters(), ids=lambda c: f"ch{c.number:02d}")
+def test_every_chapter_has_its_text(ch):
+    readme = ch.folder / "README.md"
+    assert readme.exists(), f"{ch.rel}: missing README.md (the chapter text)"
+    text = readme.read_text(encoding="utf-8")
+    assert text.startswith(f"# Chapter {ch.number} · "), f"{ch.rel}/README.md must start with '# Chapter {ch.number} · '"
+    for heading in CHAPTER_SECTIONS:
+        assert heading in text, f"{ch.rel}/README.md lacks '{heading}'"
+
+
+def test_tables_of_contents_are_current():
+    import subprocess
+
+    result = subprocess.run([sys.executable, str(ROOT / "tools" / "make_toc.py"), "--check"],
+                            capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr

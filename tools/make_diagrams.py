@@ -28,6 +28,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import diagrams_cap_a  # noqa: E402,F401
+import diagrams_cap_b  # noqa: E402,F401
+import diagrams_cap_c  # noqa: E402,F401
 import diagrams_docs  # noqa: E402,F401
 import diagrams_l1  # noqa: E402,F401
 import diagrams_l2a  # noqa: E402,F401
@@ -40,7 +43,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "figures"
 INDEX = ROOT / "appendices" / "figures.md"
 
-GROUPS = [("l1-", "Part I"), ("l2-", "Part II"), ("l3-", "Part III"), ("hb-", "Background figures")]
+GROUPS = [("l1-", "Part I"), ("l2-", "Part II"), ("l3-", "Part III"), ("cap", "Part IV · Capstones"), ("hb-", "Background figures")]
 
 
 def build() -> dict[str, str]:

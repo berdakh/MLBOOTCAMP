@@ -1,6 +1,6 @@
 # Course maintenance tasks. Readers do not need these; maintainers do.
 
-.PHONY: help install test notebooks check lint run-notebooks diagrams data clean
+.PHONY: help install test notebooks check lint run-notebooks diagrams toc data clean
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -18,11 +18,15 @@ notebooks:  ## Rebuild every chapter's notebook.ipynb from its notebook.py
 diagrams:  ## Regenerate figures/*.svg and appendices/figures.md
 	python tools/make_diagrams.py
 
+toc:  ## Regenerate the tables of contents in README.md and the part READMEs
+	python tools/make_toc.py
+
 data:  ## Regenerate data/raw (then update RAW_SHA256 in src/churnlab/data.py)
 	python tools/make_dataset.py
 
 check:  ## Everything CI checks: sync, structure, links, tests
 	python tools/nbbuild.py --check
+	python tools/make_toc.py --check
 	python tools/make_diagrams.py --check
 	python tools/check_notebooks.py
 	python tools/check_links.py

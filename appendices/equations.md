@@ -1,17 +1,17 @@
-# The equation sheet
+# Equations
 
-Every key equation in the course, in one place, grouped by topic. Each one is taught (with a worked example and usually a code cell that checks it) in the notebook linked under it. The [glossary](glossary.md) defines the words; this page holds the maths.
+This appendix collects the key equations of the book in one place, grouped by topic. Each one is derived or motivated in the chapter linked under it, usually with a worked example and a lab cell that checks it numerically. The [glossary](glossary.md) defines the words; this appendix holds the mathematics.
 
-## How to use this sheet in an interview
+## How to use this appendix
 
-An equation recited from memory proves little. Interviewers want to see that you know what it *means* and *when it is wrong*. For any equation here:
+An equation recited from memory demonstrates little. What matters, in study and in technical interviews alike, is knowing what the equation *means* and *when it fails to apply*. For any equation here:
 
-1. **Say it in words first.** "NDCG is the discounted gain of the list, divided by the gain of the best possible order." Then write the symbols.
-2. **State the assumptions.** Independent rows? Calibrated probabilities? Exponential delays? Most interview follow-ups attack an assumption, not the algebra.
-3. **Give a one-number example.** "With a 5% base rate, a constant score has PR-AUC 0.05, so 0.15 is three times the floor." A number shows you have used it.
-4. **Say what you would do with it.** Pick a threshold, size a fleet, decide whether a test has enough users.
+1. **State it in words first.** "NDCG is the discounted gain of the list, divided by the gain of the best possible order." Then write the symbols.
+2. **State the assumptions.** Are the rows independent? Are the probabilities calibrated? Are the delays exponential? Follow-up questions usually concern an assumption rather than the algebra.
+3. **Give a numerical example.** "With a 5% base rate, a constant score has PR-AUC 0.05, so 0.15 is three times the floor." A concrete number shows that the equation has been used, not only read.
+4. **State the decision it supports.** Choosing a threshold, sizing a fleet of servers, or deciding whether an experiment has enough users.
 
-Each entry below has the same shape: name, the equation, one line *in words*, and where it is taught (L1 = Level 1, L2 = Level 2, L3 = Level 3, then the notebook number).
+Each entry below has the same structure: the name, the equation, one sentence *in words*, and a link to the chapter where it is taught.
 
 ## Contents
 
@@ -39,7 +39,7 @@ $$
 
 *In words:* The share of rows whose label is 1; every ranking metric's floor depends on it.
 
-*Taught in:* [L1 · 03 SQL for ML](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch04-sql-for-ml/notebook.ipynb)
+*Taught in:* [Ch. 4 · SQL for ML](../part1-foundations/ch04-sql-for-ml/README.md)
 
 ### Precision, recall, F1
 
@@ -49,7 +49,7 @@ $$
 
 *In words:* How pure the flagged set is, how much of the target it covers, and their harmonic mean.
 
-*Taught in:* [L1 · 07 Thresholds & calibration](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch08-thresholds-and-calibration/notebook.ipynb) · [L3 · 16 Evaluating LLM systems & guardrails](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch54-evaluating-llm-systems-and-guardrails/notebook.ipynb)
+*Taught in:* [Ch. 8 · Thresholds & calibration](../part1-foundations/ch08-thresholds-and-calibration/README.md) · [Ch. 54 · Evaluating LLM systems & guardrails](../part3-deep-learning-systems/ch54-evaluating-llm-systems-and-guardrails/README.md)
 
 ### F1 and macro-F1
 
@@ -59,7 +59,7 @@ $$
 
 *In words:* The harmonic mean of precision $P$ and recall $R$, averaged over classes with equal weight.
 
-*Taught in:* [L3 · 05 Fine-tuning a classifier](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch43-fine-tuning-a-classifier/notebook.ipynb)
+*Taught in:* [Ch. 43 · Fine-tuning a classifier](../part3-deep-learning-systems/ch43-fine-tuning-a-classifier/README.md)
 
 ### Precision at k
 
@@ -69,7 +69,7 @@ $$
 
 *In words:* Of the $k$ highest-scored rows, the share that are positive; fits an action with fixed capacity.
 
-*Taught in:* [L1 · 16 Python & SQL drills](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch17-python-and-sql-drills/notebook.ipynb) · [L1 · 15 Final evaluation & documentation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch16-final-evaluation-and-docs/notebook.ipynb)
+*Taught in:* [Ch. 17 · Python & SQL drills](../part1-foundations/ch17-python-and-sql-drills/README.md) · [Ch. 16 · Final evaluation & documentation](../part1-foundations/ch16-final-evaluation-and-docs/README.md)
 
 ### Lift at k
 
@@ -79,7 +79,7 @@ $$
 
 *In words:* How many times better than random the top of the list is.
 
-*Taught in:* [L1 · 07 Thresholds & calibration](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch08-thresholds-and-calibration/notebook.ipynb) · [L1 · 08 Error analysis & artifacts](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch09-error-analysis-and-artifacts/notebook.ipynb)
+*Taught in:* [Ch. 8 · Thresholds & calibration](../part1-foundations/ch08-thresholds-and-calibration/README.md) · [Ch. 9 · Error analysis & artifacts](../part1-foundations/ch09-error-analysis-and-artifacts/README.md)
 
 ### ROC-AUC as a probability
 
@@ -89,7 +89,7 @@ $$
 
 *In words:* The chance that a random positive outscores a random negative.
 
-*Taught in:* [L1 · 04 Leakage-safe splits & a baseline](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch05-leakage-safe-splits-and-baseline/notebook.ipynb)
+*Taught in:* [Ch. 5 · Leakage-safe splits & a baseline](../part1-foundations/ch05-leakage-safe-splits-and-baseline/README.md)
 
 ### ROC-AUC from ranks
 
@@ -99,7 +99,7 @@ $$
 
 *In words:* The fraction of (positive, negative) pairs ordered correctly, read off the positives' ranks (average ranks for ties).
 
-*Taught in:* [L2 · 13 ML from scratch I](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch31-ml-from-scratch-1/notebook.ipynb)
+*Taught in:* [Ch. 31 · ML from scratch I](../part2-ml-at-scale/ch31-ml-from-scratch-1/README.md)
 
 ### Average precision (PR-AUC)
 
@@ -109,7 +109,7 @@ $$
 
 *In words:* Average the precision at the rank of every positive.
 
-*Taught in:* [L1 · 04 Leakage-safe splits & a baseline](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch05-leakage-safe-splits-and-baseline/notebook.ipynb)
+*Taught in:* [Ch. 5 · Leakage-safe splits & a baseline](../part1-foundations/ch05-leakage-safe-splits-and-baseline/README.md)
 
 ### No-skill floors
 
@@ -119,7 +119,7 @@ $$
 
 *In words:* A constant score has PR-AUC equal to the positive rate and ROC-AUC 0.5, so always quote PR-AUC next to $\pi$.
 
-*Taught in:* [L1 · 04 Leakage-safe splits & a baseline](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch05-leakage-safe-splits-and-baseline/notebook.ipynb)
+*Taught in:* [Ch. 5 · Leakage-safe splits & a baseline](../part1-foundations/ch05-leakage-safe-splits-and-baseline/README.md)
 
 ### Lift-normalised slice PR-AUC
 
@@ -129,7 +129,7 @@ $$
 
 *In words:* Divide each slice's PR-AUC by its own positive rate before comparing slices.
 
-*Taught in:* [L1 · 08 Error analysis & artifacts](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch09-error-analysis-and-artifacts/notebook.ipynb)
+*Taught in:* [Ch. 9 · Error analysis & artifacts](../part1-foundations/ch09-error-analysis-and-artifacts/README.md)
 
 ### Log loss (binary cross-entropy)
 
@@ -139,7 +139,7 @@ $$
 
 *In words:* The average surprise of the true labels; a confident wrong answer is punished hard. It is what logistic regression minimises, which is why it tends to come out calibrated.
 
-*Taught in:* [L1 · 07 Thresholds & calibration](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch08-thresholds-and-calibration/notebook.ipynb) · [L3 · 13 CTR prediction at scale](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch51-ctr-prediction-at-scale/notebook.ipynb)
+*Taught in:* [Ch. 8 · Thresholds & calibration](../part1-foundations/ch08-thresholds-and-calibration/README.md) · [Ch. 51 · CTR prediction at scale](../part3-deep-learning-systems/ch51-ctr-prediction-at-scale/README.md)
 
 ### Normalised entropy
 
@@ -149,7 +149,7 @@ $$
 
 *In words:* Log loss divided by the log loss of always predicting the base rate; below 1 means the model beats the prior.
 
-*Taught in:* [L3 · 13 CTR prediction at scale](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch51-ctr-prediction-at-scale/notebook.ipynb)
+*Taught in:* [Ch. 51 · CTR prediction at scale](../part3-deep-learning-systems/ch51-ctr-prediction-at-scale/README.md)
 
 ### Brier score
 
@@ -159,7 +159,7 @@ $$
 
 *In words:* Mean squared error of the probabilities; the base-rate constant scores $\pi(1-\pi)$.
 
-*Taught in:* [L1 · 07 Thresholds & calibration](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch08-thresholds-and-calibration/notebook.ipynb)
+*Taught in:* [Ch. 8 · Thresholds & calibration](../part1-foundations/ch08-thresholds-and-calibration/README.md)
 
 ### Expected calibration error
 
@@ -169,7 +169,7 @@ $$
 
 *In words:* Bin predictions by confidence, and average the gap between accuracy and confidence, weighted by how many predictions fall in each bin.
 
-*Taught in:* [L3 · 05 Fine-tuning a classifier](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch43-fine-tuning-a-classifier/notebook.ipynb)
+*Taught in:* [Ch. 43 · Fine-tuning a classifier](../part3-deep-learning-systems/ch43-fine-tuning-a-classifier/README.md)
 
 ### Temperature scaling
 
@@ -179,7 +179,7 @@ $$
 
 *In words:* Divide every logit by one scalar $T$ chosen on validation data. $T > 1$ softens, $T < 1$ sharpens, the argmax never moves.
 
-*Taught in:* [L3 · 05 Fine-tuning a classifier](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch43-fine-tuning-a-classifier/notebook.ipynb)
+*Taught in:* [Ch. 43 · Fine-tuning a classifier](../part3-deep-learning-systems/ch43-fine-tuning-a-classifier/README.md)
 
 ### Expected value of a threshold, and the break-even probability
 
@@ -191,7 +191,7 @@ $$
 
 *In words:* Calling an account with probability $p$ is worth $pV - (1-p)C$, positive exactly when $p > p^{*}$.
 
-*Taught in:* [L1 · 07 Thresholds & calibration](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch08-thresholds-and-calibration/notebook.ipynb)
+*Taught in:* [Ch. 8 · Thresholds & calibration](../part1-foundations/ch08-thresholds-and-calibration/README.md)
 
 ### Spearman rank correlation
 
@@ -201,7 +201,7 @@ $$
 
 *In words:* The Pearson correlation of the ranks; 1 means both models order every item identically.
 
-*Taught in:* [L2 · 18 Model optimisation for inference](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch36-model-optimization-for-inference/notebook.ipynb)
+*Taught in:* [Ch. 36 · Model optimisation for inference](../part2-ml-at-scale/ch36-model-optimization-for-inference/README.md)
 
 ### LLM-judge position bias and attack success rate
 
@@ -211,7 +211,7 @@ $$
 
 *In words:* A judge that picks the same slot in both orders is following position, not quality; ASR is the share of prompt injections that worked.
 
-*Taught in:* [L3 · 16 Evaluating LLM systems & guardrails](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch54-evaluating-llm-systems-and-guardrails/notebook.ipynb)
+*Taught in:* [Ch. 54 · Evaluating LLM systems & guardrails](../part3-deep-learning-systems/ch54-evaluating-llm-systems-and-guardrails/README.md)
 
 ## Probability, statistics and experimentation
 
@@ -223,7 +223,7 @@ $$
 
 *In words:* Each month keeps a fraction $1 - c$ of whoever is left, so the fractions multiply.
 
-*Taught in:* [L1 · 01 A reproducible ML project](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch02-reproducible-project/notebook.ipynb)
+*Taught in:* [Ch. 2 · A reproducible ML project](../part1-foundations/ch02-reproducible-project/README.md)
 
 ### Across-seed spread
 
@@ -234,7 +234,7 @@ $$
 
 *In words:* $s$ is the typical distance of one seed's score from the average.
 
-*Taught in:* [L1 · 01 A reproducible ML project](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch02-reproducible-project/notebook.ipynb)
+*Taught in:* [Ch. 2 · A reproducible ML project](../part1-foundations/ch02-reproducible-project/README.md)
 
 ### Standard error of a proportion
 
@@ -246,7 +246,7 @@ $$
 
 *In words:* The noise in a rate shrinks with $\sqrt{n}$; the second formula is the sample size for a 95% margin of $\pm m$.
 
-*Taught in:* [L1 · 06 Model selection](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch07-model-selection/notebook.ipynb) · [L2 · 01 Event logs & columnar data](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch19-event-logs-and-columnar-data/notebook.ipynb) · [L3 · 05 Fine-tuning a classifier](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch43-fine-tuning-a-classifier/notebook.ipynb)
+*Taught in:* [Ch. 7 · Model selection](../part1-foundations/ch07-model-selection/README.md) · [Ch. 19 · Event logs & columnar data](../part2-ml-at-scale/ch19-event-logs-and-columnar-data/README.md) · [Ch. 43 · Fine-tuning a classifier](../part3-deep-learning-systems/ch43-fine-tuning-a-classifier/README.md)
 
 ### Interval width from sample size
 
@@ -256,7 +256,7 @@ $$
 
 *In words:* Four times the data halves the interval; for a slice, $n$ is its number of positives (or customers).
 
-*Taught in:* [L1 · 08 Error analysis & artifacts](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch09-error-analysis-and-artifacts/notebook.ipynb) · [L1 · 15 Final evaluation & documentation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch16-final-evaluation-and-docs/notebook.ipynb)
+*Taught in:* [Ch. 9 · Error analysis & artifacts](../part1-foundations/ch09-error-analysis-and-artifacts/README.md) · [Ch. 16 · Final evaluation & documentation](../part1-foundations/ch16-final-evaluation-and-docs/README.md)
 
 ### Bootstrap percentile interval
 
@@ -266,7 +266,7 @@ $$
 
 *In words:* The middle 95% of the metric across resamples.
 
-*Taught in:* [L1 · 06 Model selection](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch07-model-selection/notebook.ipynb)
+*Taught in:* [Ch. 7 · Model selection](../part1-foundations/ch07-model-selection/README.md)
 
 ### Paired bootstrap for a difference
 
@@ -276,7 +276,7 @@ $$
 
 *In words:* Score both models on the same resampled items, take the difference each time, and read off the interval of the differences.
 
-*Taught in:* [L1 · 06 Model selection](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch07-model-selection/notebook.ipynb) · [L3 · 08 Contrastive training & re-ranking](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch46-contrastive-training-and-reranking/notebook.ipynb) · [L3 · 16 Evaluating LLM systems & guardrails](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch54-evaluating-llm-systems-and-guardrails/notebook.ipynb)
+*Taught in:* [Ch. 7 · Model selection](../part1-foundations/ch07-model-selection/README.md) · [Ch. 46 · Contrastive training & re-ranking](../part3-deep-learning-systems/ch46-contrastive-training-and-reranking/README.md) · [Ch. 54 · Evaluating LLM systems & guardrails](../part3-deep-learning-systems/ch54-evaluating-llm-systems-and-guardrails/README.md)
 
 ### Pre-registered decision rule
 
@@ -286,7 +286,7 @@ $$
 
 *In words:* The whole 95% interval of the difference must sit above zero.
 
-*Taught in:* [L1 · 15 Final evaluation & documentation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch16-final-evaluation-and-docs/notebook.ipynb)
+*Taught in:* [Ch. 16 · Final evaluation & documentation](../part1-foundations/ch16-final-evaluation-and-docs/README.md)
 
 ### Why copied rows do not help
 
@@ -296,7 +296,7 @@ $$
 
 *In words:* Duplicating rows shrinks a row bootstrap's SE by $\sqrt{k}$ without adding information; a customer-level bootstrap is unchanged.
 
-*Taught in:* [L1 · 06 Model selection](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch07-model-selection/notebook.ipynb)
+*Taught in:* [Ch. 7 · Model selection](../part1-foundations/ch07-model-selection/README.md)
 
 ### Grouped bootstrap and the design effect
 
@@ -306,7 +306,7 @@ $$
 
 *In words:* With $m$ correlated rows per user, a row-level bootstrap underestimates the variance by this design effect; resampling users gets it right automatically.
 
-*Taught in:* [L2 · 20 Final evaluation & mock loop](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch38-final-evaluation-and-mock-loop/notebook.ipynb)
+*Taught in:* [Ch. 38 · Final evaluation & mock loop](../part2-ml-at-scale/ch38-final-evaluation-and-mock-loop/README.md)
 
 ### Paired differences
 
@@ -316,7 +316,7 @@ $$
 
 *In words:* Scoring two systems on the same requests makes their errors correlated, and the covariance term removes the shared part.
 
-*Taught in:* [L2 · 20 Final evaluation & mock loop](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch38-final-evaluation-and-mock-loop/notebook.ipynb)
+*Taught in:* [Ch. 38 · Final evaluation & mock loop](../part2-ml-at-scale/ch38-final-evaluation-and-mock-loop/README.md)
 
 ### Two-proportion z-test
 
@@ -326,7 +326,7 @@ $$
 
 *In words:* The observed difference in rates, measured in standard errors computed as if both arms shared one rate (the null hypothesis).
 
-*Taught in:* [L2 · 11 A/B testing fundamentals](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch29-ab-testing-fundamentals/notebook.ipynb)
+*Taught in:* [Ch. 29 · A/B testing fundamentals](../part2-ml-at-scale/ch29-ab-testing-fundamentals/README.md)
 
 ### Standard error of a difference, and its confidence interval
 
@@ -336,7 +336,7 @@ $$
 
 *In words:* Variances of independent estimates add, so the SE of a difference is the root of the summed squared SEs.
 
-*Taught in:* [L2 · 11 A/B testing fundamentals](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch29-ab-testing-fundamentals/notebook.ipynb)
+*Taught in:* [Ch. 29 · A/B testing fundamentals](../part2-ml-at-scale/ch29-ab-testing-fundamentals/README.md)
 
 ### Sample size per arm
 
@@ -346,7 +346,7 @@ $$
 
 *In words:* (how many standard errors of separation you need)² × (noise per unit) ÷ (effect)². The 2 is there because both arms are noisy.
 
-*Taught in:* [L2 · 11 A/B testing fundamentals](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch29-ab-testing-fundamentals/notebook.ipynb) · [L3 · 17 ML platform design](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch55-ml-platform-design/notebook.ipynb)
+*Taught in:* [Ch. 29 · A/B testing fundamentals](../part2-ml-at-scale/ch29-ab-testing-fundamentals/README.md) · [Ch. 55 · ML platform design](../part3-deep-learning-systems/ch55-ml-platform-design/README.md)
 
 ### Sample-ratio mismatch: chi-square goodness of fit
 
@@ -356,7 +356,7 @@ $$
 
 *In words:* How far the observed arm counts are from the planned split, scaled by the expected counts.
 
-*Taught in:* [L2 · 11 A/B testing fundamentals](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch29-ab-testing-fundamentals/notebook.ipynb)
+*Taught in:* [Ch. 29 · A/B testing fundamentals](../part2-ml-at-scale/ch29-ab-testing-fundamentals/README.md)
 
 ### Multiple testing: Bonferroni and Benjamini–Hochberg
 
@@ -366,7 +366,7 @@ $$
 
 *In words:* Bonferroni splits α evenly over m tests (controls the chance of **any** false positive); BH sorts the p-values and compares each with a rising threshold (controls the **share** of false discoveries). With m independent null tests, $P(\text{any false positive}) = 1 - (1-\alpha)^m$.
 
-*Taught in:* [L2 · 11 A/B testing fundamentals](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch29-ab-testing-fundamentals/notebook.ipynb)
+*Taught in:* [Ch. 29 · A/B testing fundamentals](../part2-ml-at-scale/ch29-ab-testing-fundamentals/README.md)
 
 ### CUPED adjustment and its variance
 
@@ -376,7 +376,7 @@ $$
 
 *In words:* Regress the metric on its pre-period value and keep the residual (plus the mean). Because $x$ is fixed before randomisation, the difference between arms is unchanged; only the noise shrinks, by the factor $1 - \rho^2$, and so does the sample size you need.
 
-*Taught in:* [L2 · 12 Advanced experimentation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch30-advanced-experimentation/notebook.ipynb)
+*Taught in:* [Ch. 30 · Advanced experimentation](../part2-ml-at-scale/ch30-advanced-experimentation/README.md)
 
 ### Delta method for a ratio of means
 
@@ -386,7 +386,7 @@ $$
 
 *In words:* Linearise $R = \mu_c / \mu_n$ around the means; the variance of the linear approximation is $\nabla R^\top \Sigma\, \nabla R / N$ with gradient $\nabla R = (1/\mu_n,\ -\mu_c/\mu_n^2)$.
 
-*Taught in:* [L2 · 12 Advanced experimentation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch30-advanced-experimentation/notebook.ipynb)
+*Taught in:* [Ch. 30 · Advanced experimentation](../part2-ml-at-scale/ch30-advanced-experimentation/README.md)
 
 ### The interleaving statistic
 
@@ -396,7 +396,7 @@ $$
 
 *In words:* Per user, credited clicks for A minus credited clicks for B; a one-sample t-test asks whether the mean difference is zero.
 
-*Taught in:* [L2 · 12 Advanced experimentation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch30-advanced-experimentation/notebook.ipynb)
+*Taught in:* [Ch. 30 · Advanced experimentation](../part2-ml-at-scale/ch30-advanced-experimentation/README.md)
 
 ### What row sampling does to a per-request metric
 
@@ -406,7 +406,7 @@ $$
 
 *In words:* A request with $c$ clicks keeps at least one of them with probability $1-(1-f)^c$, and survives at all with probability $1-(1-f)^{10}$.
 
-*Taught in:* [L2 · 01 Event logs & columnar data](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch19-event-logs-and-columnar-data/notebook.ipynb)
+*Taught in:* [Ch. 19 · Event logs & columnar data](../part2-ml-at-scale/ch19-event-logs-and-columnar-data/README.md)
 
 ### A hash sample's size
 
@@ -416,7 +416,7 @@ $$
 
 *In words:* Each key is kept with probability $q$, independently of its id, so the sample size is binomial.
 
-*Taught in:* [L2 · 01 Event logs & columnar data](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch19-event-logs-and-columnar-data/notebook.ipynb)
+*Taught in:* [Ch. 19 · Event logs & columnar data](../part2-ml-at-scale/ch19-event-logs-and-columnar-data/README.md)
 
 ### Reservoir sampling (Algorithm R)
 
@@ -426,7 +426,7 @@ $$
 
 *In words:* After reading $n$ items, every one of them is in the size-$k$ reservoir with the same probability.
 
-*Taught in:* [L2 · 02 Aggregation & joins at scale](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch20-aggregation-and-joins-at-scale/notebook.ipynb)
+*Taught in:* [Ch. 20 · Aggregation & joins at scale](../part2-ml-at-scale/ch20-aggregation-and-joins-at-scale/README.md)
 
 ## Data, SQL and features
 
@@ -438,7 +438,7 @@ $$
 
 *In words:* 1 if the account cancels in the 30 days starting at T, else 0.
 
-*Taught in:* [L1 · 03 SQL for ML](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch04-sql-for-ml/notebook.ipynb)
+*Taught in:* [Ch. 4 · SQL for ML](../part1-foundations/ch04-sql-for-ml/README.md)
 
 ### Completed-week rule
 
@@ -448,7 +448,7 @@ $$
 
 *In words:* The week must have ended by T.
 
-*Taught in:* [L1 · 03 SQL for ML](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch04-sql-for-ml/notebook.ipynb)
+*Taught in:* [Ch. 4 · SQL for ML](../part1-foundations/ch04-sql-for-ml/README.md)
 
 ### Embargo condition
 
@@ -458,7 +458,7 @@ $$
 
 *In words:* The label must be settled before the evaluation period starts.
 
-*Taught in:* [L1 · 04 Leakage-safe splits & a baseline](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch05-leakage-safe-splits-and-baseline/notebook.ipynb)
+*Taught in:* [Ch. 5 · Leakage-safe splits & a baseline](../part1-foundations/ch05-leakage-safe-splits-and-baseline/README.md)
 
 ### Fan-out row count
 
@@ -470,7 +470,7 @@ $$
 
 *In words:* Each key contributes the product of its row counts, so every value from $U$ is counted once per matching row of $K$.
 
-*Taught in:* [L1 · 03 SQL for ML](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch04-sql-for-ml/notebook.ipynb) · [L2 · 02 Aggregation & joins at scale](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch20-aggregation-and-joins-at-scale/notebook.ipynb)
+*Taught in:* [Ch. 4 · SQL for ML](../part1-foundations/ch04-sql-for-ml/README.md) · [Ch. 20 · Aggregation & joins at scale](../part2-ml-at-scale/ch20-aggregation-and-joins-at-scale/README.md)
 
 ### Cohort retention
 
@@ -480,7 +480,7 @@ $$
 
 *In words:* The share of a sign-up cohort still active $k$ months later.
 
-*Taught in:* [L1 · 16 Python & SQL drills](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch17-python-and-sql-drills/notebook.ipynb)
+*Taught in:* [Ch. 17 · Python & SQL drills](../part1-foundations/ch17-python-and-sql-drills/README.md)
 
 ### A window feature, cut off strictly before the snapshot
 
@@ -490,7 +490,7 @@ $$
 
 *In words:* The value stamped at day $d$ sums the 7 *complete* days before $d$.
 
-*Taught in:* [L2 · 03 Feature pipelines & feature stores](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch21-feature-pipelines-and-feature-stores/notebook.ipynb)
+*Taught in:* [Ch. 21 · Feature pipelines & feature stores](../part2-ml-at-scale/ch21-feature-pipelines-and-feature-stores/README.md)
 
 ### The point-in-time rule, with a TTL
 
@@ -500,7 +500,7 @@ $$
 
 *In words:* Take the latest snapshot strictly before the event, and use it only if it is young enough.
 
-*Taught in:* [L2 · 03 Feature pipelines & feature stores](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch21-feature-pipelines-and-feature-stores/notebook.ipynb)
+*Taught in:* [Ch. 21 · Feature pipelines & feature stores](../part2-ml-at-scale/ch21-feature-pipelines-and-feature-stores/README.md)
 
 ### Feature age at serving
 
@@ -510,7 +510,7 @@ $$
 
 *In words:* What the model sees online is as old as the newest data behind it.
 
-*Taught in:* [L2 · 03 Feature pipelines & feature stores](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch21-feature-pipelines-and-feature-stores/notebook.ipynb)
+*Taught in:* [Ch. 21 · Feature pipelines & feature stores](../part2-ml-at-scale/ch21-feature-pipelines-and-feature-stores/README.md)
 
 ### A smoothed click rate
 
@@ -520,7 +520,7 @@ $$
 
 *In words:* Add $\alpha$ pseudo-impressions at the prior rate, so tiny counts do not produce extreme rates.
 
-*Taught in:* [L2 · 03 Feature pipelines & feature stores](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch21-feature-pipelines-and-feature-stores/notebook.ipynb)
+*Taught in:* [Ch. 21 · Feature pipelines & feature stores](../part2-ml-at-scale/ch21-feature-pipelines-and-feature-stores/README.md)
 
 ### Target encoding
 
@@ -530,7 +530,7 @@ $$
 
 *In words:* The mean label of the rows in that level. It is honest only if the rows $i$ are strictly earlier, with closed label windows, and never include the row being scored.
 
-*Taught in:* [L1 · 05 Pipelines & cross-validation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch06-pipelines-and-cross-validation/notebook.ipynb)
+*Taught in:* [Ch. 6 · Pipelines & cross-validation](../part1-foundations/ch06-pipelines-and-cross-validation/README.md)
 
 ### Standardisation
 
@@ -540,7 +540,7 @@ $$
 
 *In words:* How many training standard deviations a value sits from the training mean.
 
-*Taught in:* [L1 · 05 Pipelines & cross-validation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch06-pipelines-and-cross-validation/notebook.ipynb)
+*Taught in:* [Ch. 6 · Pipelines & cross-validation](../part1-foundations/ch06-pipelines-and-cross-validation/README.md)
 
 ### log1p transform
 
@@ -550,7 +550,7 @@ $$
 
 *In words:* Turns "per unit" into "roughly per doubling", and maps 0 to 0.
 
-*Taught in:* [L1 · 05 Pipelines & cross-validation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch06-pipelines-and-cross-validation/notebook.ipynb)
+*Taught in:* [Ch. 6 · Pipelines & cross-validation](../part1-foundations/ch06-pipelines-and-cross-validation/README.md)
 
 ### Partitioning by hash
 
@@ -560,7 +560,7 @@ $$
 
 *In words:* A key always goes to the same reducer, and keys spread evenly *if* no key is hot.
 
-*Taught in:* [L2 · 02 Aggregation & joins at scale](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch20-aggregation-and-joins-at-scale/notebook.ipynb)
+*Taught in:* [Ch. 20 · Aggregation & joins at scale](../part2-ml-at-scale/ch20-aggregation-and-joins-at-scale/README.md)
 
 ### HyperLogLog relative error
 
@@ -570,7 +570,7 @@ $$
 
 *In words:* The standard error of a distinct count shrinks with the square root of the number of registers.
 
-*Taught in:* [L2 · 02 Aggregation & joins at scale](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch20-aggregation-and-joins-at-scale/notebook.ipynb)
+*Taught in:* [Ch. 20 · Aggregation & joins at scale](../part2-ml-at-scale/ch20-aggregation-and-joins-at-scale/README.md)
 
 ### Which tumbling window an event belongs to
 
@@ -580,7 +580,7 @@ $$
 
 *In words:* Round the event time down to a multiple of the window size.
 
-*Taught in:* [L2 · 04 Streaming features](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch22-streaming-features/notebook.ipynb)
+*Taught in:* [Ch. 22 · Streaming features](../part2-ml-at-scale/ch22-streaming-features/README.md)
 
 ### Sliding windows: how many contain one event
 
@@ -590,7 +590,7 @@ $$
 
 *In words:* With size $S$ and hop $h$, each event falls in $S/h$ windows, so the state does $S/h$ times the updates.
 
-*Taught in:* [L2 · 04 Streaming features](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch22-streaming-features/notebook.ipynb)
+*Taught in:* [Ch. 22 · Streaming features](../part2-ml-at-scale/ch22-streaming-features/README.md)
 
 ### Watermark, closing and lateness
 
@@ -600,7 +600,7 @@ $$
 
 *In words:* The watermark trails the largest event time seen; a window is emitted once the watermark passes its end; an event whose window has already closed is late.
 
-*Taught in:* [L2 · 04 Streaming features](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch22-streaming-features/notebook.ipynb)
+*Taught in:* [Ch. 22 · Streaming features](../part2-ml-at-scale/ch22-streaming-features/README.md)
 
 ### Session windows
 
@@ -610,7 +610,7 @@ $$
 
 *In words:* An event joins (and can bridge) every session within the gap $g$.
 
-*Taught in:* [L2 · 04 Streaming features](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch22-streaming-features/notebook.ipynb)
+*Taught in:* [Ch. 22 · Streaming features](../part2-ml-at-scale/ch22-streaming-features/README.md)
 
 ## Linear models and optimisation
 
@@ -624,7 +624,7 @@ $$
 
 *In words:* Each standardised feature adds $\beta_j z_j$ to the log-odds of churn.
 
-*Taught in:* [L1 · 05 Pipelines & cross-validation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch06-pipelines-and-cross-validation/notebook.ipynb)
+*Taught in:* [Ch. 6 · Pipelines & cross-validation](../part1-foundations/ch06-pipelines-and-cross-validation/README.md)
 
 ### Logistic regression: loss and gradient
 
@@ -634,7 +634,7 @@ $$
 
 *In words:* The log loss written stably in terms of logits; its gradient is "prediction minus target", pushed back through the features.
 
-*Taught in:* [L2 · 13 ML from scratch I](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch31-ml-from-scratch-1/notebook.ipynb)
+*Taught in:* [Ch. 31 · ML from scratch I](../part2-ml-at-scale/ch31-ml-from-scratch-1/README.md)
 
 ### Softmax cross-entropy gradient
 
@@ -644,7 +644,7 @@ $$
 
 *In words:* The gradient for each class is its predicted probability, minus 1 for the true class. Confidently wrong → large gradient; confidently right → almost zero. For a batch, $dW = X^\top (P - Y) / n$.
 
-*Taught in:* [L2 · 13 ML from scratch I](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch31-ml-from-scratch-1/notebook.ipynb)
+*Taught in:* [Ch. 31 · ML from scratch I](../part2-ml-at-scale/ch31-ml-from-scratch-1/README.md)
 
 ### Log-sum-exp
 
@@ -654,7 +654,7 @@ $$
 
 *In words:* Shift by the maximum before exponentiating; the answer is unchanged and nothing overflows. Cross-entropy from logits is $\operatorname{logsumexp}(z) - z_y$.
 
-*Taught in:* [L2 · 13 ML from scratch I](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch31-ml-from-scratch-1/notebook.ipynb)
+*Taught in:* [Ch. 31 · ML from scratch I](../part2-ml-at-scale/ch31-ml-from-scratch-1/README.md)
 
 ### Minimum-norm least squares and ridge
 
@@ -664,7 +664,7 @@ $$
 
 *In words:* When there are more features than points, infinitely many $w$ fit exactly; the pseudo-inverse picks the shortest. Near $p = n$ the smallest singular value $\sigma_{\min}$ of $X$ is tiny and $\lVert \hat{w} \rVert$ scales like $1/\sigma_{\min}$: the peak. Ridge's $\lambda$ keeps $1/(\sigma^2 + \lambda)$ bounded.
 
-*Taught in:* [L3 · 19 ML depth & research discussion](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch57-ml-depth-and-research-discussion/notebook.ipynb)
+*Taught in:* [Ch. 57 · ML depth & research discussion](../part3-deep-learning-systems/ch57-ml-depth-and-research-discussion/README.md)
 
 ### k-means objective (inertia)
 
@@ -674,7 +674,7 @@ $$
 
 *In words:* Assign each point to its nearest centre, move each centre to the mean of its points; each step can only lower $J$.
 
-*Taught in:* [L2 · 13 ML from scratch I](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch31-ml-from-scratch-1/notebook.ipynb)
+*Taught in:* [Ch. 31 · ML from scratch I](../part2-ml-at-scale/ch31-ml-from-scratch-1/README.md)
 
 ### Two tools you use to verify everything else
 
@@ -684,7 +684,7 @@ $$
 
 *In words:* The distance expansion turns pairwise distances into one matrix product; the central difference has error O(ε²) and is the reference for every gradient check.
 
-*Taught in:* [L2 · 13 ML from scratch I](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch31-ml-from-scratch-1/notebook.ipynb)
+*Taught in:* [Ch. 31 · ML from scratch I](../part2-ml-at-scale/ch31-ml-from-scratch-1/README.md)
 
 ### The AdamW update
 
@@ -698,7 +698,7 @@ $$
 
 *In words:* Keep running averages of the gradient and of its square, correct their start-up bias, step by their ratio, and shrink the weights separately (decoupled weight decay).
 
-*Taught in:* [L2 · 09 PyTorch training done right](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch27-pytorch-training-done-right/notebook.ipynb) · [L3 · 02 Training efficiency & memory](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch40-training-efficiency-and-memory/notebook.ipynb)
+*Taught in:* [Ch. 27 · PyTorch training done right](../part2-ml-at-scale/ch27-pytorch-training-done-right/README.md) · [Ch. 40 · Training efficiency & memory](../part3-deep-learning-systems/ch40-training-efficiency-and-memory/README.md)
 
 ### Linear warmup, then cosine decay
 
@@ -708,7 +708,7 @@ $$
 
 *In words:* Ramp up over $T_w$ steps, then follow half a cosine down to a floor.
 
-*Taught in:* [L2 · 09 PyTorch training done right](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch27-pytorch-training-done-right/notebook.ipynb) · [L3 · 19 ML depth & research discussion](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch57-ml-depth-and-research-discussion/notebook.ipynb)
+*Taught in:* [Ch. 27 · PyTorch training done right](../part2-ml-at-scale/ch27-pytorch-training-done-right/README.md) · [Ch. 57 · ML depth & research discussion](../part3-deep-learning-systems/ch57-ml-depth-and-research-discussion/README.md)
 
 ### Learning rate vs batch size
 
@@ -718,7 +718,7 @@ $$
 
 *In words:* A bigger batch has less gradient noise, so it tolerates a larger step: linear scaling for SGD, square-root as the safer rule.
 
-*Taught in:* [L3 · 19 ML depth & research discussion](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch57-ml-depth-and-research-discussion/notebook.ipynb)
+*Taught in:* [Ch. 57 · ML depth & research discussion](../part3-deep-learning-systems/ch57-ml-depth-and-research-discussion/README.md)
 
 ### Gradient-norm clipping
 
@@ -728,7 +728,7 @@ $$
 
 *In words:* If the whole gradient is longer than $c$, shrink it to length $c$; its direction does not change.
 
-*Taught in:* [L2 · 09 PyTorch training done right](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch27-pytorch-training-done-right/notebook.ipynb)
+*Taught in:* [Ch. 27 · PyTorch training done right](../part2-ml-at-scale/ch27-pytorch-training-done-right/README.md)
 
 ## Trees and boosting
 
@@ -740,7 +740,7 @@ $$
 
 *In words:* A group's spread needs only its count, sum and sum of squares; the best split is the one that removes the most spread (variance reduction).
 
-*Taught in:* [L2 · 14 ML from scratch II](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch32-ml-from-scratch-2/notebook.ipynb)
+*Taught in:* [Ch. 32 · ML from scratch II](../part2-ml-at-scale/ch32-ml-from-scratch-2/README.md)
 
 ### Gradient boosting update
 
@@ -750,7 +750,7 @@ $$
 
 *In words:* Fit a small tree $h_m$ to the negative gradient (for $L = \tfrac12 (y-F)^2$, the residual $y - F$) and add a shrunken copy.
 
-*Taught in:* [L2 · 14 ML from scratch II](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch32-ml-from-scratch-2/notebook.ipynb)
+*Taught in:* [Ch. 32 · ML from scratch II](../part2-ml-at-scale/ch32-ml-from-scratch-2/README.md)
 
 ## Ranking, retrieval and recommendation
 
@@ -762,7 +762,7 @@ $$
 
 *In words:* Add up each item's gain, discounted by the log of its rank, and divide by the best possible order's value.
 
-*Taught in:* [L2 · 06 Learning to rank](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch24-learning-to-rank/notebook.ipynb) · [L2 · 13 ML from scratch I](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch31-ml-from-scratch-1/notebook.ipynb) · [L3 · 07 Embeddings & semantic search](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch45-embeddings-and-semantic-search/notebook.ipynb)
+*Taught in:* [Ch. 24 · Learning to rank](../part2-ml-at-scale/ch24-learning-to-rank/README.md) · [Ch. 31 · ML from scratch I](../part2-ml-at-scale/ch31-ml-from-scratch-1/README.md) · [Ch. 45 · Embeddings & semantic search](../part3-deep-learning-systems/ch45-embeddings-and-semantic-search/README.md)
 
 ### MRR
 
@@ -772,7 +772,7 @@ $$
 
 *In words:* The average, over requests, of one over the rank of the first relevant item.
 
-*Taught in:* [L2 · 06 Learning to rank](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch24-learning-to-rank/notebook.ipynb)
+*Taught in:* [Ch. 24 · Learning to rank](../part2-ml-at-scale/ch24-learning-to-rank/README.md)
 
 ### HR@10 and NDCG@10 with one target
 
@@ -782,7 +782,7 @@ $$
 
 *In words:* A hit if the target ranks in the top 10; NDCG gives a hit at rank $r$ (0 = top) the discount $1/\log_2(r + 2)$.
 
-*Taught in:* [L2 · 10 Sequence models for user behaviour](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch28-sequence-models-for-user-behavior/notebook.ipynb)
+*Taught in:* [Ch. 28 · Sequence models for user behaviour](../part2-ml-at-scale/ch28-sequence-models-for-user-behavior/README.md)
 
 ### Recall@K
 
@@ -792,7 +792,7 @@ $$
 
 *In words:* Of the items that were relevant for a user, what share did the K candidates contain?
 
-*Taught in:* [L2 · 07 Candidate generation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch25-candidate-generation/notebook.ipynb) · [L3 · 07 Embeddings & semantic search](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch45-embeddings-and-semantic-search/notebook.ipynb) · [L2 · 17 Serving a ranking cascade](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch35-serving-a-ranking-cascade/notebook.ipynb)
+*Taught in:* [Ch. 25 · Candidate generation](../part2-ml-at-scale/ch25-candidate-generation/README.md) · [Ch. 45 · Embeddings & semantic search](../part3-deep-learning-systems/ch45-embeddings-and-semantic-search/README.md) · [Ch. 35 · Serving a ranking cascade](../part2-ml-at-scale/ch35-serving-a-ranking-cascade/README.md)
 
 ### Catalogue coverage
 
@@ -802,7 +802,7 @@ $$
 
 *In words:* The share of the catalogue that appears in at least one user's list.
 
-*Taught in:* [L2 · 07 Candidate generation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch25-candidate-generation/notebook.ipynb)
+*Taught in:* [Ch. 25 · Candidate generation](../part2-ml-at-scale/ch25-candidate-generation/README.md)
 
 ### RankNet's pairwise loss and its gradient
 
@@ -812,7 +812,7 @@ $$
 
 *In words:* A logistic loss on the score difference of a pair where $i$ should beat $j$.
 
-*Taught in:* [L2 · 06 Learning to rank](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch24-learning-to-rank/notebook.ipynb)
+*Taught in:* [Ch. 24 · Learning to rank](../part2-ml-at-scale/ch24-learning-to-rank/README.md)
 
 ### LambdaRank
 
@@ -822,7 +822,7 @@ $$
 
 *In words:* Use RankNet's gradient, scaled by how much NDCG would change if $i$ and $j$ swapped places.
 
-*Taught in:* [L2 · 06 Learning to rank](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch24-learning-to-rank/notebook.ipynb)
+*Taught in:* [Ch. 24 · Learning to rank](../part2-ml-at-scale/ch24-learning-to-rank/README.md)
 
 ### Co-visitation counts
 
@@ -832,7 +832,7 @@ $$
 
 *In words:* Count the sessions in which both items appear (once per session).
 
-*Taught in:* [L2 · 07 Candidate generation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch25-candidate-generation/notebook.ipynb)
+*Taught in:* [Ch. 25 · Candidate generation](../part2-ml-at-scale/ch25-candidate-generation/README.md)
 
 ### Implicit ALS objective and its closed-form step
 
@@ -842,7 +842,7 @@ $$
 
 *In words:* Weighted least squares on every cell, with weight $c_{ui}$; with item vectors fixed, each user vector is a small linear solve.
 
-*Taught in:* [L2 · 07 Candidate generation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch25-candidate-generation/notebook.ipynb)
+*Taught in:* [Ch. 25 · Candidate generation](../part2-ml-at-scale/ch25-candidate-generation/README.md)
 
 ### BPR, the pairwise alternative
 
@@ -852,7 +852,7 @@ $$
 
 *In words:* For a clicked item $i$ and a sampled unclicked item $j$, make the user score $i$ above $j$.
 
-*Taught in:* [L2 · 07 Candidate generation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch25-candidate-generation/notebook.ipynb)
+*Taught in:* [Ch. 25 · Candidate generation](../part2-ml-at-scale/ch25-candidate-generation/README.md)
 
 ### The two-tower score
 
@@ -862,7 +862,7 @@ $$
 
 *In words:* The cosine similarity of the two normalised vectors, divided by a temperature.
 
-*Taught in:* [L2 · 08 Two-tower retrieval & ANN](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch26-two-tower-retrieval-and-ann/notebook.ipynb)
+*Taught in:* [Ch. 26 · Two-tower retrieval & ANN](../part2-ml-at-scale/ch26-two-tower-retrieval-and-ann/README.md)
 
 ### Cosine similarity
 
@@ -872,7 +872,7 @@ $$
 
 *In words:* The angle between two vectors, ignoring their lengths; for unit vectors it is just the dot product.
 
-*Taught in:* [L3 · 04 Pretrained transformers & tokenisation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch42-pretrained-transformers-and-tokenization/notebook.ipynb) · [L3 · 07 Embeddings & semantic search](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch45-embeddings-and-semantic-search/notebook.ipynb)
+*Taught in:* [Ch. 42 · Pretrained transformers & tokenisation](../part3-deep-learning-systems/ch42-pretrained-transformers-and-tokenization/README.md) · [Ch. 45 · Embeddings & semantic search](../part3-deep-learning-systems/ch45-embeddings-and-semantic-search/README.md)
 
 ### In-batch softmax (InfoNCE) with the logQ correction
 
@@ -882,7 +882,7 @@ $$
 
 *In words:* For each user in the batch, cross-entropy of picking their own item out of the batch's items, with every item's logit lowered by the log of how often it is sampled.
 
-*Taught in:* [L2 · 08 Two-tower retrieval & ANN](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch26-two-tower-retrieval-and-ann/notebook.ipynb)
+*Taught in:* [Ch. 26 · Two-tower retrieval & ANN](../part2-ml-at-scale/ch26-two-tower-retrieval-and-ann/README.md)
 
 ### InfoNCE with in-batch and hard negatives
 
@@ -892,7 +892,7 @@ $$
 
 *In words:* For every query, a softmax over all $N$ documents in the batch (its positive, the other $B - 1$ positives and $N - B$ hard negatives) and the cross-entropy of picking its own.
 
-*Taught in:* [L3 · 08 Contrastive training & re-ranking](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch46-contrastive-training-and-reranking/notebook.ipynb)
+*Taught in:* [Ch. 46 · Contrastive training & re-ranking](../part3-deep-learning-systems/ch46-contrastive-training-and-reranking/README.md)
 
 ### A random-guess baseline for the loss
 
@@ -902,7 +902,7 @@ $$
 
 *In words:* A model that cannot tell the positive from $N - 1$ negatives scores $\ln N$; useful loss starts below that.
 
-*Taught in:* [L3 · 08 Contrastive training & re-ranking](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch46-contrastive-training-and-reranking/notebook.ipynb)
+*Taught in:* [Ch. 46 · Contrastive training & re-ranking](../part3-deep-learning-systems/ch46-contrastive-training-and-reranking/README.md)
 
 ### BM25
 
@@ -913,7 +913,7 @@ $$
 
 *In words:* Rare query terms (high idf) that appear in the document count most; repeated occurrences saturate ($k_1$); long documents are penalised ($b$).
 
-*Taught in:* [L3 · 07 Embeddings & semantic search](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch45-embeddings-and-semantic-search/notebook.ipynb) · [L2 · 19 Recommendation & search system design](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch37-recsys-and-search-system-design/notebook.ipynb)
+*Taught in:* [Ch. 45 · Embeddings & semantic search](../part3-deep-learning-systems/ch45-embeddings-and-semantic-search/README.md) · [Ch. 37 · Recommendation & search system design](../part2-ml-at-scale/ch37-recsys-and-search-system-design/README.md)
 
 ### Reciprocal rank fusion
 
@@ -923,7 +923,7 @@ $$
 
 *In words:* Add one over (constant plus rank) across rankers; consistent agreement beats one first place.
 
-*Taught in:* [L3 · 07 Embeddings & semantic search](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch45-embeddings-and-semantic-search/notebook.ipynb)
+*Taught in:* [Ch. 45 · Embeddings & semantic search](../part3-deep-learning-systems/ch45-embeddings-and-semantic-search/README.md)
 
 ### Recall of an approximate index
 
@@ -933,7 +933,7 @@ $$
 
 *In words:* The share of the exact top-$k$ that the approximate search also returned.
 
-*Taught in:* [L2 · 08 Two-tower retrieval & ANN](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch26-two-tower-retrieval-and-ann/notebook.ipynb)
+*Taught in:* [Ch. 26 · Two-tower retrieval & ANN](../part2-ml-at-scale/ch26-two-tower-retrieval-and-ann/README.md)
 
 ### Cost of exact search
 
@@ -943,7 +943,7 @@ $$
 
 *In words:* One dot product per item per query.
 
-*Taught in:* [L2 · 08 Two-tower retrieval & ANN](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch26-two-tower-retrieval-and-ann/notebook.ipynb)
+*Taught in:* [Ch. 26 · Two-tower retrieval & ANN](../part2-ml-at-scale/ch26-two-tower-retrieval-and-ann/README.md)
 
 ### How ANN search cost scales
 
@@ -953,7 +953,7 @@ $$
 
 *In words:* IVF scans only the probed lists; HNSW walks a graph in roughly logarithmic hops.
 
-*Taught in:* [L2 · 19 Recommendation & search system design](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch37-recsys-and-search-system-design/notebook.ipynb)
+*Taught in:* [Ch. 37 · Recommendation & search system design](../part2-ml-at-scale/ch37-recsys-and-search-system-design/README.md)
 
 ### Re-ranking cost
 
@@ -963,7 +963,7 @@ $$
 
 *In words:* Every query pays one cross-encoder pass per re-ranked candidate.
 
-*Taught in:* [L3 · 08 Contrastive training & re-ranking](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch46-contrastive-training-and-reranking/notebook.ipynb)
+*Taught in:* [Ch. 46 · Contrastive training & re-ranking](../part3-deep-learning-systems/ch46-contrastive-training-and-reranking/README.md)
 
 ### The position-based click model
 
@@ -973,7 +973,7 @@ $$
 
 *In words:* A click happens only if the position is examined *and* the item is relevant, and the two are independent.
 
-*Taught in:* [L2 · 05 Implicit feedback & position bias](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch23-implicit-feedback-and-position-bias/notebook.ipynb) · [L2 · 20 Final evaluation & mock loop](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch38-final-evaluation-and-mock-loop/notebook.ipynb)
+*Taught in:* [Ch. 23 · Implicit feedback & position bias](../part2-ml-at-scale/ch23-implicit-feedback-and-position-bias/README.md) · [Ch. 38 · Final evaluation & mock loop](../part2-ml-at-scale/ch38-final-evaluation-and-mock-loop/README.md)
 
 ### Propensities from random traffic
 
@@ -983,7 +983,7 @@ $$
 
 *In words:* With random order, mean relevance is the same at every position, so CTR ratios are examination ratios.
 
-*Taught in:* [L2 · 05 Implicit feedback & position bias](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch23-implicit-feedback-and-position-bias/notebook.ipynb)
+*Taught in:* [Ch. 23 · Implicit feedback & position bias](../part2-ml-at-scale/ch23-implicit-feedback-and-position-bias/README.md)
 
 ### The IPS click-rate estimator, and clipping
 
@@ -993,7 +993,7 @@ $$
 
 *In words:* Divide each click by the chance that its position was examined; optionally cap the weight at $M$.
 
-*Taught in:* [L2 · 05 Implicit feedback & position bias](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch23-implicit-feedback-and-position-bias/notebook.ipynb)
+*Taught in:* [Ch. 23 · Implicit feedback & position bias](../part2-ml-at-scale/ch23-implicit-feedback-and-position-bias/README.md)
 
 ### Off-policy value of a re-ranking
 
@@ -1003,7 +1003,7 @@ $$
 
 *In words:* A click observed at logged position $p$ that the new ranking moves to position $q$ counts $\theta_q / \theta_p$ clicks.
 
-*Taught in:* [L2 · 05 Implicit feedback & position bias](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch23-implicit-feedback-and-position-bias/notebook.ipynb) · [L2 · 20 Final evaluation & mock loop](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch38-final-evaluation-and-mock-loop/notebook.ipynb)
+*Taught in:* [Ch. 23 · Implicit feedback & position bias](../part2-ml-at-scale/ch23-implicit-feedback-and-position-bias/README.md) · [Ch. 38 · Final evaluation & mock loop](../part2-ml-at-scale/ch38-final-evaluation-and-mock-loop/README.md)
 
 ## Deep learning and transformers
 
@@ -1015,7 +1015,7 @@ $$
 
 *In words:* The negative log of the probability the model gave to the true label; the best constant predictor scores the label entropy.
 
-*Taught in:* [L2 · 09 PyTorch training done right](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch27-pytorch-training-done-right/notebook.ipynb)
+*Taught in:* [Ch. 27 · PyTorch training done right](../part2-ml-at-scale/ch27-pytorch-training-done-right/README.md)
 
 ### Softmax and cross-entropy
 
@@ -1025,7 +1025,7 @@ $$
 
 *In words:* Turn $C$ logits into probabilities, and pay $-\log$ of the probability of the right class.
 
-*Taught in:* [L2 · 09 PyTorch training done right](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch27-pytorch-training-done-right/notebook.ipynb) · [L3 · 05 Fine-tuning a classifier](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch43-fine-tuning-a-classifier/notebook.ipynb)
+*Taught in:* [Ch. 27 · PyTorch training done right](../part2-ml-at-scale/ch27-pytorch-training-done-right/README.md) · [Ch. 43 · Fine-tuning a classifier](../part3-deep-learning-systems/ch43-fine-tuning-a-classifier/README.md)
 
 ### Softmax with temperature
 
@@ -1035,7 +1035,7 @@ $$
 
 *In words:* Divide the logits by $\tau$ before the softmax: lower $\tau$ sharpens the distribution, higher flattens it.
 
-*Taught in:* [L3 · 03 A transformer from scratch](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch41-transformer-from-scratch/notebook.ipynb)
+*Taught in:* [Ch. 41 · A transformer from scratch](../part3-deep-learning-systems/ch41-transformer-from-scratch/README.md)
 
 ### Backprop through a two-layer MLP
 
@@ -1048,7 +1048,7 @@ $$
 
 *In words:* Start from "prediction minus target" and walk the graph backwards; every gradient has the shape of its variable.
 
-*Taught in:* [L2 · 14 ML from scratch II](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch32-ml-from-scratch-2/notebook.ipynb)
+*Taught in:* [Ch. 32 · ML from scratch II](../part2-ml-at-scale/ch32-ml-from-scratch-2/README.md)
 
 ### Batch norm
 
@@ -1058,7 +1058,7 @@ $$
 
 *In words:* Standardise each feature with the batch's mean and (biased) variance during training, with the running averages at inference.
 
-*Taught in:* [L2 · 14 ML from scratch II](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch32-ml-from-scratch-2/notebook.ipynb)
+*Taught in:* [Ch. 32 · ML from scratch II](../part2-ml-at-scale/ch32-ml-from-scratch-2/README.md)
 
 ### LayerNorm
 
@@ -1069,7 +1069,7 @@ $$
 
 *In words:* Per token, subtract the mean and divide by the standard deviation over channels, then apply a learned scale $\gamma$ and shift $\beta$.
 
-*Taught in:* [L3 · 03 A transformer from scratch](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch41-transformer-from-scratch/notebook.ipynb)
+*Taught in:* [Ch. 41 · A transformer from scratch](../part3-deep-learning-systems/ch41-transformer-from-scratch/README.md)
 
 ### Inverted dropout
 
@@ -1079,7 +1079,7 @@ $$
 
 *In words:* Zero each unit with probability $p$ and scale the survivors by $1/(1-p)$, so the expected output is unchanged; do nothing at inference.
 
-*Taught in:* [L2 · 14 ML from scratch II](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch32-ml-from-scratch-2/notebook.ipynb)
+*Taught in:* [Ch. 32 · ML from scratch II](../part2-ml-at-scale/ch32-ml-from-scratch-2/README.md)
 
 ### Scaled dot-product attention
 
@@ -1089,7 +1089,7 @@ $$
 
 *In words:* Score every query against every key, scale, hide the future, normalise each row, average the values.
 
-*Taught in:* [L3 · 03 A transformer from scratch](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch41-transformer-from-scratch/notebook.ipynb) · [L2 · 10 Sequence models for user behaviour](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch28-sequence-models-for-user-behavior/notebook.ipynb) · [L2 · 14 ML from scratch II](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch32-ml-from-scratch-2/notebook.ipynb)
+*Taught in:* [Ch. 41 · A transformer from scratch](../part3-deep-learning-systems/ch41-transformer-from-scratch/README.md) · [Ch. 28 · Sequence models for user behaviour](../part2-ml-at-scale/ch28-sequence-models-for-user-behavior/README.md) · [Ch. 32 · ML from scratch II](../part2-ml-at-scale/ch32-ml-from-scratch-2/README.md)
 
 ### Multi-head attention
 
@@ -1100,7 +1100,7 @@ $$
 
 *In words:* $H$ attentions on $d_k = C/H$ channels each, side by side, mixed by $W^O$.
 
-*Taught in:* [L3 · 03 A transformer from scratch](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch41-transformer-from-scratch/notebook.ipynb)
+*Taught in:* [Ch. 41 · A transformer from scratch](../part3-deep-learning-systems/ch41-transformer-from-scratch/README.md)
 
 ### The attention mask inside attention
 
@@ -1110,7 +1110,7 @@ $$
 
 *In words:* A padded key $j$ gets $-\infty$, so after the softmax its weight is exactly 0 for every query.
 
-*Taught in:* [L3 · 04 Pretrained transformers & tokenisation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch42-pretrained-transformers-and-tokenization/notebook.ipynb)
+*Taught in:* [Ch. 42 · Pretrained transformers & tokenisation](../part3-deep-learning-systems/ch42-pretrained-transformers-and-tokenization/README.md)
 
 ### Mask-aware mean pooling
 
@@ -1120,7 +1120,7 @@ $$
 
 *In words:* Average the hidden vectors of the real tokens only.
 
-*Taught in:* [L3 · 04 Pretrained transformers & tokenisation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch42-pretrained-transformers-and-tokenization/notebook.ipynb)
+*Taught in:* [Ch. 42 · Pretrained transformers & tokenisation](../part3-deep-learning-systems/ch42-pretrained-transformers-and-tokenization/README.md)
 
 ### Cross-entropy and perplexity
 
@@ -1131,7 +1131,7 @@ $$
 
 *In words:* The average surprise at the true next token; perplexity is "as unsure as a uniform choice among PPL options".
 
-*Taught in:* [L3 · 03 A transformer from scratch](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch41-transformer-from-scratch/notebook.ipynb)
+*Taught in:* [Ch. 41 · A transformer from scratch](../part3-deep-learning-systems/ch41-transformer-from-scratch/README.md)
 
 ### Next-item loss over the catalogue
 
@@ -1141,7 +1141,7 @@ $$
 
 *In words:* At every non-padding position $t$, softmax cross-entropy of the next item over all $N$ items, scored by the dot product with the (tied) item embeddings.
 
-*Taught in:* [L2 · 10 Sequence models for user behaviour](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch28-sequence-models-for-user-behavior/notebook.ipynb)
+*Taught in:* [Ch. 28 · Sequence models for user behaviour](../part2-ml-at-scale/ch28-sequence-models-for-user-behavior/README.md)
 
 ### Self-attention cost
 
@@ -1151,7 +1151,7 @@ $$
 
 *In words:* Attention compute and score memory grow with the square of sequence length.
 
-*Taught in:* [L3 · 19 ML depth & research discussion](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch57-ml-depth-and-research-discussion/notebook.ipynb)
+*Taught in:* [Ch. 57 · ML depth & research discussion](../part3-deep-learning-systems/ch57-ml-depth-and-research-discussion/README.md)
 
 ### The LoRA layer
 
@@ -1161,7 +1161,7 @@ $$
 
 *In words:* The frozen weight's output plus a low-rank correction, scaled by $\alpha / r$.
 
-*Taught in:* [L3 · 06 Parameter-efficient fine-tuning](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch44-parameter-efficient-fine-tuning/notebook.ipynb)
+*Taught in:* [Ch. 44 · Parameter-efficient fine-tuning](../part3-deep-learning-systems/ch44-parameter-efficient-fine-tuning/README.md)
 
 ### LoRA trainable parameters
 
@@ -1171,7 +1171,7 @@ $$
 
 *In words:* LoRA trains $r(d + k)$ numbers per matrix instead of $dk$.
 
-*Taught in:* [L3 · 06 Parameter-efficient fine-tuning](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch44-parameter-efficient-fine-tuning/notebook.ipynb)
+*Taught in:* [Ch. 44 · Parameter-efficient fine-tuning](../part3-deep-learning-systems/ch44-parameter-efficient-fine-tuning/README.md)
 
 ### Merging
 
@@ -1181,7 +1181,7 @@ $$
 
 *In words:* After training, fold the update into a weight of the original shape: zero extra latency, but one task per merged copy.
 
-*Taught in:* [L3 · 06 Parameter-efficient fine-tuning](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch44-parameter-efficient-fine-tuning/notebook.ipynb)
+*Taught in:* [Ch. 44 · Parameter-efficient fine-tuning](../part3-deep-learning-systems/ch44-parameter-efficient-fine-tuning/README.md)
 
 ## Efficient training and scaling
 
@@ -1193,7 +1193,7 @@ $$
 
 *In words:* Each of the $m n$ outputs is a dot product of length $k$, i.e. $k$ multiplies and $k$ adds.
 
-*Taught in:* [L3 · 01 GPU fundamentals & profiling](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch39-gpu-fundamentals-and-profiling/notebook.ipynb)
+*Taught in:* [Ch. 39 · GPU fundamentals & profiling](../part3-deep-learning-systems/ch39-gpu-fundamentals-and-profiling/README.md)
 
 ### Arithmetic intensity
 
@@ -1203,7 +1203,7 @@ $$
 
 *In words:* How much arithmetic you get for every byte you read or write.
 
-*Taught in:* [L3 · 01 GPU fundamentals & profiling](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch39-gpu-fundamentals-and-profiling/notebook.ipynb)
+*Taught in:* [Ch. 39 · GPU fundamentals & profiling](../part3-deep-learning-systems/ch39-gpu-fundamentals-and-profiling/README.md)
 
 ### The roofline
 
@@ -1213,7 +1213,7 @@ $$
 
 *In words:* You cannot beat the chip's peak, and you cannot compute faster than memory can feed you.
 
-*Taught in:* [L3 · 01 GPU fundamentals & profiling](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch39-gpu-fundamentals-and-profiling/notebook.ipynb)
+*Taught in:* [Ch. 39 · GPU fundamentals & profiling](../part3-deep-learning-systems/ch39-gpu-fundamentals-and-profiling/README.md)
 
 ### Epoch time of an input pipeline
 
@@ -1224,7 +1224,7 @@ $$
 
 *In words:* Without workers, loading and compute add up; with $k$ workers they overlap and the slower of the two sets the pace.
 
-*Taught in:* [L3 · 01 GPU fundamentals & profiling](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch39-gpu-fundamentals-and-profiling/notebook.ipynb)
+*Taught in:* [Ch. 39 · GPU fundamentals & profiling](../part3-deep-learning-systems/ch39-gpu-fundamentals-and-profiling/README.md)
 
 ### Padding waste
 
@@ -1234,7 +1234,7 @@ $$
 
 *In words:* The share of computed positions that are padding.
 
-*Taught in:* [L3 · 04 Pretrained transformers & tokenisation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch42-pretrained-transformers-and-tokenization/notebook.ipynb)
+*Taught in:* [Ch. 42 · Pretrained transformers & tokenisation](../part3-deep-learning-systems/ch42-pretrained-transformers-and-tokenization/README.md)
 
 ### Model-state memory
 
@@ -1244,7 +1244,7 @@ $$
 
 *In words:* Every parameter pays for its weight, its gradient and its optimizer state.
 
-*Taught in:* [L3 · 02 Training efficiency & memory](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch40-training-efficiency-and-memory/notebook.ipynb)
+*Taught in:* [Ch. 40 · Training efficiency & memory](../part3-deep-learning-systems/ch40-training-efficiency-and-memory/README.md)
 
 ### Training memory with a frozen base
 
@@ -1254,7 +1254,7 @@ $$
 
 *In words:* Every weight must be stored ($b_w$ bytes each), but only trained weights need gradients and AdamW state (16 bytes each in fp32).
 
-*Taught in:* [L3 · 06 Parameter-efficient fine-tuning](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch44-parameter-efficient-fine-tuning/notebook.ipynb)
+*Taught in:* [Ch. 44 · Parameter-efficient fine-tuning](../part3-deep-learning-systems/ch44-parameter-efficient-fine-tuning/README.md)
 
 ### Activation memory of a transformer
 
@@ -1264,7 +1264,7 @@ $$
 
 *In words:* Linear in layers, batch and hidden size, and **quadratic in sequence length** through the attention probabilities.
 
-*Taught in:* [L3 · 02 Training efficiency & memory](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch40-training-efficiency-and-memory/notebook.ipynb)
+*Taught in:* [Ch. 40 · Training efficiency & memory](../part3-deep-learning-systems/ch40-training-efficiency-and-memory/README.md)
 
 ### Gradient accumulation
 
@@ -1274,7 +1274,7 @@ $$
 
 *In words:* Weight each micro-batch's mean-loss gradient by its share of the examples.
 
-*Taught in:* [L3 · 02 Training efficiency & memory](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch40-training-efficiency-and-memory/notebook.ipynb)
+*Taught in:* [Ch. 40 · Training efficiency & memory](../part3-deep-learning-systems/ch40-training-efficiency-and-memory/README.md)
 
 ### Global batch size
 
@@ -1284,7 +1284,7 @@ $$
 
 *In words:* The batch the optimiser sees is GPUs times per-GPU batch times accumulation steps.
 
-*Taught in:* [L3 · 09 Distributed data parallel](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch47-distributed-data-parallel/notebook.ipynb)
+*Taught in:* [Ch. 47 · Distributed data parallel](../part3-deep-learning-systems/ch47-distributed-data-parallel/README.md)
 
 ### Activation checkpointing cost
 
@@ -1294,7 +1294,7 @@ $$
 
 *In words:* Backward costs about two forwards; recomputing adds one more.
 
-*Taught in:* [L3 · 02 Training efficiency & memory](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch40-training-efficiency-and-memory/notebook.ipynb)
+*Taught in:* [Ch. 40 · Training efficiency & memory](../part3-deep-learning-systems/ch40-training-efficiency-and-memory/README.md)
 
 ### Loss scaling
 
@@ -1304,7 +1304,7 @@ $$
 
 *In words:* Scale the loss up so gradients are representable in fp16, then divide by $S$ in fp32 before the update.
 
-*Taught in:* [L3 · 10 Scaling to large models](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch48-scaling-to-large-models/notebook.ipynb)
+*Taught in:* [Ch. 48 · Scaling to large models](../part3-deep-learning-systems/ch48-scaling-to-large-models/README.md)
 
 ### Data parallelism averages gradients
 
@@ -1314,7 +1314,7 @@ $$
 
 *In words:* With equal shards of size $b$, the mean of the ranks' mean-loss gradients is the gradient of the mean loss over the global batch $N b$.
 
-*Taught in:* [L3 · 09 Distributed data parallel](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch47-distributed-data-parallel/notebook.ipynb)
+*Taught in:* [Ch. 47 · Distributed data parallel](../part3-deep-learning-systems/ch47-distributed-data-parallel/README.md)
 
 ### Ring all-reduce traffic
 
@@ -1324,7 +1324,7 @@ $$
 
 *In words:* $N - 1$ reduce-scatter steps plus $N - 1$ all-gather steps, each sending $M / N$.
 
-*Taught in:* [L3 · 09 Distributed data parallel](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch47-distributed-data-parallel/notebook.ipynb)
+*Taught in:* [Ch. 47 · Distributed data parallel](../part3-deep-learning-systems/ch47-distributed-data-parallel/README.md)
 
 ### All-reduce time and bus bandwidth
 
@@ -1334,7 +1334,7 @@ $$
 
 *In words:* A bandwidth term that barely depends on $N$, plus a latency term ($\alpha$ per hop) that grows with it.
 
-*Taught in:* [L3 · 09 Distributed data parallel](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch47-distributed-data-parallel/notebook.ipynb)
+*Taught in:* [Ch. 47 · Distributed data parallel](../part3-deep-learning-systems/ch47-distributed-data-parallel/README.md)
 
 ### Scaling efficiency
 
@@ -1344,7 +1344,7 @@ $$
 
 *In words:* The share of the step spent on useful compute; $o$ is the fraction of communication hidden behind backward.
 
-*Taught in:* [L3 · 09 Distributed data parallel](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch47-distributed-data-parallel/notebook.ipynb)
+*Taught in:* [Ch. 47 · Distributed data parallel](../part3-deep-learning-systems/ch47-distributed-data-parallel/README.md)
 
 ### Model-state memory per GPU (mixed-precision Adam, $N$ data-parallel GPUs)
 
@@ -1354,7 +1354,7 @@ $$
 
 *In words:* Each stage shards one more of optimizer state (12 bytes), gradients (2) and parameters (2).
 
-*Taught in:* [L3 · 10 Scaling to large models](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch48-scaling-to-large-models/notebook.ipynb)
+*Taught in:* [Ch. 48 · Scaling to large models](../part3-deep-learning-systems/ch48-scaling-to-large-models/README.md)
 
 ### Pipeline bubble
 
@@ -1364,7 +1364,7 @@ $$
 
 *In words:* $p - 1$ slots of fill and drain out of $m + p - 1$.
 
-*Taught in:* [L3 · 10 Scaling to large models](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch48-scaling-to-large-models/notebook.ipynb)
+*Taught in:* [Ch. 48 · Scaling to large models](../part3-deep-learning-systems/ch48-scaling-to-large-models/README.md)
 
 ### Tensor parallelism
 
@@ -1375,7 +1375,7 @@ $$
 
 *In words:* Split the weight by output columns and all-gather the halves, or by input rows and all-reduce the partial sums.
 
-*Taught in:* [L3 · 10 Scaling to large models](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch48-scaling-to-large-models/notebook.ipynb)
+*Taught in:* [Ch. 48 · Scaling to large models](../part3-deep-learning-systems/ch48-scaling-to-large-models/README.md)
 
 ### Training compute and time
 
@@ -1385,7 +1385,7 @@ $$
 
 *In words:* 6 FLOPs per parameter per token; time is that divided by the FLOP/s you actually get.
 
-*Taught in:* [L3 · 10 Scaling to large models](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch48-scaling-to-large-models/notebook.ipynb) · [L3 · 17 ML platform design](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch55-ml-platform-design/notebook.ipynb)
+*Taught in:* [Ch. 48 · Scaling to large models](../part3-deep-learning-systems/ch48-scaling-to-large-models/README.md) · [Ch. 55 · ML platform design](../part3-deep-learning-systems/ch55-ml-platform-design/README.md)
 
 ### Chinchilla compute-optimal sizing
 
@@ -1395,7 +1395,7 @@ $$
 
 *In words:* Compute-optimal training uses about 20 tokens per parameter, so the best model size grows with the square root of compute.
 
-*Taught in:* [L3 · 10 Scaling to large models](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch48-scaling-to-large-models/notebook.ipynb)
+*Taught in:* [Ch. 48 · Scaling to large models](../part3-deep-learning-systems/ch48-scaling-to-large-models/README.md)
 
 ### Optimal checkpoint interval (Young 1974; Daly 2006)
 
@@ -1405,7 +1405,7 @@ $$
 
 *In words:* Checkpoint cost per interval plus, per failure, half an interval of lost work and a restart.
 
-*Taught in:* [L3 · 10 Scaling to large models](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch48-scaling-to-large-models/notebook.ipynb)
+*Taught in:* [Ch. 48 · Scaling to large models](../part3-deep-learning-systems/ch48-scaling-to-large-models/README.md)
 
 ## Serving and systems
 
@@ -1417,7 +1417,7 @@ $$
 
 *In words:* Divide by the step size, round to the nearest integer, and multiply back.
 
-*Taught in:* [L3 · 11 Quantisation & distillation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch49-quantization-and-distillation/notebook.ipynb)
+*Taught in:* [Ch. 49 · Quantisation & distillation](../part3-deep-learning-systems/ch49-quantization-and-distillation/README.md)
 
 ### Affine (asymmetric) int8 quantisation
 
@@ -1427,7 +1427,7 @@ $$
 
 *In words:* A scale turns float units into integer steps, a zero-point shifts so that 0.0 lands exactly on an integer; the rounding error per value is at most $s/2$.
 
-*Taught in:* [L2 · 18 Model optimisation for inference](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch36-model-optimization-for-inference/notebook.ipynb)
+*Taught in:* [Ch. 36 · Model optimisation for inference](../part2-ml-at-scale/ch36-model-optimization-for-inference/README.md)
 
 ### Rounding error bound
 
@@ -1437,7 +1437,7 @@ $$
 
 *In words:* Rounding moves a value by at most half a step.
 
-*Taught in:* [L3 · 11 Quantisation & distillation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch49-quantization-and-distillation/notebook.ipynb)
+*Taught in:* [Ch. 49 · Quantisation & distillation](../part3-deep-learning-systems/ch49-quantization-and-distillation/README.md)
 
 ### Model size in memory
 
@@ -1447,7 +1447,7 @@ $$
 
 *In words:* Memory is parameters times bytes per parameter; int8 is a quarter of fp32.
 
-*Taught in:* [L2 · 18 Model optimisation for inference](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch36-model-optimization-for-inference/notebook.ipynb) · [L3 · 11 Quantisation & distillation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch49-quantization-and-distillation/notebook.ipynb)
+*Taught in:* [Ch. 36 · Model optimisation for inference](../part2-ml-at-scale/ch36-model-optimization-for-inference/README.md) · [Ch. 49 · Quantisation & distillation](../part3-deep-learning-systems/ch49-quantization-and-distillation/README.md)
 
 ### Distillation loss
 
@@ -1457,7 +1457,7 @@ $$
 
 *In words:* Match the teacher's softened distribution (weight $\alpha$) and the true label (weight $1 - \alpha$).
 
-*Taught in:* [L3 · 11 Quantisation & distillation](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch49-quantization-and-distillation/notebook.ipynb) · [L2 · 18 Model optimisation for inference](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch36-model-optimization-for-inference/notebook.ipynb)
+*Taught in:* [Ch. 49 · Quantisation & distillation](../part3-deep-learning-systems/ch49-quantization-and-distillation/README.md) · [Ch. 36 · Model optimisation for inference](../part2-ml-at-scale/ch36-model-optimization-for-inference/README.md)
 
 ### Parity criterion
 
@@ -1468,7 +1468,7 @@ $$
 
 *In words:* The largest disagreement must be below what rounding to six decimals can explain ($0.5 \times 10^{-6}$), with a little slack.
 
-*Taught in:* [L1 · 10 Consistent serving](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch11-consistent-serving/notebook.ipynb) · [L2 · 18 Model optimisation for inference](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch36-model-optimization-for-inference/notebook.ipynb)
+*Taught in:* [Ch. 11 · Consistent serving](../part1-foundations/ch11-consistent-serving/README.md) · [Ch. 36 · Model optimisation for inference](../part2-ml-at-scale/ch36-model-optimization-for-inference/README.md)
 
 ### How a skewed feature moves a score
 
@@ -1480,7 +1480,7 @@ $$
 
 *In words:* The error in the feature, times its coefficient, is added straight to the log-odds.
 
-*Taught in:* [L1 · 10 Consistent serving](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch11-consistent-serving/notebook.ipynb)
+*Taught in:* [Ch. 11 · Consistent serving](../part1-foundations/ch11-consistent-serving/README.md)
 
 ### Batching throughput
 
@@ -1490,7 +1490,7 @@ $$
 
 *In words:* A batch of $B$ requests finishes together, so throughput rises as long as the call time $t(B)$ grows more slowly than $B$.
 
-*Taught in:* [L3 · 12 High-throughput serving](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch50-high-throughput-serving/notebook.ipynb)
+*Taught in:* [Ch. 50 · High-throughput serving](../part3-deep-learning-systems/ch50-high-throughput-serving/README.md)
 
 ### Arithmetic intensity of a Linear layer
 
@@ -1500,7 +1500,7 @@ $$
 
 *In words:* Each weight read ($b$ bytes) is used for one multiply-add per request in the batch. It becomes compute-bound when $I(B)$ exceeds the hardware's peak FLOP/s ÷ memory bandwidth.
 
-*Taught in:* [L3 · 12 High-throughput serving](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch50-high-throughput-serving/notebook.ipynb)
+*Taught in:* [Ch. 50 · High-throughput serving](../part3-deep-learning-systems/ch50-high-throughput-serving/README.md)
 
 ### KV-cache size
 
@@ -1510,7 +1510,7 @@ $$
 
 *In words:* A key and a value (the 2) per layer, head, channel, position and sequence.
 
-*Taught in:* [L3 · 03 A transformer from scratch](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch41-transformer-from-scratch/notebook.ipynb) · [L3 · 12 High-throughput serving](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch50-high-throughput-serving/notebook.ipynb)
+*Taught in:* [Ch. 41 · A transformer from scratch](../part3-deep-learning-systems/ch41-transformer-from-scratch/README.md) · [Ch. 50 · High-throughput serving](../part3-deep-learning-systems/ch50-high-throughput-serving/README.md)
 
 ### Percentile
 
@@ -1520,7 +1520,7 @@ $$
 
 *In words:* The value with $q\%$ of observations at or below it. NumPy's default interpolates between neighbours, so the two differ slightly on small samples.
 
-*Taught in:* [L1 · 13 Health, logs & latency](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch14-health-logs-and-latency/notebook.ipynb)
+*Taught in:* [Ch. 14 · Health, logs & latency](../part1-foundations/ch14-health-logs-and-latency/README.md)
 
 ### Little's law
 
@@ -1530,7 +1530,7 @@ $$
 
 *In words:* Average requests in flight = arrival rate × average time in the system.
 
-*Taught in:* [L1 · 13 Health, logs & latency](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch14-health-logs-and-latency/notebook.ipynb) · [L1 · 17 System design & mock interview](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch18-system-design-and-mock-interview/notebook.ipynb) · [L2 · 17 Serving a ranking cascade](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch35-serving-a-ranking-cascade/notebook.ipynb) · [L3 · 12 High-throughput serving](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch50-high-throughput-serving/notebook.ipynb)
+*Taught in:* [Ch. 14 · Health, logs & latency](../part1-foundations/ch14-health-logs-and-latency/README.md) · [Ch. 18 · System design & mock interview](../part1-foundations/ch18-system-design-and-mock-interview/README.md) · [Ch. 35 · Serving a ranking cascade](../part2-ml-at-scale/ch35-serving-a-ranking-cascade/README.md) · [Ch. 50 · High-throughput serving](../part3-deep-learning-systems/ch50-high-throughput-serving/README.md)
 
 ### Why latency explodes near saturation
 
@@ -1540,7 +1540,7 @@ $$
 
 *In words:* As utilisation ρ approaches 1, waiting time grows without bound, which is why capacity plans target 50–70% utilisation.
 
-*Taught in:* [L2 · 17 Serving a ranking cascade](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch35-serving-a-ranking-cascade/notebook.ipynb)
+*Taught in:* [Ch. 35 · Serving a ranking cascade](../part2-ml-at-scale/ch35-serving-a-ranking-cascade/README.md)
 
 ### Single-process ceiling
 
@@ -1550,7 +1550,7 @@ $$
 
 *In words:* CPU-bound Python serves at most one request per CPU-time per process, however many threads it has.
 
-*Taught in:* [L1 · 13 Health, logs & latency](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch14-health-logs-and-latency/notebook.ipynb)
+*Taught in:* [Ch. 14 · Health, logs & latency](../part1-foundations/ch14-health-logs-and-latency/README.md)
 
 ### Fan-out and tail latency
 
@@ -1560,7 +1560,7 @@ $$
 
 *In words:* With N parallel calls, each slow with probability q, the request is slow if any one is.
 
-*Taught in:* [L2 · 17 Serving a ranking cascade](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch35-serving-a-ranking-cascade/notebook.ipynb) · [L1 · 13 Health, logs & latency](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch14-health-logs-and-latency/notebook.ipynb)
+*Taught in:* [Ch. 35 · Serving a ranking cascade](../part2-ml-at-scale/ch35-serving-a-ranking-cascade/README.md) · [Ch. 14 · Health, logs & latency](../part1-foundations/ch14-health-logs-and-latency/README.md)
 
 ### The latency budget
 
@@ -1570,7 +1570,7 @@ $$
 
 *In words:* Stage budgets plus slack must fit the SLO; because tail latencies rarely coincide, the p99 of the sum is below the sum of p99s, which makes per-stage budgets conservative.
 
-*Taught in:* [L2 · 17 Serving a ranking cascade](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch35-serving-a-ranking-cascade/notebook.ipynb) · [L1 · 17 System design & mock interview](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch18-system-design-and-mock-interview/notebook.ipynb) · [L3 · 18 Large-scale design cases](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch56-large-scale-design-cases/notebook.ipynb)
+*Taught in:* [Ch. 35 · Serving a ranking cascade](../part2-ml-at-scale/ch35-serving-a-ranking-cascade/README.md) · [Ch. 18 · System design & mock interview](../part1-foundations/ch18-system-design-and-mock-interview/README.md) · [Ch. 56 · Large-scale design cases](../part3-deep-learning-systems/ch56-large-scale-design-cases/README.md)
 
 ### Cache hit rate and its effect on latency
 
@@ -1580,7 +1580,7 @@ $$
 
 *In words:* A cache can serve at most the repeated keys; expected latency mixes hit and miss times.
 
-*Taught in:* [L2 · 17 Serving a ranking cascade](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch35-serving-a-ranking-cascade/notebook.ipynb)
+*Taught in:* [Ch. 35 · Serving a ranking cascade](../part2-ml-at-scale/ch35-serving-a-ranking-cascade/README.md)
 
 ### Amdahl's law: what a speed-up is worth end to end
 
@@ -1590,7 +1590,7 @@ $$
 
 *In words:* Speeding up a stage that is a fraction $f$ of the time can never beat $1/(1-f)$ overall.
 
-*Taught in:* [L2 · 18 Model optimisation for inference](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch36-model-optimization-for-inference/notebook.ipynb)
+*Taught in:* [Ch. 36 · Model optimisation for inference](../part2-ml-at-scale/ch36-model-optimization-for-inference/README.md)
 
 ### Exponential backoff
 
@@ -1600,7 +1600,7 @@ $$
 
 *In words:* Double the wait after each failed attempt, with random jitter so clients do not retry in lockstep.
 
-*Taught in:* [L1 · 11 API clients & tests](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch12-api-clients-and-tests/notebook.ipynb)
+*Taught in:* [Ch. 12 · API clients & tests](../part1-foundations/ch12-api-clients-and-tests/README.md)
 
 ### Worst-case time of one logical call
 
@@ -1610,7 +1610,7 @@ $$
 
 *In words:* Every attempt may hang until the timeout, plus all the waits.
 
-*Taught in:* [L1 · 11 API clients & tests](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch12-api-clients-and-tests/notebook.ipynb)
+*Taught in:* [Ch. 12 · API clients & tests](../part1-foundations/ch12-api-clients-and-tests/README.md)
 
 ### Why retries help with transient failures
 
@@ -1620,7 +1620,7 @@ $$
 
 *In words:* If attempts fail independently with probability $q$, all $R + 1$ fail with probability $q^{R+1}$; during an outage they are not independent.
 
-*Taught in:* [L1 · 11 API clients & tests](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch12-api-clients-and-tests/notebook.ipynb)
+*Taught in:* [Ch. 12 · API clients & tests](../part1-foundations/ch12-api-clients-and-tests/README.md)
 
 ### Capacity: QPS and replicas
 
@@ -1634,7 +1634,7 @@ $$
 
 *In words:* Average QPS from daily users, times a peak factor, divided by what one replica handles at target utilisation.
 
-*Taught in:* [L1 · 17 System design & mock interview](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch18-system-design-and-mock-interview/notebook.ipynb) · [L2 · 19 Recommendation & search system design](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch37-recsys-and-search-system-design/notebook.ipynb) · [L3 · 18 Large-scale design cases](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch56-large-scale-design-cases/notebook.ipynb)
+*Taught in:* [Ch. 18 · System design & mock interview](../part1-foundations/ch18-system-design-and-mock-interview/README.md) · [Ch. 37 · Recommendation & search system design](../part2-ml-at-scale/ch37-recsys-and-search-system-design/README.md) · [Ch. 56 · Large-scale design cases](../part3-deep-learning-systems/ch56-large-scale-design-cases/README.md)
 
 ### Fleet size with headroom
 
@@ -1644,7 +1644,7 @@ $$
 
 *In words:* At least two replicas, and enough to carry peak traffic while keeping a fraction $h$ of each spare.
 
-*Taught in:* [L3 · 18 Large-scale design cases](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch56-large-scale-design-cases/notebook.ipynb) · [L3 · 20 Full interview loop & portfolio](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch58-full-interview-loop-and-portfolio/notebook.ipynb)
+*Taught in:* [Ch. 56 · Large-scale design cases](../part3-deep-learning-systems/ch56-large-scale-design-cases/README.md) · [Ch. 58 · Full interview loop & portfolio](../part3-deep-learning-systems/ch58-full-interview-loop-and-portfolio/README.md)
 
 ### Scoring load and servers
 
@@ -1654,7 +1654,7 @@ $$
 
 *In words:* Rows scored per second is QPS times candidates; divide by what the fleet scores per second at target utilisation.
 
-*Taught in:* [L2 · 19 Recommendation & search system design](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch37-recsys-and-search-system-design/notebook.ipynb)
+*Taught in:* [Ch. 37 · Recommendation & search system design](../part2-ml-at-scale/ch37-recsys-and-search-system-design/README.md)
 
 ### Batch-scoring time
 
@@ -1664,7 +1664,7 @@ $$
 
 *In words:* If the whole population scores in minutes, a nightly batch job beats an online service.
 
-*Taught in:* [L1 · 17 System design & mock interview](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch18-system-design-and-mock-interview/notebook.ipynb)
+*Taught in:* [Ch. 18 · System design & mock interview](../part1-foundations/ch18-system-design-and-mock-interview/README.md)
 
 ### Embedding and index memory
 
@@ -1674,7 +1674,7 @@ $$
 
 *In words:* Flat storage is $n \times d \times$ bytes; HNSW adds graph links; product quantisation compresses each vector to a few bytes.
 
-*Taught in:* [L2 · 19 Recommendation & search system design](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch37-recsys-and-search-system-design/notebook.ipynb)
+*Taught in:* [Ch. 37 · Recommendation & search system design](../part2-ml-at-scale/ch37-recsys-and-search-system-design/README.md)
 
 ### Embedding-table memory
 
@@ -1684,7 +1684,7 @@ $$
 
 *In words:* Embedding tables dominate recommender memory, and Adam's two slots triple them during training.
 
-*Taught in:* [L3 · 13 CTR prediction at scale](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch51-ctr-prediction-at-scale/notebook.ipynb)
+*Taught in:* [Ch. 51 · CTR prediction at scale](../part3-deep-learning-systems/ch51-ctr-prediction-at-scale/README.md)
 
 ### Online feature-store size
 
@@ -1694,7 +1694,7 @@ $$
 
 *In words:* Entities times (key plus features times bytes), times store overhead and replicas.
 
-*Taught in:* [L3 · 17 ML platform design](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch55-ml-platform-design/notebook.ipynb)
+*Taught in:* [Ch. 55 · ML platform design](../part3-deep-learning-systems/ch55-ml-platform-design/README.md)
 
 ### Cost per 1,000 requests
 
@@ -1704,7 +1704,7 @@ $$
 
 *In words:* The hourly price divided by the number of requests actually served in that hour.
 
-*Taught in:* [L3 · 12 High-throughput serving](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch50-high-throughput-serving/notebook.ipynb)
+*Taught in:* [Ch. 50 · High-throughput serving](../part3-deep-learning-systems/ch50-high-throughput-serving/README.md)
 
 ### The price of idle capacity
 
@@ -1714,7 +1714,7 @@ $$
 
 *In words:* An accelerator used a fraction $u$ of the time costs $1/u$ times its price per useful hour.
 
-*Taught in:* [L3 · 17 ML platform design](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch55-ml-platform-design/notebook.ipynb)
+*Taught in:* [Ch. 55 · ML platform design](../part3-deep-learning-systems/ch55-ml-platform-design/README.md)
 
 ### Cost per request
 
@@ -1724,7 +1724,7 @@ $$
 
 *In words:* API: tokens in and out times their prices; self-hosted: the hourly price times the seconds each request occupies.
 
-*Taught in:* [L3 · 16 Evaluating LLM systems & guardrails](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch54-evaluating-llm-systems-and-guardrails/notebook.ipynb)
+*Taught in:* [Ch. 54 · Evaluating LLM systems & guardrails](../part3-deep-learning-systems/ch54-evaluating-llm-systems-and-guardrails/README.md)
 
 ### LLM cost per conversation
 
@@ -1734,7 +1734,7 @@ $$
 
 *In words:* Every turn re-sends the system prompt, retrieved text and the whole history, so input tokens grow with each turn.
 
-*Taught in:* [L3 · 18 Large-scale design cases](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch56-large-scale-design-cases/notebook.ipynb)
+*Taught in:* [Ch. 56 · Large-scale design cases](../part3-deep-learning-systems/ch56-large-scale-design-cases/README.md)
 
 ### Blended cost with a human fallback
 
@@ -1744,7 +1744,7 @@ $$
 
 *In words:* The LLM cost plus the human cost of every conversation it fails to deflect.
 
-*Taught in:* [L3 · 18 Large-scale design cases](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch56-large-scale-design-cases/notebook.ipynb)
+*Taught in:* [Ch. 56 · Large-scale design cases](../part3-deep-learning-systems/ch56-large-scale-design-cases/README.md)
 
 ### Risk score
 
@@ -1754,7 +1754,7 @@ $$
 
 *In words:* Rate each risk 1–5 on both axes and deal with the largest products first.
 
-*Taught in:* [L3 · 17 ML platform design](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch55-ml-platform-design/notebook.ipynb)
+*Taught in:* [Ch. 55 · ML platform design](../part3-deep-learning-systems/ch55-ml-platform-design/README.md)
 
 ## Monitoring
 
@@ -1766,7 +1766,7 @@ $$
 
 *In words:* For each bin, the change in share times the log of the ratio of shares; both factors have the same sign, so every term is $\ge 0$.
 
-*Taught in:* [L1 · 14 Monitoring & rollback](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch15-monitoring-and-rollback/notebook.ipynb)
+*Taught in:* [Ch. 15 · Monitoring & rollback](../part1-foundations/ch15-monitoring-and-rollback/README.md)
 
 ### Score-mean ratio (prediction drift)
 
@@ -1776,7 +1776,7 @@ $$
 
 *In words:* A cheap prediction-drift alarm: the current mean score over the reference mean.
 
-*Taught in:* [L1 · 14 Monitoring & rollback](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch15-monitoring-and-rollback/notebook.ipynb)
+*Taught in:* [Ch. 15 · Monitoring & rollback](../part1-foundations/ch15-monitoring-and-rollback/README.md)
 
 ### Calibration ratio on a matured cohort
 
@@ -1786,7 +1786,7 @@ $$
 
 *In words:* Mean predicted over observed rate, once labels have matured; 1 is perfect.
 
-*Taught in:* [L1 · 14 Monitoring & rollback](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch15-monitoring-and-rollback/notebook.ipynb)
+*Taught in:* [Ch. 15 · Monitoring & rollback](../part1-foundations/ch15-monitoring-and-rollback/README.md)
 
 ### Rollback rule
 
@@ -1796,7 +1796,7 @@ $$
 
 *In words:* Agree in advance how much worse a candidate may be before it is rolled back automatically.
 
-*Taught in:* [L1 · 14 Monitoring & rollback](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch15-monitoring-and-rollback/notebook.ipynb)
+*Taught in:* [Ch. 15 · Monitoring & rollback](../part1-foundations/ch15-monitoring-and-rollback/README.md)
 
 ### Delayed feedback and label maturity
 
@@ -1806,7 +1806,7 @@ $$
 
 *In words:* A conversion is visible only once it has happened; with exponential delays, a share $1 - e^{-e/\tau}$ is visible after time $e$.
 
-*Taught in:* [L3 · 13 CTR prediction at scale](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch51-ctr-prediction-at-scale/notebook.ipynb) · [L3 · 17 ML platform design](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch55-ml-platform-design/notebook.ipynb)
+*Taught in:* [Ch. 51 · CTR prediction at scale](../part3-deep-learning-systems/ch51-ctr-prediction-at-scale/README.md) · [Ch. 55 · ML platform design](../part3-deep-learning-systems/ch55-ml-platform-design/README.md)
 
 ## Ads, CTR and bandits
 
@@ -1818,7 +1818,7 @@ $$
 
 *In words:* Keeping a random fraction $w$ of negatives divides their count by $1/w$, so the odds the model learns are $1/w$ times the true odds; multiply them back by $w$.
 
-*Taught in:* [L3 · 13 CTR prediction at scale](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch51-ctr-prediction-at-scale/notebook.ipynb)
+*Taught in:* [Ch. 51 · CTR prediction at scale](../part3-deep-learning-systems/ch51-ctr-prediction-at-scale/README.md)
 
 ### Hash collisions
 
@@ -1828,7 +1828,7 @@ $$
 
 *In words:* With $k$ keys hashed into $n$ buckets, a key shares its bucket with probability about $1 - e^{-k/n}$.
 
-*Taught in:* [L3 · 13 CTR prediction at scale](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch51-ctr-prediction-at-scale/notebook.ipynb)
+*Taught in:* [Ch. 51 · CTR prediction at scale](../part3-deep-learning-systems/ch51-ctr-prediction-at-scale/README.md)
 
 ### ESMM
 
@@ -1838,7 +1838,7 @@ $$
 
 *In words:* Both losses are defined on **every** impression; pCVR is never fitted on clicked rows alone.
 
-*Taught in:* [L3 · 14 Multi-task ranking & exploration](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch52-multitask-ranking-and-exploration/notebook.ipynb)
+*Taught in:* [Ch. 52 · Multi-task ranking & exploration](../part3-deep-learning-systems/ch52-multitask-ranking-and-exploration/README.md)
 
 ### Blended ranking score
 
@@ -1848,7 +1848,7 @@ $$
 
 *In words:* With calibrated predictions and $a = b = 1$, the score is expected value per impression.
 
-*Taught in:* [L3 · 14 Multi-task ranking & exploration](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch52-multitask-ranking-and-exploration/notebook.ipynb)
+*Taught in:* [Ch. 52 · Multi-task ranking & exploration](../part3-deep-learning-systems/ch52-multitask-ranking-and-exploration/README.md)
 
 ### eCPM and the second price
 
@@ -1858,7 +1858,7 @@ $$
 
 *In words:* Rank by expected revenue per 1,000 impressions; the winner pays per click the smallest bid that would still beat the runner-up.
 
-*Taught in:* [L3 · 14 Multi-task ranking & exploration](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch52-multitask-ranking-and-exploration/notebook.ipynb) · [L3 · 18 Large-scale design cases](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch56-large-scale-design-cases/notebook.ipynb)
+*Taught in:* [Ch. 52 · Multi-task ranking & exploration](../part3-deep-learning-systems/ch52-multitask-ranking-and-exploration/README.md) · [Ch. 56 · Large-scale design cases](../part3-deep-learning-systems/ch56-large-scale-design-cases/README.md)
 
 ### Revenue equivalence
 
@@ -1868,7 +1868,7 @@ $$
 
 *In words:* With $n$ bidders and uniform values, first-price and second-price auctions earn the same expected revenue.
 
-*Taught in:* [L3 · 14 Multi-task ranking & exploration](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch52-multitask-ranking-and-exploration/notebook.ipynb)
+*Taught in:* [Ch. 52 · Multi-task ranking & exploration](../part3-deep-learning-systems/ch52-multitask-ranking-and-exploration/README.md)
 
 ### Bandits: regret, UCB1 and Thompson sampling
 
@@ -1882,7 +1882,7 @@ $$
 
 *In words:* Regret counts the clicks lost by not always playing the best arm; UCB1 adds an optimism bonus that shrinks with plays; Thompson sampling draws from each arm's Beta posterior and plays the best draw.
 
-*Taught in:* [L3 · 14 Multi-task ranking & exploration](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch52-multitask-ranking-and-exploration/notebook.ipynb)
+*Taught in:* [Ch. 52 · Multi-task ranking & exploration](../part3-deep-learning-systems/ch52-multitask-ranking-and-exploration/README.md)
 
 ## Privacy and fairness
 
@@ -1902,7 +1902,7 @@ $$
 
 *In words:* AUC is the chance a positive outscores a negative; the bias AUCs restrict the pairs to mixes of subgroup and background examples.
 
-*Taught in:* [L3 · 15 Fairness, robustness & privacy](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch53-fairness-robustness-and-privacy/notebook.ipynb)
+*Taught in:* [Ch. 53 · Fairness, robustness & privacy](../part3-deep-learning-systems/ch53-fairness-robustness-and-privacy/README.md)
 
 ### Error rates per group at threshold $t$
 
@@ -1912,7 +1912,7 @@ $$
 
 *In words:* False-positive and false-negative rates computed separately per group, at the same threshold.
 
-*Taught in:* [L3 · 15 Fairness, robustness & privacy](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch53-fairness-robustness-and-privacy/notebook.ipynb)
+*Taught in:* [Ch. 53 · Fairness, robustness & privacy](../part3-deep-learning-systems/ch53-fairness-robustness-and-privacy/README.md)
 
 ### Power mean over groups
 
@@ -1922,7 +1922,7 @@ $$
 
 *In words:* A mean that, for negative $p$, is pulled towards the worst group.
 
-*Taught in:* [L3 · 15 Fairness, robustness & privacy](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch53-fairness-robustness-and-privacy/notebook.ipynb)
+*Taught in:* [Ch. 53 · Fairness, robustness & privacy](../part3-deep-learning-systems/ch53-fairness-robustness-and-privacy/README.md)
 
 ### Differential privacy
 
@@ -1932,7 +1932,7 @@ $$
 
 *In words:* Adding or removing one record changes the probability of any outcome by at most a factor $e^{\varepsilon}$ (plus a small slack $\delta$).
 
-*Taught in:* [L3 · 15 Fairness, robustness & privacy](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch53-fairness-robustness-and-privacy/notebook.ipynb)
+*Taught in:* [Ch. 53 · Fairness, robustness & privacy](../part3-deep-learning-systems/ch53-fairness-robustness-and-privacy/README.md)
 
 ### One DP-SGD step
 
@@ -1942,7 +1942,7 @@ $$
 
 *In words:* Clip each example's gradient to norm $C$, add Gaussian noise scaled to $C$, then average and step.
 
-*Taught in:* [L3 · 15 Fairness, robustness & privacy](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch53-fairness-robustness-and-privacy/notebook.ipynb)
+*Taught in:* [Ch. 53 · Fairness, robustness & privacy](../part3-deep-learning-systems/ch53-fairness-robustness-and-privacy/README.md)
 
 ## Coding interviews: complexity
 
@@ -1954,7 +1954,7 @@ $$
 
 *In words:* The local exponent that `growth_table` prints: if doubling n multiplies the time by 4, the algorithm is about O(n²); by 2, O(n).
 
-*Taught in:* [L2 · 15 Coding patterns I](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch33-coding-patterns-1/notebook.ipynb)
+*Taught in:* [Ch. 33 · Coding patterns I](../part2-ml-at-scale/ch33-coding-patterns-1/README.md)
 
 ### Input size → the complexity you need
 
@@ -1964,7 +1964,7 @@ $$
 
 *In words:* Pure Python does about $10^7$ simple steps per second, so $n$ tells you which complexity you can afford.
 
-*Taught in:* [L2 · 15 Coding patterns I](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch33-coding-patterns-1/notebook.ipynb) · [L1 · 16 Python & SQL drills](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch17-python-and-sql-drills/notebook.ipynb)
+*Taught in:* [Ch. 33 · Coding patterns I](../part2-ml-at-scale/ch33-coding-patterns-1/README.md) · [Ch. 17 · Python & SQL drills](../part1-foundations/ch17-python-and-sql-drills/README.md)
 
 ### Why the sliding window is O(n)
 
@@ -1974,7 +1974,7 @@ $$
 
 *In words:* Count pointer moves, not loop nesting. A `while` inside a `for` is not automatically quadratic.
 
-*Taught in:* [L2 · 15 Coding patterns I](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch33-coding-patterns-1/notebook.ipynb)
+*Taught in:* [Ch. 33 · Coding patterns I](../part2-ml-at-scale/ch33-coding-patterns-1/README.md)
 
 ### Heap top-k versus sorting
 
@@ -1984,7 +1984,7 @@ $$
 
 *In words:* A size-$k$ heap keeps the top $k$ of a stream in $O(n \log k)$ time and $O(k)$ memory.
 
-*Taught in:* [L2 · 15 Coding patterns I](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch33-coding-patterns-1/notebook.ipynb)
+*Taught in:* [Ch. 33 · Coding patterns I](../part2-ml-at-scale/ch33-coding-patterns-1/README.md)
 
 ### Prefix sums and "subarray sum equals k"
 
@@ -1994,7 +1994,7 @@ $$
 
 *In words:* Any subarray sum is a difference of two prefix sums, so count earlier prefixes equal to the current one minus $k$.
 
-*Taught in:* [L2 · 15 Coding patterns I](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch33-coding-patterns-1/notebook.ipynb)
+*Taught in:* [Ch. 33 · Coding patterns I](../part2-ml-at-scale/ch33-coding-patterns-1/README.md)
 
 ### Output-sensitive bounds
 
@@ -2004,7 +2004,7 @@ $$
 
 *In words:* If the answer itself can have $p$ items, no algorithm beats $O(n + p)$.
 
-*Taught in:* [L2 · 15 Coding patterns I](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch33-coding-patterns-1/notebook.ipynb)
+*Taught in:* [Ch. 33 · Coding patterns I](../part2-ml-at-scale/ch33-coding-patterns-1/README.md)
 
 ### Graph traversal cost
 
@@ -2014,7 +2014,7 @@ $$
 
 *In words:* Each node is enqueued (or pushed) once and each edge is looked at once (twice if undirected). A grid of R × C cells has V = RC and E ≤ 4RC.
 
-*Taught in:* [L2 · 16 Coding patterns II](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch34-coding-patterns-2/notebook.ipynb)
+*Taught in:* [Ch. 34 · Coding patterns II](../part2-ml-at-scale/ch34-coding-patterns-2/README.md)
 
 ### Dijkstra's relaxation
 
@@ -2024,7 +2024,7 @@ $$
 
 *In words:* When you pop the closest unfinished node u, try every edge out of it; correct because, with $w \ge 0$, nothing popped later can be closer.
 
-*Taught in:* [L2 · 16 Coding patterns II](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch34-coding-patterns-2/notebook.ipynb)
+*Taught in:* [Ch. 34 · Coding patterns II](../part2-ml-at-scale/ch34-coding-patterns-2/README.md)
 
 ### Binary search iterations
 
@@ -2034,7 +2034,7 @@ $$
 
 *In words:* Each check halves the range of candidates.
 
-*Taught in:* [L2 · 16 Coding patterns II](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch34-coding-patterns-2/notebook.ipynb)
+*Taught in:* [Ch. 34 · Coding patterns II](../part2-ml-at-scale/ch34-coding-patterns-2/README.md)
 
 ### The DP recurrences in this notebook
 
@@ -2045,7 +2045,7 @@ $$
 
 *In words:* The best answer for a state is built from the best answers of smaller states; the base cases are $\text{coins}(0) = 0$, $D(i, 0) = i$, $D(0, j) = j$.
 
-*Taught in:* [L2 · 16 Coding patterns II](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch34-coding-patterns-2/notebook.ipynb)
+*Taught in:* [Ch. 34 · Coding patterns II](../part2-ml-at-scale/ch34-coding-patterns-2/README.md)
 
 ### Union-find
 
@@ -2055,7 +2055,7 @@ $$
 
 *In words:* With path compression and union by size each operation is effectively constant time; with neither, a chain makes `find` O(n).
 
-*Taught in:* [L2 · 16 Coding patterns II](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/ch34-coding-patterns-2/notebook.ipynb)
+*Taught in:* [Ch. 34 · Coding patterns II](../part2-ml-at-scale/ch34-coding-patterns-2/README.md)
 
 ---
 

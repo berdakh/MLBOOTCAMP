@@ -1,218 +1,191 @@
-# Capstones
+# Part IV · Capstone projects
 
-Five independent portfolio projects on real public data. Each one takes the
-habits from the five-day bootcamp (checksummed data, leakage-safe splits, an
-honest baseline, a tested API, a model card) and applies them to a problem
-with a different shape: run-to-failure sensor data, an hourly time series,
-messy transactions, a ranking problem and a text classifier with a human in
-the loop.
+*Five projects on public data, each with a complete guided solution · four to six days each at three hours a day*
 
+The capstones apply the practice of Parts I–III to problems of different
+shapes: run-to-failure sensor data, an hourly time series, messy retail
+transactions, a ranking problem, and a text classifier whose outputs are
+reviewed by people. Each project folder contains:
 
----
+| File | Purpose |
+|---|---|
+| `README.md` | The project brief: question, data and its terms, framing, baselines, evaluation protocol, milestones, interview questions |
+| `walkthrough.ipynb` | A guided solution. Each step states the goal, asks you to decide or implement something, then presents and explains a solution, with alternatives and common mistakes |
 
-## Read this first: the honesty rule
+Attempt each step of a walkthrough before reading its solution. The aim is
+not to reproduce our code but to be able to defend every decision in your own
+version.
 
-These are **public-data demonstrations inspired by** energy, industrial,
-retail and social-platform problems. They are **not** work done for, with, or
-endorsed by ERCOT, NASA, any energy company, Amazon, Meta, Netflix, Google,
-Jigsaw or any other organisation, and your README must not suggest otherwise.
+## The projects
 
-* **Never invent results.** Every number in a README, model card, slide or
-  interview answer comes from a run of your code, on a split you name. If you
-  have not run it, the cell says *TBD — fill from your run*.
-* **Never invent business impact.** "Reduced forecast error by X% versus a
-  seasonal-naive baseline on 2023 rolling-origin folds" is a measurement.
-  "Would save $2M a year" is a fabrication, unless you build and state a
-  cost model and label it as an assumption.
-* **Results tables start empty.** The template ships with `TBD — fill from
-  your run` in every results cell. Do not copy numbers from papers or other
-  repositories into them; cite a paper's number only in a separate, clearly
-  labelled "published reference points" note, and only if you have read it.
-* **Data terms are the publisher's, not ours.** The briefs were written on a
-  machine that could not reach the dataset hosts. Facts are marked
-  **verified from an official page snippet** (seen in a search-engine extract
-  of the official page) or **to verify**. Either way, **open the official page
-  yourself and read the licence or terms before you download**, and quote the
-  key condition in your `DATA_CARD.md`.
+<!-- toc:start -->
+| | Capstone | Guided solution |
+|---|---|---|
+| 1 | [Capstone 2 · Predictive maintenance on NASA C-MAPSS](cap1-predictive-maintenance/README.md) | in preparation |
+| 2 | [Capstone 1 · Day-ahead hourly load forecasting for the Texas grid (ERCOT)](cap2-electricity-load-forecasting/README.md) | in preparation |
+| 3 | [Capstone 3 · Weekly product demand forecasting on UCI Online Retail II](cap3-retail-demand-forecasting/README.md) | in preparation |
+| 4 | [Capstone 4 · Top-10 movie recommendations on MovieLens, evaluated in time](cap4-movie-recommendations/README.md) | in preparation |
+| 5 | [Capstone 5 · Toxic-comment triage for human review on Civil Comments](cap5-content-moderation/README.md) | in preparation |
+<!-- toc:end -->
 
----
-
-## The five capstones
-
-The numbering is **by domain** (it matches the table in the repository
-README), not the order to do them in. The recommended order is below.
-
-| # | Capstone | Core skill it proves | Recommended order | MVP budget at 3 h/day |
-|---|---|---|---|---|
-| 1 | [ERCOT hourly load forecasting](cap2-electricity-load-forecasting/README.md) | Rolling-origin backtests, seasonal baselines, peak-hour error | 2nd | 4–5 days (12–15 h) |
-| 2 | [C-MAPSS predictive maintenance](cap1-predictive-maintenance/README.md) | Engine-level splits, RUL metrics, a compact PyTorch temporal model | **1st** | 4 days (12 h) |
-| 3 | [Online Retail demand forecasting](cap3-retail-demand-forecasting/README.md) | SQL cleaning of messy transactions, intermittent demand, sales ≠ demand | 3rd | 5 days (15 h) |
-| 4 | [MovieLens recommendations](cap4-movie-recommendations/README.md) | Time-aware ranking evaluation, Recall@10 / NDCG@10, cold start | 4th | 4–5 days (12–15 h) |
-| 5 | [Civil Comments moderation triage](cap5-content-moderation/README.md) | PR-AUC, thresholds under review capacity, subgroup error rates | 5th | 5 days (15 h) |
-
-A copyable repository layout for every capstone (package skeleton, FastAPI
-app factory, tests, CI, README / model card / data card templates) is in
-[`capstones/template/`](https://github.com/berdakh/MLBOOTCAMP/tree/main/part4-capstones/template).
-
----
-
-## Recommended order, and why
-
-**1. C-MAPSS first.** It is the closest to a signal-processing / EEG
-background: multichannel sensor time series, windowing, per-channel
-normalisation, and — most importantly — the evaluation looks like
-cross-subject evaluation. Engines are subjects: if windows from the same
-engine land in both train and validation, the score is inflated in exactly the
-way a within-subject BCI score is. You already have the instinct; the project
-turns it into an engineering artifact (package, API, model card). The data is
-small, clean-ish and CPU-friendly, so it is a quick early win that sets up
-your template repository for the rest.
-
-**2. ERCOT second.** Still a numeric time series, but now the hard part is
-the *protocol*: rolling-origin backtests, forecasts issued at a fixed time
-with only the data available then, daylight-saving days, and an error metric
-that cares about peaks. It is also the most relevant capstone for Houston
-energy employers. Doing it after C-MAPSS means your template and test habits
-are already in place and the new ideas are purely about time.
-
-**3. Online Retail third.** The first project where the data fights back:
-cancellations, non-product stock codes, missing customer IDs, wholesale
-orders, and the fact that recorded sales are not demand. It is SQL-heavy
-(DuckDB is a natural fit, as in the bootcamp's notebook 03) and introduces
-intermittent demand. Doing it after ERCOT lets you reuse backtesting while
-learning data cleaning under ambiguity.
-
-**4. MovieLens fourth.** A change of problem type: ranking instead of
-regression. New metrics (Recall@10, NDCG@10), a strong popularity baseline
-that many published models struggle to beat, and cold-start users and items.
-The time-aware split is a direct continuation of ERCOT and Retail.
-
-**5. Civil Comments last.** The most different and the most open-ended: text,
-a pretrained model (GPU optional), heavy label noise, threshold selection
-under a human-review capacity constraint, and subgroup error analysis with
-identity labels. It builds on the bootcamp's thresholds and calibration day
-and is the strongest material for "responsible ML" and product-sense
-questions, which are easier to answer well after four projects.
-
-**When to deviate.** If you are targeting a specific role, move the matching
-capstone earlier: recommender / ads / feed roles → MovieLens second; trust &
-safety / NLP roles → Civil Comments second; supply-chain / retail science →
-Online Retail second. Keep C-MAPSS first unless you already have a polished
-portfolio repository: it is the fastest way to build the template you will
-reuse.
-
----
-
-## Time budget, honestly
-
-A month at 3 h/day is about 90 hours. The bootcamp takes the first five days
-(~15 h). That leaves ~75 h, and the five MVPs above add up to roughly 66–72 h
-**if nothing goes wrong**, before any extensions and before interview
-practice. Things will go wrong (a download, a time-zone bug, a long training
-run). So:
-
-* **Plan for three polished capstones, and treat four and five as a bonus.**
-  Three projects you can defend line by line are worth more than five
-  half-finished ones. A sensible core is C-MAPSS + ERCOT + the one closest to
-  the roles you are applying for.
-* **Time-box each MVP.** When the budget runs out, stop adding features,
-  fill the README with what you have, and write the limitations section.
-  An honest "not done: weather features" is fine; an unfinished repository
-  with no results table is not.
-* **Extensions are optional.** Every brief separates the MVP from extensions,
-  and marks GPU-only items. None of the MVPs needs a GPU.
-* Keep doing ~30 minutes of SQL / Python drills and one mock question per day
-  alongside the capstones; see the [study plan](../appendices/study-plan.md).
-
-| Capstone | MVP | Typical extensions | Where time usually goes |
+| Project | Problem type | Main skill | Typical duration |
 |---|---|---|---|
-| C-MAPSS | 4 days | FD002/FD004 operating-condition normalisation, uncertainty | Windowing and RUL-cap choice |
-| ERCOT | 4–5 days | Weather features, probabilistic forecasts | Parsing yearly files, DST, hour-ending |
-| Online Retail | 5 days | Hierarchical reconciliation, price effects | Cleaning rules and deciding the label |
-| MovieLens | 4–5 days | Implicit MF / EASE tuning, content features for cold items | Building the leakage-free evaluation |
-| Civil Comments | 5 days | Transformer fine-tuning (GPU), calibration per subgroup | Data access for identity labels; subsampling |
+| 1 · Predictive maintenance (NASA C-MAPSS) | Regression on multichannel sensor sequences | Engine-level splits; remaining-useful-life metrics; a compact temporal model | 4 days |
+| 2 · Electricity load forecasting (ERCOT) | Hourly time-series forecasting | Rolling-origin backtests; seasonal baselines; peak-hour error | 4–5 days |
+| 3 · Retail demand forecasting (UCI Online Retail) | Forecasting from transactions | Cleaning ambiguous data; intermittent demand; the difference between sales and demand | 5 days |
+| 4 · Movie recommendations (MovieLens) | Ranking | Time-aware evaluation; Recall@10 and NDCG@10; cold start | 4–5 days |
+| 5 · Content moderation triage (Civil Comments) | Text classification with human review | PR-AUC; thresholds under reviewer capacity; subgroup error rates | 5 days |
 
----
+A repository template for your own version of any project (package
+skeleton, FastAPI app factory, tests, CI, README, model card and data card
+templates) is in [template/](template/README.md).
 
-## Shared definition of done (every capstone)
+## Order
 
-A capstone is **done** when all of these are true. Copy this list into your
-repository as an issue or a checklist.
+The projects are numbered in the recommended order.
 
-1. **Repository** created from the template; package renamed; `make setup`,
-   `make data`, `make train`, `make evaluate`, `make test` and `make serve`
-   all work from a clean clone (state the Python version).
-2. **Data** is downloaded by code from the official source, checksummed, and
-   never committed. `DATA_CARD.md` names the source, licence/terms (with a
-   short quote), citation, size you measured, and every cleaning decision.
-3. **Question** stated in business terms, with who would act on the answer
-   and what decision changes.
-4. **Evaluation protocol** written *before* modelling: split, metrics, which
-   data selects models and which is touched once. A test asserts the split
-   does not leak (time, entity or user).
-5. **At least one baseline** from the brief, and **at least one improvement**,
-   both evaluated on the same split, with a measure of uncertainty
-   (bootstrap over entities/days/users, or across backtest folds).
-6. **Results table filled from your run**, with the split named. No invented
-   or copied numbers.
-7. **Error analysis**: the slices from the brief (peak hours, late
-   predictions, intermittent items, cold-start users, identity subgroups),
-   with at least one hypothesis per bad slice.
-8. **API** with `/health`, `/ready` and a prediction endpoint; Pydantic
-   validation; the model version in every response; tests for each
+1. **Predictive maintenance** comes first because it is closest to a
+   signal-processing background: multichannel sensor time series, windowing,
+   per-channel normalisation, and an evaluation that resembles cross-subject
+   evaluation. Engines play the role of subjects: if windows from the same
+   engine appear in both training and validation data, the score is inflated
+   in the same way a within-subject brain-computer-interface score is. The
+   data is small and trains on a CPU, so the project also serves to set up
+   the template repository used for the others.
+2. **Electricity load forecasting** remains a numerical time series, but the
+   difficulty moves to the evaluation protocol: rolling-origin backtests,
+   forecasts issued at a fixed time with only the data available then,
+   daylight-saving days, and a metric that emphasises peak hours.
+3. **Retail demand forecasting** is the first project in which the data is
+   genuinely ambiguous: cancellations, non-product stock codes, missing
+   customer identifiers, wholesale orders, and the fact that recorded sales
+   are not the same as demand. It relies on SQL (DuckDB, as in Chapter 4) and
+   introduces intermittent demand.
+4. **Movie recommendations** changes the problem type from regression to
+   ranking, with new metrics, a popularity baseline that is hard to beat, and
+   users and items that have no history.
+5. **Content moderation triage** is the most open-ended: text, a pretrained
+   model, noisy labels, thresholds chosen under the capacity of a human review
+   team, and error rates compared across identity subgroups.
+
+A reader preparing for a particular kind of role may move the matching
+project earlier: recommendation or advertising roles, Project 4; trust and
+safety or language roles, Project 5; supply-chain roles, Project 3.
+
+## Time
+
+At three hours a day, a month provides about 90 hours. Part I uses about 15,
+which leaves about 75; the five minimum versions together need roughly 66–72
+hours if nothing goes wrong. In practice it is better to plan three finished
+projects and to treat the fourth and fifth as optional. Three projects whose
+every decision you can explain are worth more than five unfinished ones.
+Time-box each project: when the budget is spent, stop adding features, record
+the results you have, and write the limitations section.
+
+| Project | Minimum version | Typical extensions | Where time is usually spent |
+|---|---|---|---|
+| 1 · C-MAPSS | 4 days | FD002/FD004 with operating-condition normalisation; uncertainty estimates | Windowing; the choice of RUL cap |
+| 2 · ERCOT | 4–5 days | Weather features; probabilistic forecasts | Parsing the yearly files; daylight saving; hour-ending timestamps |
+| 3 · Online Retail | 5 days | Hierarchical reconciliation; price effects | Cleaning rules; deciding the label |
+| 4 · MovieLens | 4–5 days | Tuned matrix factorisation or EASE; content features for new items | Building an evaluation without leakage |
+| 5 · Civil Comments | 5 days | Transformer fine-tuning (GPU); calibration per subgroup | Access to identity labels; subsampling |
+
+## Rules for reporting results
+
+These are public-data exercises inspired by problems in energy, industry,
+retail and online platforms. They are not work done for, with, or endorsed
+by ERCOT, NASA, Jigsaw, Google or any other organisation, and your write-up
+must not suggest otherwise.
+
+* **Report only measured results.** Every number in a README, model card or
+  interview answer must come from a run of your code on a named split. A
+  result you have not produced is written as *TBD — fill from your run*.
+* **Do not invent impact.** "Mean absolute error 12% lower than the
+  seasonal-naive baseline on 2023 rolling-origin folds" is a measurement.
+  "Would save two million dollars a year" is not, unless you state a cost
+  model and label it as an assumption.
+* **Keep published results separate.** If you cite a number from a paper, put
+  it in a clearly labelled note of published reference points, and only if
+  you have read the paper.
+* **Read the data terms yourself.** The briefs were written on a machine that
+  could not reach every data host; facts about each dataset are marked
+  *verified from an official page snippet* or *to verify*. Read the licence
+  on the official page before downloading, and quote its key condition in
+  your data card.
+
+## Definition of done
+
+A project is finished when all of the following hold.
+
+1. A repository created from the template, with `make setup`, `make data`,
+   `make train`, `make evaluate`, `make test` and `make serve` working from a
+   clean clone.
+2. Data downloaded by code from the official source, checked against a size
+   or checksum, and not committed. The data card names the source, licence
+   (with a short quotation), citation, the size you measured, and every
+   cleaning decision.
+3. The question stated precisely: who acts on the answer, and which decision
+   it changes.
+4. An evaluation protocol written before modelling: the split, the metrics,
+   which data selects models and which is used once at the end. A test
+   asserts that the split does not leak across time, entities or users.
+5. At least one baseline and one improvement, evaluated on the same split,
+   with a measure of uncertainty (a bootstrap over entities, days or users,
+   or the spread across backtest folds).
+6. A results table filled from your own run, with the split named.
+7. Error analysis on the slices named in the brief, with at least one
+   hypothesis for each poor slice.
+8. A prediction API with `/health`, `/ready` and a prediction endpoint,
+   validated inputs, the model version in every response, and tests for each
    validation rule and for the not-ready state.
-9. **CI** green: `ruff` + `pytest` on toy data, no network.
-10. **`MODEL_CARD.md`** and a **Limitations** section that a sceptical
-    reviewer would agree with.
-11. **You can answer the brief's interview questions** aloud in 2 minutes
-    each, using your own numbers.
+9. Continuous integration passing: lint and tests on small toy data, without
+   network access.
+10. A model card and a limitations section that a sceptical reviewer would
+    accept.
+11. The ability to answer the brief's interview questions aloud, about two
+    minutes each, using your own numbers.
 
----
+## Assessment rubric (100 points)
 
-## Shared capstone rubric (100 points)
-
-Score your own repository, then ask someone else to. The
+Score your own repository, then ask someone else to score it. The
 [readiness rubric](../appendices/readiness-rubric.md) uses the total.
 
-| Area | Points | Full marks | Half marks | Zero |
+| Area | Points | Full marks | Half marks | No marks |
 |---|---:|---|---|---|
-| **Problem framing** | 10 | Business question, decision owner, unit of prediction, horizon and label are precise; the metric follows from the decision | Question is clear but metric or horizon is generic | "Predict X with deep learning" |
-| **Data provenance & validation** | 10 | Official source, licence quoted, checksums, contract checks, every cleaning decision justified and counted | Source and licence stated; cleaning ad hoc | Data from an unnamed mirror; licence ignored |
-| **Evaluation protocol & leakage** | 20 | Split matches deployment (time / entity / user); leakage traps from the brief tested in code; test touched once; uncertainty reported | Correct split but no leakage tests or no uncertainty | Random split on temporal or grouped data; tuned on test |
-| **Baselines & improvement** | 15 | Strong, domain-appropriate baseline; improvement justified and measured on the same split; negative results reported | Weak baseline only (e.g. global mean) | No baseline |
-| **Error analysis & limitations** | 10 | Slices from the brief analysed with counts and CIs; limitations specific to the data | Generic limitations; one slice | None |
-| **Engineering quality** | 15 | Package, config, Makefile, tests that would catch real bugs, CI green, reproducible from a clean clone | Runs, but only from a notebook or with manual steps | Cannot be run by someone else |
-| **Serving** | 10 | App factory, health vs readiness, validation rules tested, model version in responses, clear precomputed-vs-online split | Endpoint works; little validation | No API |
-| **Communication** | 10 | README a hiring manager can read in 3 minutes; model card; honest framing; you can defend every number | Complete but long or vague | Hype, unclear claims |
+| Problem framing | 10 | Question, decision owner, unit of prediction, horizon and label are precise; the metric follows from the decision | The question is clear but the metric or horizon is generic | "Predict X with deep learning" |
+| Data provenance and validation | 10 | Official source, licence quoted, checksums, contract checks, every cleaning decision justified and counted | Source and licence stated; cleaning ad hoc | Data from an unnamed copy; licence ignored |
+| Evaluation protocol and leakage | 20 | The split matches deployment; the brief's leakage risks are tested in code; the test data is used once; uncertainty reported | Correct split, but no leakage tests or no uncertainty | Random split on temporal or grouped data; tuning on the test set |
+| Baselines and improvement | 15 | A strong, domain-appropriate baseline; the improvement is justified and measured on the same split; negative results reported | A weak baseline only, such as the global mean | No baseline |
+| Error analysis and limitations | 10 | The brief's slices analysed with counts and confidence intervals; limitations specific to the data | Generic limitations; one slice | None |
+| Engineering quality | 15 | Package, configuration, Makefile, tests that would catch real defects, CI passing, reproducible from a clean clone | Runs, but only from a notebook or with manual steps | Cannot be run by another person |
+| Serving | 10 | App factory, health and readiness separated, validation rules tested, model version in responses, a clear division between precomputed and online computation | The endpoint works; little validation | No API |
+| Communication | 10 | A README a reviewer can read in three minutes; a model card; accurate framing; every number can be explained | Complete but long or vague | Overstated or unclear claims |
 | **Total** | **100** | | | |
 
-**Automatic caps** (apply regardless of the total):
+**Caps that apply regardless of the total.** An invented or copied result
+presented as your own: score 0 until removed. Leakage into the test set (a
+scaler fitted on all data, the same engine or user in training and test, a
+threshold tuned on the test set): at most 50. Data used against its terms
+(for example MovieLens in a commercial product, or raw files redistributed
+where this is not allowed): at most 50 until corrected.
 
-* Any invented or copied result presented as yours → **score 0** until removed.
-* Test-set leakage found (e.g. scaler fitted on all data, same engine/user in
-  train and test, threshold tuned on test) → **max 50**.
-* Data used against its terms (e.g. MovieLens in a revenue-bearing product,
-  raw files redistributed where not allowed) → **max 50** until fixed.
+A score of 75 or more is a solid portfolio project; 85 or more, with a clear
+explanation in an interview, is a good target for at least two projects.
 
-A score of **75+** is a solid portfolio piece. **85+** with a clean interview
-walkthrough is the bar to aim for on at least two capstones.
+## Reusing Part I components
 
----
+The `churnlab` package from Part I contains small, readable versions of the
+operational components each project needs. Reuse the ideas rather than
+necessarily the code:
 
-## Stretch for all capstones: reuse the bootcamp patterns
+* a registry with a CURRENT pointer, promotion and rollback:
+  [`src/churnlab/registry.py`](../src/churnlab/registry.py);
+* model bundles with metadata and integrity checks:
+  [`src/churnlab/artifacts.py`](../src/churnlab/artifacts.py);
+* drift measurement (PSI), alert rules and latency summaries:
+  [`src/churnlab/monitoring.py`](../src/churnlab/monitoring.py);
+* an app factory with `/metrics` and `/admin/reload`:
+  [`src/churnlab/api.py`](../src/churnlab/api.py).
 
-The bootcamp's `churnlab` package already contains small, readable versions of
-the operational pieces. Copy the ideas, not necessarily the code:
-
-* **Registry with a CURRENT pointer, promote and rollback** —
-  [`src/churnlab/registry.py`](https://github.com/berdakh/MLBOOTCAMP/blob/main/src/churnlab/registry.py).
-* **Model bundles with metadata and integrity checks** —
-  [`src/churnlab/artifacts.py`](https://github.com/berdakh/MLBOOTCAMP/blob/main/src/churnlab/artifacts.py).
-* **Drift (PSI), alert rules and latency summaries** —
-  [`src/churnlab/monitoring.py`](https://github.com/berdakh/MLBOOTCAMP/blob/main/src/churnlab/monitoring.py).
-* **App factory with `/metrics` and `/admin/reload`** —
-  [`src/churnlab/api.py`](https://github.com/berdakh/MLBOOTCAMP/blob/main/src/churnlab/api.py).
-
-Each brief ends with a specific suggestion for that dataset. For interview
-practice beyond the per-capstone questions, see the
+For interview practice beyond each project's own questions, see the
 [interview question bank](../appendices/interview-questions.md).

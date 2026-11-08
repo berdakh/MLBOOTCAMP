@@ -30,6 +30,8 @@ jobs:
         run: python -m pytest
       - name: Notebooks in sync with their notebook.py sources
         run: python tools/nbbuild.py --check
+      - name: Tables of contents in sync with the chapter folders
+        run: python tools/make_toc.py --check
       - name: Diagrams in sync with their generator
         run: python tools/make_diagrams.py --check
       - name: Notebook structure, syntax, links, Colab badges

@@ -1,102 +1,96 @@
-# Level 3 · Deep Learning & Large-Scale ML Systems
+# Part III · Deep Learning and Large-Scale Systems
 
-**Ten days, about three hours a day · 20 notebooks · free Colab T4 GPU (every notebook also runs on a CPU with a reduced budget)**
+*Chapters 39–58 · about two weeks at three hours a day · Google Colab T4 GPU (every lab also runs on a CPU with a reduced budget)*
 
-Level 3 prepares you for ML engineer roles at large technology companies,
-where the models are deep, the data does not fit on one machine and the
-interview loop expects depth. You will profile and speed up GPU training,
-build a transformer and then fine-tune pretrained ones, train retrieval
-models, distribute training across processes, make inference fast and cheap,
-build ads-style CTR and multi-task rankers, evaluate LLM-based systems and
-their guardrails, and finish with staff-level system design and a full mock
-loop.
+Part III covers the deep-learning side of industrial machine learning: GPU
+performance and memory, transformers built from scratch and then fine-tuned,
+retrieval models, distributed training, efficient inference, advertising and
+multi-task ranking, fairness and privacy, the evaluation of systems built on
+language models, and system design at the scale of large organisations.
 
-**Prerequisites:** Levels 1 and 2, or equivalent: comfortable PyTorch, a
-working understanding of ranking, retrieval and experimentation.
+**Prerequisites.** Parts I and II, or equivalent: working PyTorch, and an
+understanding of ranking, retrieval and controlled experiments.
 
-## Hardware: what "T4 core" means
+## Hardware and budgets
 
-Each notebook targets the free Colab T4 GPU (16 GB memory, fast fp16, no
-bf16). In Colab, choose **Runtime → Change runtime type → T4 GPU** before
-running. Sizes are not hard-coded: `scaleml.device.budget()` picks them for
-the hardware it finds, and every notebook prints the budget it used.
+The labs are written for the free Colab T4 GPU (16 GB of memory, fast fp16,
+no bf16). In Colab, choose *Runtime → Change runtime type → T4 GPU* before
+running. Data and model sizes are not fixed in the code: the function
+`scaleml.device.budget()` chooses them for the hardware it finds, and each
+lab prints the budget it used.
 
-| Budget | When | Typical size |
+| Budget | When it is used | Typical size |
 |---|---|---|
-| `gpu` | a CUDA GPU is present | 20k training examples, 128-token sequences, 2 epochs |
-| `cpu` | no GPU | 1.5k examples, 64 tokens, 1 epoch: shows the method, not the accuracy |
-| `smoke` | `BOOTCAMP_BUDGET=smoke`, used by automated checks | proves the code runs |
+| `gpu` | a CUDA GPU is present | 20,000 training examples, 128-token sequences, 2 epochs |
+| `cpu` | no GPU | 1,500 examples, 64 tokens, 1 epoch: demonstrates the method, not the attainable accuracy |
+| `smoke` | `BOOTCAMP_BUDGET=smoke`, used by automated checks | verifies that the code runs |
 
-Distributed training (Day 5) runs *real* multi-process `torch.distributed`
-code on one machine (the `gloo` backend on CPU) and explains what changes on
-a multi-GPU cluster. Free Colab has one GPU, so multi-GPU speed-ups are
-explained with arithmetic, not measured.
+Distributed training (Chapters 47–48) uses real multi-process
+`torch.distributed` code on one machine (the `gloo` backend) and explains
+what changes on a multi-GPU cluster. Free Colab provides one GPU, so
+multi-GPU speed-ups are derived by calculation rather than measured.
 
 ## Data and models
 
-All public, downloaded from the Hugging Face Hub on first use and cached:
-text classification datasets (AG News, IMDB, SST-2), a scientific-claims
-retrieval set, and small pretrained models (for example DistilBERT, MiniLM
-sentence encoders, GPT-2 small, a 0.5B instruction model). Each notebook names
-the exact dataset and model, with a link to its card. **Read each card's
-licence before reusing anything outside this course.** CTR and multi-task
-ranking (Day 7) use a synthetic Criteo-like generator, so no licence question
-arises.
+All datasets and models are public and are downloaded from the Hugging Face
+Hub on first use: text classification datasets (AG News, IMDB, SST-2), a
+scientific-claim retrieval set, a toxicity dataset with identity annotations,
+and small pretrained models (DistilBERT, MiniLM sentence encoders, GPT-2
+small, a 0.5-billion-parameter instruction model). Each chapter names the
+exact dataset and model with a link to its card; read the licence on the card
+before reusing them elsewhere. Advertising and multi-task ranking
+(Chapters 51–52) use a synthetic dataset.
 
-## The notebooks
+## Scope and limitations
 
-| # | Notebook | You learn to | Time |
-|---|---|---|---|
-| **Day 1 — GPU performance** ||||
-| 01 | [GPU fundamentals & profiling](ch39-gpu-fundamentals-and-profiling/notebook.ipynb) | The GPU execution and memory model, synchronisation and timing, `torch.profiler`, input-pipeline bottlenecks, fp16 on a T4 | 90 min |
-| 02 | [Training efficiency & memory](ch40-training-efficiency-and-memory/notebook.ipynb) | Memory arithmetic (weights, gradients, optimiser, activations), gradient accumulation, activation checkpointing, `torch.compile`, debugging OOM | 90 min |
-| **Day 2 — Transformers** ||||
-| 03 | [A transformer from scratch](ch41-transformer-from-scratch/notebook.ipynb) | Build and train a small decoder-only transformer; causal masking; sampling; a KV cache and its speed-up | 90 min |
-| 04 | [Pretrained transformers & tokenisation](ch42-pretrained-transformers-and-tokenization/notebook.ipynb) | Tokenisers, model heads, pooling, padding and truncation, batched inference throughput | 90 min |
-| **Day 3 — Fine-tuning** ||||
-| 05 | [Fine-tuning a classifier](ch43-fine-tuning-a-classifier/notebook.ipynb) | Full fine-tuning against a linear probe and a TF-IDF baseline; proper evaluation, calibration, error analysis | 90 min |
-| 06 | [Parameter-efficient fine-tuning](ch44-parameter-efficient-fine-tuning/notebook.ipynb) | LoRA from scratch and with `peft`; memory, time and accuracy against full fine-tuning; merging adapters | 90 min |
-| **Day 4 — Embeddings & retrieval** ||||
-| 07 | [Embeddings & semantic search](ch45-embeddings-and-semantic-search/notebook.ipynb) | Sentence embeddings, FAISS, lexical vs dense vs hybrid retrieval, retrieval evaluation | 90 min |
-| 08 | [Contrastive training & re-ranking](ch46-contrastive-training-and-reranking/notebook.ipynb) | Fine-tune a bi-encoder with in-batch and hard negatives; a cross-encoder re-ranker; the two-stage trade-off | 90 min |
-| **Day 5 — Distributed training** ||||
-| 09 | [Distributed data parallel](ch47-distributed-data-parallel/notebook.ipynb) | `torch.distributed` by hand: processes, ranks, all-reduce, DDP, samplers, rank-0 logging, checkpoints | 90 min |
-| 10 | [Scaling to large models](ch48-scaling-to-large-models/notebook.ipynb) | ZeRO/FSDP, tensor and pipeline parallelism, compute budgets, scaling laws, fault tolerance, all by arithmetic and simulation | 90 min |
-| **Day 6 — Efficient inference** ||||
-| 11 | [Quantisation & distillation](ch49-quantization-and-distillation/notebook.ipynb) | int8 quantisation, distilling a fine-tuned model into a small student; accuracy, latency and size | 90 min |
-| 12 | [High-throughput serving](ch50-high-throughput-serving/notebook.ipynb) | Dynamic batching, throughput vs latency curves, KV cache and continuous batching for generation, cost per 1k requests | 90 min |
-| **Day 7 — Ads & multi-objective ranking** ||||
-| 13 | [CTR prediction at scale](ch51-ctr-prediction-at-scale/notebook.ipynb) | Sparse features, the hashing trick, embedding tables, a deep-and-cross model, normalised entropy, calibration, delayed feedback | 90 min |
-| 14 | [Multi-task ranking & exploration](ch52-multitask-ranking-and-exploration/notebook.ipynb) | Multi-task models, objective blending, auctions and eCPM, bandits (ε-greedy, Thompson sampling) | 90 min |
-| **Day 8 — Responsible and LLM systems** ||||
-| 15 | [Fairness, robustness & privacy](ch53-fairness-robustness-and-privacy/notebook.ipynb) | Subgroup error analysis, threshold effects, shift and perturbation tests, differential privacy in practice | 90 min |
-| 16 | [Evaluating LLM systems & guardrails](ch54-evaluating-llm-systems-and-guardrails/notebook.ipynb) | Evaluation sets for generation, LLM-as-judge pitfalls, prompt injection, a guardrail classifier, cost and latency | 90 min |
-| **Day 9 — Staff-level system design** ||||
-| 17 | [ML platform design](ch55-ml-platform-design/notebook.ipynb) | Feature platform, training platform, registry, continuous training and deployment: the trade-offs that come up at staff level | 90 min |
-| 18 | [Large-scale design cases](ch56-large-scale-design-cases/notebook.ipynb) | Ads ranking, video recommendations, an LLM assistant, real-time fraud: numbers, deep dives, failure modes | 90 min |
-| **Day 10 — The loop** ||||
-| 19 | [ML depth & research discussion](ch57-ml-depth-and-research-discussion/notebook.ipynb) | Depth questions on optimisation, generalisation, transformers and recsys; critiquing a paper; research to production | 90 min |
-| 20 | [Full interview loop & portfolio](ch58-full-interview-loop-and-portfolio/notebook.ipynb) | A timed full loop with leveling rubrics; packaging your portfolio and capstones | 90 min |
+* A T4 is a 2018 data-centre GPU. It demonstrates every technique at small
+  scale; it does not reproduce the absolute numbers of production clusters.
+* Multi-GPU and multi-node behaviour is taught with real distributed code
+  on processes and with arithmetic, not measured.
+* Material on language models concerns the engineering and evaluation of
+  systems that use them: fine-tuning small models, retrieval, serving and
+  guardrails. Pre-training large models is outside the scope of the book.
 
-## Honest limits
+## Organisation
 
-* A T4 is a 2018-era data-centre GPU. It shows every technique here at small
-  scale; it does not reproduce the absolute numbers of production clusters,
-  and the notebooks never pretend it does.
-* Multi-GPU and multi-node behaviour is taught through real distributed code
-  on processes, plus arithmetic. Measuring it needs hardware free Colab does
-  not have.
-* LLM content in Level 3 is about *engineering and evaluation* of systems
-  that use language models: fine-tuning small models, retrieval, serving and
-  guardrails. Pre-training large models is out of scope.
+| Chapters | Theme |
+|---|---|
+| 39–40 | GPU performance: execution and memory model, profiling, training memory |
+| 41–42 | Transformers: from scratch, and pretrained models with tokenisation |
+| 43–44 | Fine-tuning: full fine-tuning against baselines; parameter-efficient methods (LoRA) |
+| 45–46 | Embeddings and retrieval: semantic search, contrastive training, re-ranking |
+| 47–48 | Distributed training: data parallelism; scaling to large models |
+| 49–50 | Efficient inference: quantisation and distillation; high-throughput serving |
+| 51–52 | Advertising and multi-objective ranking: CTR prediction, multi-task models, auctions, bandits |
+| 53–54 | Responsible systems: fairness, robustness and privacy; evaluating LLM systems and guardrails |
+| 55–56 | System design: ML platforms; large-scale design cases |
+| 57–58 | Depth questions and research discussion; the full interview loop and portfolio |
 
-## Layout
+## Chapters
 
-```
-level3/
-  notebook_src/   percent-format sources (edit these)
-  notebooks/      generated .ipynb (outputs cleared)
-  solutions/      written answers + code/ reference solutions graded in CI
-  requirements.txt
-src/scaleml/      the Level 3 package (device, train, textdata, topic modules, grading/)
-```
+<!-- toc:start -->
+| Ch. | Chapter | Lab | Time |
+|---:|---|---|---|
+| 39 | [GPU fundamentals & profiling](ch39-gpu-fundamentals-and-profiling/README.md) | [notebook](ch39-gpu-fundamentals-and-profiling/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch39-gpu-fundamentals-and-profiling/notebook.ipynb) | 90 min |
+| 40 | Training efficiency & memory | [notebook](ch40-training-efficiency-and-memory/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch40-training-efficiency-and-memory/notebook.ipynb) | 90 min |
+| 41 | A transformer from scratch | [notebook](ch41-transformer-from-scratch/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch41-transformer-from-scratch/notebook.ipynb) | 90 min |
+| 42 | Pretrained transformers & tokenisation | [notebook](ch42-pretrained-transformers-and-tokenization/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch42-pretrained-transformers-and-tokenization/notebook.ipynb) | 90 min |
+| 43 | Fine-tuning a classifier | [notebook](ch43-fine-tuning-a-classifier/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch43-fine-tuning-a-classifier/notebook.ipynb) | 90 min |
+| 44 | Parameter-efficient fine-tuning | [notebook](ch44-parameter-efficient-fine-tuning/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch44-parameter-efficient-fine-tuning/notebook.ipynb) | 90 min |
+| 45 | Embeddings & semantic search | [notebook](ch45-embeddings-and-semantic-search/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch45-embeddings-and-semantic-search/notebook.ipynb) | 90 min |
+| 46 | Contrastive training & re-ranking | [notebook](ch46-contrastive-training-and-reranking/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch46-contrastive-training-and-reranking/notebook.ipynb) | 90 min |
+| 47 | Distributed data parallel | [notebook](ch47-distributed-data-parallel/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch47-distributed-data-parallel/notebook.ipynb) | 90 min |
+| 48 | Scaling to large models | [notebook](ch48-scaling-to-large-models/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch48-scaling-to-large-models/notebook.ipynb) | 90 min |
+| 49 | [Quantisation & distillation](ch49-quantization-and-distillation/README.md) | [notebook](ch49-quantization-and-distillation/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch49-quantization-and-distillation/notebook.ipynb) | 90 min |
+| 50 | High-throughput serving | [notebook](ch50-high-throughput-serving/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch50-high-throughput-serving/notebook.ipynb) | 90 min |
+| 51 | CTR prediction at scale | [notebook](ch51-ctr-prediction-at-scale/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch51-ctr-prediction-at-scale/notebook.ipynb) | 90 min |
+| 52 | Multi-task ranking & exploration | [notebook](ch52-multitask-ranking-and-exploration/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch52-multitask-ranking-and-exploration/notebook.ipynb) | 90 min |
+| 53 | Fairness, robustness & privacy | [notebook](ch53-fairness-robustness-and-privacy/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch53-fairness-robustness-and-privacy/notebook.ipynb) | 90 min |
+| 54 | Evaluating LLM systems & guardrails | [notebook](ch54-evaluating-llm-systems-and-guardrails/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch54-evaluating-llm-systems-and-guardrails/notebook.ipynb) | 90 min |
+| 55 | ML platform design | [notebook](ch55-ml-platform-design/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch55-ml-platform-design/notebook.ipynb) | 90 min |
+| 56 | Large-scale design cases | [notebook](ch56-large-scale-design-cases/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch56-large-scale-design-cases/notebook.ipynb) | 90 min |
+| 57 | ML depth & research discussion | [notebook](ch57-ml-depth-and-research-discussion/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch57-ml-depth-and-research-discussion/notebook.ipynb) | 90 min |
+| 58 | Full interview loop & portfolio | [notebook](ch58-full-interview-loop-and-portfolio/notebook.ipynb) · [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/ch58-full-interview-loop-and-portfolio/notebook.ipynb) | 90 min |
+<!-- toc:end -->
+
+**Next:** [Part IV · Capstone projects](../part4-capstones/README.md)
