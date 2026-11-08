@@ -62,7 +62,7 @@ print("repo:", ROOT)
 print("artifacts:", ART)
 
 # %%
-# --- Catch up: the feature table and the fixed time split (notebooks 03-04) --
+# --- Catch up: the feature table and the fixed time split (Chapters 4–5) --
 import json
 import time
 

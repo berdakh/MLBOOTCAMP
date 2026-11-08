@@ -62,7 +62,7 @@ print("repo:", ROOT)
 print("artifacts:", ART)
 
 # %%
-# --- Catch up: the registry (notebook 08) and the fixed split (notebook 04) --
+# --- Catch up: the registry (Chapter 9) and the fixed split (Chapter 5) --
 import shutil
 
 from churnlab import bootstrap
@@ -74,7 +74,7 @@ split = bootstrap.ensure_split()
 
 # This notebook deploys a broken model on purpose. It works on a COPY of the
 # registry, so re-running it always starts from the same state and the course
-# registry that notebook 15 uses is never touched.
+# registry that Chapter 16 uses is never touched.
 OPS_DIR = ART / "registry_nb14"
 if OPS_DIR.exists():
     shutil.rmtree(OPS_DIR)

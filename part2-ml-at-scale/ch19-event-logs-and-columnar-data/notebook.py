@@ -58,7 +58,7 @@ print("repo:", ROOT)
 print("artifacts:", ART)
 
 # %%
-# --- Catch up: this is the first Level 2 notebook; it builds the data -------
+# --- Catch up: this is the first Part II notebook; it builds the data -------
 import time
 
 import duckdb

@@ -277,7 +277,7 @@ class ClickMLP(nn.Module):
 def new_model(seed=0, bias_init=True):
     torch.manual_seed(seed)
     model = ClickMLP(len(users), len(items), int(items["category"].max()) + 1)
-    if bias_init:  # see 9.4: start at the base rate, not at 50%
+    if bias_init:  # see 27.4: start at the base rate, not at 50%
         with torch.no_grad():
             model.mlp[-1].bias.fill_(float(np.log(POS_RATE / (1 - POS_RATE))))
     return model

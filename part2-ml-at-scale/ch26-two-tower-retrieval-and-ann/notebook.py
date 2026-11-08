@@ -61,7 +61,7 @@ print("repo:", ROOT)
 print("artifacts:", ART)
 
 # %%
-# --- Catch up: clicks, evaluation sets and notebook 07's ALS baseline --------
+# --- Catch up: clicks, evaluation sets and Chapter 25's ALS baseline --------
 import time
 
 import numpy as np
@@ -298,7 +298,7 @@ tt_logq = train_two_tower(logq_correction=True)
 # %%
 new_items = set(np.flatnonzero(items["created_day"].to_numpy() >= min(store.VALID_DAYS)).tolist())
 log_pop = np.log1p(pop)
-results, cands = {}, {"ALS (notebook 07)": cands_als}
+results, cands = {}, {"ALS (Chapter 25)": cands_als}
 for name, model in [("two-tower, no correction", tt_plain), ("two-tower + logQ", tt_logq)]:
     ue, ie = embed(model)
     cands[name] = rt.score_topk(ue, ie, eval_users, 100)

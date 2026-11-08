@@ -65,7 +65,7 @@ ART = artifact_dir(use_drive=USE_DRIVE)
 print("repo:", ROOT)
 print("artifacts:", ART)
 
-# Level 3 is written for a GPU runtime: Runtime -> Change runtime type -> T4 GPU.
+# Part III is written for a GPU runtime: Runtime -> Change runtime type -> T4 GPU.
 from scaleml.device import budget, describe, get_device
 
 DEVICE = get_device()
@@ -76,7 +76,7 @@ if DEVICE.type == "cpu":
     print("No GPU found: running with the reduced CPU budget. Numbers will be much worse than on a T4.")
 
 # %%
-# --- Catch up: nothing from notebook 01 is needed; build the model here ------
+# --- Catch up: nothing from Chapter 39 is needed; build the model here ------
 import json
 import time
 

@@ -68,7 +68,7 @@ ART = artifact_dir(use_drive=USE_DRIVE)
 print("repo:", ROOT)
 print("artifacts:", ART)
 
-# Level 3 is written for a GPU runtime: Runtime -> Change runtime type -> T4 GPU.
+# Part III is written for a GPU runtime: Runtime -> Change runtime type -> T4 GPU.
 from scaleml.device import budget, describe, get_device
 
 DEVICE = get_device()
@@ -201,7 +201,7 @@ ROUNDS = {
                     "LLM customer-support assistant with human hand-off (18.4)",
                     "Real-time payment fraud at 5,000 TPS, 100 ms (18.5)",
                     "An ML platform for 50 teams: features, training, deployment, monitoring (17)",
-                    "Search ranking for a marketplace (Level 2 nb 19)"],
+                    "Search ranking for a marketplace (Chapter 37)"],
         "follow_ups": ["What is your peak QPS and how many replicas?", "Which label is biased, and how?",
                        "How do you know the new model is better before and after launch?",
                        "What fails first at 10x traffic?", "What would you build first, and what not at all?"],
@@ -538,7 +538,7 @@ def depth_results(path: Path) -> list[dict]:
 
 
 PROJECTS = [
-    {"title": "TaskFlow churn prediction service (Level 1)",
+    {"title": "TaskFlow churn prediction service (Part I)",
      "problem": "Rank 10M SaaS accounts by churn risk so customer success can intervene within capacity.",
      "data": "Synthetic, checksummed TaskFlow event logs; time-based split with an embargo.",
      "approach": "Leakage-safe features, logistic regression vs gradient boosting, cost-based threshold, "
@@ -546,7 +546,7 @@ PROJECTS = [
      "results": results_from(ART / "final_report.json", "test"),
      "limitations": ["synthetic data: absolute numbers do not transfer", "single company-shaped scenario"],
      "next_steps": ["apply the same pipeline to a capstone dataset"]},
-    {"title": "shoprank: retrieval and learning-to-rank cascade (Level 2)",
+    {"title": "shoprank: retrieval and learning-to-rank cascade (Part II)",
      "problem": "Rank items for users of a simulated marketplace under position-biased click logs.",
      "data": "Simulated marketplace logs (shoprank), train/valid/test weeks; exploration traffic for propensities.",
      "approach": "Candidate generation (two-tower + co-visitation), LambdaMART ranker, IPS evaluation, "
@@ -554,10 +554,10 @@ PROJECTS = [
      "results": results_from(ART / "level2" / "final" / "test_results.json"),
      "limitations": ["simulated world with known ground truth", "offline only: no online A/B"],
      "next_steps": ["interleaving experiment design", "a sequence model for session intent"]},
-    {"title": "Depth experiments: warmup, batch scaling, label noise, double descent (Level 3)",
+    {"title": "Depth experiments: warmup, batch scaling, label noise, double descent (Part III)",
      "problem": "Turn four ML-depth interview topics into measured evidence.",
      "data": "Tiny Shakespeare (public domain text) and synthetic classification/regression data.",
-     "approach": "Small controlled experiments on CPU/T4 with fixed seeds (notebook 19).",
+     "approach": "Small controlled experiments on CPU/T4 with fixed seeds (Chapter 57).",
      "results": depth_results(ART / "level3" / "nb19" / "depth_demos.json"),
      "limitations": ["toy scale; one seed in the warmup sweep"], "next_steps": ["repeat the warmup sweep over 3 seeds"]},
 ]
@@ -711,7 +711,7 @@ _ = (PORTFOLIO / "readiness.json").write_text(json.dumps(
 # The cell below recomputes 1 and 2 by hand and with `scaleml.design`.
 
 # %%
-# Key equations, recomputed (instant). The EXAMPLE scores are copied from 20.5.
+# Key equations, recomputed (instant). The EXAMPLE scores are copied from 58.5.
 import math
 
 example_scores = {"phone_coding": [3, 3, 2, 3], "coding_1": [3, 2, 2, 3], "coding_2": [2, 3, 2, 2],

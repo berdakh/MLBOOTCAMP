@@ -70,7 +70,7 @@ ART = artifact_dir(use_drive=USE_DRIVE)
 print("repo:", ROOT)
 print("artifacts:", ART)
 
-# Level 3 is written for a GPU runtime: Runtime -> Change runtime type -> T4 GPU.
+# Part III is written for a GPU runtime: Runtime -> Change runtime type -> T4 GPU.
 from scaleml.device import budget, describe, get_device
 
 DEVICE = get_device()
@@ -104,7 +104,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 seed_everything(0)
 IS_CUDA = DEVICE.type == "cuda"
 
-# Four training runs share this budget: on CPU it is smaller than notebook 05's.
+# Four training runs share this budget: on CPU it is smaller than Chapter 43's.
 N_TRAIN = BUDGET.train_examples // 2 if IS_CUDA else 640
 N_EVAL = BUDGET.eval_examples if IS_CUDA else 300
 MAX_LEN = BUDGET.max_seq_len

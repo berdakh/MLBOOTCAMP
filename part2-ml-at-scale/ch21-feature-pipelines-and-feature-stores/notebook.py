@@ -60,7 +60,7 @@ print("repo:", ROOT)
 print("artifacts:", ART)
 
 # %%
-# --- Catch up: the ShopStream small dataset (notebook 01) -------------------
+# --- Catch up: the ShopStream small dataset (Chapter 19) -------------------
 import time
 
 import duckdb

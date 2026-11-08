@@ -65,7 +65,7 @@ ART = artifact_dir(use_drive=USE_DRIVE)
 print("repo:", ROOT)
 print("artifacts:", ART)
 
-# Level 3 is written for a GPU runtime: Runtime -> Change runtime type -> T4 GPU.
+# Part III is written for a GPU runtime: Runtime -> Change runtime type -> T4 GPU.
 from scaleml.device import budget, describe, get_device
 
 DEVICE = get_device()
@@ -270,7 +270,7 @@ gpu_h = ds.gpu_hours_from_flops(flops, tr["GPU peak fp16 FLOP/s (T4 spec sheet: 
 print(f"\ncompute: {flops:.2e} FLOPs -> {gpu_h:,.0f} GPU-hours at the assumed MFU "
       f"-> {gpu_h * tr['price per GPU-hour (placeholder)']:,.0f} at the placeholder price")
 print("note: a 1B-parameter model does not fit a T4's 16 GB for full fine-tuning with Adam "
-      "(16 bytes/param, notebook 02) - the arithmetic says how long, not whether it fits.")
+      "(16 bytes/param, Chapter 40) - the arithmetic says how long, not whether it fits.")
 
 # %% [markdown]
 # **Expected:** `1.20e+19 FLOPs -> 171 GPU-hours`, about 85 at the placeholder
@@ -535,7 +535,7 @@ adr = ds.adr_markdown(
     1, "Online feature store: managed key-value service vs self-hosted cluster",
     status="Accepted (illustrative)", decided_on="2026-01-15",
     context=("Ten ranking models need ~400 features per user at p99 < 10 ms for ~2,000 peak lookups/s "
-             "(ASSUMED). Sizing in 17.1 gives ~1.5 TB in memory with 3 replicas. The platform team "
+             "(ASSUMED). Sizing in 55.1 gives ~1.5 TB in memory with 3 replicas. The platform team "
              "has 4 engineers and no existing on-call for stateful stores."),
     options={
         "A · managed KV service": "no on-call for storage nodes, autoscaling; per-GB price higher; vendor limits on item size",

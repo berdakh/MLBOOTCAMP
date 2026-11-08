@@ -79,10 +79,10 @@ T0 = time.time()
 split = time_split(bootstrap.ensure_features())
 train, valid = split.train, split.valid
 
-model = make_model("logreg").fit(train[FEATURES], train[LABEL])  # notebook 06's selection
+model = make_model("logreg").fit(train[FEATURES], train[LABEL])  # Chapter 7's selection
 scores = predict_proba(model, valid)
 y = valid[LABEL].to_numpy()
-threshold, _ = best_threshold_by_value(y, scores, bootstrap.VALUE_TP, bootstrap.COST_FP)  # notebook 07
+threshold, _ = best_threshold_by_value(y, scores, bootstrap.VALUE_TP, bootstrap.COST_FP)  # Chapter 8
 report = classification_report(y, scores)
 print(f"threshold {threshold:.3f} | " + ", ".join(f"{k} {v:.3f}" for k, v in report.items() if k != "n"))
 
@@ -293,7 +293,7 @@ meta = ModelMetadata(
     },
     metrics={"validation": report},
     params={"C": 1.0},
-    notes="demo bundle from notebook 08",
+    notes="demo bundle from Chapter 9",
 )
 bundle = save_bundle(model, meta, ART / "bundles" / "logreg_demo", overwrite=True)
 print(sorted(p.name for p in bundle.iterdir()))
@@ -435,7 +435,7 @@ val = m["metrics"]["validation"]
 worst_rows = readable.sort_values("pr_auc").head(3)
 card = f"""# Model card · TaskFlow churn risk · {m['model_name']} {m['version']}
 
-*Generated from `registry/{m['version']}/metadata.json` by notebook 08. Synthetic data; teaching project.*
+*Generated from `registry/{m['version']}/metadata.json` by Chapter 9. Synthetic data; teaching project.*
 
 ## Intended use
 
@@ -450,12 +450,12 @@ without re-validation.
 - {m['training_data']['rows']:,} (snapshot, customer) rows, monthly snapshots {m['training_data']['first_snapshot']} to {m['training_data']['last_snapshot']}
 - fingerprint `{m['training_data']['fingerprint']}`; label `{m['label']}` = cancels within 30 days of the snapshot
 - {len(m['features'])} features: {', '.join(m['features'])}
-- point-in-time features (notebook 03); 30-day embargo before validation (notebook 04)
+- point-in-time features (Chapter 4); 30-day embargo before validation (Chapter 5)
 
 ## Evaluation
 
 Validation period 2024-04-01 to 2024-06-01 ({val['n']:,} rows, positive rate {val['positive_rate']:.3f}).
-The test period (2024-07 onwards) is untouched until notebook 15.
+The test period (2024-07 onwards) is untouched until Chapter 16.
 
 | metric | value |
 |---|---|
@@ -465,7 +465,7 @@ The test period (2024-07 onwards) is untouched until notebook 15.
 | lift @ top 10% | {val['lift@10%']:.2f} |
 
 Compared with: base rate (PR-AUC {val['positive_rate']:.3f}) and gradient-boosted trees
-(registry v2, PR-AUC {pr.get('v2', float('nan')):.3f}); see notebook 06 for the paired comparison.
+(registry v2, PR-AUC {pr.get('v2', float('nan')):.3f}); see Chapter 7 for the paired comparison.
 
 Weakest slices with ≥ 300 rows by PR-AUC. The worst one's customer-bootstrap CI ({lo:.3f}-{hi:.3f})
 {"overlaps the overall CI, so no slice is clearly worse at this sample size" if hi >= lo_all else "does not overlap the overall CI: investigate it"}:
@@ -476,7 +476,7 @@ Weakest slices with ≥ 300 rows by PR-AUC. The worst one's customer-bootstrap C
 Score ≥ **{m['threshold']:.3f}**, the value-maximising threshold on validation under **assumed** costs:
 a call costs ${bootstrap.COST_FP:.0f}; reaching a would-be churner is worth ${bootstrap.VALUE_TP:.0f}
 ($600 margin × an assumed, unmeasured 25% save rate). Break-even for calibrated scores is 1/6.
-Halving the save rate moves the threshold to ≈ 0.45; doubling it to ≈ 0.10 (notebook 07).
+Halving the save rate moves the threshold to ≈ 0.45; doubling it to ≈ 0.10 (Chapter 8).
 Scores are close to calibrated on validation (Brier {val['brier']:.3f}).
 
 ## Limitations

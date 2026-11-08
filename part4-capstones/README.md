@@ -21,10 +21,10 @@ version.
 <!-- toc:start -->
 | | Capstone | Guided solution |
 |---|---|---|
-| 1 | [Capstone 2 · Predictive maintenance on NASA C-MAPSS](cap1-predictive-maintenance/README.md) | in preparation |
+| 1 | [Capstone 2 · Predictive maintenance on NASA C-MAPSS](cap1-predictive-maintenance/README.md) | [walkthrough](cap1-predictive-maintenance/walkthrough.ipynb) |
 | 2 | [Capstone 1 · Day-ahead hourly load forecasting for the Texas grid (ERCOT)](cap2-electricity-load-forecasting/README.md) | in preparation |
-| 3 | [Capstone 3 · Weekly product demand forecasting on UCI Online Retail II](cap3-retail-demand-forecasting/README.md) | in preparation |
-| 4 | [Capstone 4 · Top-10 movie recommendations on MovieLens, evaluated in time](cap4-movie-recommendations/README.md) | in preparation |
+| 3 | [Capstone 3 · Weekly product demand forecasting on UCI Online Retail II](cap3-retail-demand-forecasting/README.md) | [walkthrough](cap3-retail-demand-forecasting/walkthrough.ipynb) |
+| 4 | [Capstone 4 · Movie recommendations (MovieLens)](cap4-movie-recommendations/README.md) | [walkthrough](cap4-movie-recommendations/walkthrough.ipynb) |
 | 5 | [Capstone 5 · Toxic-comment triage for human review on Civil Comments](cap5-content-moderation/README.md) | in preparation |
 <!-- toc:end -->
 

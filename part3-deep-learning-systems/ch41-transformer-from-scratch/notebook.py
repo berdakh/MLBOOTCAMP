@@ -64,7 +64,7 @@ ART = artifact_dir(use_drive=USE_DRIVE)
 print("repo:", ROOT)
 print("artifacts:", ART)
 
-# Level 3 is written for a GPU runtime: Runtime -> Change runtime type -> T4 GPU.
+# Part III is written for a GPU runtime: Runtime -> Change runtime type -> T4 GPU.
 from scaleml.device import budget, describe, get_device
 
 DEVICE = get_device()
@@ -563,7 +563,7 @@ def kv_cache_bytes(layers, heads, d_head, seq, batch, bytes_per):
 
 
 print(f"KV cache, 7B fp16, 4,096 tokens: {kv_cache_bytes(32, 32, 128, 4096, 1, 2) / 2**30:.1f} GiB")
-print(f"KV cache, the 3.7 benchmark model (512 tokens, fp32): "
+print(f"KV cache, the 41.7 benchmark model (512 tokens, fp32): "
       f"{kv_cache_bytes(CFG.n_layer, CFG.n_head, CFG.n_embd // CFG.n_head, 512, 1, 4) / 2**10:.0f} KiB")
 
 # %% [markdown]

@@ -57,7 +57,7 @@ print("repo:", ROOT)
 print("artifacts:", ART)
 
 # %%
-# --- Catch up: the SQL drills need the CLEAN TaskFlow tables (notebook 02) ---
+# --- Catch up: the SQL drills need the CLEAN TaskFlow tables (Chapter 3) ---
 from churnlab import bootstrap
 from grading import ch17 as grade
 

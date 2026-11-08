@@ -79,7 +79,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 
 t0 = time.time()
 world, users, items, imps = store.load("small")
-# Same point-in-time setup as notebook 17: features from days 0-34, labels 35-41.
+# Same point-in-time setup as Chapter 35: features from days 0-34, labels 35-41.
 _, lgbm, train_frame = sv.train_ranker(imps, items, len(users), feature_days=(0, 34), label_days=(35, 41))
 state = sv.build_state(imps, items, len(users), feature_days=(0, 41))  # serving state for the valid week
 X_train = train_frame[sv.FEATURES].to_numpy(np.float32)

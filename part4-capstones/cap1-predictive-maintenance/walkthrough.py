@@ -700,9 +700,10 @@ for name, fp in [("constant (mean capped RUL)", fp_mean), ("ridge on window feat
 print(pd.DataFrame(cv_rows).round(3).to_string(index=False), f"\n({time.time() - t0:.1f}s)")
 
 # %% [markdown]
-# **Expected:** the constant baseline is poor (an RMSE of roughly 40–50 cycles
-# on the official data — it predicts the same number for an engine about to fail
-# and one with 150 cycles left); ridge should roughly halve it.
+# **Expected (official data):** the constant baseline is poor — an RMSE of
+# about 45 cycles; it predicts the same number for an engine about to fail and
+# one with 150 cycles left. Ridge cuts that by more than half (about 19 cycles
+# when we ran it).
 #
 # **Why these baselines.** The constant tells you how much signal there is at
 # all. The linear model on the same window features as the tree model isolates
@@ -743,10 +744,12 @@ cv_rows.append(cap_table[cap_table.cap == 125].iloc[0].to_dict())
 print("cap chosen by engine-level CV RMSE (uncapped truth):", CAP)
 
 # %% [markdown]
-# **Expected (official data):** gradient boosting beats ridge by a few cycles of
-# RMSE. Caps of 125 and 150 are usually close, and 100 is worse, because cuts
-# with true RUL up to 150 can never be predicted above 100. Your chosen cap is
-# whatever CV says; the rest of the notebook uses the printed value.
+# **Expected (official data):** gradient boosting beats ridge by two to three
+# cycles of RMSE (about 17 against 19 in our run). Cap 125 came out best, with
+# 100 and 150 each about two cycles worse: 100 can never predict the cuts with
+# 100–150 cycles left, and 150 asks the model for precision in early life where
+# the sensors carry none. Your chosen cap is whatever CV says; the rest of the
+# notebook uses the printed value.
 #
 # **Common mistake:** choosing the cap by comparing *capped* errors. A smaller
 # cap shrinks both the labels and the errors, so it always looks better; only
@@ -787,6 +790,9 @@ print(f"engine-level split  : RMSE {RMSE_GROUP:.2f} cycles (honest)")
 print(f"the random split understates the error by {100 * (1 - RMSE_RANDOM / RMSE_GROUP):.0f}%  ({time.time() - t0:.1f}s)")
 
 # %% [markdown]
+# **Expected (official data):** roughly half the error with the random split
+# (about 7 against 14 cycles when we ran it).
+#
 # **What to notice:** the random split reports a smaller error, for the same
 # model and features. Its validation windows have near-identical neighbours in
 # training (same engine, 29 shared cycles, same initial-wear offset), so the
@@ -1020,8 +1026,10 @@ print("capped-truth RMSE (literature-style, for comparison only):",
 
 # %% [markdown]
 # **Expected (official data):** gradient boosting and the CNN both far ahead of
-# the constant; RMSE intervals about ±3–4 cycles wide, because there are only
-# 100 test engines. The NASA score is dominated by a handful of engines (next
+# the constant (about 14 and 16 cycles against 43 in our run); RMSE intervals
+# about ±2 cycles wide, because there are only 100 test engines, and a paired
+# CNN-minus-trees interval that may include zero even though CV preferred the
+# trees. The NASA score is dominated by a handful of engines (next
 # step). The capped-truth RMSE is lower than the uncapped one; papers usually
 # report the capped version, so compare with care and say which one you quote.
 #
@@ -1070,18 +1078,26 @@ axes[1].set(xlabel="error = predicted - true (cycles)", title="error distributio
 plt.show()
 
 # %% [markdown]
-# **How to read it (the patterns we expect, check them against your output).**
+# **How to read it (what we saw on the official data; check it against your
+# output).**
 #
-# * **Near failure (< 25 cycles) errors are smallest** — the degradation is
-#   unmistakable — and this is the slice a planner cares about most.
-# * **Far from failure (> 75 cycles) predictions sit below the truth and flatten
-#   at the cap.** That is the cap working as designed: the model says "at least
-#   about $R_{\max}$" and is scored against the uncapped truth, so these engines
-#   are predicted *early*. Early is the safe side.
-# * **The NASA score's worst engines** are typically late predictions on
-#   engines with short observed histories or with unusually slow-looking
-#   degradation. Hypothesis to test: a short history gives a noisy slope; the
-#   `cycles observed` column lets you check it.
+# * **Near failure (< 25 cycles) errors are smallest** — about 5 cycles RMSE —
+#   because the degradation is unmistakable. This is the slice a planner cares
+#   about most, and it is the good news.
+# * **The middle band (25–75 cycles) is where late predictions concentrate**:
+#   in our run three engines in four were predicted late there, by about 7
+#   cycles on average. This is the dangerous slice: the engine is close enough
+#   to failure for a late estimate to delay a shop visit too long. Hypothesis:
+#   the capped label teaches the model that most windows "look healthy" (the
+#   flat part covers a large share of training windows), so it is slow to
+#   leave the plateau for engines whose drift is mild. Test it: compare cap 100
+#   and 150 on this slice only, or add an asymmetric loss (an extension).
+# * **Far from failure (> 75 cycles)** errors are as large but balanced: the
+#   cap stops predictions near 125 while the truth goes up to 145.
+# * **The NASA score is dominated by a few engines** (the top five gave about
+#   40% of the total in our run), all with errors of 30–40 cycles. Look at
+#   their sensor traces before inventing a fix: they are the interview story
+#   for "what does the asymmetric score reward?".
 #
 # **Do not game the score.** Subtracting a constant from every prediction
 # lowers the NASA score (fewer late engines) while raising RMSE. If a planner

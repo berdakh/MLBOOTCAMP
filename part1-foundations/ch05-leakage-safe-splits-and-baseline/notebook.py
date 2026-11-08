@@ -61,7 +61,7 @@ print("repo:", ROOT)
 print("artifacts:", ART)
 
 # %%
-# --- Catch up: the feature table from notebook 03 --------------------------
+# --- Catch up: the feature table from Chapter 4 --------------------------
 import numpy as np
 import pandas as pd
 

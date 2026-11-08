@@ -58,7 +58,7 @@ print("repo:", ROOT)
 print("artifacts:", ART)
 
 # %%
-# --- Catch up: logs, propensities (notebook 05) and the hidden truth --------
+# --- Catch up: logs, propensities (Chapter 23) and the hidden truth --------
 import time
 
 import numpy as np

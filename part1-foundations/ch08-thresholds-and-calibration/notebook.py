@@ -61,7 +61,7 @@ print("repo:", ROOT)
 print("artifacts:", ART)
 
 # %%
-# --- Catch up: features, split, and the model selected in notebook 06 ------
+# --- Catch up: features, split, and the model selected in Chapter 7 ------
 import json
 import time
 
@@ -91,10 +91,10 @@ train, valid = split.train, split.valid
 selection_path = ART / "selection.json"
 if selection_path.exists():
     selection = json.loads(selection_path.read_text())
-    print("using notebook 06's selection:", selection["selected_model"], selection["params"])
+    print("using Chapter 7's selection:", selection["selected_model"], selection["params"])
 else:
     selection = {"selected_model": "logreg", "params": {"C": 1.0}}
-    print("no selection.json in this artifact dir; using the course's selection: logreg, C=1.0 (notebook 06)")
+    print("no selection.json in this artifact dir; using the course's selection: logreg, C=1.0 (Chapter 7)")
 
 model = make_model(selection["selected_model"], **selection["params"]).fit(train[FEATURES], train[LABEL])
 y = valid[LABEL].to_numpy()
@@ -402,7 +402,7 @@ policy = {
         "mean_precision_at_capacity": round(float(capacity_df["precision@40"].mean()), 3),
     },
     "sensitivity": "threshold moves 0.10-0.45 when the save rate is doubled/halved (section 7.3)",
-    "chosen_on": "validation (optimistic); confirm once on test in notebook 15",
+    "chosen_on": "validation (optimistic); confirm once on test in Chapter 16",
 }
 (ART / "threshold_policy.json").write_text(json.dumps(policy, indent=2))
 print(json.dumps(policy, indent=2))

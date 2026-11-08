@@ -519,7 +519,7 @@ print(gap.round(4).to_string())
 
 # %%
 cuped_factor = cv["cuped"].var() / cv["raw"].var()
-criteria = f"""# Launch criteria: ranker A vs production (template, filled by notebook 12)
+criteria = f"""# Launch criteria: ranker A vs production (template, filled by Chapter 30)
 
 ## Decision metric (one, pre-registered)
 * Clicks per exposed user over 14 days, user-randomised 50/50, analysed with CUPED

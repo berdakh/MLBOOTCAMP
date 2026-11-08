@@ -59,7 +59,7 @@ print("repo:", ROOT)
 print("artifacts:", ART)
 
 # %%
-# --- Catch up: a registry with trained models (notebook 08) -----------------
+# --- Catch up: a registry with trained models (Chapter 9) -----------------
 # Builds the feature table, the time split and two registered models if they
 # are not already in ART (about 20-30 seconds the first time).
 from churnlab import bootstrap

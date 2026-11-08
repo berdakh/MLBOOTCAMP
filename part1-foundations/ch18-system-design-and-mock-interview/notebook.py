@@ -58,7 +58,7 @@ print("repo:", ROOT)
 print("artifacts:", ART)
 
 # %%
-# --- Catch up: only the feature table and split, to MEASURE scoring speed in 17.3 ---
+# --- Catch up: only the feature table and split, to MEASURE scoring speed in 18.3 ---
 from churnlab import bootstrap
 from grading import ch18 as grade
 

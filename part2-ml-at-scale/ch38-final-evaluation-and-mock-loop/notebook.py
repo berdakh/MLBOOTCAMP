@@ -259,7 +259,7 @@ pd.DataFrame({"raw CTR ratio": raw_prop, "power-law fit": propensity,
 # pre-registration file.
 
 # %%
-assert prereg_path.exists(), "write the pre-registration first (20.2)"
+assert prereg_path.exists(), "write the pre-registration first (38.2)"
 test = imps[imps["day"].between(store.TEST_DAYS[0], store.TEST_DAYS[-1])]
 state_test = sv.build_state(imps, items, len(users), feature_days=(0, 48))  # refreshed features, frozen ranker
 print(f"test week: {len(test):,} impressions, {test['request_id'].nunique():,} requests, "

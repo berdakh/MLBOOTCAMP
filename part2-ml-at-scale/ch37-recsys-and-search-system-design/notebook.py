@@ -366,7 +366,7 @@ ranker_rows_per_s = peak * 500          # heavy ranker scores 500 candidates per
 preranker_rows_per_s = peak * 2_000
 feature_reads_per_s = peak * (1 + 500)  # one user row + 500 item rows per request
 RANKER_ROWS_PER_CORE = 20_000           # ASSUMPTION for a mid-size multi-task DNN on CPU; measure it
-PRERANK_ROWS_PER_CORE = 1_000_000       # ASSUMPTION: a dot product / tiny MLP (notebook 18 measured ~4M/s for a 128-64 MLP)
+PRERANK_ROWS_PER_CORE = 1_000_000       # ASSUMPTION: a dot product / tiny MLP (Chapter 36 measured ~4M/s for a 128-64 MLP)
 
 capacity = pd.DataFrame([
     {"quantity": "requests per day", "value": DAU * REQ_PER_USER, "unit": "requests"},

@@ -58,7 +58,7 @@ print("repo:", ROOT)
 print("artifacts:", ART)
 
 # %%
-# --- Catch up: features, split and a registry (notebooks 03, 04, 08) --------
+# --- Catch up: features, split and a registry (Chapters 4, 5, 9) --------
 from churnlab import bootstrap
 from grading import ch11 as grade
 
@@ -400,7 +400,7 @@ r = api.post("/predict", json=mars)
 print("known regions:", known_regions)
 print("region=MARS ->", r.status_code, r.json()["churn_probability"])
 
-# Monitoring's job: count it. The app keeps recent inputs in memory (notebook 14 builds on this).
+# Monitoring's job: count it. The app keeps recent inputs in memory (Chapter 15 builds on this).
 recent = pd.DataFrame(list(api.app.state.metrics.recent_inputs))
 unseen = ~recent["region"].isin(known_regions)
 print(f"recent inputs: {len(recent)} | unseen region values: {int(unseen.sum())} "

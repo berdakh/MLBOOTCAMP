@@ -6,7 +6,7 @@
 # %% [markdown]
 # # Capstone 3 · Retail demand forecasting (UCI Online Retail) — guided walkthrough
 #
-# **Capstone · about 5 minutes to run on a laptop CPU · CPU only**
+# **Capstone · about 2 minutes to run on a laptop CPU (plus a 45 MB download) · CPU only**
 #
 # This notebook is a complete worked solution of the capstone's minimum viable product (MVP), written as
 # if a tutor were sitting next to you. It forecasts how many units of each product a UK online gift
@@ -982,7 +982,7 @@ print(f"WAPE({best_baseline}) − WAPE(gbm) = {diff.WAPE:+.3f}, 95% CI [{diff.ci
 seg_test = test_scores[test_scores.segment != "all"].pivot(index="segment", columns="method", values="WAPE")
 print("\ntest WAPE by segment:")
 print(seg_test[["naive", "ma_8", "seasonal_naive", "sba", "gbm", "gbm_ma8_mean", "per_segment_choice"]].round(3).to_string())
-comb = ci.loc[f"gbm_ma8_mean − gbm"]
+comb = ci.loc["gbm_ma8_mean − gbm"]
 print(f"\nWAPE(gbm_ma8_mean) − WAPE(gbm) = {comb.WAPE:+.3f}, 95% CI [{comb.ci_low:+.3f}, {comb.ci_high:+.3f}]")
 
 # %% [markdown]

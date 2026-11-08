@@ -198,7 +198,7 @@ print(f"{len(T):,} test users | {len(target_rows) - len(T)} users skipped (no ea
 # %%
 results = {}
 neg_rng = np.random.default_rng(0)
-NEG = sr.sample_negatives(T, N_ITEMS, n_neg=100, rng=neg_rng)  # used in 10.6
+NEG = sr.sample_negatives(T, N_ITEMS, n_neg=100, rng=neg_rng)  # used in 28.6
 
 
 def evaluate_scores(name, scores):

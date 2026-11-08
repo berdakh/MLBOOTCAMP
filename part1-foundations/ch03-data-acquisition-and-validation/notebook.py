@@ -485,7 +485,7 @@ quality = {
         "missing region": "'unknown' category (keeps 87 customers, lets the model use missingness)",
         "duplicate usage keys": "keep first copy per (customer_id, week_start)",
         "sessions == -1": "NaN (unknown), imputed inside the model pipeline",
-        "leaky columns": "kept for labels only; excluded from features (see 2.6)",
+        "leaky columns": "kept for labels only; excluded from features (see 3.6)",
     },
     "clean_contracts_pass": {name: r.ok for name, r in clean_reports.items()},
 }

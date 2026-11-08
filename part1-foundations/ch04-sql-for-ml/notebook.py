@@ -58,13 +58,13 @@ print("repo:", ROOT)
 print("artifacts:", ART)
 
 # %%
-# --- Catch up: the clean tables from notebook 02 ---------------------------
+# --- Catch up: the clean tables from Chapter 3 ---------------------------
 import pandas as pd
 
 from churnlab import bootstrap
 from grading import ch04 as grade
 
-tables = bootstrap.load_clean()  # raw extract, verified and cleaned (notebook 02)
+tables = bootstrap.load_clean()  # raw extract, verified and cleaned (Chapter 3)
 {name: df.shape for name, df in tables.items()}
 
 # %% [markdown]
