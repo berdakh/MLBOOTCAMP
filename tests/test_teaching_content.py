@@ -18,9 +18,9 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
-from levels import LEVELS, sources  # noqa: E402
+from book import all_sources  # noqa: E402
 
-ALL_SOURCES = [s for lv in LEVELS for s in sources(lv)]
+ALL_SOURCES = all_sources()
 
 
 def markdown_cells(src: Path) -> list[str]:
@@ -43,7 +43,7 @@ def test_sources_found():
     assert len(ALL_SOURCES) >= 58
 
 
-@pytest.mark.parametrize("src", ALL_SOURCES, ids=lambda p: f"{p.parent.parent.name}-{p.stem[:2]}")
+@pytest.mark.parametrize("src", ALL_SOURCES, ids=lambda p: p.parent.name[:5])
 def test_every_notebook_has_a_glossary(src):
     text = src.read_text(encoding="utf-8")
     assert "## 📖 Words to know" in text, f"{src.name}: add a '## 📖 Words to know' table"
@@ -52,7 +52,7 @@ def test_every_notebook_has_a_glossary(src):
     assert len(rows) >= 6, f"{src.name}: the glossary should define at least 5 terms"
 
 
-@pytest.mark.parametrize("src", ALL_SOURCES, ids=lambda p: f"{p.parent.parent.name}-{p.stem[:2]}")
+@pytest.mark.parametrize("src", ALL_SOURCES, ids=lambda p: p.parent.name[:5])
 def test_display_maths_is_balanced(src):
     for number, cell in enumerate(markdown_cells(src), 1):
         fences = [ln for ln in cell.splitlines() if ln.strip() == "$$"]
@@ -62,11 +62,11 @@ def test_display_maths_is_balanced(src):
 
 
 def test_every_diagram_is_used():
-    figures = {p.name for p in (ROOT / "docs" / "assets" / "diagrams").glob("*.svg")}
+    figures = {p.name for p in (ROOT / "figures").glob("*.svg")}
     texts = [p.read_text(encoding="utf-8") for p in ALL_SOURCES]
-    for pattern in ("docs/**/*.md", "*.md", "level2/*.md", "level3/*.md"):
+    for pattern in ("*.md", "part*/**/*.md", "appendices/*.md"):
         texts += [p.read_text(encoding="utf-8") for p in ROOT.glob(pattern)
-                  if p.name != "diagrams.md"]
+                  if p.name != "figures.md"]
     corpus = "\n".join(texts)
     unused = sorted(f for f in figures if not re.search(re.escape(f), corpus))
     assert not unused, f"figures not embedded anywhere: {unused}"

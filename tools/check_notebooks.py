@@ -22,7 +22,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from levels import all_notebooks  # noqa: E402
+from book import all_notebooks  # noqa: E402
 
 # Lines Jupyter understands but Python does not.
 MAGIC = re.compile(r"^\s*[%!]")

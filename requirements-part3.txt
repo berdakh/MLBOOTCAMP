@@ -1,0 +1,8 @@
+# Level 3: deep learning and large models. Colab preinstalls torch,
+# transformers, accelerate and datasets on GPU runtimes; pip skips them.
+-r requirements-part2.txt
+transformers>=4.45
+datasets>=2.19
+accelerate>=0.30
+peft>=0.11
+safetensors>=0.4

@@ -7,8 +7,8 @@ Core (shared by every Level 2 notebook):
     store.py     where Level 2 artifacts live, and cached dataset loading
 
 Topic modules (each introduced by its notebook) live alongside, and graders
-for exercises live in ``shoprank.grading``. Exercise self-checks reuse
-``churnlab.checks.run_check`` from Level 1.
+for exercises live in the ``grading`` package (src/grading/chNN.py) and reuse
+``churnlab.checks.run_check`` from Part I.
 """
 
 __version__ = "2.0.0"

@@ -7,7 +7,8 @@ Core (shared by every Level 3 notebook):
     textdata.py  public Hugging Face text datasets, sampled to a budget
 
 Topic modules are added by the notebooks that introduce them; exercise graders
-live in ``scaleml.grading`` and reuse ``churnlab.checks.run_check``.
+live in the ``grading`` package (src/grading/chNN.py) and reuse
+``churnlab.checks.run_check``.
 
 Level 3 targets a free Colab T4 GPU. On a CPU every notebook still runs, with
 the smaller sizes chosen by ``device.budget()``.
