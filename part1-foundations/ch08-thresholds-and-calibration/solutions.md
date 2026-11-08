@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `top_k_per_snapshot`
 
-[verified] Reference code: [`code/nb07.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def top_k_per_snapshot(df, scores, k):
@@ -30,7 +30,7 @@ returning the flags in *sorted* order; using `np.asarray(scores)` with a
 
 ## Exercise 2 · `best_threshold`
 
-[verified] Reference code: [`code/nb07.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def best_threshold(y, scores, value_tp, cost_fp):

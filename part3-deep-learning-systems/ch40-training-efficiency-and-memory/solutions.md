@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `training_memory_bytes`
 
-[verified] Reference code: [`code/nb02.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 STATE_BYTES = {"sgd": 0, "sgd_momentum": 4, "adam": 8, "adamw": 8}
@@ -32,7 +32,7 @@ None of these include activations, the CUDA context or fragmentation.
 
 ## Exercise 2 · `accumulated_step`
 
-[verified] Reference code: [`code/nb02.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def accumulated_step(model, batches, loss_fn):
@@ -74,10 +74,10 @@ stateless or 8-bit optimizer (SGD: 8 B/param = 10.4 GB, tight; 8-bit Adam: ~13 G
 too tight with activations and the CUDA context), or offloading optimizer state to CPU
 RAM (ZeRO-Offload; slow on Colab's PCIe and 12 GB of host RAM).
 
-(c) **Parameter-efficient fine-tuning** (LoRA, notebook 06): freeze the base
+(c) **Parameter-efficient fine-tuning** (LoRA, Chapter 44): freeze the base
 weights (fp16: 2.6 GB, no gradients, no optimizer state), train adapters
 with ~0.1–1% of the parameters; add activation checkpointing for seq 1024. Or
-QLoRA (4-bit base weights, ~0.7 GB). Or pick a smaller model. The interview point:
+QLoRA (4-bit base weights, ~0.7 GB). Or pick a smaller model. The general lesson:
 **do the arithmetic before picking the technique**: each technique shrinks a
 specific term.
 

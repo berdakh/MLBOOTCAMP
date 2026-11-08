@@ -1,62 +1,72 @@
 # Interpreting the diagnostic
 
-[Notebook 00](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch01-diagnostic/notebook.ipynb)
-([Colab](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch01-diagnostic/notebook.ipynb))
-measures five areas: **Python, pandas, SQL, testing and evaluation**. This page
-explains how to read your result and where to spend extra time.
-
+The skills diagnostic of
+[Chapter 1](../part1-foundations/ch01-diagnostic/README.md)
+([lab](../part1-foundations/ch01-diagnostic/notebook.ipynb),
+[open in Colab](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part1-foundations/ch01-diagnostic/notebook.ipynb))
+measures five areas: **Python, pandas, SQL, testing and evaluation**. This
+appendix explains how to read the result and how to use it to decide where to
+spend additional time.
 
 ---
 
-## What the diagnostic measures and what it does not
+## What the diagnostic measures, and what it does not
 
-It measures whether you can produce small, correct pieces of code in each area
-**unaided and under time pressure**, which is what a technical screen measures.
-It does not measure research ability, mathematical depth, or how good your
-models are. A low score in an area you have never been trained in (SQL and
-testing, for most researchers) is the expected starting point, not a verdict.
+The diagnostic measures whether you can produce small, correct pieces of code
+in each area **without assistance and within a time limit**, which is also
+what a technical screening interview measures. It does not measure research
+ability, mathematical depth, or the quality of the models you build. A low
+score in an area in which you have had no training (for most researchers, SQL
+and software testing) is the expected starting point, not a judgement of
+ability.
 
-## Turning your result into a level
+## Converting the result into a rating
 
-For each area, work out the share of items you passed, and note how many you
-needed to look something up for. Then:
+For each area, compute the share of items you passed, and note how many of
+them required you to look something up. Then assign a rating:
 
-| Level | Share passed, unaided | Time | What it means |
+| Rating | Share passed without assistance | Time | Interpretation |
 |---|---|---|---|
-| **Strong** | 80% or more | Within the suggested time | Do the area's days normally; spend spare time elsewhere |
-| **Partial** | 50–79% | Or over time, or with lookups | Do the area's days carefully, including every exercise; add the area to your daily drills |
-| **Gap** | Below 50% | — | Prioritise the area's days; read its handbook chapter first; daily drills from week 2 |
+| **Strong** | 80% or more | Within the suggested time | Work through the area's chapters normally; spend any spare time on weaker areas |
+| **Partial** | 50–79% | Or over time, or with look-ups | Work through the area's chapters carefully, including every exercise, and add the area to your regular drills |
+| **Gap** | Below 50% | — | Give the area's chapters priority; read each chapter's text in full before its lab; drill the area regularly after Part I |
 
-Being *over time* on an item you passed counts as half a pass for this
-purpose. Interviews are timed.
+An item that was passed but took longer than the suggested time counts as
+half a pass for this purpose, because interviews are timed.
 
-## Routing table
+## Where each area is taught
 
-| Area | Days and notebooks that train it | Handbook | Extra practice |
-|---|---|---|---|
-| **Python** (functions, data structures, errors, modules) | Day 1 (01), Day 3 (09–11), Day 5 (16) | [2 · Reproducibility](../part1-foundations/_handbook/02-reproducibility.md) | Rebuild one `churnlab` module from a blank file each week |
-| **pandas** (selection, groupby, merge, time) | Day 1 (02, 04), Day 2 (08) | [3 · Data, SQL and leakage](../part1-foundations/_handbook/03-data-sql-and-leakage.md) | Translate each SQL drill into pandas as well |
-| **SQL** (joins, aggregation, windows, dates) | Day 1 (03), Day 5 (16) | [3 · Data, SQL and leakage](../part1-foundations/_handbook/03-data-sql-and-leakage.md) | Daily 20–30 minute SQL drills in weeks 2–4 |
-| **Testing** (pytest, fixtures, what to assert) | Day 3 (09, 11), Day 4 (12) | [5 · Serving](../part1-foundations/_handbook/05-serving.md) | Write tests first for each capstone module |
-| **Evaluation** (metrics for imbalance, uncertainty, thresholds) | Day 1 (04), Day 2 (05–08), Day 5 (15) | [4 · Evaluation and decisions](../part1-foundations/_handbook/04-evaluation-and-decisions.md) | Explain one capstone result per week aloud with its interval |
+| Area | Chapters that teach it | Further practice |
+|---|---|---|
+| **Python** (functions, data structures, errors, modules) | [Chapter 2](../part1-foundations/ch02-reproducible-project/README.md); [Chapters 10–12](../part1-foundations/ch10-fastapi-and-contracts/README.md); [Chapter 17](../part1-foundations/ch17-python-and-sql-drills/README.md) | Rebuild one `churnlab` module from an empty file at regular intervals; [Chapters 33–34](../part2-ml-at-scale/ch33-coding-patterns-1/README.md) (coding patterns) |
+| **pandas** (selection, grouping, merging, time) | [Chapter 3](../part1-foundations/ch03-data-acquisition-and-validation/README.md), [Chapter 5](../part1-foundations/ch05-leakage-safe-splits-and-baseline/README.md), [Chapter 9](../part1-foundations/ch09-error-analysis-and-artifacts/README.md) | Translate each SQL drill of Chapter 17 into pandas as well |
+| **SQL** (joins, aggregation, window functions, dates) | [Chapter 4](../part1-foundations/ch04-sql-for-ml/README.md), [Chapter 17](../part1-foundations/ch17-python-and-sql-drills/README.md) | Regular 20–30 minute SQL drills after Part I; [Chapter 20](../part2-ml-at-scale/ch20-aggregation-and-joins-at-scale/README.md) (aggregation and joins at scale) |
+| **Testing** (pytest, fixtures, what to assert) | [Chapter 10](../part1-foundations/ch10-fastapi-and-contracts/README.md), [Chapter 12](../part1-foundations/ch12-api-clients-and-tests/README.md), [Chapter 13](../part1-foundations/ch13-packaging-and-configuration/README.md) | Write the tests first for each capstone module |
+| **Evaluation** (metrics under class imbalance, uncertainty, thresholds) | [Chapter 5](../part1-foundations/ch05-leakage-safe-splits-and-baseline/README.md); [Chapters 6–9](../part1-foundations/ch06-pipelines-and-cross-validation/README.md); [Chapter 16](../part1-foundations/ch16-final-evaluation-and-docs/README.md) | Explain one capstone result aloud, with its confidence interval, after each capstone; [Chapters 29–30](../part2-ml-at-scale/ch29-ab-testing-fundamentals/README.md) (experimentation) |
 
-Two areas the diagnostic does not cover directly, and which most researchers
-also need to practise: **APIs and deployment** (Days 3–4) and **communication**
-(Day 5, and every checkpoint). Assume you need them unless you have shipped a
-service before.
+Two areas are not covered directly by the diagnostic, and most researchers
+also need to practise them: **APIs and deployment**
+([Chapters 10–15](../part1-foundations/ch10-fastapi-and-contracts/README.md))
+and **communication**
+([Chapters 16–18](../part1-foundations/ch16-final-evaluation-and-docs/README.md),
+and the checkpoint questions at the end of every lab). Unless you have
+previously built and operated a service that other people used, assume that
+both need attention.
 
 ## Typical profiles
 
 | Profile | Common pattern | Suggested emphasis |
 |---|---|---|
-| Strong modeller, new to engineering | Evaluation strong; SQL and testing gaps | Day 1 notebook 03 slowly; Day 3 in full; SQL drills daily from week 2 |
-| Strong programmer, light ML | Python and testing strong; evaluation partial | Day 2 in full; Handbook 4 before Day 2 |
-| Data analyst background | SQL and pandas strong; testing and Python modules partial | Day 3 and Day 4; build capstones as packages with tests |
-| Even across the board | Partial everywhere | Follow the plan as written; the biggest gains come from Days 1 and 3 |
+| Strong modeller, new to engineering | Evaluation strong; SQL and testing weak | Chapter 4 slowly, with every exercise; Chapters 10–12 in full; regular SQL drills after Part I |
+| Strong programmer, little machine learning | Python and testing strong; evaluation partial | Chapters 6–9 in full, reading each chapter's text carefully before its lab |
+| Background in data analysis | SQL and pandas strong; testing and Python modules partial | Chapters 10–15; build each capstone as a package with tests |
+| Even across all areas | Partial everywhere | Follow the [study plan](study-plan.md) as written; Chapters 2–5 and 10–12 usually give the largest improvement |
 
-## Re-measure
+## Measuring again
 
-Retake the diagnostic, or compare with notebook 16's drills, at the end of
-Day 5 and again at the end of each week. Keep the numbers in one place. The
+Repeat the diagnostic, or compare your times on the drills of
+[Chapter 17](../part1-foundations/ch17-python-and-sql-drills/README.md), at
+the end of Part I and again after each capstone. Record the numbers in one
+place, so that change over time is visible. The
 [readiness rubric](readiness-rubric.md) is the broader measure; the
 diagnostic is the quick one.

@@ -6,17 +6,17 @@
 # %% [markdown]
 # # Chapter 22 · Streaming features
 #
-# **Day 2 · ~90 minutes · CPU only**
+# **Part II · Chapter 22 · about 90 minutes · CPU only**
 #
 # "Clicks on this category in the last 15 minutes" cannot come from a daily
 # batch job: it has to be computed from the event stream as events arrive.
 # Streams deliver events late, out of order and sometimes twice, so a
 # streaming feature is a set of explicit decisions about time, completeness
-# and duplicates. This notebook simulates such a stream from ShopStream and
-# makes those decisions visible with numbers. It also checks that the
-# streaming feature matches its batch definition.
+# and duplicates. This lab simulates such a stream from ShopStream and makes
+# those decisions measurable. It also checks that the streaming feature
+# matches its batch definition.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. distinguish event time from processing time, and measure how out of order a stream is;
 # 2. implement tumbling, sliding and session windows incrementally, one event at a time;
@@ -25,7 +25,10 @@
 # 5. write an online/offline parity test between a batch (SQL) and a streaming computation of the same feature;
 # 6. map these ideas onto Kafka, Flink and Spark Structured Streaming.
 #
-# **You will produce:** nothing on disk besides the cached dataset; this notebook is a simulation.
+# **Outputs of this lab:** nothing on disk besides the cached dataset; the lab is a simulation.
+
+# %% [markdown]
+# Read first: [Chapter 22 text](README.md) — event time, windows, watermarks, late data, delivery guarantees and parity testing, explained in full.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -101,8 +104,8 @@ print(f"day 42: {len(day):,} impressions, {day.clicked.sum():,} clicks, {day.req
 #
 # * **Event time**: when the thing happened (the impression was rendered on the
 #   phone). Features and labels are defined on it.
-# * **Processing time**: when the event reaches your stream processor. It is
-#   later, by network, batching, retries, and phones that were offline.
+# * **Processing time**: when the event reaches the stream processor. It is
+#   later, because of the network, batching, retries, and phones that were offline.
 #
 # `F.simulate_event_stream` turns the day's log into a stream: each event gets
 # an `event_id`, an `event_ts` (seconds since the day's first event) and an
@@ -119,14 +122,14 @@ print(f"events older than an event already received: {behind.mean():.0%}; "
 stream[["event_id", "category", "clicked", "event_ts", "arrival_ts"]].head(4)
 
 # %% [markdown]
-# > **Intuition.** Event time is the postmark; processing time is the day the letter lands in your mailbox. Sorting letters by delivery day puts a card posted on Monday but delayed by a strike next to Thursday's post. *Where it breaks down:* postmarks are stamped by the post office; event timestamps come from phones whose clocks can be wrong, so real pipelines also sanity-check event times.
+# > **Intuition.** Event time is the postmark; processing time is the day the letter arrives. Sorting letters by delivery day puts a card posted on Monday but delayed by a strike next to Thursday's post. *Where it breaks down:* postmarks are stamped by the post office; event timestamps come from phones whose clocks can be wrong, so real pipelines also sanity-check event times.
 #
 # **Expected:** median delay about 2 s, p90 about 5 s, p99 in the tens of
 # minutes; about 65% of events arrive after a later-timestamped event (a
 # little disorder is the normal state) but only about 3% are more than a
 # minute behind.
 #
-# The feature we will compute: **clicks per category per 15-minute window**.
+# The feature computed in this lab is **clicks per category per 15-minute window**.
 # Its batch definition, on event time, in SQL:
 
 # %%
@@ -145,8 +148,8 @@ print(f"{len(batch):,} (category, window) rows; total clicks {int(batch.value.su
 # ones) and the day's 6,259 clicks.
 #
 # The naive streaming version puts each event into the window of its
-# **arrival** time (processing-time windows: simple, and what you get if you
-# timestamp events when they reach the server):
+# **arrival** time (processing-time windows: simple, and the result obtained
+# when events are timestamped as they reach the server):
 
 # %%
 proc = stream.assign(window_start=np.floor(stream.arrival_ts / W) * W).groupby(
@@ -174,7 +177,7 @@ print(f"processing-time windows that differ from the event-time truth: {(m.value
 # | **Sliding (hopping)** | size `S`, advancing every `h < S`; each event is in `S/h` windows | clicks in the last hour, updated every 15 min |
 # | **Session** | per key, events closer than a gap `g` belong together; windows merge | session length, items viewed this session |
 #
-# Sliding windows first: each event is added to the 4 one-hour windows (sliding
+# We start with sliding windows: each event is added to the 4 one-hour windows (sliding
 # every 15 minutes) that contain it. With no completeness question yet (we
 # process the whole stream, then read the state), the result must equal the
 # batch definition exactly.
@@ -237,16 +240,16 @@ new_session = (ordered.user_id != ordered.user_id.shift()) | (ordered.event_ts.d
 print(f"sessions: streaming {n_stream:,} | batch {int(new_session.sum()):,}")
 
 # %% [markdown]
-# **Expected:** the same number of sessions both ways (4,416 on day 42). Remove the merge loop's ability to merge
-# *several* sessions (e.g. stop at the first match) and the counts
-# diverge: that is the bridging case.
+# **Expected:** the same number of sessions both ways (4,416 on day 42). If the
+# merge loop is changed so that it cannot merge *several* sessions (e.g. it
+# stops at the first match), the counts diverge: that is the bridging case.
 
 # %% [markdown]
 # ## 4.3 · Watermarks: when is a window complete?
 #
 # A streaming job must *emit* a window's result at some point, but late events
-# may still arrive. A **watermark** is the processor's claim "I have seen
-# (almost) every event with event time ≤ W". The simplest and most common
+# may still arrive. A **watermark** is the processor's assertion that it has
+# seen (almost) every event with event time ≤ W. The simplest and most common
 # kind is *bounded out-of-orderness*:
 #
 # `watermark = (max event time seen so far) − allowed lateness`
@@ -269,7 +272,7 @@ print(f"sessions: streaming {n_stream:,} | batch {int(new_session.sum()):,}")
 #
 # *What to notice:* every dot is below the no-delay line (events always arrive after they happen). The watermark trails the latest event time by the allowed lateness; the red event happened early but arrived after the watermark passed it.
 #
-# > **Intuition.** A watermark is the teacher's "pencils down, I'm collecting the papers" for each window: after it, a late paper is either refused (drop), set aside for regrading (side output) or accepted with a corrected grade sent out later (update). *Where it breaks down:* a teacher knows how many students are in the room; a stream processor never knows how many events are still on their way, so the watermark is a heuristic promise, not a fact.
+# > **Intuition.** A watermark resembles a teacher announcing, for each window, that the papers are now being collected: after it, a late paper is either refused (drop), set aside for regrading (side output) or accepted with a corrected grade sent out later (update). *Where it breaks down:* a teacher knows how many students are in the room; a stream processor never knows how many events are still on their way, so the watermark is a heuristic promise, not a fact.
 
 # %% [markdown]
 # > **Exercise 1.** Implement `TumblingWindowCounter(window_seconds,
@@ -313,7 +316,7 @@ grade.ex1(TumblingWindowCounter)
 #
 # `F.WindowAggregator` is the same machinery as Exercise 1, extended with
 # sums, the three late-data policies and optional deduplication (read it in
-# [`src/shoprank/features.py`](../../src/shoprank/features.py)). Run the
+# [`src/shoprank/features.py`](../../src/shoprank/features.py)). We run the
 # click-count feature through it for several allowed lateness values and
 # compare with the batch truth.
 
@@ -348,8 +351,8 @@ pd.DataFrame(rows).set_index("allowed lateness (s)").round(3)
 # right; 1 hour drops none and matches the batch definition exactly, at the
 # cost of holding about 100 open windows instead of about 20 and publishing
 # each result an hour after its window ends. For a "last 15 minutes"
-# feature, an hour of delay defeats the purpose. So the usual answer is a
-# short lateness, plus a policy for the stragglers:
+# feature, an hour of delay defeats the purpose. The usual design is therefore
+# a short lateness, plus a policy for the stragglers:
 
 # %%
 side = run_stream(stream, 60, policy="side")
@@ -364,7 +367,7 @@ print(f"update:      {corrections:,} corrected results emitted after the first |
 # **Expected:** about 1,100 events in the side output (the result itself is
 # the same as *drop*), and with *update* every window ends up exactly right
 # (100.0%), at the price of about 1,100 corrections that downstream systems
-# must apply as upserts. The online store from notebook 03 does exactly that
+# must apply as upserts. The online store from Chapter 21 does exactly that
 # (a newer write for the same key replaces the old one), but a model that
 # already scored a request with the first value has used it.
 
@@ -381,10 +384,10 @@ print(f"update:      {corrections:,} corrected results emitted after the first |
 #   transactions; Spark checkpoints with idempotent sinks). It is about the
 #   *effect* on state and sinks, not about the network delivering once.
 #
-# > **Intuition.** "Add 1 to the counter" is a toggle switch: press it twice and you are somewhere else. "Mark event 8812 as counted" is a light switch labelled ON: press it twice and the light is still just on. Deduplicating by event id turns the first kind of update into the second. *Where it breaks down:* the switch needs a stable label; an id minted by the processor differs between the original and the retry.
+# > **Intuition.** "Add 1 to the counter" is a toggle switch: pressing it twice leaves it in a different state. "Mark event 8812 as counted" is a switch labelled ON: pressing it twice leaves the light on. Deduplicating by event id turns the first kind of update into the second. *Where it breaks down:* the switch needs a stable label; an id minted by the processor differs between the original and the retry.
 #
 # The cheapest robust defence works under at-least-once: make the update
-# **idempotent** by deduplicating on the event id. Re-deliver 5% of the
+# **idempotent** by deduplicating on the event id. We re-deliver 5% of the
 # stream a few seconds to minutes after the original:
 
 # %%
@@ -410,7 +413,7 @@ print(f"dedup by id: total clicks {idem.results().value.sum():,.0f} | duplicates
 # The dedup state (event ids per open window) is freed when the window
 # closes, so memory stays bounded by the allowed lateness. A duplicate that
 # arrives *after* its window closed is handled by the late-data policy
-# instead. Note what makes this work: a **stable event id assigned at the
+# instead. The method depends on a **stable event id assigned at the
 # source** (the client or the first server). An id assigned by the processor
 # would differ between the original and the retry.
 
@@ -418,7 +421,7 @@ print(f"dedup by id: total clicks {idem.results().value.sum():,.0f} | duplicates
 # ## 4.6 · Online/offline parity
 #
 # The feature has two implementations: the batch SQL (used to build training
-# data, notebook 03) and the streaming job (used to serve). A **parity test**
+# data, Chapter 21) and the streaming job (used to serve). A **parity test**
 # runs both over the same events and reports where they disagree. By hand,
 # for the 60-second-lateness *drop* stream:
 
@@ -436,7 +439,7 @@ print(f"windows in both: {len(both):,} | differing: {(diff > 0).sum():,} | max |
 # `left_only`/`right_only`); about 150 windows differ, by at most 2
 # clicks: exactly the late events the drop policy discarded. A parity
 # test turns "the streaming feature looks fine" into a number that can gate a
-# deployment or page an on-call engineer.
+# deployment or alert an on-call engineer.
 
 # %% [markdown]
 # > **Exercise 2.** Package the comparison as
@@ -465,7 +468,7 @@ grade.ex2(parity_report)
 # %% [markdown]
 # ## 4.7 · The real systems
 #
-# Nothing to install; this is how the simulation maps onto production tools.
+# Nothing needs to be installed; the table shows how the simulation maps onto production tools.
 #
 # | Concept here | Kafka | Flink | Spark Structured Streaming |
 # |---|---|---|---|
@@ -482,23 +485,23 @@ grade.ex2(parity_report)
 # **online store** (keyed by `(category, window)` or simply by `category`
 # with the latest window) *and* appends it to an **offline log** with its
 # window end time, so training sets can be built point-in-time from exactly
-# the values that were served (notebook 03, Exercise 3). Teams that cannot
+# the values that were served (Chapter 21, Exercise 3). Teams that cannot
 # afford two implementations run the streaming code in batch mode over
 # historical data ("kappa" style) instead of maintaining a separate SQL
 # version, and they still run parity tests, because configuration (lateness,
 # dedup, time zones) differs between deployments.
 
 # %% [markdown]
-# > **Exercise 3 (written).** Your Flink job computes "clicks per item in the
+# > **Exercise 3 (written).** A Flink job computes "clicks per item in the
 # > last 10 minutes" and writes it to Redis. After a deployment, the job
 # > restarts from a checkpoint taken 4 minutes earlier, so Kafka re-delivers 4
 # > minutes of events. Describe what breaks (in the job's state, in Redis, in
 # > the model's inputs, in any offline log of served features) under (a)
 # > at-least-once processing without dedup, (b) at-least-once with
 # > dedup by event id, (c) exactly-once checkpointing with a non-transactional
-# > Redis sink. What would you monitor to detect each problem?
+# > Redis sink. What should be monitored to detect each problem?
 # >
-# > Write your answer in the cell below.
+# > Write the answer in the cell below.
 
 # %% [markdown]
 # *Your answer here.*
@@ -553,13 +556,13 @@ grade.ex2(parity_report)
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
 # 1. Event time vs processing time: define both, and give an example where a feature computed on processing time is wrong.
-# 2. What is a watermark? What does the allowed-lateness setting trade off, and how would you choose it for a "clicks in the last 15 minutes" feature?
+# 2. What is a watermark? What does the allowed-lateness setting trade off, and how should it be chosen for a "clicks in the last 15 minutes" feature?
 # 3. Compare drop, update and side-output policies for late data. Which would you choose for a fraud feature, and which for a dashboard?
-# 4. Explain at-least-once and exactly-once processing. What does "exactly-once" actually guarantee in Flink or Spark, and why do you still need idempotent sinks?
-# 5. How do you make sure a streaming feature in production equals the feature the model was trained on? Describe the parity test and what you log.
+# 4. Explain at-least-once and exactly-once processing. What does "exactly-once" actually guarantee in Flink or Spark, and why are idempotent sinks still needed?
+# 5. How can one make sure that a streaming feature in production equals the feature the model was trained on? Describe the parity test and what is logged.
 # 6. Design the pipeline for "number of items a user viewed in the current session" for a feed ranker: windows, state, latency budget, failure handling.
 #
-# **Next chapter:** [`05_implicit_feedback_and_position_bias.ipynb`](../ch23-implicit-feedback-and-position-bias/notebook.ipynb) — Day 3: clicks are biased by position; learn to measure and correct it.
+# **Next chapter:** [Chapter 23 · Implicit feedback & position bias](../ch23-implicit-feedback-and-position-bias/notebook.ipynb) — clicks are biased by position; how to measure and correct the bias.

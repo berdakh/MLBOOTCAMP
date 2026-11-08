@@ -1,16 +1,16 @@
 # Solutions · Chapter 32 · ML from scratch II
 
-Try each exercise before reading its answer, with a timer running. Markers:
+Attempt each exercise before reading its answer, with a timer running. Markers:
 [verified] verified by running · [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
-Reference code: [`code/nb14.py`](solutions.py), graded in CI against
-[`src/shoprank/grading/nb14.py`](../../src/grading/ch32.py).
+Reference code: [`solutions.py`](solutions.py), graded in CI against
+[`src/grading/ch32.py`](../../src/grading/ch32.py).
 
 ---
 
 ## Exercise 1 · `best_split` in O(n log n)
 
-[verified] Reference: `ex1` in [`code/nb14.py`](solutions.py).
+[verified] Reference: `ex1` in [`solutions.py`](solutions.py).
 
 ```python
 order = np.argsort(x, kind="stable"); xs, ys = x[order], y[order]
@@ -39,7 +39,7 @@ subtract `y.mean()` first for robustness; the minimiser does not change).
 
 ## Exercise 2 · `gbm_fit` / `gbm_predict` with stumps
 
-[verified] Reference: `ex2` and `gbm_predict` in [`code/nb14.py`](solutions.py).
+[verified] Reference: `ex2` and `gbm_predict` in [`solutions.py`](solutions.py).
 
 ```python
 init = y.mean(); F = np.full(len(y), init); stumps = []
@@ -75,7 +75,7 @@ adding `lr × stump` with 0 < lr ≤ 1 never increases the training SSE.
 
 ## Exercise 3 · `mlp_grads`
 
-[verified] Reference: `ex3` in [`code/nb14.py`](solutions.py).
+[verified] Reference: `ex3` in [`solutions.py`](solutions.py).
 
 ```python
 z1 = X @ W1 + b1; h = np.maximum(z1, 0); logits = h @ W2 + b2
@@ -98,7 +98,7 @@ forgetting `/ n` (all gradients off by n).
 
 ## Exercise 4 · Masked `attention`
 
-[verified] Reference: `ex4` in [`code/nb14.py`](solutions.py).
+[verified] Reference: `ex4` in [`solutions.py`](solutions.py).
 
 ```python
 scores = Q @ np.swapaxes(K, -1, -2) / np.sqrt(d)
@@ -121,7 +121,7 @@ differ from the reference").
 
 ## Exercise 5 · `batchnorm_forward`
 
-[verified] Reference: `ex5` in [`code/nb14.py`](solutions.py).
+[verified] Reference: `ex5` in [`solutions.py`](solutions.py).
 
 Training: `mu, var = x.mean(0), x.var(0)`; `out = gamma * (x - mu) / sqrt(var + eps) + beta`;
 `new_mean = (1-m)·old + m·mu`; `new_var = (1-m)·old + m·var·n/(n-1)`; raise for
@@ -139,7 +139,7 @@ same reason.
 
 ## Exercise 6 · `inverted_dropout`
 
-[verified] Reference: `ex6` in [`code/nb14.py`](solutions.py).
+[verified] Reference: `ex6` in [`solutions.py`](solutions.py).
 
 ```python
 if not training or p == 0: return x.copy()
@@ -156,7 +156,7 @@ norm interact badly when stacked (the "variance shift" seen at eval).
 
 ## Exercise 7 · Backprop through softmax + cross-entropy (written)
 
-[open-ended] A whiteboard-ready derivation (your wording will differ):
+[open-ended] A derivation suitable for a whiteboard (wording will differ):
 
 1. **Softmax:** pₖ = e^{zₖ} / Σⱼ e^{zⱼ}. Its Jacobian: ∂pₖ/∂zⱼ = pₖ(δₖⱼ − pⱼ).
 2. **Loss:** L = −log p_y = −z_y + log Σⱼ e^{zⱼ}. Differentiate directly (easier
@@ -187,7 +187,7 @@ norm interact badly when stacked (the "variance shift" seen at eval).
    residuals y − σ(F), Newton leaf values Σ(y − p)/Σp(1 − p), init = log-odds.
    LambdaMART: pseudo-residuals are the "lambdas" — pairwise RankNet gradients
    within a query weighted by |ΔNDCG| of swapping the pair — and leaves use
-   the Newton step with the matching second derivatives (notebook 06). [verified] (14-2)
+   the Newton step with the matching second derivatives (Chapter 24). [verified] (Exercise 2)
 2. **Histogram GBDTs.** They bucket each feature into ≤ 255 bins once; a node's
    split search builds gradient/hessian histograms in O(n) and scans B bins,
    instead of sorting (O(n log n)) per node; the sibling's histogram comes from
@@ -201,7 +201,7 @@ norm interact badly when stacked (the "variance shift" seen at eval).
    (True = keep vs True = block, which differs between APIs); the mask dtype
    (float additive mask vs boolean); fp16 overflow of −inf/−1e9 fills; and
    reproduce with the failing users' inputs, asserting `isfinite` after each
-   layer. Fix by defining the empty-row output (zeros, as in 14-4) or by
+   layer. Fix by defining the empty-row output (zeros, as in Exercise 4) or by
    guaranteeing at least one valid key (e.g. a "no history" token). [open-ended]
 4. **Batch norm offline vs one-at-a-time serving.** (a) The model is served in
    training mode: outputs depend on the batch, and a batch of 1 normalises
@@ -221,4 +221,4 @@ norm interact badly when stacked (the "variance shift" seen at eval).
 6. **Gradient of softmax CE.** p − y (or p − q for a target distribution q).
    Because the gradient only needs a target distribution, label smoothing
    (q = (1 − ε)·onehot + ε/C) and distillation (q = teacher softmax at
-   temperature T) plug in without any new derivation. [verified] (14-7, 13-2)
+   temperature T) plug in without any new derivation. [verified] (Exercise 7; Chapter 31, Exercise 2)

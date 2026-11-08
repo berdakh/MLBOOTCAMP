@@ -6,13 +6,13 @@
 # %% [markdown]
 # # Chapter 2 · A reproducible ML project
 #
-# **Day 1 · ~40 minutes · CPU only**
+# **Part I · Chapter 2 · about 40 minutes · CPU only**
 #
 # In research, a result is usually reproduced by the person who produced it, on
 # the machine that produced it, soon after. In industry it has to be reproduced
 # by someone else, on another machine, months later, often while something is
 # broken. This notebook sets up the habits that make that possible, using the
-# project you will carry through all five days.
+# project that runs through all of Part I.
 #
 # By the end you will be able to:
 #
@@ -23,6 +23,9 @@
 # 5. keep your work across temporary Colab sessions.
 #
 # **You will produce:** `artifacts/runs/<run_id>.json`, a run record for a first small experiment.
+
+# %% [markdown]
+# Read first: [Chapter 2 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -59,7 +62,7 @@ print("artifacts:", ART)
 from grading import ch02 as grade
 
 # %% [markdown]
-# ## 0 · The problem you will solve all week
+# ## 2.0 · The problem studied throughout Part I
 #
 # **Churn** is a customer leaving a subscription business: cancelling, or simply
 # not renewing. It can be **voluntary** (they decided to leave: low usage, a
@@ -91,8 +94,8 @@ from grading import ch02 as grade
 #
 # *What to notice:* the model only produces the ranked list; everything that creates value (the calls, the saves) happens outside it, and the label for this month only exists 30 days later.
 #
-# Full background, for anyone new to the problem:
-# [The problem: predicting churn](https://github.com/berdakh/MLBOOTCAMP/blob/main/part1-foundations/_handbook/00-the-churn-problem.md).
+# Full background, for readers new to the problem: sections 2.1–2.2 of the
+# [chapter text](README.md).
 
 # %% [markdown]
 # ## Key terms
@@ -113,7 +116,7 @@ from grading import ch02 as grade
 # | **Run record** | a file holding everything needed to reproduce one number | `artifacts/runs/<run_id>.json` |
 
 # %% [markdown]
-# ## 1.1 · What has to be pinned
+# ## 2.1 · What has to be pinned
 #
 # A number reproduces only if **all four** of these are the same as when it was
 # produced. Miss one and you will eventually get a different number with no
@@ -128,7 +131,7 @@ from grading import ch02 as grade
 #
 # There is a fifth, which no tool fixes: **the decisions**. Why this split? Why
 # this threshold? Those go in writing, next to the result - you will do that on
-# Day 2 (model card) and Day 5 (README).
+# Chapter 9 (model card) and Chapter 16 (project documentation).
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l1-four-pins.svg" alt="Code, data, environment and randomness are pinned so the same number comes out on another machine months later; decisions are written next to the result" width="100%">
 #
@@ -145,7 +148,7 @@ from grading import ch02 as grade
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/architecture.svg" alt="The project: raw extract, validation, SQL features, split, pipeline, registry, service, monitoring" width="100%">
 
 # %% [markdown]
-# ## 1.2 · Why a package, not a notebook
+# ## 2.2 · Why a package, not a notebook
 #
 # Notebooks are excellent for *explaining* and *exploring*. They are poor
 # places to *keep* code: cells run out of order, functions cannot be imported
@@ -180,11 +183,11 @@ print((ROOT / ".gitignore").read_text().split("# --- Secrets")[0].split("# --- C
 
 # %% [markdown]
 # Why are models **not** committed? They are large, they are reproducible from
-# code + data + environment, and a pickle executes code when loaded. Ship them
-# through a registry (Day 2), not through git.
+# code + data + environment, and a pickle executes code when loaded. Models are distributed
+# through a registry (Chapter 9), not through git.
 
 # %% [markdown]
-# ## 1.3 · The environment is part of the result
+# ## 2.3 · The environment is part of the result
 #
 # Two files, two jobs:
 #
@@ -247,7 +250,7 @@ git_commit()
 # number you report.
 
 # %% [markdown]
-# ## 1.4 · Randomness: pin it, then check it is pinned
+# ## 2.4 · Randomness: pin it, then check it is pinned
 #
 # Two runs of the "same" experiment, with and without a seed:
 
@@ -276,7 +279,7 @@ print("seeds 0-4:", [round(float(experiment(s)), 4) for s in range(5)])
 #
 # So pinning a seed makes a run **repeatable**; it does not make a result
 # **reliable**. When two models differ by less than the across-seed spread, you
-# have not shown that one is better. Day 2 does this properly with confidence
+# have not shown that one is better. Chapter 7 does this properly with confidence
 # intervals.
 #
 # > **Research bridge.** This is the same discipline as reporting
@@ -291,7 +294,7 @@ print("seeds 0-4:", [round(float(experiment(s)), 4) for s in range(5)])
 # > and the split, so pin each one you rely on.
 
 # %% [markdown]
-# ## 1.5 · Configuration as data, and a run identity
+# ## 2.5 · Configuration as data, and a run identity
 #
 # Every knob that changes a result belongs in **one** configuration object,
 # not scattered through cells. A config that is plain data can be saved,
@@ -340,10 +343,10 @@ def config_hash(config: dict) -> str:
 grade.ex1(config_hash)
 
 # %% [markdown]
-# ## 1.6 · A first experiment, with a run record
+# ## 2.6 · A first experiment, with a run record
 #
 # Now a real (small) experiment on the project data. The feature table is
-# built by SQL you will write yourself in notebook 03; here,
+# built by SQL you will write yourself in Chapter 4; here,
 # `churnlab.bootstrap` builds it for you in a few seconds so this notebook can
 # stand alone.
 
@@ -371,7 +374,7 @@ metrics
 # **Expected:** PR-AUC around 0.1 on validation, against a positive rate near
 # 0.05. A random ranking would score about the positive rate, so three raw
 # features already carry signal. (PR-AUC and why it, not accuracy, is the
-# headline metric are covered on Day 2.)
+# headline metric are covered in Chapters 5 and 8.)
 #
 # A number like this is only useful with its context. Here is the record that
 # makes it reproducible:
@@ -421,7 +424,7 @@ def record_run(directory: Path, config: dict, metrics: dict) -> Path:
 grade.ex2(record_run)
 
 # %% [markdown]
-# ## 1.7 · Keeping work across Colab sessions
+# ## 2.7 · Keeping work across Colab sessions
 #
 # A Colab runtime is temporary: after a disconnect, everything under
 # `/content` is gone, including `artifacts/`. You have three defences, used
@@ -459,7 +462,7 @@ with tempfile.TemporaryDirectory() as tmp:
 # > **Exercise 3 (written).** Think of your own cross-subject EEG/BCI work (or
 # > any research project). Name three ways a colleague re-running it a year
 # > later could get a different number, and for each, the specific pin from
-# > section 1.1 that would have prevented it. Write your answer in the cell
+# > section 2.1 that would have prevented it. Write your answer in the cell
 # > below.
 
 # %% [markdown]
@@ -514,4 +517,4 @@ with tempfile.TemporaryDirectory() as tmp:
 # 4. Why keep code in `src/` rather than in notebooks, and why the *src layout* specifically?
 # 5. Why are trained models excluded from git, and how do they travel instead?
 #
-# **Next chapter:** [`02_data_acquisition_and_validation.ipynb`](../ch03-data-acquisition-and-validation/notebook.ipynb) — get the raw data, prove it is the right data, and find what is wrong with it.
+# **Next chapter:** [Chapter 3 · Data acquisition & validation](../ch03-data-acquisition-and-validation/notebook.ipynb) — get the raw data, prove it is the right data, and find what is wrong with it.

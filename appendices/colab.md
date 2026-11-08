@@ -1,24 +1,34 @@
 # Working in Colab
 
-Every notebook runs in a free Colab CPU runtime. The one thing to understand
-is that a Colab runtime is **temporary**, and to decide in advance how you will
-keep your work.
+Every lab in the book runs in a free Google Colab runtime: Parts I and II on
+a CPU, Part III on the free T4 GPU (or, more slowly, on a CPU). The most
+important property of a Colab runtime is that it is **temporary**. This
+appendix explains what that implies and how to decide, in advance, how your
+work will be kept.
 
 
 ---
 
 ## Runtimes
 
-- **CPU is enough.** Every core cell is designed for a free CPU runtime. GPU
-  sections are labelled optional and guarded by `RUN_GPU_EXTENSION = False`;
-  nothing later depends on them. Do not request a GPU for the core material:
-  it does not make scikit-learn faster.
-- **Each notebook gets its own runtime** by default. Two notebooks open in two
-  tabs do not share variables or files under `/content` unless you arrange it.
+- **Parts I and II need only a CPU.** Every core cell of these parts is
+  designed for a free CPU runtime. The one GPU section in Part I (a
+  small PyTorch network in Chapter 7) is labelled optional and guarded by
+  `RUN_GPU_EXTENSION = False`, and no later chapter depends on it. A GPU does not make scikit-learn faster, so there
+  is no reason to request one for this material.
+- **Part III is written for a GPU.** Choose *Runtime → Change runtime type →
+  T4 GPU* before running a Part III lab. The setup cell prints the device it
+  found and the compute budget it chose. On a CPU the labs still run, with a
+  reduced budget (fewer examples, shorter sequences, smaller models), and the
+  results are correspondingly weaker. The free GPU allowance is limited and
+  varies; when it is exhausted, Colab offers only CPU runtimes for a while.
+- **Each lab has its own runtime** by default. Two labs open in two browser
+  tabs do not share variables or files under `/content` unless you arrange
+  it.
 - **Package versions are Colab's.** Colab preinstalls a set of libraries and
   updates them from time to time. The setup cell installs only what is
-  missing or too old (`requirements.txt` has lower bounds). Versions you
-  trained with are recorded in each model's metadata.
+  missing or older than the lower bounds in the part's requirements file.
+  The versions a model was trained with are recorded in its metadata.
 
 ## Disconnects
 
@@ -28,23 +38,23 @@ about 12 hours; Google changes these limits and does not guarantee them.
 When a runtime is recycled, **everything under `/content` is deleted**: the
 cloned repository, your feature table, your trained models, the registry.
 
-The course gives you three safety nets. Use at least one.
+The book provides three ways to protect against this loss. Use at least one.
 
 | Option | How | Survives a disconnect? | Cost |
 |---|---|---|---|
 | **1. Google Drive** | `USE_DRIVE = True` in the setup cell | Yes, automatically | One authorisation click per session; Drive I/O is slower than local disk |
 | **2. Zip and download** | `export_artifacts` at the end; `restore_artifacts` next time | Yes, if you remember to export | Two manual steps per session |
-| **3. Rebuild** | Do nothing: the catch-up cell rebuilds | Not needed | Seconds to about a minute per notebook; your *own* changes are not rebuilt |
+| **3. Rebuild** | Do nothing: the catch-up cell rebuilds | Not needed | Seconds to a few minutes per lab; your *own* changes are not rebuilt |
 
-Option 3 is always there. Every notebook's catch-up cell calls a
-`churnlab.bootstrap.ensure_*` function that rebuilds what earlier notebooks
-produced, deterministically. So you **never lose the ability to continue**.
-What you can lose is your own work: a model you tuned differently, an exercise
-answer you wrote in a cell, notes. Options 1 and 2 protect that.
+Option 3 is always available. Every lab's catch-up cell calls functions
+(in Part I, `churnlab.bootstrap.ensure_*`) that rebuild deterministically what
+earlier chapters produced. The ability to continue is therefore **never
+lost**. What can be lost is your own work: a model tuned differently, an
+exercise answer written in a cell, notes. Options 1 and 2 protect that.
 
-> **Tip:** Notebook cells you edit are part of the notebook, not the artifacts. To keep
-> them, *File → Save a copy in Drive* before you start working. Otherwise your
-> edits live only in the browser tab.
+> **Note.** Cells you edit belong to the notebook, not to the artifacts. To
+> keep them, choose *File → Save a copy in Drive* before starting work;
+> otherwise the edits exist only in the browser tab.
 
 ## The `USE_DRIVE` switch
 
@@ -64,9 +74,14 @@ Things to know:
 - A model saved to Drive in one session may be loaded in a later session where
   Colab has a newer scikit-learn. The loader then warns about a version
   mismatch. See [Troubleshooting](troubleshooting.md#scikit-learn-version-mismatch-when-loading-a-bundle).
-- Two notebooks running at once with `USE_DRIVE = True` write to the same
-  folder. That is fine for reading; avoid training into the same registry
-  from two notebooks at the same moment.
+- Two labs running at once with `USE_DRIVE = True` write to the same
+  folder. Reading from it concurrently is safe; training into the same
+  registry from two labs at the same moment is not.
+- Part II generates synthetic data sets under `artifacts/level2/` inside the
+  artifact directory. With `USE_DRIVE = True` these are kept as well, which
+  saves regeneration time but uses Drive space. Models and data sets that
+  Part III downloads from the Hugging Face Hub are cached separately, in the
+  directory named by the `HF_HOME` environment variable.
 
 ## The `BOOTCAMP_ARTIFACTS` environment variable
 
@@ -111,40 +126,47 @@ restore_artifacts(Path("/content/artifacts.zip"), ART, overwrite=True)
 `overwrite=True`, and refuses archive entries that would extract outside the
 target directory.
 
-## Rebuild with `churnlab.bootstrap`
+## Rebuilding with `churnlab.bootstrap`
 
-What each catch-up function provides:
+The Part I catch-up functions, and what each provides:
 
 | Function | Rebuilds | Originally from |
 |---|---|---|
-| `ensure_raw()` | The raw extract, checksum-verified (downloads only if a file is missing or corrupt) | Notebook 02 |
-| `load_clean()` | The four tables, cleaned | Notebook 02 |
-| `ensure_features()` | `features.parquet`: the (snapshot, customer) training table | Notebook 03 |
-| `ensure_split()` | The fixed train / validation / test time split | Notebook 04 |
-| `ensure_registry()` | A registry with v1 (logistic regression) and v2 (boosted trees), the higher validation PR-AUC promoted to `CURRENT` | Notebook 08 |
+| `ensure_raw()` | The raw extract, checksum-verified (downloads only if a file is missing or corrupt) | Chapter 3 |
+| `load_clean()` | The four tables, cleaned | Chapter 3 |
+| `ensure_features()` | `features.parquet`: the (snapshot, customer) training table | Chapter 4 |
+| `ensure_split()` | The fixed train / validation / test time split | Chapter 5 |
+| `ensure_registry()` | A registry with v1 (logistic regression) and v2 (boosted trees), the higher validation PR-AUC promoted to `CURRENT` | Chapter 9 |
 
-Each function reuses what is already on disk and builds only what is missing.
-To force a clean rebuild, delete the relevant file or folder in the artifact
-directory and rerun the catch-up cell.
+Each function reuses what is already on disk and builds only what is
+missing. To force a clean rebuild, delete the relevant file or folder in the
+artifact directory and rerun the catch-up cell. The labs of Parts II and III
+follow the same principle with their own functions (for example, regenerating
+the ShopStream data set when its folder is missing); each lab's catch-up cell
+names what it rebuilds.
 
 ## Running a server in Colab
 
-Day 3 and Day 4 start a local `uvicorn` server inside the runtime and call it
-from the notebook. It is reachable only from that runtime, not from the
-internet. That is enough for everything in the course. Exposing it publicly
-needs a tunnelling service or a real host, which is outside the course.
+Chapters 10–15 start a local `uvicorn` server inside the runtime and call it
+from the lab. The server is reachable only from that runtime, not from the
+internet, which is sufficient for everything in the book. Making it publicly
+reachable requires a tunnelling service or a real host, which is outside the
+scope of the book.
 
 If you rerun a cell that starts the server, the port may still be in use; see
 [Troubleshooting](troubleshooting.md#port-already-in-use).
 
 ## Working on capstones in Colab
 
-The same setup works. A pattern that keeps capstones apart:
+The same setup works for the capstone projects of Part IV. The following
+pattern keeps the artifacts of different capstones apart:
 
 ```python
 import os
 os.environ["BOOTCAMP_ARTIFACTS"] = "/content/drive/MyDrive/capstones/ercot/artifacts"
 ```
 
-For anything you will show in a portfolio, keep the code in a git repository
-(a capstone repository from the template), not only in Colab notebooks.
+For work that others will read, such as a portfolio project, keep the code
+in a git repository created from the
+[capstone template](../part4-capstones/template/README.md), not only in Colab
+notebooks.

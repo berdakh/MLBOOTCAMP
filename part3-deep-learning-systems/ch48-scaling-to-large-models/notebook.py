@@ -6,9 +6,9 @@
 # %% [markdown]
 # # Chapter 48 · Scaling to large models
 #
-# **Day 5 · ~90 minutes · T4 GPU (runs on CPU; everything here is arithmetic, simulation and small CPU demos)**
+# **Part III · Chapter 48 · about 90 minutes · T4 GPU (runs on CPU; everything here is arithmetic, simulation and small CPU demos)**
 #
-# Data parallelism (notebook 09) assumes a full copy of the model, its gradients and its
+# Data parallelism (Chapter 47) assumes a full copy of the model, its gradients and its
 # optimizer state fits on every GPU. For a 7B-parameter model trained with Adam that is
 # ~112 GB, which no single GPU holds. This notebook covers what large-model teams do
 # instead (shard the state, split the layers, pipeline the stages), how they decide how
@@ -16,7 +16,7 @@
 # hardware failures during runs that last weeks. These are the numbers behind every
 # "how would you train a 70B model?" interview question.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. compute model-state memory per GPU under DDP and ZeRO stages 1/2/3 (FSDP), and run a real 2-process FSDP step on CPU;
 # 2. explain tensor parallelism by splitting a Linear layer across two simulated devices, and verify the result;
@@ -34,6 +34,9 @@
 # **Expected:** lines were printed by a CPU run unless marked *"on a T4 you should
 # see … (not measured in our verification runs)"*. Every multi-GPU number in this notebook
 # is a calculation from stated assumptions, not a measurement.
+
+# %% [markdown]
+# Read first: [Chapter 48 text](README.md) explains the ideas behind this lab (Scaling to large models) in more depth; [solutions](solutions.md) has worked answers.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -130,10 +133,10 @@ GB = 1e9
 # | fp32 master weights + Adam's two fp32 moments ("K", optimizer state) | 4 + 4 + 4 = 12 |
 # | **total** | **16** |
 #
-# (Notebook 02 counted the PyTorch-autocast way, fp32 weights and gradients plus a cached
+# (Chapter 40 counted the PyTorch-autocast way, fp32 weights and gradients plus a cached
 # fp16 copy: 18 bytes/param. Same order of magnitude; we use the paper's 16 here because the
 # ZeRO stages are defined on it.) **Activations come on top** and depend on batch, sequence
-# length and checkpointing (notebook 02).
+# length and checkpointing (Chapter 40).
 #
 # DDP replicates all 16Ψ bytes on every GPU. ZeRO ("Zero Redundancy Optimizer") partitions
 # the redundant copies across the N data-parallel GPUs:
@@ -196,7 +199,7 @@ RESULTS["zero_7b_64gpus_GB"] = {f"stage{s}": D.zero_memory_per_gpu(7e9, 64, s) /
 # transformer block, plus the root) across 2 gloo processes, takes 3 AdamW steps, and
 # reports how many parameter and optimizer-state elements each rank holds locally. It also
 # prints the losses, which we then compare with a single process training on the
-# concatenated batch, the same check as DDP in notebook 09. FSDP is guarded by a flag
+# concatenated batch, the same check as DDP in Chapter 47. FSDP is guarded by a flag
 # because `fully_shard` on CPU/gloo needs a recent PyTorch (2.6+); if it fails, the cell
 # explains and the notebook continues.
 
@@ -841,14 +844,14 @@ print(f"Young: sqrt(2 * 300 s * {mtbf / 3600:.1f} h) = {math.sqrt(2 * 300 * mtbf
 # | FSDP demo: `ImportError: cannot import name 'fully_shard'` | PyTorch older than 2.4 | upgrade PyTorch, or set `RUN_FSDP_DEMO = False`; the rest of the notebook does not need it |
 # | FSDP demo hangs or times out | leftover processes holding resources; a very busy CPU | restart the runtime; it finishes in ~10 s on a free Colab CPU |
 # | FSDP losses differ from single-process | different initialisation per rank (seed each rank the same before wrapping), or a per-rank batch that is not the matching half | `torch.manual_seed(0)` before building the model on every rank |
-# | Your memory estimate is far below the real OOM point | activations, temporary all-gather buffers, the CUDA context and fragmentation are not in the 16 bytes/param | measure (notebook 02); budget 20–40% headroom |
+# | Your memory estimate is far below the real OOM point | activations, temporary all-gather buffers, the CUDA context and fragmentation are not in the 16 bytes/param | measure (Chapter 40); budget 20–40% headroom |
 # | fp16 training: loss becomes `nan` | overflow in forward (large activations) or no loss scaling | `GradScaler`; check for `inf` in activations; keep softmax/LayerNorm in fp32 (autocast does); prefer bf16 where supported |
 # | `GradScaler` scale keeps shrinking | gradients overflow every step (a real divergence, not scaling) | lower the learning rate, clip gradients, inspect the data |
 
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question without notes; a complete answer takes about a minute:
 #
 # 1. How much GPU memory does training a 7B model with mixed-precision Adam need, and how do ZeRO stages 1, 2 and 3 change the per-GPU number on 64 GPUs? What do you pay for stage 3?
 # 2. Compare data, tensor and pipeline parallelism: what is split, what is communicated, and where in a cluster (inside a node or across nodes) does each belong?
@@ -857,4 +860,4 @@ print(f"Young: sqrt(2 * 300 s * {mtbf / 3600:.1f} h) = {math.sqrt(2 * 300 * mtbf
 # 5. What did the Chinchilla paper change about how we size models, and why do many production models deliberately train past the compute-optimal point?
 # 6. Why does fp16 training need loss scaling and bf16 training not? What does the dynamic loss scaler do when it sees `inf`?
 #
-# **Next chapter:** [`11_quantization_and_distillation.ipynb`](../ch49-quantization-and-distillation/notebook.ipynb) — from training big models to serving small ones: int8 quantisation and knowledge distillation, with accuracy, latency and size measured.
+# **Next chapter:** [Chapter 49 · Quantisation & distillation](../ch49-quantization-and-distillation/notebook.ipynb) — from training big models to serving small ones: int8 quantisation and knowledge distillation, with accuracy, latency and size measured.

@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `info_nce_loss`
 
-[verified] Reference code: [`code/nb08.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def info_nce_loss(q, d, temperature=0.05):
@@ -26,7 +26,7 @@ softmax over cosines is nearly flat and gradients are tiny.
 
 ## Exercise 2 · `mine_hard_negatives`
 
-[verified] Reference code: [`code/nb08.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def mine_hard_negatives(ranked_ids, positives, n, skip_top=0):
@@ -44,7 +44,7 @@ the top 3.
 
 ## Exercise 3 · Fixing a RAG assistant's retrieval
 
-[open-ended] A strong answer:
+[open-ended] A good answer:
 
 * **First measure where it fails.** Build a judged set from real questions (and the
   documents that answer them); compute Recall@k of the current first stage at the depth
@@ -65,7 +65,7 @@ the top 3.
   MS MARCO re-ranker *lowered* SciFact nDCG@10 in our run (0.840 → 0.757 at depth 50 on 30
   queries). Fine-tune it on in-domain pairs before trusting it.
 * **(c) Hybrid first stage.** Cheap (BM25 index + RRF), robust for identifiers, names,
-  error codes; in notebook 07 RRF raised Recall@100 from 0.886 (BM25) / 0.919 (dense) to
+  error codes; in Chapter 45 RRF raised Recall@100 from 0.886 (BM25) / 0.919 (dense) to
   0.954. Usually the first thing to try.
 * **Evaluation.** Offline: Recall@k and nDCG@10 on the judged set, per slice, with
   bootstrap CIs over queries, plus end-to-end answer correctness and citation accuracy.
@@ -92,7 +92,7 @@ the top 3.
    beyond a few hundred. Choose the depth from a quality-vs-latency table like 8.4's: the
    smallest depth after which nDCG stops rising (bounded by the first stage's
    Recall@depth), within the latency budget.
-4. **Before shipping a better bi-encoder:** re-embed and re-index the whole corpus with the
+4. **Before deploying a better bi-encoder:** re-embed and re-index the whole corpus with the
    new model (old and new vectors are not comparable), keep queries and index on the same
    version, check latency and index size, verify per-slice quality and that no slice
    regressed, plan the backfill for new documents and a rollback path, then an online A/B

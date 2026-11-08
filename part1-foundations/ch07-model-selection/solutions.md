@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `decide`
 
-[verified] Reference code: [`code/nb06.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def decide(y, scores_a, scores_b, groups):
@@ -39,7 +39,7 @@ evidence.
 
 ## Exercise 2 · `budgeted_search`
 
-[verified] Reference code: [`code/nb06.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def budgeted_search(param_grid_list, evaluate_fn, budget, seed=0):
@@ -59,7 +59,7 @@ def budgeted_search(param_grid_list, evaluate_fn, budget, seed=0):
 wasted budget); `min(budget, len(...))` handles small grids; a **fixed seed**
 so the search itself is reproducible; and every trial kept, not just the
 winner. In practice, add `seconds` and fold-level scores to each row, and
-write the table to disk (notebook 06 writes `artifacts/trials.csv`).
+write the table to disk (Chapter 7 writes `artifacts/trials.csv`).
 
 **Push further.** Random search beats grid search at a fixed budget when only
 a few hyperparameters matter (Bergstra & Bengio, 2012): a grid wastes
@@ -116,7 +116,7 @@ carry no new information, the cluster interval did not.
 models are evaluated on the same rows, so shared noise is counted twice.
 Compute the paired bootstrap interval of the difference.
 
-**4. Why linear won.** A smooth, roughly monotone risk; few positives (≈ 1,400),
+**4. Why the linear model was better.** A smooth, roughly monotone risk; few positives (≈ 1,400),
 so tree leaves estimate noisy rates; non-linearity already engineered into
 the features; synthetic data generated from a smooth score. Reversing
 property: strong interactions or thresholds in the true relationship (e.g.

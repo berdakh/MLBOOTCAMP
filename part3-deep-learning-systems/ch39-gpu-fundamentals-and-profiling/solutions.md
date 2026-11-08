@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `time_fn`
 
-[verified] Reference code: [`code/nb01.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def time_fn(fn, device, warmup, iters):
@@ -44,7 +44,7 @@ statistics for you.
 
 ## Exercise 2 · `tflops`
 
-[verified] Reference code: [`code/nb01.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def tflops(n, seconds):
@@ -61,7 +61,7 @@ tokens` for a full training step: the rule used for LLM compute budgets.
 
 ## Exercise 3 · `arithmetic_intensity`
 
-[verified] Reference code: [`code/nb01.py`](solutions.py) (`ex3`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex3`).
 
 ```python
 def arithmetic_intensity(flops, bytes):
@@ -80,7 +80,7 @@ caches, so measured intensity at DRAM is lower.
 
 ## Exercise 4 · Reading a profiler table
 
-[open-ended] A good answer, in the order an interviewer wants it:
+[open-ended] A good answer, in a logical order (finding, evidence, actions):
 
 **Bottleneck: the input pipeline (data loading on the CPU); the GPU is idle
 most of the time.** Evidence:

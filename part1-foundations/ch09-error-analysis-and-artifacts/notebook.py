@@ -6,7 +6,7 @@
 # %% [markdown]
 # # Chapter 9 · Error analysis & artifacts
 #
-# **Day 2 · ~45 minutes · CPU only**
+# **Part I · Chapter 9 · about 45 minutes · CPU only**
 #
 # A single PR-AUC hides where the model fails and for whom. And a model that
 # exists only as a variable in a notebook cannot be served, audited or rolled
@@ -25,7 +25,10 @@
 # `history.jsonl`) and `artifacts/model_card.md`.
 #
 # All numbers are on the **validation** period; models are fitted on **train**.
-# The test period is reserved for notebook 15.
+# The test period is reserved for Chapter 16.
+
+# %% [markdown]
+# Read first: [Chapter 9 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -105,7 +108,7 @@ print(f"threshold {threshold:.3f} | " + ", ".join(f"{k} {v:.3f}" for k, v in rep
 # | **Model card** | a short document of intended use, evidence and limits | `artifacts/model_card.md` |
 
 # %% [markdown]
-# ## 8.1 · Slices: where is the model weak?
+# ## 9.1 · Slices: where is the model weak?
 #
 # `evaluation.slice_report` computes per-slice metrics and **flags** slices
 # with fewer than `min_rows` rows instead of hiding them. Tenure needs
@@ -133,7 +136,7 @@ slices.round(3)
 # PR-AUC: a slice with 30-50 positives has a PR-AUC that can move by ±0.05 or
 # more on resampling. We used `min_rows=300` (only ≈ 15 positives at a 5%
 # rate) and two slices are flagged: region `unknown` (130 rows, the truly
-# missing regions from notebook 02) and tenure `2y+` (47 rows).
+# missing regions from Chapter 3) and tenure `2y+` (47 rows).
 #
 # Before reading anything into the worst slice, put an interval on it:
 
@@ -154,7 +157,7 @@ print(f"  overall      {pt_all:.3f}  95% customer CI [{lo_all:.3f}, {hi_all:.3f}
 # overall one (≈ [0.136, 0.197]). Also note that PR-AUC depends on the
 # slice's positive rate: a slice with fewer churners has a lower PR-AUC
 # baseline, so compare `pr_auc / positive_rate` (lift) or ROC-AUC before
-# calling a slice "badly served". The defensible statement is usually
+# calling a slice "badly served". The statement the evidence supports is usually
 # *"we see no slice where the model is clearly worse, at this sample size"*,
 # not a story about why one region is hard.
 #
@@ -194,7 +197,7 @@ def worst_slices(report, metric, min_rows, n):
 grade.ex2(worst_slices)
 
 # %% [markdown]
-# ## 8.2 · Errors: what do the misses look like?
+# ## 9.2 · Errors: what do the misses look like?
 #
 # At the chosen threshold, every validation row is a TP, FP, FN or TN.
 # Compare their median features. The question for each group is: *could any
@@ -242,7 +245,7 @@ print(f"churn rate among all healthy-looking rows: {v.loc[healthy, LABEL].mean()
 # the analysis.
 #
 # **Feature ideas this suggests** (proposed, not implemented; each needs a
-# point-in-time definition and a leakage check like notebook 03's):
+# point-in-time definition and a leakage check like Chapter 4's):
 #
 # * contract renewal date and "days until renewal" (churn clusters at renewal);
 # * change in seat count, and logins of the account's admin / champion user;
@@ -252,14 +255,14 @@ print(f"churn rate among all healthy-looking rows: {v.loc[healthy, LABEL].mean()
 #
 # **What we would do next**, in order:
 #
-# 1. measure the save rate (the cost assumption that moves the threshold most, notebook 07);
+# 1. measure the save rate (the cost assumption that moves the threshold most, Chapter 8);
 # 2. add renewal-date features, the likeliest large gain from the error profile;
-# 3. re-run the model comparison with the new features (trees may win once interactions appear);
-# 4. set up monitoring for the score distribution and for flags per month (Day 4);
+# 3. re-run the model comparison with the new features (trees may do better once interactions appear);
+# 4. set up monitoring for the score distribution and for flags per month (Chapter 15);
 # 5. only then, more hyperparameter tuning.
 
 # %% [markdown]
-# ## 8.3 · A model bundle: the model plus everything needed to trust it
+# ## 9.3 · A model bundle: the model plus everything needed to trust it
 #
 # `churnlab.artifacts` saves a **bundle**: a directory with `model.joblib` and
 # `metadata.json`. The metadata answers the questions you will be asked about
@@ -348,12 +351,12 @@ with tempfile.TemporaryDirectory() as tmp:
 # artifacts or a registry with access control.
 
 # %% [markdown]
-# ## 8.4 · A registry: versions, a pointer, and an audit log
+# ## 9.4 · A registry: versions, a pointer, and an audit log
 #
 # `churnlab.registry.Registry` is a directory of immutable bundles (`v1/`,
 # `v2/`, ...), a `CURRENT` file naming the live version, and an append-only
 # `history.jsonl`. Deploying is writing a version into `CURRENT`; rolling back
-# is writing the previous one (notebook 14 does that under pressure).
+# is writing the previous one (Chapter 15 does that under pressure).
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l1-bundle-registry.svg" alt="A registry with immutable version folders v1, v2 and v3, a CURRENT file pointing at the live version, an append-only history log, and rollback as rewriting CURRENT" width="100%">
 #
@@ -397,7 +400,7 @@ print((registry.root / "history.jsonl").read_text())
 # configuration.
 
 # %% [markdown]
-# ## 8.5 · A model card
+# ## 9.5 · A model card
 #
 # A model card is the short document that travels with a model: what it is
 # for, what it is **not** for, what data it saw, how good it is (with
@@ -551,7 +554,7 @@ print(f"notebook compute time: {time.time() - T0:.0f} s")
 # |---|---|---|
 # | `ArtifactError: ... already exists; bundles are immutable` | saving to an existing bundle directory | use a new version (the registry does this), or `overwrite=True` only for throwaway demos |
 # | `UserWarning: model trained with sklearn X, running Y` | the bundle was made in another environment (e.g. local vs Colab) | re-train in this environment, or pin the same sklearn; use `strict_versions=True` in a service |
-# | Registry shows v3, v4, ... after re-running | you called `register` unconditionally | register only when the model changed; the cell in 8.4 checks first |
+# | Registry shows v3, v4, ... after re-running | you called `register` unconditionally | register only when the model changed; the cell in 9.4 checks first |
 # | `slice_report` row has no `pr_auc` | the slice has a single class (no churners) | it is too small to evaluate; report it as such |
 # | `bootstrap_ci` fails on a slice | almost every resample had no positives | do not bootstrap slices with a handful of positives |
 # | `tenure_bucket` puts 30 days in "0-30d" | `pd.cut` closes intervals on the right by default | pass `right=False` |
@@ -568,4 +571,4 @@ print(f"notebook compute time: {time.time() - T0:.0f} s")
 # 5. Walk through deploying v2 and rolling back to v1 with this registry. Why can rollback not half-succeed?
 # 6. Name two things your model card says the model must *not* be used for, and why.
 #
-# **Next chapter:** [`09_fastapi_and_contracts.ipynb`](../ch10-fastapi-and-contracts/notebook.ipynb) — serve the promoted model behind a typed API contract.
+# **Next chapter:** [Chapter 10 · FastAPI & contracts](../ch10-fastapi-and-contracts/notebook.ipynb) — serve the promoted model behind a typed API contract.

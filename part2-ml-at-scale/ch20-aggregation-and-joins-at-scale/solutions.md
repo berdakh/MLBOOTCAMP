@@ -1,13 +1,13 @@
 # Solutions · Chapter 20 · Aggregation & joins at scale
 
-Try each exercise before reading its answer. Markers: [verified] verified by running ·
+Attempt each exercise before reading its answer. Markers: [verified] verified by running ·
 [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `reservoir_sample`
 
-[verified] Reference code: [`code/nb02.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def reservoir_sample(stream, k, seed):
@@ -27,7 +27,7 @@ def reservoir_sample(stream, k, seed):
 each is in the reservoir with probability `k/n`. True for `n = k`. Item
 `n+1` enters with probability `k/(n+1)`. An item already inside stays unless
 the new item enters *and* lands on its slot:
-`k/n · (1 − k/(n+1) · 1/k) = k/n · n/(n+1) = k/(n+1)`. Induction done.
+`k/n · (1 − k/(n+1) · 1/k) = k/n · n/(n+1) = k/(n+1)`, which completes the induction.
 
 **Common mistakes.**
 
@@ -37,7 +37,7 @@ the new item enters *and* lands on its slot:
   far too often. The grader's chi-square test shows it (first items ~1,500
   times, last ~100, where 500 is expected).
 * `random.sample(list(stream), k)`: uniform, but it stores the whole stream,
-  which defeats the purpose (memory `O(n)`, not `O(k)`).
+  which defeats the purpose of the algorithm (memory `O(n)`, not `O(k)`).
 
 **Push further.** Weighted reservoir sampling (Efraimidis–Spirakis: keep the
 `k` items with the largest `u ** (1/w)`) and distributed reservoirs (sample
@@ -47,7 +47,7 @@ the new item enters *and* lands on its slot:
 
 ## Exercise 2 · `partitioned_count`
 
-[verified] Reference code: [`code/nb02.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def partitioned_count(keys, n_partitions):
@@ -92,8 +92,8 @@ chunk size: for fewer than 4 keys it is 0, and `range(0, n, 0)` raises.
   from that day's partition only. 7- and 30-day uniques are
   `HLL_COUNT.MERGE` over the last 7/30 daily sketches: no rescan of the log,
   and a late correction to one day means rebuilding one day's sketches. (Sum
-  of daily distinct counts would double-count users who return; that is the
-  whole reason for sketches that merge.)
+  of daily distinct counts would double-count users who return; this is the
+  reason for using sketches that merge.)
 * **Skew.** The hot items are fine for an *aggregation* with sketches: each
   mapper builds a partial sketch per item (combiner), so the shuffle carries
   one fixed-size sketch per item per mapper, not 5% of all rows. If computing

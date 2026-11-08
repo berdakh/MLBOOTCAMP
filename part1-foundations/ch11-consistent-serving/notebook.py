@@ -6,15 +6,15 @@
 # %% [markdown]
 # # Chapter 11 · Consistent serving
 #
-# **Day 3 · ~45 minutes · CPU only**
+# **Part I · Chapter 11 · about 45 minutes · CPU only**
 #
-# The most expensive serving bugs raise no errors. The API returns 200, the
-# probabilities look plausible, and they are quietly different from the ones
-# you validated, because something about the inputs or the preprocessing is
-# not the same as in training. This notebook makes that failure visible,
-# removes its main cause, and builds the check that catches the rest.
+# The most costly serving errors raise no exceptions. The API returns 200,
+# the probabilities look plausible, and yet they differ from the ones that
+# were validated, because the inputs or the preprocessing are not the same as
+# in training. This lab first makes that failure visible, then removes its
+# main cause, and finally builds a check that detects what remains.
 #
-# By the end you will be able to:
+# After this chapter you should be able to:
 #
 # 1. show and measure training/serving skew: maximum score difference and decisions flipped at the threshold;
 # 2. explain why serving the saved `Pipeline` object removes a whole class of skew;
@@ -22,7 +22,10 @@
 # 4. load a model safely: hash verification, version warnings, readiness without a model;
 # 5. trace any prediction to a model version and a request id.
 #
-# **You will produce:** `artifacts/serving/parity_valid.csv`, a parity report (offline vs API) on 500 validation rows.
+# **Lab output:** `artifacts/serving/parity_valid.csv`, a parity report (offline vs API) on 500 validation rows.
+
+# %% [markdown]
+# **Read first:** [Chapter 11 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -84,13 +87,13 @@ print(f"train {len(train):,} rows | valid {len(valid):,} rows")
 # | **Model version header** | the response names which model answered | `v1` |
 
 # %% [markdown]
-# ## 10.1 · Skew, made visible
+# ## 11.1 · Skew, made visible
 #
 # Imagine the model was trained *without* a pipeline: a data scientist wrote
 # the preprocessing as a function in a notebook, trained a logistic regression
 # on the resulting NumPy array, and handed over the coefficients. A backend
 # engineer then **re-implemented** the preprocessing in the service, working
-# from a description. Here is the training side, written out by hand (it does
+# from a description. The training side, written out by hand, follows (it does
 # the same as `churnlab.modeling.make_preprocessor("linear")`, minus the
 # missing-value indicators and rare-category grouping):
 
@@ -138,9 +141,9 @@ print(f"validation PR-AUC {average_precision_score(valid[LABEL], p_offline):.3f}
 # **Expected:** PR-AUC about 0.158, a threshold near 0.19, and about 170 of
 # the 6,956 validation rows flagged.
 #
-# Now the service side. It receives JSON bodies (dicts), so it is written
-# row by row. Read it carefully: it contains **three** bugs, each a mistake
-# real teams make.
+# Next, the service side. It receives JSON bodies (dicts), so it is written
+# row by row. It contains **three** bugs, each of a kind that occurs in
+# practice.
 
 # %%
 from churnlab.api import example_payload
@@ -209,7 +212,7 @@ bug_table = pd.DataFrame({
 bug_table
 
 # %% [markdown]
-# **Expected (read it slowly):**
+# **Expected:**
 #
 # * **Column order** is the most destructive (several hundred flips, PR-AUC
 #   falls to about 0.07) and the *easiest to miss in code review*, because
@@ -225,7 +228,7 @@ bug_table
 # transform will drift apart, so there should be only **one**.
 
 # %% [markdown]
-# ## 10.2 · The fix: one object, trained and served
+# ## 11.2 · The fix: one object, trained and served
 #
 # The registered models are scikit-learn `Pipeline`s. Preprocessing (impute,
 # log, scale, one-hot) is *inside* the object that was fitted, saved and
@@ -274,7 +277,7 @@ print("max |offline - api path|:", np.max(np.abs(p_offline_path - p_api_path)))
 # arithmetic.
 
 # %% [markdown]
-# ## 10.3 · The parity test: offline vs the running API
+# ## 11.3 · The parity test: offline vs the running API
 #
 # The previous cell imitated the API. A **parity test** calls the real one:
 # score the same rows offline and through `/predict/batch`, then compare
@@ -359,7 +362,7 @@ def parity_check(model, http_client, rows_df: pd.DataFrame) -> dict:
 grade.ex1(parity_check)
 
 # %% [markdown]
-# ## 10.4 · Field order, missing optional fields, unseen categories
+# ## 11.4 · Field order, missing optional fields, unseen categories
 #
 # Three things a caller can legitimately do that must not change the answer
 # (or crash the service):
@@ -388,7 +391,7 @@ print(f"{'offline with NaN':<24}      p={model.predict_proba(nan_row)[0, 1]:.6f}
 # (NaN), and the pipeline imputes it with the *training* median.
 #
 # Now a region the model has never seen. The contract accepts it (a plain
-# string, notebook 09); the one-hot encoder ignores unknown categories:
+# string, chapter 10); the one-hot encoder ignores unknown categories:
 
 # %%
 known_regions = sorted(train["region"].astype(str).unique())
@@ -406,16 +409,16 @@ print(f"recent inputs: {len(recent)} | unseen region values: {int(unseen.sum())}
 # %% [markdown]
 # **Expected:** `known regions: ['APAC', 'EU', 'LATAM', 'NA', 'unknown']`; MARS
 # returns 200 with a valid probability; and the monitoring count finds one
-# unseen value. The trade-off from notebook 09 in action: the request
+# unseen value. The trade-off from chapter 10 in action: the request
 # succeeds, and the unusual input is **counted** rather than refused. A spike in
 # that count after a deploy (or after the sales team opens a new market) is
 # an alert, not a crash.
 
 # %% [markdown]
-# ## 10.5 · Loading a model safely
+# ## 11.5 · Loading a model safely
 #
-# A bundle is a directory with `model.joblib` and `metadata.json` (notebook
-# 08). `load_bundle` checks two things before returning the model:
+# A bundle is a directory with `model.joblib` and `metadata.json` (Chapter
+# 9). `load_bundle` checks two things before returning the model:
 #
 # 1. the SHA-256 of `model.joblib` equals `metadata["model_sha256"]`, so a corrupted
 #    or swapped file is refused;
@@ -479,9 +482,9 @@ except ArtifactError as exc:
 # Notice what was **not** detected: editing `metadata.json` did not trip the
 # hash check, because the hash covers only `model.joblib`. That means someone
 # could also edit the `threshold` in metadata and the service would serve it
-# silently. A stronger bundle would also hash (or sign) the metadata. It is a
-# good thing to say in an interview: *know what your integrity check does not
-# cover.*
+# silently. A stronger bundle would also hash (or sign) the metadata. The
+# general point is worth stating in an interview: *know what your integrity
+# check does not cover.*
 #
 # What does the **service** do with a bad bundle, or no bundle at all? It must
 # not crash: it starts, answers `/health`, and reports **not ready** until a
@@ -515,10 +518,10 @@ print(f"old sklearn version: /ready {c.get('/ready').status_code} | warnings at 
 # sends traffic only to instances whose readiness check passes. A process that
 # crashes on start is restarted in a loop; a process that reports "not ready"
 # stays visible, keeps its logs, and starts serving the moment a reload
-# succeeds (notebook 14 uses `/admin/reload` for rollback).
+# succeeds (chapter 15 uses `/admin/reload` for rollback).
 
 # %% [markdown]
-# ## 10.6 · Which model answered? Versions and request ids
+# ## 11.6 · Which model answered? Versions and request ids
 #
 # Every prediction must be traceable to the exact model that produced it,
 # and every request to its log line. The service does both:
@@ -543,7 +546,7 @@ print("log line           :", line[-1])
 # bundle, its training data fingerprint and its threshold.
 
 # %% [markdown]
-# > **Exercise 2.** The buggy `serve_preprocess` from 10.1 is still in this
+# > **Exercise 2.** The buggy `serve_preprocess` from 11.1 is still in this
 # > notebook. Write `fixed_serve_preprocess(customers, stats)` that takes a
 # > list of request dicts (as produced by `example_payload`; optional fields
 # > may be `None` or missing, keys may be in any order) and returns **exactly**
@@ -563,7 +566,7 @@ def fixed_serve_preprocess(customers: list[dict], stats: dict) -> np.ndarray:
 grade.ex2(fixed_serve_preprocess)
 
 # %% [markdown]
-# > **Exercise 3 (written).** The parity test in 10.3 replays *stored* feature
+# > **Exercise 3 (written).** The parity test in 11.3 replays *stored* feature
 # > rows through the API. List three sources of training/serving skew that it
 # > would **not** catch, and for each, how you would detect or prevent it.
 # > (Think about where the feature values in a live request come from.)
@@ -620,7 +623,7 @@ grade.ex2(fixed_serve_preprocess)
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
 # 1. What is training/serving skew, and why does it not show up as errors?
 # 2. Name three ways a re-implemented preprocessing step can differ from training, and which is hardest to spot in review.
@@ -629,4 +632,5 @@ grade.ex2(fixed_serve_preprocess)
 # 5. What does `load_bundle` verify, what does it not verify, and what should the service do when loading fails?
 # 6. A customer complains about a prediction made last week. What do you need from the response or the logs to investigate it?
 #
-# **Next chapter:** [`11_api_clients_and_tests.ipynb`](../ch12-api-clients-and-tests/notebook.ipynb) — call the service over real HTTP with timeouts and retries, and write the test suite that guards all of this.
+# **Next chapter:** [Chapter 12 · API clients & tests](../ch12-api-clients-and-tests/notebook.ipynb) — calling the service over real HTTP with timeouts and retries, and writing a test suite for it.
+

@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `parity_check`
 
-[verified] Reference code: [`code/nb10.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def parity_check(model, http_client, rows_df):
@@ -48,7 +48,7 @@ works, but is 300 requests where one is enough).
 
 ## Exercise 2 · `fixed_serve_preprocess`
 
-[verified] Reference code: [`code/nb10.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def fixed_serve_preprocess(customers, stats):
@@ -119,7 +119,7 @@ barely moved (0.158 → 0.157), so an aggregate metric would not reveal it.
 scaler means, categories) is the object that is served, and the
 `ColumnTransformer` selects columns by name. It cannot prevent skew *before*
 the model: features computed differently online, stale features, different
-time windows, upstream changes (see 10-3).
+time windows, upstream changes (see Exercise 3).
 
 **4. 4e-7.** Pass, *if* you know why it is not zero: this API rounds to six
 decimals, so differences up to 5e-7 are expected. Without that knowledge

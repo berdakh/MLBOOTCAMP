@@ -6,15 +6,15 @@
 # %% [markdown]
 # # Chapter 19 · Event logs & columnar data
 #
-# **Day 1 · ~90 minutes · CPU only**
+# **Part II · Chapter 19 · about 90 minutes · CPU only**
 #
-# Every ranking model at a large company is trained on *logs*: one row per
-# item shown, written by a serving system that was not designed with your
-# model in mind. Whether a model can be trained, debugged and evaluated
-# honestly is mostly decided before any modelling, by what the log records,
-# how it is stored and how you sample it.
+# Ranking models in industry are trained on *logs*: one row per item shown,
+# written by a serving system that was not designed with the model in mind.
+# Whether a model can be trained, debugged and evaluated without bias is
+# largely decided before any modelling, by what the log records, how it is
+# stored and how it is sampled.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. say what a good impression/click log row must contain, and why some things (like "the user looked at it") can never be logged;
 # 2. measure CSV against Parquet (size, read time, column projection) and read a Parquet file's row-group statistics;
@@ -22,7 +22,10 @@
 # 4. aggregate a dataset larger than your memory budget out of core, with DuckDB's `memory_limit`;
 # 5. sample a log without biasing the metric you care about, reproducibly, with a stable hash.
 #
-# **You will produce:** the ShopStream `small` dataset, a day-partitioned copy of it, and the first week of the `large` scale, all under `artifacts/level2/`.
+# **Outputs of this lab:** the ShopStream `small` dataset, a day-partitioned copy of it, and the first week of the `large` scale, all under `artifacts/level2/`.
+
+# %% [markdown]
+# Read first: [Chapter 19 text](README.md) — ShopStream, its hidden ground truth, log design, columnar storage and sampling, explained in full.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -98,25 +101,25 @@ print(f"small dataset ready in {time.perf_counter() - t0:.1f} s")
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-shopstream-at-a-glance.svg" alt="ShopStream: users and items, a logging policy, position-biased examination, clicks and purchases; logged columns vs hidden truth" width="100%">
 #
-# *What to notice:* the log records *what was shown where* and *what was clicked*, but examination and true relevance stay in the red box. Every Level 2 method is graded against that box.
+# *What to notice:* the log records *what was shown where* and *what was clicked*, but examination and true relevance stay in the red box. Every method in Part II is graded against that box.
 
 # %% [markdown]
 # ## 1.1 · What a good log row contains
 #
-# > **Intuition.** A log row is a witness statement: *who, what, where, when, chosen by whom, and what happened next*. A detective can reconstruct a case from complete statements; a missing "where" (position) or "chosen by whom" (policy version) cannot be recovered later. *Where it breaks down:* a witness can at least say what they looked at; a log never can (examination is invisible).
+# > **Intuition.** A log row is like a witness statement: *who, what, where, when, chosen by whom, and what happened next*. A case can be reconstructed from complete statements; a missing "where" (position) or "chosen by whom" (policy version) cannot be recovered later. *Where it breaks down:* a witness can at least say what they looked at; a log never can (examination is invisible).
 #
-# One impression row should let you answer, months later: *who saw what,
-# where, when, chosen by which system, with what probability, and what
-# happened next?* The fields that matter:
+# One impression row should allow an analyst to answer, months later: *who saw
+# what, where, when, chosen by which system, with what probability, and what
+# happened next?* The required fields are:
 #
-# | Field | Why you need it | ShopStream column |
+# | Field | Purpose | ShopStream column |
 # |---|---|---|
 # | **event id** (unique per impression) | deduplication; joining clicks to the impression they came from | derive `request_id * 10 + position` |
 # | **request id** | groups the 10 items shown together: every per-list metric (NDCG, "did the user click anything") needs it | `request_id` |
 # | **entity ids** | user, item (and session, device, surface) | `user_id`, `item_id` |
-# | **event time** | when it happened on the device, in UTC; the time your features must be "as of" | `ts` |
-# | **position** | the single strongest driver of clicks (Day 3) | `position` |
-# | **policy / model version** | which ranker produced the list; without it you cannot compare models in the log | (one policy here) |
+# | **event time** | when it happened on the device, in UTC; the time as of which features must be computed | `ts` |
+# | **position** | the single strongest driver of clicks (Chapter 23) | `position` |
+# | **policy / model version** | which ranker produced the list; without it, models cannot be compared in the log | (one policy here) |
 # | **logging propensity** | P(this item shown at this position by the policy); needed for unbiased off-policy evaluation | `is_random` marks uniform exploration traffic; propensities of the main policy are *not* logged, a common real-world gap |
 # | **outcomes** | click, purchase, dwell…, each with its own timestamp | `clicked`, `purchased` |
 #
@@ -124,8 +127,8 @@ print(f"small dataset ready in {time.perf_counter() - t0:.1f} s")
 # A missing click means "not examined" *or* "examined and not interesting",
 # and the log cannot tell which. ShopStream's generator knows (it decided),
 # so the raw files contain a hidden `examined` column; `store.load` drops it,
-# and so should you. Using it would be training on information no production
-# system has.
+# and every analysis should do the same. Using it would amount to training on
+# information that no production system has.
 
 # %%
 raw = pd.read_parquet(sorted((small_dir / "impressions").glob("*.parquet"))[0])
@@ -150,12 +153,12 @@ print(f"CTR policy traffic {imps.loc[~imps.is_random, 'clicked'].mean():.3f} | "
 # %% [markdown]
 # ## 1.2 · Two scales: `small` and (part of) `large`
 #
-# `small` is 2.4M rows and fits comfortably in pandas. The `large` preset
-# (200,000 users, 20,000 items) is about **46 million** impressions over 56
+# `small` has 2.4M rows and fits comfortably in pandas. The `large` preset
+# (200,000 users, 20,000 items) has about **46 million** impressions over 56
 # days. We generate its first `LARGE_DAYS` days, written the way a warehouse
 # stores logs: Parquet files partitioned by day. The generator emits requests
 # in day order, so stopping early gives exactly the first days of the full
-# world. Then we extrapolate how long the whole thing would take.
+# world. We then extrapolate how long the full data set would take.
 
 # %%
 from shoprank.data import K, WorldConfig, make_world
@@ -179,8 +182,8 @@ print(sorted(p.name for p in (large_dir / "impressions").iterdir()))
 # **Expected:** about 4.7 million rows for 7 days, written in about 30 s
 # on our 4-core test machine (Colab is often 1.5-2× slower), and an
 # extrapolated full `large` of about 46M rows taking about 5 minutes here,
-# more on Colab. That is past this notebook's time budget, which is why we
-# stop at a week. On disk: about 50 MB, in folders `day=0` … `day=6`.
+# more on Colab. That exceeds this lab's time budget, which is why we stop at
+# one week. On disk: about 50 MB, in folders `day=0` … `day=6`.
 #
 # Notice the folder names: `day=3`. This *Hive-style* layout puts a column's
 # value in the path, so a query engine can decide which files to open from
@@ -191,9 +194,10 @@ print(sorted(p.name for p in (large_dir / "impressions").iterdir()))
 #
 # CSV is text, one row after another: every read parses every character of
 # every column. Parquet is **columnar** (each column stored contiguously, so
-# you can read only the columns you need), **typed and compressed**
+# a reader can read only the columns it needs), **typed and compressed**
 # (similar values next to each other compress well), and split into **row
-# groups** that carry min/max statistics per column. Measure it.
+# groups** that carry min/max statistics per column. We measure the
+# difference.
 
 # %%
 FLAT = L2 / "formats"
@@ -222,12 +226,12 @@ del df_csv, df_pq, df_2  # free memory before the larger steps
 # **Expected:** the CSV is about 5-6× larger than the Parquet file
 # (about 165 MB vs 25 MB), `read_csv` is roughly 10× slower than
 # `read_parquet` (about 2.8 s vs 0.25 s here), and reading two columns is
-# faster again (about 0.05 s). And `read_csv`
+# faster again (about 0.05 s). In addition, `read_csv`
 # silently returns `ts` as a plain `object` (string) column: CSV has no
 # types, so every reader re-guesses them. With Parquet, the schema travels
 # with the data.
 #
-# > **Intuition.** CSV is a stack of index cards, one per impression: to total the `clicked` field you pick up every card. Parquet is a ledger with one page per column, and a sticky note on each chapter saying "request ids 24k–37k in here". You open only the pages and chapters you need. *Where it breaks down:* changing one row in Parquet means rewriting a whole file; columnar formats are for reading, not for row-by-row updates.
+# > **Intuition.** CSV is a stack of index cards, one per impression: to total the `clicked` field, every card must be picked up. Parquet is a ledger with one page per column, and a note on each section saying "request ids 24k–37k in here". Only the pages and sections that are needed are opened. *Where it breaks down:* changing one row in Parquet means rewriting a whole file; columnar formats are for reading, not for row-by-row updates.
 #
 # **Row groups and statistics.** The file was written sorted by
 # `request_id`. Each row group stores min/max per column, so a filter like
@@ -259,17 +263,17 @@ print("row groups that may contain user_id == 4242:", sum(lo <= 4242 <= hi for l
 # %% [markdown]
 # **Expected:** about 20 row groups of 122,880 rows (DuckDB's default);
 # exactly 1 row group can contain the `request_id` range, while all of them
-# may contain `user_id == 4242`. **Sort (or cluster) your files by the
-# column you filter on most**, and the statistics do the skipping for you.
+# may contain `user_id == 4242`. **Sort (or cluster) files by the column that
+# is filtered on most often**; the statistics then do the skipping.
 
 # %% [markdown]
 # ## 1.4 · Partition pruning and predicate pushdown
 #
 # Row-group skipping still opens every file to read its footer. **Partition
 # pruning** is one level higher: with a `day=` directory per day, a filter on
-# `day` removes whole files from the scan *before any is opened*. Write a
-# day-partitioned copy of `small` (DuckDB does it in one statement) and ask
-# DuckDB what it actually scanned.
+# `day` removes whole files from the scan *before any is opened*. We write a
+# day-partitioned copy of `small` (one DuckDB statement) and ask DuckDB what
+# it actually scanned.
 
 # %% [markdown]
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-scan-skipping.svg" alt="Partition pruning, row-group statistics and column projection: three ways a columnar scan reads less" width="100%">
@@ -301,7 +305,7 @@ print("\n".join(line for line in plan.splitlines() if any(
 # only one week's files were opened. `Projections` lists only the columns the
 # query uses: column projection, pushed into the scan.
 #
-# How much does that save? Time the same aggregate over one week with
+# How much does this save? We time the same aggregate over one week with
 # pruning, and with a filter DuckDB cannot push into the file list (the day is
 # computed from the timestamp, so it is only known after reading each row).
 
@@ -323,8 +327,9 @@ for name, q in [("partition filter", week_pruned), ("filter on derived ts", week
 # %% [markdown]
 # **Expected:** identical results (position-0 CTR about 0.45), but the
 # derived-timestamp filter scans all 56 files and takes roughly 10× longer
-# (about 10 ms vs 130 ms here). On a laptop that is milliseconds; on a 10 TB table it is the
-# difference between a one-minute query and a one-hour, expensive one. Real
+# (about 10 ms vs 130 ms here). On a laptop the difference is milliseconds; on
+# a 10 TB table it is the difference between a one-minute query and a
+# one-hour, expensive one. Real
 # warehouses (BigQuery, Snowflake, Spark/Hive tables) apply the same rule:
 # **filter on the partition column itself**, not on an expression of
 # another column.
@@ -334,7 +339,7 @@ for name, q in [("partition filter", week_pruned), ("filter on derived ts", week
 #
 # Pandas needs the whole table in RAM, plus copies during a `groupby`.
 # DuckDB streams through the files and, when its `memory_limit` is reached,
-# spills intermediate state to disk. Compare what pandas needs for the
+# spills intermediate state to disk. We compare what pandas needs for the
 # week of `large` with what DuckDB is allowed to use.
 
 # %%
@@ -380,16 +385,16 @@ ooc.close()
 # other versions may spill it to disk and succeed slowly. Distinct counts are
 # *holistic*: the state per group grows with the number of distinct values,
 # not a fixed few bytes. `approx_count_distinct` (HyperLogLog) keeps a
-# fixed-size sketch per group instead. Notebook 02 measures what that costs in
-# accuracy. In production the same reasoning scales out (Spark, BigQuery):
-# you write the aggregate, the engine streams, shuffles and spills, and
-# holistic aggregates are the ones that hurt.
+# fixed-size sketch per group instead. Chapter 20 measures what that costs in
+# accuracy. In production the same reasoning applies to distributed engines
+# (Spark, BigQuery): the analyst writes the aggregate, the engine streams,
+# shuffles and spills, and holistic aggregates are the expensive ones.
 
 # %% [markdown]
 # ## 1.6 · Sampling without bias
 #
-# You rarely analyse a full log; you sample. **What you sample decides which
-# metrics stay unbiased.** Three 10% samples of `small`:
+# Analyses are rarely run on a full log; they are run on a sample. **The
+# sampling unit decides which metrics stay unbiased.** Three 10% samples of `small`:
 #
 # * **rows**: keep each impression independently;
 # * **requests**: keep all 10 rows of 10% of requests;
@@ -432,15 +437,15 @@ pd.DataFrame({name: metrics(df) for name, df in samples.items()}).T.round(3)
 #   only about 25-30 in the row and request samples. A per-user metric needs
 #   *all* of a user's rows: sample users.
 #
-# > **Intuition.** Sampling rows to measure "did the request get a click?" is like tearing out 10% of a book's pages at random and asking how many chapters have a happy ending: each chapter survives as a page or two, and most of the endings are gone. *Tiny example:* a request with one click, rows kept with probability 0.1: the request survives (any of its 10 rows kept) with probability $1-0.9^{10}=0.65$, but its click survives with probability only 0.1, so given that it survives, it shows a click $0.1/0.65 \approx 15\%$ of the time instead of 100%.
+# > **Intuition.** Sampling rows to measure "did the request get a click?" is like removing 90% of a book's pages at random and then asking how many chapters have a happy ending: each chapter survives as a page or two, and most of the endings are gone. *Tiny example:* a request with one click, rows kept with probability 0.1: the request survives (any of its 10 rows kept) with probability $1-0.9^{10}=0.65$, but its click survives with probability only 0.1, so given that it survives, it shows a click $0.1/0.65 \approx 15\%$ of the time instead of 100%.
 #
 # **Rule:** sample at the level of the unit your metric is computed over (or
 # coarser). Requests for ranking metrics; users for anything per-user, and for
-# A/B tests (Day 6), where the user is the randomisation unit.
+# A/B tests (Chapter 29), where the user is the randomisation unit.
 #
 # **Reproducibility.** `rng.random(...)` above gives a different sample if
 # the user count changes, and it cannot be recomputed inside SQL or on
-# another machine. The standard trick is a **hash of the key**:
+# another machine. The standard remedy is a **hash of the key**:
 # `keep = hash(salt + user_id) % 100 < pct`. Same user → same decision,
 # every day, in every job. But *which* hash? Python's built-in `hash()` of a
 # string is salted per process (a security feature, `PYTHONHASHSEED`):
@@ -454,8 +459,9 @@ for run in (1, 2):
 # **Expected:** the string hash differs between the two processes (the
 # integer hash is just `42` both times, which is not a hash you want either:
 # `user_id % 100` keeps users 0-9, 100-109, …, and ids are often assigned in
-# signup order). Use a cryptographic hash from `hashlib`: its output is
-# defined by a standard, identical in every process, language and machine.
+# signup order). A cryptographic hash from `hashlib` is the right tool: its
+# output is defined by a standard, identical in every process, language and
+# machine.
 
 # %% [markdown]
 # > **Exercise 1.** Write `user_hash_sample(user_ids, pct, salt="")` that
@@ -498,7 +504,7 @@ print(f"{in_sample.sum():,} users sampled ({in_sample.mean():.1%});",
 # %% [markdown]
 # **Expected:** about 1,030 users (10.3%) and about 209 distinct items per
 # user, matching the full log. These numbers are identical on every run and
-# every machine: that is the point.
+# every machine, which is the purpose of the method.
 #
 # > **Exercise 2.** Write `daily_ctr_by_position_sql(impressions_dir)` that
 # > returns a DuckDB SQL **string** computing, over the day-partitioned
@@ -509,8 +515,8 @@ print(f"{in_sample.sum():,} users sampled ({in_sample.mean():.1%});",
 # > The grader runs your query on a small dataset in which **every file
 # > outside days 7-13 is corrupt** (except day 0, which is valid but must not
 # > appear in the result). A query that prunes partitions never opens them;
-# > one that reads everything and filters later crashes. Then it compares
-# > your numbers with a reference.
+# > one that reads everything and filters later fails. The grader then
+# > compares the numbers with a reference.
 
 # %%
 def daily_ctr_by_position_sql(impressions_dir: str) -> str:
@@ -529,7 +535,7 @@ grade.ex2(daily_ctr_by_position_sql)
 # > clicked anything in the carousel. Name one field that, if forgotten now,
 # > makes an offline evaluation of a *new* carousel model impossible later.
 # >
-# > Write your answer in the cell below.
+# > Write the answer in the cell below.
 
 # %% [markdown]
 # *Your answer here.*
@@ -562,7 +568,7 @@ grade.ex2(daily_ctr_by_position_sql)
 # $$
 #
 # * $N$: number of keys (users); $q$: the share kept (`pct / 100`).
-# * *Example:* $N = 10{,}000$ users at $q = 0.1$: $1{,}000 \pm 30$. The 1,030 users you got above is one standard deviation high, which is what chance looks like.
+# * *Example:* $N = 10{,}000$ users at $q = 0.1$: $1{,}000 \pm 30$. The 1,030 users obtained above are one standard deviation above the mean, an ordinary chance deviation.
 #
 # The cell below checks equations 1 and 2 against the log itself.
 
@@ -600,7 +606,7 @@ print(f"2. predicted share of row-sampled requests with a click: {predicted:.3f}
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
 # 1. Design the impression log for a home feed. Which fields are non-negotiable, and which one do teams most often forget that later blocks off-policy evaluation?
 # 2. Why is Parquet faster than CSV for analytics? Explain columnar layout, compression, row-group statistics and schema, and say when CSV is still fine.
@@ -609,4 +615,4 @@ print(f"2. predicted share of row-sampled requests with a click: {predicted:.3f}
 # 5. A colleague samples 1% of impression rows and reports that NDCG@10 dropped. What is wrong, and how should they sample?
 # 6. Why `hash(salt + id) % 100 < k` rather than `random() < k/100`, why a salt, and why not Python's `hash()`?
 #
-# **Next chapter:** [`02_aggregation_and_joins_at_scale.ipynb`](../ch20-aggregation-and-joins-at-scale/notebook.ipynb) — what a distributed engine does with your `GROUP BY` and `JOIN`, why skew hurts, and when an approximate answer is the right one.
+# **Next chapter:** [Chapter 20 · Aggregation & joins at scale](../ch20-aggregation-and-joins-at-scale/notebook.ipynb) — what a distributed engine does with a `GROUP BY` and a `JOIN`, why skew slows it down, and when an approximate answer is the right one.

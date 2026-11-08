@@ -6,22 +6,22 @@
 # %% [markdown]
 # # Chapter 45 · Embeddings & semantic search
 #
-# **Day 4 · ~90 minutes · T4 GPU (runs on CPU with a reduced budget)**
+# **Part III · Chapter 45 · about 90 minutes · T4 GPU (runs on CPU with a reduced budget)**
 #
 # Retrieval is the first stage of search, recommendations, question answering and every
 # retrieval-augmented LLM: it decides which few hundred items out of millions the expensive
-# models ever see. This notebook builds the three standard first stages, **lexical (BM25)**,
+# models ever see. This lab builds the three standard first stages, **lexical (BM25)**,
 # **dense (a bi-encoder + FAISS)** and **hybrid (rank fusion)**, and evaluates them on a
-# public benchmark with relevance judgements, so that "semantic search is better" becomes a
-# number you can defend.
+# public benchmark with relevance judgements, so that the claim "semantic search is better"
+# can be checked with a number.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. implement BM25 from its formula and as a sparse-matrix index;
 # 2. embed text with a sentence encoder from plain `transformers` (mean pooling + normalisation) and measure throughput;
 # 3. search with FAISS: exact (`IndexFlatIP`) vs approximate (HNSW), and measure the recall/latency trade-off;
 # 4. evaluate retrieval with nDCG@10 and Recall@100 against qrels;
-# 5. fuse lexical and dense rankings with reciprocal rank fusion and say honestly what wins, and where.
+# 5. fuse lexical and dense rankings with reciprocal rank fusion and state accurately which system is better, and where.
 #
 # **You will produce:** `artifacts/level3/nb07/retrieval_results.json` (metrics, latencies and
 # throughput on your device).
@@ -39,6 +39,9 @@
 # would take several minutes); with a GPU the notebook uses 256 tokens. Both search the full
 # 5,183-document corpus. Numbers in **Expected:** lines were printed
 # by a CPU run unless marked *"on a T4 you should see … (not measured in our verification runs)"*.
+
+# %% [markdown]
+# Read first: [Chapter 45 text](README.md) explains the ideas behind this lab (Embeddings & semantic search) in more depth; [solutions](solutions.md) has worked answers.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -161,10 +164,10 @@ print("relevant abstract:", corpus[next(iter(test_qrels[q0]))][:200], "...")
 #   the top, in order of relevance. This is BEIR's headline metric: it rewards putting the
 #   answer *first*, which is what a user (or an LLM context window) sees.
 # * **Recall@100**: the fraction of relevant documents anywhere in the top 100. This is what
-#   matters for a **first stage** whose output goes to a re-ranker (notebook 08): a document
+#   matters for a **first stage** whose output goes to a re-ranker (Chapter 46): a document
 #   that is not retrieved cannot be re-ranked up.
 #
-# Unjudged documents count as non-relevant, so these metrics are lower bounds; notebook 08
+# Unjudged documents count as non-relevant, so these metrics are lower bounds; Chapter 46
 # returns to that ("false negatives").
 #
 # ## 7.2 · Lexical retrieval: BM25
@@ -239,7 +242,7 @@ print("BM25 on a 1,200-doc sub-corpus:", R.evaluate_run(run_sub, test_qrels))
 # embedded once, offline, and a query costs one encoder call plus a nearest-neighbour search.
 # `all-MiniLM-L6-v2` was trained contrastively on ~1B sentence pairs to put related texts
 # close in cosine similarity. Its `sentence-transformers` pipeline is just: transformer →
-# mask-aware **mean pooling** (notebook 04) → **L2 normalisation**. We rebuild it with
+# mask-aware **mean pooling** (Chapter 42) → **L2 normalisation**. We rebuild it with
 # `AutoModel` (`scaleml.retrieval.Encoder`), so nothing is hidden and there is one less
 # dependency. With unit vectors, inner product = cosine similarity.
 
@@ -272,7 +275,7 @@ print(f"{np.mean(np.array(n_tok) >= DOC_LEN):.0%} of documents were truncated at
 # **On a T4 you should see** the full 5,183-document corpus at 256 tokens embedded in roughly
 # 10–30 seconds with fp16 autocast, i.e. a few hundred to a thousand documents/s (not measured
 # in our verification runs). Embedding is the offline cost of dense retrieval and is paid
-# again for the *whole corpus* every time the encoder changes (notebook 08).
+# again for the *whole corpus* every time the encoder changes (Chapter 46).
 #
 # ## 7.4 · Exact vs approximate nearest neighbours with FAISS
 #
@@ -340,12 +343,12 @@ for r in ann_rows:
 # while HNSW costs 0.04 / 0.10 / 0.33 ms at `efSearch` 16 / 64 / 256 with recall@10 against exact
 # search of 0.88 / 0.975 / 0.996 (latencies vary ±20 % between runs). Exact search grows linearly with N; HNSW grows slowly.
 #
-# The lesson for design interviews: an ANN index is a *recall vs latency vs memory* dial, and
+# The general lesson: an ANN index is a *recall vs latency vs memory* dial, and
 # you must measure its recall against exact search on your own data. HNSW costs memory (the
 # graph adds ~`2·M` neighbour ids per vector) and build time; IVF-PQ indexes compress vectors
 # (product quantisation) for billion-scale collections at a further recall cost.
 #
-# ## 7.5 · Lexical vs dense: where each wins
+# ## 7.5 · Lexical vs dense: where each is better
 #
 # Averages hide structure. Compare the two systems query by query.
 
@@ -362,11 +365,11 @@ for name, i in [("BM25 wins most", int(np.argmax(nd_bm25 - nd_dense))), ("dense 
 
 # %% [markdown]
 # **Expected:** BM25 better on ~80 queries, dense better on ~70, tied on ~150
-# of 300 (mostly where both are perfect or both fail). In our run BM25's biggest win was a claim
+# of 300 (mostly where both are perfect or both fail). In our run BM25's largest advantage was on a claim
 # with a rare exact term (*"1/2000 in UK have abnormal PrP positivity"*: "PrP"/"prion" anchors
-# the match); dense's biggest win paraphrased the abstract (*"methionine restriction may activate
-# miRNAs"* vs an abstract on "microRNAs" in "stress responses"). Typically BM25 wins when the claim
-# shares rare, exact terms with its abstract (gene names, drug names, numbers); dense wins
+# the match); dense retrieval's largest advantage was on a claim that paraphrased the abstract (*"methionine restriction may activate
+# miRNAs"* vs an abstract on "microRNAs" in "stress responses"). Typically BM25 is better when the claim
+# shares rare, exact terms with its abstract (gene names, drug names, numbers); dense is better
 # when the claim paraphrases the abstract. That complementarity is why hybrids work.
 #
 # ## 7.6 · Hybrid retrieval: reciprocal rank fusion
@@ -428,7 +431,7 @@ print("wrote", OUT / "retrieval_results.json")
 # | dense, HNSW | 0.619 | 0.916 |
 # | hybrid (RRF) | **0.681** | **0.954** |
 #
-# **Honestly:** on nDCG@10, BM25 beats the general-purpose dense model here (by 0.045); dense has
+# **Interpretation.** On nDCG@10, BM25 beats the general-purpose dense model here (by 0.045); dense has
 # the better Recall@100. The hybrid is best on both metrics, but its nDCG@10 gain over BM25
 # (+0.014) has a 95 % bootstrap interval that includes zero (−0.011 to +0.037); its gain over dense
 # (+0.059, interval +0.028 to +0.089) and its Recall@100 (0.954) are clear. For a first stage
@@ -439,21 +442,21 @@ print("wrote", OUT / "retrieval_results.json")
 # nDCG@10, still at or below BM25, with the hybrid a little above both (not measured in our
 # verification runs).
 #
-# **What to take away.** No single first stage wins everywhere: on scientific claims, exact
+# **What to take away.** No single first stage is best everywhere: on scientific claims, exact
 # terms matter, and a general-purpose embedding model has not seen this domain's vocabulary.
-# Measure on *your* queries before replacing a lexical system. Notebook 08 shows the two
+# Measure on *your* queries before replacing a lexical system. Chapter 46 shows the two
 # levers that move dense retrieval: **fine-tuning the bi-encoder on in-domain pairs** and a
 # **cross-encoder re-ranker** on top.
 
 # %% [markdown]
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l3-two-stage-retrieval.svg" alt="A pipeline: corpus embedded offline, stage 1 BM25 plus dense fused by RRF returning the top 50, stage 2 a cross-encoder re-ranking to the top 5 for the user or an LLM" width="100%">
 #
-# *What to notice:* this notebook built the blue box; notebook 08 adds the yellow one. Stage 1 is optimised for recall because anything it misses is gone for good.
+# *What to notice:* this lab built the blue box; Chapter 46 adds the yellow one. Stage 1 is optimised for recall because anything it misses is gone for good.
 #
 # > **Intuition.** BM25 matches *spelling*, a dense model matches *meaning*. "PrP" in a claim and
 # > "PrP" in an abstract is a sure hit for BM25 and just another token for a general embedding
 # > model; "methionine restriction may activate miRNAs" vs "microRNAs in stress responses" is the
-# > reverse. A hybrid asks both and lets agreement win.
+# > reverse. A hybrid asks both and rewards agreement.
 #
 # > **Intuition.** HNSW is like asking for directions in an unfamiliar country: first take
 # > the motorway to the right region (the sparse top layer), then main roads, then side streets
@@ -466,7 +469,7 @@ print("wrote", OUT / "retrieval_results.json")
 # > what you would evaluate offline (metrics, query sets, which slices: head vs tail queries,
 # > exact identifiers like SKUs), the index choice and its memory at 384 dimensions (float32 vs
 # > product quantisation), the re-embedding cost when the model changes, and whether you would
-# > ship dense-only or hybrid, and why. Write your answer in the cell below.
+# > deploy dense-only or hybrid, and why. Write your answer in the cell below.
 
 # %% [markdown]
 # *Your answer (Exercise 3):* ...
@@ -539,7 +542,7 @@ print("wrote", OUT / "retrieval_results.json")
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question without notes; a complete answer takes about a minute:
 #
 # 1. Walk through BM25: what do idf, $k_1$ and $b$ each do, and when does BM25 beat a dense retriever?
 # 2. Bi-encoder vs cross-encoder: why can only one of them index a corpus offline?
@@ -548,4 +551,4 @@ print("wrote", OUT / "retrieval_results.json")
 # 5. Why does reciprocal rank fusion work without score normalisation, and when could it hurt?
 # 6. Design: semantic search over a company's internal documents for an LLM assistant. Name the retrieval stages, the evaluation set you would build, and the online metrics you would watch.
 #
-# **Next chapter:** [`08_contrastive_training_and_reranking.ipynb`](../ch46-contrastive-training-and-reranking/notebook.ipynb) — fine-tune this bi-encoder contrastively on in-domain pairs and add a cross-encoder re-ranker.
+# **Next chapter:** [Chapter 46 · Contrastive training & re-ranking](../ch46-contrastive-training-and-reranking/notebook.ipynb) — fine-tune this bi-encoder contrastively on in-domain pairs and add a cross-encoder re-ranker.

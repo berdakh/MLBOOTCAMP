@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `causal_self_attention`
 
-[verified] Reference code: [`code/nb03.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def causal_self_attention(x, w_qkv, w_out, n_heads):
@@ -36,7 +36,7 @@ FlashAttention/memory-efficient kernels, no `T × T` matrix in memory.
 
 ## Exercise 2 · `top_k_sample`
 
-[verified] Reference code: [`code/nb03.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def top_k_sample(logits, k, temperature, generator):
@@ -60,7 +60,7 @@ confident and many when it is not. Temperature 0 is handled separately as `argma
 
 ## Exercise 3 · Attention complexity and the KV cache
 
-[open-ended] Model answer:
+[open-ended] A model answer:
 
 (a) One forward pass over `n` tokens: computing Q, K, V and the output projection is
 **O(n·d²)**; the scores `QKᵀ` and the weighted sum `AV` are **O(n²·d)**. The attention
@@ -79,8 +79,8 @@ from both terms. (Measured in 3.7 on CPU: the cache was 2.1–2.2× faster at 64
 linearly with context and batch: 0.5 MB per token for a 7B model in fp16. **Why
 bandwidth-bound:** each decode step does only ~2 FLOPs per parameter per token
 (a matrix-vector product) but must read *all* weights and the whole KV cache from
-memory: arithmetic intensity ~1 FLOP/byte, far left of the roofline ridge (notebook
-01). Batching many sequences raises intensity for the weights (read once, used for the
+memory: arithmetic intensity ~1 FLOP/byte, far left of the roofline ridge (Chapter
+39). Batching many sequences raises intensity for the weights (read once, used for the
 whole batch) but not for the KV cache (each sequence has its own), so long contexts
 stay bandwidth-bound. Remedies: grouped-/multi-query attention (fewer K/V heads),
 KV cache quantisation, paged attention to avoid fragmentation, sliding-window attention.

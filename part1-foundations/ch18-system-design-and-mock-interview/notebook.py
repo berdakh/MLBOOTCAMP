@@ -6,14 +6,14 @@
 # %% [markdown]
 # # Chapter 18 · System design & mock interview
 #
-# **Day 5 · ~70 minutes · CPU only**
+# **Part I · Chapter 18 · about 70 minutes · CPU only**
 #
 # An ML system design round is not a test of whether you know the newest model.
 # It checks whether you can turn a vague product goal into a system that makes
 # the right decision, is measured honestly, and keeps working after launch, and
 # whether you can say all that in a structured way in 35-45 minutes.
 #
-# By the end you will be able to:
+# After this chapter you should be able to:
 #
 # 1. run a design conversation through a fixed sequence of headings, starting from the decision and the metric, not the model;
 # 2. do back-of-envelope capacity and latency arithmetic out loud;
@@ -21,7 +21,10 @@
 # 4. run a timed 45-minute mock interview on yourself, score it with a rubric, and track the scores across weeks;
 # 5. tell two research stories in STAR form that answer behavioural questions.
 #
-# **You will produce:** `artifacts/mock_interview.json`, dated rubric scores you append to each time you do a mock.
+# **Lab output:** `artifacts/mock_interview.json`, dated rubric scores you append to each time you do a mock.
+
+# %% [markdown]
+# **Read first:** [Chapter 18 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -79,7 +82,7 @@ print(f"train rows: {len(split.train):,}")
 # | **STAR** | Situation, Task, Action, Result: a structure for behavioural answers | most of the time on Action |
 
 # %% [markdown]
-# ## 17.1 · The framework
+# ## 18.1 · The framework
 #
 # Use the same nine headings every time, in this order. Interviewers forgive a
 # missing detail; they rarely forgive starting with "I'd use a transformer"
@@ -114,7 +117,7 @@ print(f"train rows: {len(split.train):,}")
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/serving.svg" alt="Serving: batch scoring and online prediction paths sharing one model bundle" width="100%">
 
 # %% [markdown]
-# ## 17.2 · Back-of-envelope helpers
+# ## 18.2 · Back-of-envelope helpers
 #
 # Capacity arithmetic should take you 30 seconds and be done out loud. These
 # helpers exist so you can check your mental arithmetic, not replace it.
@@ -174,7 +177,7 @@ table([
 # a feature store designed for it.
 #
 # The per-replica QPS numbers above are **assumptions**; in a real design you
-# measure them. Notebook 13 did, for this project's service.
+# measure them. Chapter 14 did, for this project's service.
 
 # %% [markdown]
 # > **Exercise 1.** Write `peak_qps(dau, requests_per_user_per_day, peak_factor)`
@@ -227,7 +230,7 @@ table([{"component": k, "p95_ms": v} for k, v in console_budget.items()] +
 # `latency_budget` with a 90 ms total it should raise.
 
 # %% [markdown]
-# ## 17.3 · Worked design #1: churn prediction for 10M accounts
+# ## 18.3 · Worked design #1: churn prediction for 10M accounts
 #
 # *Prompt: "Design a churn prediction system for a SaaS company with 10 million
 # accounts. Customer success wants a daily ranked list, and support agents want
@@ -272,7 +275,7 @@ table([{"component": k, "p95_ms": v} for k, v in console_budget.items()] +
 #   table the CS tool reads. No online latency problem at all.
 # * **Online** (the console): the API reads the *precomputed* score first. Only
 #   if the agent asks for "refresh with today's activity" does it compute
-#   features online and call the model. Capacity is tiny (17.2), so this is about
+#   features online and call the model. Capacity is tiny (18.2), so this is about
 #   latency and availability, not throughput. Fallback: show yesterday's score
 #   with its date.
 #
@@ -319,7 +322,7 @@ print(f"10M accounts: ~{hours_10m_one_core * 60:.1f} min of model time on one pr
 # share of accounts flagged, batch job success/row counts. Monthly, once labels
 # arrive: PR-AUC and calibration on the holdout. Online: p95 latency, error rate,
 # fallback rate. Alerts route to a person; rollback = point the registry's
-# CURRENT back (notebook 14).
+# CURRENT back (chapter 15).
 #
 # **9 · Risks.** Feedback loops (above); the model penalising a region or plan
 # because of how the business treated it historically (slice metrics);
@@ -342,7 +345,7 @@ print(f"10M accounts: ~{hours_10m_one_core * 60:.1f} min of model time on one pr
 # > how to say that; now say it about features.
 
 # %% [markdown]
-# ## 17.4 · Worked design #2 (shorter): a moderation triage queue
+# ## 18.4 · Worked design #2 (shorter): a moderation triage queue
 #
 # *Prompt: "Design a system that decides which user comments go to human
 # moderators. Reviewers can handle 20,000 comments a day; 5 million are
@@ -386,7 +389,7 @@ table([
 # worth saying before anyone suggests a GPU cluster.
 
 # %% [markdown]
-# ## 17.5 · Practice prompts
+# ## 18.5 · Practice prompts
 #
 # Do at least one fully (Exercise 3). For each, what a strong answer covers:
 #
@@ -404,7 +407,7 @@ table([
 
 # %% [markdown]
 # > **Exercise 3 (written).** Pick one practice prompt and write a full design
-# > under the nine headings of 17.1, including at least one capacity or latency
+# > under the nine headings of 18.1, including at least one capacity or latency
 # > number and one explicit trade-off table. Give yourself 35 minutes, as in an
 # > interview. Write your answer in the cell below.
 
@@ -412,7 +415,7 @@ table([
 # *Your answer here.*
 
 # %% [markdown]
-# ## 17.6 · The mock interview (45 minutes)
+# ## 18.6 · The mock interview (45 minutes)
 #
 # Do this with a friend reading the interviewer's part, or alone with a timer
 # and a recording. Do not pause the clock.
@@ -421,8 +424,8 @@ table([
 # |---|---|---|
 # | Intro | 0-5 | "Tell me about yourself" (≤ 90 s) + why this role |
 # | Project deep-dive | 5-20 | Walk through TaskFlow (or your capstone); interviewer drills into 2-3 decisions |
-# | ML system design | 20-35 | One prompt from 17.5 (drawn at random below) |
-# | Coding / SQL | 35-45 | One drill from notebook 16 you have *not* just practised |
+# | ML system design | 20-35 | One prompt from 18.5 (drawn at random below) |
+# | Coding / SQL | 35-45 | One drill from chapter 17 you have *not* just practised |
 # | Your questions | last 2-5 | Two questions you ask them |
 
 # %%
@@ -534,7 +537,7 @@ progress
 # choose next week's practice (the readiness rubric maps each to resources).
 
 # %% [markdown]
-# ## 17.7 · Behavioural questions: STAR with research stories
+# ## 18.7 · Behavioural questions: STAR with research stories
 #
 # Behavioural rounds are scored as seriously as technical ones, and researchers
 # often under-sell themselves by describing the field instead of their

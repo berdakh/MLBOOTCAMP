@@ -6,21 +6,21 @@
 # %% [markdown]
 # # Chapter 46 · Contrastive training & re-ranking
 #
-# **Day 4 · ~90 minutes · T4 GPU (runs on CPU with a reduced budget)**
+# **Part III · Chapter 46 · about 90 minutes · T4 GPU (runs on CPU with a reduced budget)**
 #
-# Notebook 07 showed a general-purpose embedding model losing to BM25 on scientific claims.
+# Chapter 45 showed a general-purpose embedding model performing worse than BM25 on scientific claims.
 # The two standard fixes are (1) **fine-tune the bi-encoder** on in-domain (query, relevant
 # document) pairs with a contrastive loss, and (2) add a **cross-encoder re-ranker** that reads
 # query and document together for the top candidates. Both are core to every production search
 # and RAG stack, and both come with a cost you must be able to quantify.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. write the InfoNCE loss with in-batch negatives and explain the role of the temperature;
 # 2. fine-tune a bi-encoder on the benchmark's *train* queries and measure nDCG@10 before/after on the *test* queries;
 # 3. mine hard negatives with BM25, and explain false negatives and how to limit them;
 # 4. re-rank the top-50 with a public cross-encoder and build a quality-vs-latency table;
-# 5. reason about the two-stage (retrieve → re-rank) trade-off in a design interview.
+# 5. reason quantitatively about the two-stage (retrieve → re-rank) trade-off.
 #
 # **You will produce:** `artifacts/level3/nb08/two_stage_results.json` (metrics before/after
 # training, re-ranking quality and latency on your device).
@@ -36,13 +36,16 @@
 # **Measured here vs on a T4.** Our verification runs are CPU-only. This notebook embeds the
 # corpus three times (base model and two fine-tuned ones), so the CPU budget searches a
 # **1,200-document sub-corpus** (every abstract relevant to a test query plus random others,
-# the one notebook 07 used to show BM25's inflation) with documents cut at 128 tokens. Fewer
+# the one Chapter 45 used to show BM25's inflation) with documents cut at 128 tokens. Fewer
 # distractors make every score higher than on the full corpus: compare systems within this
 # notebook only. The CPU budget also trains on a subset of the training pairs for one epoch and
 # re-ranks for a subset of test queries; with a GPU the notebook uses the full corpus, all
 # pairs and all test queries.
 # Numbers in **Expected:** lines were printed by a CPU run unless marked *"on a T4 you should
 # see … (not measured in our verification runs)"*.
+
+# %% [markdown]
+# Read first: [Chapter 46 text](README.md) explains the ideas behind this lab (Contrastive training & re-ranking) in more depth; [solutions](solutions.md) has worked answers.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -393,7 +396,7 @@ for name, m in metrics.items():
 # | dense: + in-batch FT | 0.765 | 0.983 | +0.006 (−0.004 to +0.016) |
 # | dense: + hard-neg FT | 0.760 | 0.977 | +0.000 (−0.011 to +0.012) |
 #
-# **Honestly: on the CPU budget neither fine-tune measurably changed retrieval quality**; every
+# **On the CPU budget neither fine-tune measurably changed retrieval quality**; every
 # interval includes zero. Twenty steps on 320 pairs with a small learning rate barely move a
 # model pre-trained on a billion pairs, and the sub-corpus leaves little headroom. This is the
 # result to expect from a budget this small, not evidence that contrastive fine-tuning does
@@ -403,7 +406,7 @@ for name, m in metrics.items():
 # clearer gain from in-domain contrastive fine-tuning, typically a few nDCG@10 points over the
 # base model, with hard negatives adding a further point or two when false negatives are
 # controlled (not measured in our verification runs). Whatever the size of the gain, the
-# workflow is the one to remember: train on train queries, measure on held-out queries, report
+# workflow is the important part: train on train queries, measure on held-out queries, report
 # a confidence interval over queries.
 #
 # ## 8.4 · Cross-encoder re-ranking
@@ -425,7 +428,7 @@ for name, m in metrics.items():
 #
 # > **Intuition.** A bi-encoder compares two CVs that were written separately; a cross-encoder
 # > interviews the two candidates together, so it can notice how their answers relate. The
-# > interview is better, but you cannot interview a million candidates per query.
+# > joint interview is more informative, but one cannot interview a million candidates per query.
 
 # %%
 ce_tok = AutoTokenizer.from_pretrained(R.CROSS_ENCODER_ID, revision=R.CROSS_ENCODER_REV)
@@ -515,11 +518,11 @@ for r in rows:
 #
 # The re-ranking depth is the dial: for a re-ranker that helps (measure it, as 8.4 shows),
 # quality rises with depth only while the first stage still has relevant documents to surface
-# (its Recall@depth is the ceiling), and latency rises linearly. In a design interview, say it with numbers: *at a 100 ms p99 budget with ~1 ms per
+# (its Recall@depth is the ceiling), and latency rises linearly. Stated with numbers: *at a 100 ms p99 budget with ~1 ms per
 # pair on a GPU, a 50-deep re-rank fits; at 1,000 QPS that is 50,000 pair inferences per
 # second, so the re-ranker's GPU fleet, not the ANN index, dominates cost*. Distilling the
 # cross-encoder into the bi-encoder (training stage 1 on stage 2's scores) is the usual way to
-# buy back some of that quality without the latency.
+# recover some of that quality without the latency.
 
 # %%
 summary = {"device": describe(DEVICE), "n_docs": len(doc_ids), "doc_len": DOC_LEN, "n_train_pairs": len(pairs),
@@ -602,13 +605,13 @@ print("wrote", OUT / "two_stage_results.json")
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question without notes; a complete answer takes about a minute:
 #
-# 1. Write InfoNCE on the whiteboard. What does the temperature do, and why do larger batches help contrastive training?
+# 1. Write down the InfoNCE loss. What does the temperature do, and why do larger batches help contrastive training?
 # 2. What are hard negatives, how do you mine them, and what are false negatives? Give two mitigations.
 # 3. Why can a cross-encoder not be used as a first-stage retriever? How do you pick the re-ranking depth?
-# 4. You fine-tuned the bi-encoder and offline nDCG@10 went up 3 points. What else must happen before you ship it (re-indexing, A/B test, latency, freshness of embeddings, backward compatibility of vectors)?
+# 4. You fine-tuned the bi-encoder and offline nDCG@10 went up 3 points. What else must happen before you deploy it (re-indexing, A/B test, latency, freshness of embeddings, backward compatibility of vectors)?
 # 5. How would you build training data for a retriever from search logs, and what biases does it carry?
 # 6. Design: a two-stage retrieval system for 100M documents at 1,000 QPS with a 150 ms p99 budget. Allocate the budget across stages and justify the numbers.
 #
-# **Next chapter:** [`09_distributed_data_parallel.ipynb`](../ch47-distributed-data-parallel/notebook.ipynb) — Day 5: train on several processes with `torch.distributed`, by hand.
+# **Next chapter:** [Chapter 47 · Distributed data parallel](../ch47-distributed-data-parallel/notebook.ipynb) — the first of two chapters on distributed training: train on several processes with `torch.distributed`, by hand.

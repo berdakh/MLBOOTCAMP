@@ -1,13 +1,13 @@
 # Solutions · Chapter 29 · A/B testing fundamentals
 
-Try each exercise before reading its answer. Markers: [verified] verified by running ·
+Attempt each exercise before reading its answer. Markers: [verified] verified by running ·
 [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `sample_size_per_arm`
 
-[verified] Reference code: [`code/nb11.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def sample_size_per_arm(p0, mde_abs, alpha=0.05, power=0.8):
@@ -16,11 +16,11 @@ def sample_size_per_arm(p0, mde_abs, alpha=0.05, power=0.8):
     return int(math.ceil(z**2 * (p0 * (1 - p0) + p1 * (1 - p1)) / mde_abs**2))
 ```
 
-`(1.96 + 0.84)² ≈ 7.85` is worth memorising: for 10% → 11%,
+The constant `(1.96 + 0.84)² ≈ 7.85` is worth remembering: for 10% → 11%,
 `7.85 × (0.09 + 0.0979) / 0.0001 ≈ 14,749` per arm. The notebook simulated
 2,000 experiments at that size and measured a power of 0.805 ([verified]).
 
-**Variants you may meet.** Some texts use the pooled variance `2 p̄(1-p̄)`
+**Variants in the literature.** Some texts use the pooled variance `2 p̄(1-p̄)`
 under the null for the `z_{α/2}` term; the numbers differ by well under 1%
 for small effects. One-sided tests use `z_{1-α}` (1.645). All share the key
 fact: `n ∝ 1/δ²`.
@@ -44,7 +44,7 @@ proportion `n_a / N` against `expected_ratio`.
 
 **Sense of scale.** 50,400 / 49,600 (a 50.4% share) gives p ≈ 0.011 ([verified] computed); the same
 50.4% share of 2 million users gives p ≈ 1e-29. SRM checks become extremely sensitive at
-scale, which is what you want: at 2 million users, a 0.4-point imbalance is
+scale, which is the desired behaviour: at 2 million users, a 0.4-point imbalance is
 4,000 users that something lost or added.
 
 ---
@@ -66,7 +66,7 @@ def aa_false_positive_rate(n_experiments, n_users_per_arm, n_looks, alpha=0.05, 
     return float((pvals < alpha).any(axis=1).mean())
 ```
 
-The trick is to simulate **conversions per batch**, not individual users:
+The efficient approach is to simulate **conversions per batch**, not individual users:
 `binomial(per_look, p)` per arm per look, then `cumsum` gives the cumulative
 counts every look sees. 4,000 experiments × 10 looks run in milliseconds.
 Measured ([verified]): 0.047 with one look, 0.198 with ten looks, 0.009 at α = 0.01.
@@ -81,11 +81,11 @@ cross ±1.96. With infinitely many looks, the probability of eventually crossing
 
 **1. User randomisation, impression-level CI.** The binomial SE assumes
 independent impressions, but impressions from one user share that user's
-propensity to click (and heavy users contribute many). The true variance of the
+propensity to click (and heavy users contribute many impressions). The true variance of the
 pooled CTR is larger, so the CI is **too narrow** and the test fires too often.
-Show it with an A/A test: the notebook measured a 50% false-positive rate for
+Demonstrate it with an A/A test: the notebook measured a 50% false-positive rate for
 the naive test vs 4% for a user-level test ([verified]), with the naive SE 2.8x too
-small. Fix: per-user metric + t-test, or the delta method for the pooled ratio (notebook 12).
+small. Fix: per-user metric + t-test, or the delta method for the pooled ratio (Chapter 30).
 
 **2. Request / user / cluster.** *Request*: when the treatment has no memory
 and outcomes are per request (e.g. a search ranking tweak on query-level CTR);
@@ -106,7 +106,7 @@ reduction (CUPED), a more sensitive metric, or accept a larger MDE.
 **4. 50.4% / 49.6% of 2 million.** Chi-square p ≈ 1e-29: an SRM. Do not
 interpret the lift. Look for the cause: assignment vs logging mismatch, bot
 filtering, redirects or crashes in one arm, a client version that fails to
-log, users excluded post-assignment. Fix and rerun. Section 11.6 showed an A/A
+log, users excluded post-assignment. Fix and rerun. Section 29.6 showed an A/A
 test with a lazy-logging bug producing a +2% "lift" at p ≈ 1e-10 ([verified]).
 
 **5. Daily peeking.** With 14 daily looks and stop-at-first-significance, the
@@ -117,7 +117,7 @@ spending (O'Brien–Fleming), or always-valid p-values / confidence sequences
 (mSPRT), which allow continuous monitoring at a known error rate. Bonferroni
 across looks is valid but very conservative (0.026 measured).
 
-**6. 3 of 25 metrics up.** Under no effect at all you would expect about
+**6. 3 of 25 metrics up.** With no effect at all one would expect about
 1.25 significant metrics at α = 0.05, more with correlated metrics, so 3 is
 weak evidence by itself. Decide with the **pre-registered primary metric**
 and guardrails. Apply BH (or Bonferroni for a strict family) to the secondary metrics, check

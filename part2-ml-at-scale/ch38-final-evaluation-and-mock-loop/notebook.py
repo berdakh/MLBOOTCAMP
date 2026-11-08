@@ -6,7 +6,7 @@
 # %% [markdown]
 # # Chapter 38 · Final evaluation & mock loop
 #
-# **Day 10 · ~90 minutes · CPU only**
+# **Part II · Chapter 38 · about 90 minutes · CPU only**
 #
 # For nineteen notebooks the test week (days 49–55) has stayed closed. Today
 # it opens, once, under a plan written down *before* the first test number is
@@ -14,7 +14,7 @@
 # the same discipline on yourself: a timed, scored mock interview loop with a
 # progress log you keep adding to until interview day.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. pre-register an evaluation (model, metrics, sample, uncertainty method, decision rule) and show it was saved first;
 # 2. evaluate a ranking system on held-out time with several lenses: true relevance, clicks, IPS-corrected clicks, and retrieval recall;
@@ -22,9 +22,12 @@
 # 4. put grouped bootstrap intervals on every number, resampling users rather than rows;
 # 5. run a four-round mock loop against a rubric and log your progress.
 #
-# **You will produce:** `artifacts/level2/final/preregistration.json`,
+# **Outputs:** `artifacts/level2/final/preregistration.json`,
 # `artifacts/level2/final/test_results.json`, and
 # `artifacts/level2/mock_loop/` (`plan.md`, `rubric.json`, `progress_log.csv`).
+
+# %% [markdown]
+# Read first: [Chapter 38 text](README.md), which explains the concepts this lab measures. Worked answers are in [solutions.md](solutions.md).
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -101,11 +104,11 @@ print(f"{len(imps):,} impressions loaded, ranker trained ({time.time() - t0:.0f}
 # | Rubric anchors | short descriptions of what each score means, so scores are comparable over time | 1 = missing or wrong … 4 = strong |
 
 # %% [markdown]
-# ## 20.1 · Choose on validation, not on test
+# ## 38.1 · Choose on validation, not on test
 #
 # Everything that involves *choosing* happens on the validation week: which
 # system, which configuration. Here the candidates are the systems of
-# notebook 17, all with the product's category cap of 3 (a product decision
+# Chapter 35, all with the product's category cap of 3 (a product decision
 # fixed before this evaluation) and, for reference, without it.
 
 # %%
@@ -138,13 +141,13 @@ pd.DataFrame(valid_results)
 # %% [markdown]
 # **Expected (validation, catalogue NDCG@10):** with cap 3, the cascade
 # 0.71, ANN-only 0.63, popularity 0.40; without the cap 0.875, 0.79 and 0.39.
-# The cascade numbers match notebook 17 exactly, as they should. (ANN-only
-# with the cap is higher than notebook 17's 0.58 because here it takes 300
+# The cascade numbers match Chapter 35 exactly, as they should. (ANN-only
+# with the cap is higher than Chapter 35's 0.58 because here it takes 300
 # neighbours, so the cap can backfill with more ANN items.) The cascade wins
 # either way, so it is the system we take to the test week.
 
 # %% [markdown]
-# ## 20.2 · Pre-register, then look
+# ## 38.2 · Pre-register, then look
 #
 # A pre-registration is a short file written **before** the test data is
 # scored. It fixes: the system and its configuration, the data window, every
@@ -212,7 +215,7 @@ print("sha256:", prereg_sha)
 # a plan is never silently rewritten.
 
 # %% [markdown]
-# ## 20.3 · Propensities from randomised traffic
+# ## 38.3 · Propensities from randomised traffic
 #
 # The IPS metric needs P(examined | position). Only the **random** requests
 # (5 % of traffic, items in uniformly random order) give it without bias: in
@@ -250,7 +253,7 @@ pd.DataFrame({"raw CTR ratio": raw_prop, "power-law fit": propensity,
 # traffic running.
 
 # %% [markdown]
-# ## 20.4 · Open the test week
+# ## 38.4 · Open the test week
 #
 # From here on, nothing is tuned. The cell refuses to run without the
 # pre-registration file.
@@ -346,7 +349,7 @@ pd.DataFrame({name: {lens: np.nanmean(v) for lens, v in d.items()} for name, d i
 # | LightGBM ranker | 0.664 | 2.22 | 2.26 |
 # | random | 0.529 | 1.86 | 1.90 |
 #
-# This is Level 2's central lesson in one table. **Raw clicks say the old
+# This is Part II's central lesson in one table. **Raw clicks say the old
 # policy is best** by a wide margin; that is position bias — the items the
 # policy put on top got examined, so they got the clicks. **IPS reverses the
 # conclusion** and agrees with the truth: the ranker's lists are better.
@@ -355,7 +358,7 @@ pd.DataFrame({name: {lens: np.nanmean(v) for lens, v in d.items()} for name, d i
 # pointed in the right direction, and raw clicks are not.
 
 # %% [markdown]
-# ## 20.5 · Uncertainty, by user
+# ## 38.5 · Uncertainty, by user
 #
 # Requests of one user are correlated (same taste, same activity), so the
 # unit of resampling is the **user**. A row-level bootstrap would give
@@ -430,17 +433,17 @@ results.round(3)
 # 0.29 DCG (0.28–0.31), in line with the simulator's ground truth of 0.31."*
 
 # %% [markdown]
-# ## 20.6 · The mock loop
+# ## 38.6 · The mock loop
 #
 # A big-tech ML engineer loop is usually four to six interviews in one day.
 # This notebook's mock covers the four core rounds, back to back, timed:
 #
 # | Round | Minutes | Format | Material |
 # |---|---|---|---|
-# | 1 · Coding | 45 | 1–2 data-structure/algorithm problems, live, talk while you code | Level 2 notebooks 15–16 |
-# | 2 · ML coding | 45 | implement an ML method or metric from scratch, test it | notebooks 13–14, 05–06 |
-# | 3 · ML system design | 45 | one open prompt, whiteboard-style | notebooks 17–19 |
-# | 4 · Behavioural | 30 | 3–4 STAR stories, with follow-ups | Level 1 notebook 17 (STAR) |
+# | 1 · Coding | 45 | 1–2 data-structure/algorithm problems, live, talk while you code | Chapters 33–34 |
+# | 2 · ML coding | 45 | implement an ML method or metric from scratch, test it | Chapters 31–32, 23–24 |
+# | 3 · ML system design | 45 | one open prompt, whiteboard-style | Chapters 35–37 |
+# | 4 · Behavioural | 30 | 3–4 STAR stories, with follow-ups | Chapter 18 (STAR) |
 #
 # Rules that make a mock useful: a real timer, no notes, a partner or a
 # recording, and **scores written down within 10 minutes** of finishing, in the
@@ -521,7 +524,7 @@ print("wrote", sorted(p.name for p in MOCK.iterdir()))
 
 # %% [markdown]
 # **Expected:** one prompt per round (different every run: the one
-# deliberately unseeded cell, as in Level 1) and `wrote ['plan.md', 'rubric.json']`
+# deliberately unseeded cell, as in Part I) and `wrote ['plan.md', 'rubric.json']`
 # (plus `progress_log.csv` once you have logged a round).
 #
 # Time each round with these two helpers: `start_round` when you begin,
@@ -580,7 +583,7 @@ progress
 # Next week's practice goes to the lowest column. Aim for 3+ in every round,
 # on fresh prompts, before booking real interviews.
 #
-# ## 20.7 · Levelling expectations
+# ## 38.7 · Levelling expectations
 #
 # What distinguishes a **mid-level** from a **senior** answer, phrased
 # generically (every company's ladder differs; use this to calibrate, not to
@@ -594,13 +597,13 @@ progress
 # | Behavioural | clear STAR stories about own tasks | scope beyond own tasks (influence, mentoring, cross-team), measurable impact, honest reflection on mistakes, judgment under ambiguity |
 # | Project deep-dive | can explain what was built and the metric | can defend every decision against alternatives, knows the system's limits, the evaluation's biases and what they would do next |
 #
-# Your Level 2 project is designed to give you senior-style material for the
+# The Part II project is designed to give you senior-style material for the
 # deep-dive: a cascade with measured stage latencies (17), an optimisation
 # table (18), a design with numbers (19), and a pre-registered held-out
 # evaluation in which position bias reverses a naive conclusion (20).
 #
 # > **Exercise 2 (written).** Write the script of a **3-minute walkthrough**
-# > of your Level 2 system, as you would give it at the start of a project
+# > of your Part II system, as you would give it at the start of a project
 # > deep-dive: the problem and metric, the data and its main bias, the
 # > cascade with one number per stage (latency or recall), how you evaluated
 # > it (pre-registration, IPS, grouped bootstrap), the headline result with its
@@ -657,7 +660,7 @@ progress
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
-# | `AssertionError: write the pre-registration first` | ran 20.4 before 20.2 | run the notebook top to bottom |
+# | `AssertionError: write the pre-registration first` | ran 38.4 before 38.2 | run the notebook top to bottom |
 # | "pre-registration already on file" but you changed the system | a plan from an earlier run in this runtime | that is the point: write a *new* file with a reason, never edit the old one |
 # | IPS-DCG intervals much wider than the others | IPS variance: large weights at low-propensity positions | expected; clip weights (e.g. at 1/0.05) and report that you did |
 # | Fitted eta far from 0.9 | too few random requests (e.g. a subsampled log) | use more days of random traffic; check clicks per position |

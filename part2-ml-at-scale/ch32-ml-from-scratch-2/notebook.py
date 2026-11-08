@@ -6,16 +6,16 @@
 # %% [markdown]
 # # Chapter 32 · ML from scratch II
 #
-# **Day 7 · ~90 minutes · CPU only**
+# **Part II · Chapter 32 · about 90 minutes · CPU only**
 #
-# The second half of the ML coding drill covers the models you use every day
-# through a library: tree splits and gradient boosting (the engine of LightGBM
-# rankers in notebook 06), backpropagation, attention, batch norm and dropout.
-# Interviewers ask for these because a few lines of NumPy reveal whether you
-# know what the library is doing, including the parts that bite in production:
-# train/eval modes, masking and numerical overflow.
+# The second half of the ML coding practice covers models that are normally used
+# through a library: tree splits and gradient boosting (the basis of the LightGBM
+# rankers in Chapter 24), backpropagation, attention, batch norm and dropout.
+# Interviewers ask for these because a few lines of NumPy show whether the
+# candidate knows what the library does, including the parts that cause
+# production failures: train/eval modes, masking and numerical overflow.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. find the best regression-tree split in O(n log n) with sorting and prefix sums;
 # 2. implement gradient boosting with stumps and explain "fitting the negative gradient";
@@ -24,10 +24,13 @@
 # 5. implement batch norm (train vs eval, running statistics) and inverted dropout;
 # 6. walk an interviewer through the softmax-cross-entropy gradient on a whiteboard.
 #
-# **You will produce:** six graded NumPy implementations and one written derivation.
+# **Outputs:** six graded NumPy implementations and one written derivation.
 #
-# Same rules as notebook 13: start a timer, no lookups, run the grader, then
-# read the talk-through box.
+# The rules are those of Chapter 31: start a timer, do not look anything up,
+# run the grader, then read the talk-through box.
+
+# %% [markdown]
+# Read first: [Chapter 32 text](README.md), which explains the concepts this lab measures. Worked answers are in [solutions.md](solutions.md).
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -74,13 +77,13 @@ rng = np.random.default_rng(0)
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
-# | SSE | sum of squared differences from the mean: how spread out a group is | `S₂ − S₁²/m` in 14.1 |
+# | SSE | sum of squared differences from the mean: how spread out a group is | `S₂ − S₁²/m` in 32.1 |
 # | Prefix sum | a running total; the sum of any prefix is one lookup | `np.cumsum(y)` and `np.cumsum(y**2)` |
 # | Regression stump | a depth-1 tree: one threshold, two leaf values | `best_split` in Exercise 1 |
 # | Residual (pseudo-residual) | target minus current prediction; for squared loss, the negative gradient | `y − F` in Exercise 2 |
 # | Shrinkage (learning rate) | the fraction of each new tree's prediction that is added | `lr = 0.1` |
 # | Backprop | the chain rule applied from the loss back to every parameter, reusing stored forward values | `mlp_grads` in Exercise 3 |
-# | Upstream gradient | the gradient of the loss with respect to a layer's output | `dout` in the 14.2 table |
+# | Upstream gradient | the gradient of the loss with respect to a layer's output | `dout` in the 32.2 table |
 # | Scaled dot-product attention | softmax(QKᵀ/√d)V: a weighted average of values, weighted by query–key match | Exercise 4 |
 # | Mask | a boolean saying which keys each query may use | causal and padding masks; True = may attend |
 # | Running statistics | moving averages of mean and variance that batch norm uses at inference | `momentum = 0.1` in Exercise 5 |
@@ -88,7 +91,7 @@ rng = np.random.default_rng(0)
 # | Biased vs unbiased variance | dividing by n vs n − 1 | the forward pass uses n, the running variance n − 1 |
 
 # %% [markdown]
-# ## 14.1 · Prefix sums: the trick behind fast tree splits
+# ## 32.1 · Prefix sums: the trick behind fast tree splits
 #
 # A regression tree chooses the split that minimises the summed squared error
 # (SSE) of the two children. For a set with sum S₁ = Σy, sum of squares
@@ -99,8 +102,8 @@ rng = np.random.default_rng(0)
 # After sorting by the feature, every candidate left child is a **prefix**, so
 # cumulative sums give S₁ and S₂ for all n−1 splits at once. Sorting is
 # O(n log n); everything after it is O(n). Recomputing each child's mean from
-# scratch is O(n) per split and O(n²) overall. Here is the identity checked on
-# every prefix of a small array:
+# scratch is O(n) per split and O(n²) overall. The next cell checks the identity
+# on every prefix of a small array:
 
 # %%
 y_demo = rng.normal(size=8)
@@ -115,12 +118,12 @@ print("max |fast - slow|:", np.abs(fast - slow).max())
 # **Expected:** the first entry is 0 (one point has no spread), the rest grow,
 # and the two methods agree to ~1e-16.
 #
-# Two details matter in the exercise and in interviews. **You cannot split
-# between equal feature values** (a threshold puts all copies on one side), so
+# Two details matter in the exercise and in interviews. **A split cannot be
+# placed between equal feature values** (a threshold puts all copies on one side), so
 # only positions where `x_sorted[i] < x_sorted[i+1]` are valid. And
 # `S₂ − S₁²/m` subtracts two large numbers: with big `y` values it loses
 # precision (catastrophic cancellation). Libraries centre `y` first or use
-# Welford-style updates; say so if asked about robustness.
+# Welford-style updates; this is worth mentioning if robustness is discussed.
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-x-tree-split.svg" alt="Eight sorted points with candidate thresholds between them, the best threshold, and the summed child SSE at every candidate" width="100%">
 #
@@ -133,7 +136,7 @@ print("max |fast - slow|:", np.abs(fast - slow).max())
 # > cancellation); centre `y` first.
 
 # %% [markdown]
-# ## 14.2 · Backprop: shapes, local gradients, and the chain rule
+# ## 32.2 · Backprop: shapes, local gradients, and the chain rule
 #
 # Backprop is the chain rule applied in reverse topological order, with one
 # rule that removes most bugs: **the gradient of a quantity has the shape of
@@ -152,7 +155,7 @@ print("max |fast - slow|:", np.abs(fast - slow).max())
 #
 # *What to notice:* each backward box needs only its own forward input and the gradient arriving from its right; that locality is why backprop costs about twice the forward pass.
 #
-# A one-layer check, using the helpers from notebook 13:
+# A one-layer check, using the helpers from Chapter 31:
 
 # %%
 X_demo = rng.normal(size=(6, 4))
@@ -173,7 +176,7 @@ print(f"relative error vs numerical gradient: {relative_error(dW, numerical_grad
 # **Expected:** `dW shape: (4, 3)` and a relative error around 1e-11 or smaller.
 
 # %% [markdown]
-# ## 14.3 · Attention and the fully-masked row
+# ## 32.3 · Attention and the fully-masked row
 #
 # $$\text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d}}\right) V$$
 #
@@ -181,12 +184,12 @@ print(f"relative error vs numerical gradient: {relative_error(dW, numerical_grad
 # entries (a dot product of d such terms has variance d), so the softmax does not
 # saturate. A **mask** says which keys each query may use: *causal* masks hide
 # the future in a decoder; *padding* masks hide pad tokens in a batch of
-# variable-length sequences (notebook 10 used both).
+# variable-length sequences (Chapter 28 used both).
 #
-# The production bug: a query row whose keys are **all** masked. Setting masked
+# A common production bug is a query row whose keys are **all** masked. Setting masked
 # scores to `-inf` gives `exp(-inf - (-inf)) = exp(nan)` and the NaN then flows
 # into every gradient. It happens with left-padded batches, empty histories
-# (a cold-start user in notebook 10) and some cross-attention layouts.
+# (a cold-start user in Chapter 28) and some cross-attention layouts.
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-x-attention-lookup.svg" alt="One query scored against four keys; the scores become softmax weights 0.63, 0.23, 0.14 and 0 for a masked key, which mix the values" width="100%">
 #
@@ -196,7 +199,7 @@ print(f"relative error vs numerical gradient: {relative_error(dW, numerical_grad
 # > attention returns a *blend* of all values, weighted by how well each key matches the
 # > query. *Where it breaks down:* the weights sum to 1 even when no key matches well, so
 # > attention always returns *something*; a fully masked row is the case where there is
-# > nothing to blend, and you must choose the answer yourself.
+# > nothing to blend, and the implementation must define the answer explicitly.
 
 # %%
 scores = np.array([[2.0, 1.0, 0.5], [0.3, 0.2, 0.1]])
@@ -212,14 +215,14 @@ print("-1e9 instead of -inf:\n", e2 / e2.sum(axis=1, keepdims=True))
 # %% [markdown]
 # **Expected:** the naive version prints `nan` for the whole second row; the
 # `-1e9` version prints a *uniform* `[0.3333 0.3333 0.3333]` for it — no NaN, but
-# the query now silently attends to keys it was told to ignore. Exercise 4 asks
+# the query now silently attends to keys that should be ignored. Exercise 4 asks
 # for the explicit convention: zero weights and a zero output for such rows.
 # (In our check, PyTorch 2.8's `F.scaled_dot_product_attention` on CPU returned
 # zeros for a fully masked row — the same convention; earlier releases and some
-# kernels returned NaN, so test the version and backend you deploy.)
+# kernels returned NaN, so the deployed version and backend should be tested.)
 
 # %% [markdown]
-# ## 14.4 · Batch norm and dropout: two layers with two modes
+# ## 32.4 · Batch norm and dropout: two layers with two modes
 #
 # Both layers behave differently in training and inference, which makes them
 # the most common source of "the offline metric does not match serving" bugs
@@ -233,7 +236,7 @@ print("-1e9 instead of -inf:\n", e2 / e2.sum(axis=1, keepdims=True))
 # Why "inverted": scaling at training time keeps E[output] = input, so
 # inference needs no change. (The original paper scaled at test time instead.)
 # A model left in training mode at serving time gives predictions that change
-# with the batch it happens to be in, and differ between calls:
+# with the batch the input happens to be in, and differ between calls:
 
 # %%
 x_demo = rng.normal(loc=2.0, size=(4, 3))
@@ -247,19 +250,19 @@ print("row 0 normalised within batch B:", bn_other[0])
 # **Expected:** two different vectors for the same input row (in our run
 # `[1.4692 -0.3189 0.0834]` and `[0.8546 0.2136 0.0057]`). With
 # running statistics (eval mode) the row would map to the same output in any
-# batch. In PyTorch, that is the whole job of `model.eval()` (notebook 09).
+# batch. In PyTorch, that is the whole job of `model.eval()` (Chapter 27).
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-x-batchnorm-modes.svg" alt="Two-by-two grid: batch norm and dropout in training mode and in inference mode" width="100%">
 #
 # *What to notice:* everything in the left column depends on randomness or on the rest of the batch; the right column is deterministic, which is what serving needs.
 #
-# > **Intuition.** Training-mode batch norm grades on a curve: your score depends on who
+# > **Intuition.** Training-mode batch norm grades on a curve: a student's score depends on who
 # > else sat the exam that day. Eval mode grades against a fixed scale learned over the
 # > whole term. *Where it breaks down:* the fixed scale goes stale if serving traffic drifts
 # > away from training traffic; the running statistics are only as current as the training data.
 
 # %% [markdown]
-# ## 14.5 · Exercises
+# ## 32.5 · Exercises
 #
 # | # | Implement | Target time |
 # |---|---|---|
@@ -295,7 +298,7 @@ grade.ex1(best_split)
 # %% [markdown]
 # > **Talk it through.**
 # > 1. *Clarify:* the criterion (SSE/variance for regression; Gini or entropy for classification), the threshold convention, minimum leaf size, missing values.
-# > 2. *Brute force:* try every threshold, recompute both SSEs: O(n²). Say it, then improve.
+# > 2. *Brute force:* try every threshold, recompute both SSEs: O(n²). State it, then improve it.
 # > 3. *Optimise:* sort by x, prefix sums of y and y², SSE of every prefix/suffix in O(1), mask out positions between equal x values.
 # > 4. *Complexity:* O(n log n) time (the sort), O(n) memory. Across d features: O(d·n log n) per node; LightGBM/XGBoost "hist" mode pre-buckets x into ≤ 255 bins so a node costs O(n + bins) per feature with no sort.
 # > 5. *Edge cases:* duplicates, constant feature, n = 1, huge y values (cancellation in S₂ − S₁²/m).
@@ -335,16 +338,16 @@ grade.ex2(gbm_fit, gbm_predict)
 # > 2. *Why `init = mean(y)`:* it is the constant minimising squared loss; for log-loss it would be the log-odds of the base rate.
 # > 3. *Learning rate (shrinkage):* smaller lr needs more trees and generalises better; tune `n_estimators` with early stopping on a validation set.
 # > 4. *Complexity:* O(M · d · n log n) for M rounds (re-sorting each round; pre-sorting once per feature gives O(M·d·n)); prediction O(M) per row.
-# > 5. *Beyond squared loss:* other losses change the pseudo-residuals and the leaf values (a Newton step: Σg / Σh, which is what XGBoost/LightGBM use; LambdaMART plugs in ranking gradients — notebook 06).
+# > 5. *Beyond squared loss:* other losses change the pseudo-residuals and the leaf values (a Newton step: Σg / Σh, which is what XGBoost/LightGBM use; LambdaMART plugs in ranking gradients — Chapter 24).
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-x-gradient-boosting.svg" alt="Gradient boosting as a chain: mean, residuals, a stump fitted to them, a shrunken update, new residuals, repeated for M rounds" width="100%">
 #
 # *What to notice:* each stump only ever sees what is still wrong (the residuals), and ν keeps any one stump from fixing too much at once.
 #
-# > **Intuition.** Boosting is golf: each stroke aims from where the ball is now, not
+# > **Intuition.** Boosting resembles golf: each stroke aims from where the ball is now, not
 # > from the tee, and shrinkage is choosing to putt gently. Many small corrections overshoot
-# > less than a few big ones. *Where it breaks down:* in golf you stop at the hole; boosting
-# > keeps chasing noise in the training residuals unless you stop on a validation set.
+# > less than a few large ones. *Where it breaks down:* a golfer stops at the hole; boosting
+# > keeps fitting noise in the training residuals unless it is stopped on a validation set.
 
 # %% [markdown]
 # > **Exercise 3.** *(target 20 min)* Implement `mlp_grads(params, X, y)` →
@@ -366,10 +369,10 @@ grade.ex3(mlp_grads)
 
 # %% [markdown]
 # > **Talk it through.**
-# > 1. *Write the forward pass with named intermediates* (`z1, h, logits`): you need them in the backward pass. Say the shapes as you go.
+# > 1. *Write the forward pass with named intermediates* (`z1, h, logits`): the backward pass needs them. State the shapes along the way.
 # > 2. *Backward in reverse:* `dlogits = (P − Y)/n` → `dW2 = hᵀ dlogits`, `db2 = Σ dlogits` → `dh = dlogits W2ᵀ` → `dz1 = dh ⊙ 1[z1 > 0]` → `dW1 = Xᵀ dz1`, `db1 = Σ dz1`.
 # > 3. *Verify:* a gradient check on a tiny network; mention the ReLU kink (avoid points with z1 ≈ 0).
-# > 4. *Complexity:* forward and backward are both O(n·(d·h + h·C)); the backward pass costs about 2× the forward. Memory O(n·h) for the stored activations — the reason activation checkpointing exists (Level 3).
+# > 4. *Complexity:* forward and backward are both O(n·(d·h + h·C)); the backward pass costs about 2× the forward. Memory O(n·h) for the stored activations — the reason activation checkpointing exists (Part III, Chapter 40).
 # > 5. *Follow-ups to expect:* initialisation (He for ReLU), dead ReLUs, why not sigmoid hidden units (vanishing gradients).
 
 # %% [markdown]
@@ -438,13 +441,13 @@ grade.ex6(inverted_dropout)
 # %% [markdown]
 # > **Talk it through (Exercises 5-6).**
 # > 1. *Why biased vs unbiased:* the forward pass normalises the batch you have (biased); the running variance estimates the population variance (unbiased). Mixing them up is invisible in training and shifts eval outputs slightly.
-# > 2. *Momentum convention:* PyTorch's `momentum=0.1` weights the **new** batch by 0.1; Keras's `momentum=0.99` weights the **old** value by 0.99. Same idea, opposite parameter — say which you mean.
+# > 2. *Momentum convention:* PyTorch's `momentum=0.1` weights the **new** batch by 0.1; Keras's `momentum=0.99` weights the **old** value by 0.99. Same idea, opposite parameter: state which convention is meant.
 # > 3. *Failure modes:* tiny batches (noisy statistics; use GroupNorm/LayerNorm), batch-dependent outputs in serving (forgot eval mode), distribution shift between train and serve (running stats stale), dropout left on at inference (noisy predictions).
 # > 4. *Complexity:* O(n·features) for both; batch norm keeps 2 × features extra state.
 # > 5. *Backward (follow-up):* dropout's backward is the same mask times the same scale; batch norm's backward has three paths through the mean and variance — offer the compact formula `dx = (γ/σ)(dy − mean(dy) − x̂·mean(dy·x̂))`.
 
 # %% [markdown]
-# > **Exercise 7.** *(written, target 10 min)* Out loud or on paper, as you would at
+# > **Exercise 7.** *(written, target 10 min)* Aloud or on paper, as at
 # > a whiteboard: derive ∂L/∂z for `L = −log softmax(z)_y` with logits `z ∈ ℝ^C`.
 # > Then extend to a batch of n examples with the mean loss and to `Z = XW`,
 # > giving `dW`. Say where numerical stability enters, and what the gradient
@@ -462,9 +465,9 @@ grade.ex6(inverted_dropout)
 # 5. Confidently wrong vs right: ...
 
 # %% [markdown]
-# ## 14.6 · Score yourself
+# ## 32.6 · Score yourself
 #
-# Same rubric as 13.6: 0-2 on framing, correctness, numerical care, efficiency,
+# Same rubric as Section 31.6 of the lab: 0–2 on framing, correctness, numerical care, efficiency,
 # verification and communication; time against the target. The exercises that
 # most often go wrong in practice interviews are 3 (a transposed gradient) and
 # 4 (the mask): if those took over 1.5× their target, redo them tomorrow from
@@ -602,9 +605,9 @@ print(f"6. inverted dropout, p = 0.5, x = 2: mean output {draws.mean():.3f}")
 #
 # 1. Walk through how a gradient-boosted tree model is trained for squared loss, then say what changes for log-loss and for a ranking loss like LambdaMART.
 # 2. Why do histogram-based GBDTs (LightGBM, XGBoost `hist`) train much faster than exact-split implementations, and what do they give up?
-# 3. Your transformer trains fine but outputs NaN for some users at inference. Masking is the suspect. What exactly would you check?
+# 3. A transformer trains normally but outputs NaN for some users at inference. Masking is the suspect. What exactly would you check?
 # 4. A model with batch norm scores well offline but much worse in production, where requests are scored one at a time. Give two plausible causes and how to confirm each.
 # 5. Why is attention's cost quadratic in sequence length, and name two families of methods that reduce the time or memory cost.
 # 6. Without code: what is the gradient of softmax cross-entropy with respect to the logits, and why does it make training with label smoothing or soft targets straightforward?
 #
-# **Next chapter:** [`15_coding_patterns_1.ipynb`](../ch33-coding-patterns-1/notebook.ipynb) — Day 8: the classic coding round, pattern by pattern, with a protocol for talking through it.
+# **Next chapter:** [Chapter 33 · Coding patterns I](../ch33-coding-patterns-1/notebook.ipynb) — Chapters 33–34: the classic coding round, pattern by pattern, with a protocol for talking through it.

@@ -4,7 +4,7 @@ Try each drill against the clock before reading its answer. Markers: [verified]
 verified by running · [expected] expected, depends on your run · [open-ended] personal /
 open-ended.
 
-All coded answers are in [`code/nb16.py`](solutions.py) and graded in CI.
+All coded answers are in [`solutions.py`](solutions.py) and graded in CI.
 In an interview, say the approach and complexity first, then code.
 
 ---
@@ -91,7 +91,7 @@ then `sum(y_true[i] for i in top) / k`. Raise `ValueError` for `k <= 0`
 
 **Follow-ups.** Grouped data (customers, subjects): stratify groups,
 `StratifiedGroupKFold`. Time-ordered data: do not shuffle at all. That is the
-mistake notebook 04 measured.
+mistake chapter 5 measured.
 
 ---
 

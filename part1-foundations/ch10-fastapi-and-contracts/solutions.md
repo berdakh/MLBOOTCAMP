@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `make_app`
 
-[verified] Reference code: [`code/nb09.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 class DoubleRequest(BaseModel):
@@ -57,7 +57,7 @@ looks for.
 
 ## Exercise 2 · `make_schema_v2`
 
-[verified] Reference code: [`code/nb09.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 from churnlab.schemas import CustomerFeatures
@@ -84,7 +84,7 @@ change. `int` rejects `7.5`, and `ge`/`le` reject `-1` and `11`.
   today, and the two drift apart the next time a v1 bound changes.
 * Returning an instance (`CustomerFeaturesV2(...)`) instead of the class.
 
-**Push further.** The model does not use NPS yet. The contract change can ship
+**Push further.** The model does not use NPS yet. The contract change can be released
 first (callers start sending it, monitoring records its distribution), and a
 model trained with NPS later. Contract and model are versioned separately.
 
@@ -96,7 +96,7 @@ model trained with NPS later. Contract and model are versioned separately.
 
 | # | Change | Breaking? | Why |
 |---|---|---|---|
-| 1 | Add a **required** request field `contract_end_date` | **Yes** | every existing request lacks it → 422 for every caller. Make it optional with a sensible default, or ship it under `/v2` |
+| 1 | Add a **required** request field `contract_end_date` | **Yes** | every existing request lacks it → 422 for every caller. Make it optional with a sensible default, or release it under `/v2` |
 | 2 | Add `explanation` to the `/predict` **response** | **No** (usually) | well-behaved clients ignore unknown response keys. It breaks only clients that validate responses strictly (e.g. a generated client with "forbid extra"), so say so in the changelog |
 | 3 | Rename `churn_probability` → `score` | **Yes** | every client reading `churn_probability` gets a `KeyError` or `None`. Add `score` alongside the old name, deprecate it, remove it in the next major version |
 | 4 | Tighten `seats` from `le=10000` to `le=5000` | **Yes** | requests that were valid (6,000 seats) now get 422. Tightening validation is breaking; relaxing it is not |
@@ -112,7 +112,7 @@ period, and measure who still calls the old one before removing it.
 
 **1. Misspelled field.** `"sesions_4w": 3` returns **422** with two errors:
 `sesions_4w` → `extra_forbidden`, `sessions_4w` → `missing` ([verified] observed in
-section 9.7). Without `extra="forbid"`, the typo is silently dropped; for a
+section 10.7). Without `extra="forbid"`, the typo is silently dropped; for a
 required field you still get a 422 (missing), but for an *optional* field
 (e.g. `features_used_4w` misspelled) the request succeeds and the pipeline
 imputes the training median. That is a wrong prediction with no error anywhere.

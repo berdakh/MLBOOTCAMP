@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `weekly_change_sql`
 
-[verified] Reference code: [`code/nb03.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```sql
 SELECT customer_id, week_start, sessions,
@@ -37,7 +37,7 @@ one you chose.
 
 ## Exercise 2 · `latest_invoice_sql(as_of)`
 
-[verified] Reference code: [`code/nb03.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def latest_invoice_sql(as_of: str) -> str:
@@ -67,7 +67,7 @@ with `?` placeholders) to avoid SQL injection.
 
 ## Exercise 3 · `tickets_30d_sql(snapshot)`
 
-[verified] Reference code: [`code/nb03.py`](solutions.py) (`ex3`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex3`).
 
 ```sql
 WITH active AS (
@@ -121,7 +121,7 @@ on the left makes about 30 customers disagree with the package at 2024-02-01.
 
 ## Checkpoint answers
 
-**1. Fan-out.** See 03-4: per-customer sessions joined with tickets multiplies
+**1. Fan-out.** See lab section 4.3: per-customer sessions joined with tickets multiplies
 sessions by the ticket count. Prevent by aggregating per key before joining,
 and by asserting key uniqueness.
 

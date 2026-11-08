@@ -6,15 +6,15 @@
 # %% [markdown]
 # # Chapter 49 · Quantisation & distillation
 #
-# **Day 6 · ~90 minutes · T4 GPU (runs on CPU with a reduced budget)**
+# **Part III · Chapter 49 · about 90 minutes · T4 GPU (runs on CPU with a reduced budget)**
 #
-# A model that is accurate but too slow or too expensive to serve does not ship. The two
-# standard ways to make a trained model cheaper are **quantisation** (store and compute
+# A model that is accurate but too slow or too expensive to serve is of limited practical use.
+# The two standard ways to make a trained model cheaper are **quantisation** (store and compute
 # with fewer bits) and **distillation** (train a small *student* to imitate a large
-# *teacher*). Interviews ask how they work, what they cost in accuracy, and which to use
-# when; this notebook measures all three axes (accuracy, latency, size) on one task.
+# *teacher*). Interview questions cover how they work, what they cost in accuracy, and when
+# each is appropriate; this lab measures all three quantities (accuracy, latency, size) on one task.
 #
-# By the end you will be able to:
+# By the end of this lab you should be able to:
 #
 # 1. fine-tune a DistilBERT teacher on AG News and measure its accuracy, latency and size;
 # 2. apply post-training dynamic int8 quantisation with `quantize_dynamic` and measure what changes;
@@ -31,7 +31,7 @@
 # (Apache-2.0), pinned to a revision. **Data:** [AG News](https://huggingface.co/datasets/fancyzhx/ag_news)
 # (4 news topics; see its card for licence and terms; for research and teaching use).
 #
-# **Budget honesty.** On a T4 the teacher is fully fine-tuned on 20k examples. On a CPU that
+# **Compute budget.** On a T4 the teacher is fully fine-tuned on 20k examples. On a CPU that
 # would take hours, so the CPU budget fine-tunes only the **top 3 of 6 layers** on 1.5k
 # examples for one epoch (~2 minutes): a weaker teacher, the same method. The student is
 # deliberately tiny (a TF-IDF + MLP classifier) so that it trains in seconds anywhere.
@@ -39,6 +39,9 @@
 # **Measured here vs on a T4.** Our verification runs are CPU-only. Numbers in
 # **Expected:** lines were printed by a CPU run unless marked *"on a T4 you should
 # see … (not measured in our verification runs)"*.
+
+# %% [markdown]
+# Read first: [Chapter 49 text](README.md), which explains quantisation and distillation in more detail than this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -135,9 +138,9 @@ print(f"labels: {LABELS} | labelled {len(lab_df)}, unlabelled transfer {len(tran
 # |---|---|---|
 # | Quantisation | Storing (and computing with) numbers in fewer bits, e.g. 8-bit integers instead of 32-bit floats | DistilBERT's Linear layers converted to int8 |
 # | Scale `s` | The real-valued size of one integer step; `x ≈ q × s` | `max(abs(W[row])) / 127` for one weight row |
-# | Per-tensor vs per-channel | One scale for a whole matrix vs one scale per output row | per-channel cuts the weight error 2.4× in 11.3 |
+# | Per-tensor vs per-channel | One scale for a whole matrix vs one scale per output row | per-channel cuts the weight error 2.4× in section 3 |
 # | Dynamic quantisation | Weights stored as int8 once; activations quantised on the fly at run time, no calibration data | `quantize_dynamic(model, {nn.Linear})` |
-# | Weight-only quantisation | Only the weights are low-bit; the arithmetic still runs in floating point | the int8/int4 simulation in 11.3 |
+# | Weight-only quantisation | Only the weights are low-bit; the arithmetic still runs in floating point | the int8/int4 simulation in section 3 |
 # | Group-wise scales | One scale per small block of weights (e.g. 128), needed for int4 | GPTQ / AWQ 4-bit LLM loaders |
 # | Knowledge distillation | Training a small *student* to imitate a large *teacher*'s outputs | DistilBERT teacher → TF-IDF + MLP student |
 # | Temperature `T` | Divides the logits before the softmax; `T > 1` flattens the distribution | `T = 4` in the student runs |
@@ -146,7 +149,7 @@ print(f"labels: {LABELS} | labelled {len(lab_df)}, unlabelled transfer {len(tran
 # | Agreement | Share of examples where two models give the same prediction | int8 vs fp32 agree on ~96% |
 
 # %% [markdown]
-# ## 11.1 · The teacher: fine-tune DistilBERT
+# ## 1 · The teacher: fine-tune DistilBERT
 #
 # A sequence-classification head (`AutoModelForSequenceClassification`, 4 labels) on
 # DistilBERT, trained with the course's explicit loop (`scaleml.train.train`: AdamW,
@@ -221,7 +224,7 @@ print(f"teacher accuracy on {len(eval_y)} eval examples: {ACC_TEACHER:.3f}")
 # fine-tuning on 20k examples reach ~0.92–0.94 in roughly 10 minutes (not measured in our
 # verification runs).
 #
-# ## 11.2 · Post-training dynamic int8 quantisation
+# ## 2 · Post-training dynamic int8 quantisation
 #
 # **Dynamic quantisation** (`torch.ao.quantization.quantize_dynamic`) converts the weights
 # of every `nn.Linear` to int8 *once*, and at run time quantises each layer's *activations*
@@ -308,9 +311,9 @@ if "int8" in LAT:
 # load: on a heavily loaded machine we also saw multi-threaded int8 runs *slower* than fp32,
 # which is why single requests are timed on one thread. On a CPU, batching cuts the cost per
 # example only modestly (a 64-token sequence already makes the matrix products large); on a
-# GPU it matters far more (notebook 12).
+# GPU it matters far more (Chapter 50).
 #
-# ## 11.3 · Quantising a weight matrix by hand
+# ## 3 · Quantising a weight matrix by hand
 #
 # Symmetric linear quantisation maps a real weight w to an integer
 # `q = round(w / scale)` in `[-127, 127]` and back with `ŵ = q × scale`. The rounding error
@@ -329,7 +332,7 @@ if "int8" in LAT:
 # > are measured in very coarse steps; per-channel gives each row a ruler cut to its own length.
 # > *Where the analogy breaks down:* a layer's output is a sum of many products, and independent
 # > rounding errors partly cancel in that sum, so the output error is smaller than "ruler
-# > precision" suggests (11.3 measures exactly this).
+# > precision" suggests (section 3 measures exactly this).
 
 # %% [markdown]
 # > **Exercise 1.** Write `quantize_per_channel_int8(W)` for a 2-D float tensor `W` (rows = output
@@ -447,7 +450,7 @@ else:
     print("Skipped (RUN_GPU_EXTENSION = False or no GPU).")
 
 # %% [markdown]
-# ## 11.4 · Knowledge distillation
+# ## 4 · Knowledge distillation
 #
 # A teacher's output distribution carries more information than the label: for a
 # Business article it might give Sci/Tech 15% and Sports 0.1%, which says which mistakes
@@ -578,17 +581,17 @@ print(f"(12 students trained in {time.time() - t0:.0f} s) | teacher: {ACC_TEACHE
 # **Expected (CPU budget, measured):** the teacher labels 2,500 texts in about a minute and
 # is right on ~90% of the transfer set (0.896). The students land below the teacher (a bag of
 # n-grams cannot match a transformer) and their differences are small: compare the means
-# with the seed spread (±0.002–0.003) before believing any ranking. Our run: A 0.835,
+# with the seed spread (±0.002–0.003) before trusting any ranking. Our run: A 0.835,
 # B 0.827, C 0.849, D 0.843. The transfer-set variants (C, D) gained 1–1.5 points over A
 # because they see 1.7× as much text; soft targets alone on the labelled set (B) did not help
 # this student (slightly worse), and with the transfer set plain pseudo-labels (C) did as
 # well as full distillation (D). An earlier run with a different sample gave the same
 # pattern (A 0.836, B 0.831, C 0.841, D 0.839). **More data labelled by
-# the teacher is usually the biggest win of distillation**, and soft targets matter more when
+# the teacher is usually the largest benefit of distillation**, and soft targets matter more when
 # the student is a smaller version of the teacher (same tokenizer, a few layers, e.g.
 # DistilBERT itself was distilled from BERT) than for a very different model like ours.
 #
-# ## 11.5 · The trade-off table
+# ## 5 · The trade-off table
 #
 # Accuracy, latency (batch 1, CPU, *including* featurisation for the student and excluding
 # tokenisation for the transformers, which costs ~1 ms), and size on disk.
@@ -625,7 +628,7 @@ print("wrote", OUT / "compression_table.json")
 # verification runs): the GPU changes the latency column, not the ranking of sizes.
 #
 # How to choose: start from the **latency and cost budget** (p99 per request, requests per
-# second, hardware), then take the most accurate model that fits. Quantisation is nearly free
+# second, hardware), then choose the most accurate model that fits. Quantisation is nearly free
 # accuracy-wise and should be tried first; distillation costs a training pipeline (and a
 # teacher to maintain) but buys the largest speed-ups; the two compose (quantise the student).
 
@@ -633,7 +636,7 @@ print("wrote", OUT / "compression_table.json")
 # > **Exercise 3.** Your team serves this topic classifier for a news feed: 2,000 requests per second at
 # > peak, a p99 latency budget of 20 ms, CPU-only serving machines. Using *your* table, (a) which model(s)
 # > meet the latency budget at batch 1, and how would batching change that answer? (b) The product team
-# > says "the student is 3 points worse; ship the teacher on GPUs instead". What would you measure before
+# > says "the student is 3 points worse; deploy the teacher on GPUs instead". What would you measure before
 # > agreeing (think: cost per request, the business metric, which classes the student gets wrong)?
 # > (c) If you had to make the distilled student better, list three changes in order of expected payoff.
 # > Write your answer in the cell below.
@@ -678,7 +681,7 @@ print("wrote", OUT / "compression_table.json")
 # $1 - \alpha$). *Symbols:* $z_t, z_s$ teacher and student logits, $T$ the temperature, $\alpha \in [0, 1]$,
 # $y$ the label. The $T^2$ undoes the $1/T^2$ shrinkage of the soft term's gradient, so changing $T$
 # does not silently change its weight. *Example:* with $\alpha = 0$ this is ordinary cross-entropy
-# (variants A and C of 11.4).
+# (variants A and C of section 4).
 #
 # The cell below checks all four numerically.
 
@@ -732,4 +735,4 @@ print(f"distillation loss by hand {by_hand.item():.4f} | scaleml.serving.kd_loss
 # 5. Why does distillation with an unlabelled transfer set often help more than soft targets alone?
 # 6. You must cut inference cost by 4× with at most 1 point of accuracy loss. Walk through your plan and the measurements you would make.
 #
-# **Next chapter:** [`12_high_throughput_serving.ipynb`](../ch50-high-throughput-serving/notebook.ipynb) — put a model behind an API and make it fast: dynamic batching, latency vs throughput curves, KV caches and continuous batching for generation, and cost per 1,000 requests.
+# **Next chapter:** [Chapter 50 · High-throughput serving](../ch50-high-throughput-serving/notebook.ipynb) — put a model behind an API and make it fast: dynamic batching, latency vs throughput curves, KV caches and continuous batching for generation, and cost per 1,000 requests.

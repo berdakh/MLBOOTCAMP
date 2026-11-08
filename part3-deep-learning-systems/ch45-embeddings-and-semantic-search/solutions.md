@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `bm25_scores`
 
-[verified] Reference code: [`code/nb07.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def bm25_scores(query_tokens, doc_tokens_list, k1=1.2, b=0.75):
@@ -37,7 +37,7 @@ sparse matrix and answered a query in ~0.2 ms over 5,183 abstracts in the notebo
 
 ## Exercise 2 · `reciprocal_rank_fusion`
 
-[verified] Reference code: [`code/nb07.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def reciprocal_rank_fusion(rankings, k=60):
@@ -57,13 +57,13 @@ Recall@100 0.954, vs 0.667 / 0.886 (BM25) and 0.622 / 0.919 (dense).
 
 ## Exercise 3 · Replacing BM25 product search with semantic search
 
-[open-ended] A strong plan:
+[open-ended] A good plan:
 
 * **Offline evaluation.** Build a judged query set from logs (stratified: head, torso,
   tail queries; navigational queries with exact identifiers such as SKUs, model numbers,
   brand names; misspellings; long natural-language queries). Metrics: Recall@k of the
   first stage (k = what the ranker consumes), nDCG@10, and per-slice results. Expect
-  dense to win on paraphrase/long-tail and lose on identifiers and rare terms (as BM25 beat
+  dense retrieval to be better on paraphrase/long-tail queries and worse on identifiers and rare terms (as BM25 beat
   MiniLM on SciFact's gene/drug-name claims: 0.667 vs 0.622 nDCG@10 in our run).
 * **Index and memory.** 50M × 384 × 4 B = 77 GB of float32 vectors (+ HNSW graph,
   ~50M × 2M × 4 B ≈ 13 GB at M = 32): needs sharding or a big-memory host. IVF-PQ with
@@ -73,7 +73,7 @@ Recall@100 0.954, vs 0.667 / 0.886 (BM25) and 0.622 / 0.919 (dense).
   ~41 docs/s that is ~14 days on one machine; at [expected] ~1–5k docs/s per GPU, hours on a
   small GPU fleet. Plan versioned indexes (old and new side by side), backfills and
   queries embedded with the *same* model version as the index.
-* **Ship hybrid.** Keep BM25 for exact matching and fuse (RRF or a learned combination)
+* **Deploy a hybrid.** Keep BM25 for exact matching and fuse (RRF or a learned combination)
   with dense; on SciFact the hybrid was the best of the three on both metrics, and it is
   robust when one system fails on a slice. Validate with an online A/B test on
   search conversion, zero-result rate and latency.
@@ -83,7 +83,7 @@ Recall@100 0.954, vs 0.667 / 0.886 (BM25) and 0.622 / 0.919 (dense).
 ## Checkpoint answers
 
 1. **BM25.** idf weights rare terms up; `k1` controls term-frequency saturation; `b`
-   controls length normalisation. BM25 wins on exact, rare terms (identifiers, names,
+   controls length normalisation. BM25 is better on exact, rare terms (identifiers, names,
    numbers), out-of-domain vocabulary the encoder never saw, and when there is no
    training data; it is also cheap and interpretable. On SciFact (CPU run) it beat MiniLM
    on nDCG@10, 0.667 vs 0.622.

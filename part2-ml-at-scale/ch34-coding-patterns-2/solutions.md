@@ -1,16 +1,16 @@
 # Solutions · Chapter 34 · Coding patterns II
 
-Try each exercise against the clock before reading its answer. Markers:
+Attempt each exercise against the clock before reading its answer. Markers:
 [verified] verified by running · [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
-Reference code: [`code/nb16.py`](solutions.py), graded in CI against
-[`src/shoprank/grading/nb16.py`](../../src/grading/ch34.py).
+Reference code: [`solutions.py`](solutions.py), graded in CI against
+[`src/grading/ch34.py`](../../src/grading/ch34.py).
 
 ---
 
 ## Exercise 1 · `num_islands`
 
-[verified] Reference: `ex1` in [`code/nb16.py`](solutions.py) — scan; on unseen land,
+[verified] Reference: `ex1` in [`solutions.py`](solutions.py) — scan; on unseen land,
 count and BFS-flood with a `deque`, marking cells when they are enqueued.
 
 **Complexity.** O(R·C) time; O(R·C) for `seen`.
@@ -26,7 +26,7 @@ connected), one giant island, many single-cell islands, a snake-shaped island
 
 ## Exercise 2 · `course_order`
 
-[verified] Reference: `ex2` in [`code/nb16.py`](solutions.py) — Kahn's algorithm.
+[verified] Reference: `ex2` in [`solutions.py`](solutions.py) — Kahn's algorithm.
 
 ```python
 graph = [[] for _ in range(n)]; indeg = [0] * n
@@ -53,7 +53,7 @@ of levels is the critical path length.
 
 ## Exercise 3 · `dijkstra`
 
-[verified] Reference: `ex3` in [`code/nb16.py`](solutions.py) — adjacency lists,
+[verified] Reference: `ex3` in [`solutions.py`](solutions.py) — adjacency lists,
 heap of `(dist, node)`, skip stale entries.
 
 **Complexity.** O((V + E) log V) time (each edge can push once), O(V + E) space.
@@ -70,7 +70,7 @@ improve a distance; the source need not be 0.
 
 ## Exercise 4 · `min_capacity`
 
-[verified] Reference: `ex4` in [`code/nb16.py`](solutions.py).
+[verified] Reference: `ex4` in [`solutions.py`](solutions.py).
 
 ```python
 lo, hi = max(weights), sum(weights)
@@ -97,7 +97,7 @@ other loading can finish in fewer days (exchange argument).
 
 ## Exercise 5 · `lis_length`
 
-[verified] Reference: `ex5` in [`code/nb16.py`](solutions.py).
+[verified] Reference: `ex5` in [`solutions.py`](solutions.py).
 
 ```python
 tails = []
@@ -122,7 +122,7 @@ store for each element the index of its predecessor.
 
 ## Exercise 6 · `edit_distance`
 
-[verified] Reference: `ex6` in [`code/nb16.py`](solutions.py) — bottom-up with two rows.
+[verified] Reference: `ex6` in [`solutions.py`](solutions.py) — bottom-up with two rows.
 
 **Complexity.** O(m·n) time, O(min(m, n)) space (swap so the shorter string
 indexes the row).
@@ -136,7 +136,7 @@ accepted (recursion depth m + n = 600 at the largest test).
 
 ## Exercise 7 · `Trie`
 
-[verified] Reference: `ex7` in [`code/nb16.py`](solutions.py) — nested dicts with a
+[verified] Reference: `ex7` in [`solutions.py`](solutions.py) — nested dicts with a
 private sentinel object as the end-of-word marker (a sentinel cannot collide
 with a real character, unlike a key such as `"$"` or `"#"`).
 
@@ -149,7 +149,7 @@ stopped by the timing projection after 4,000 words.
 
 ## Exercise 8 · `UnionFind`
 
-[verified] Reference: `ex8` in [`code/nb16.py`](solutions.py) — iterative path
+[verified] Reference: `ex8` in [`solutions.py`](solutions.py) — iterative path
 compression and union by size.
 
 **Complexity.** O(α(n)) amortised per operation with both optimisations,
@@ -167,13 +167,13 @@ O(log n) with either alone; O(n) space.
    weights. With negative edges Dijkstra can finalise a node too early and
    return wrong distances; use Bellman-Ford (O(V·E), also detects negative
    cycles) or, on a DAG, relax edges in topological order (O(V + E)). 0/1
-   weights: 0-1 BFS with a deque. [verified] (16.3, 16-3)
+   weights: 0-1 BFS with a deque. [verified] (lab Section 34.3; Exercise 3)
 2. **Pipeline dependencies.** Model tasks as a DAG (edge prereq → task); Kahn's
    algorithm yields an execution order; if fewer than all tasks are output,
    the remaining ones (in-degree > 0) contain the cycle — report them, or run
    a DFS with colours to print the actual cycle. Tasks in the same Kahn level
    can run in parallel; the longest path (by expected duration) is the critical
-   path that bounds the total runtime. [verified] (16-2)
+   path that bounds the total runtime. [verified] (Exercise 2)
 3. **Binary search on the answer.** A numeric answer in a known range and a
    monotone feasibility check that is cheaper than direct optimisation.
    ML-systems examples: the smallest number of replicas (or batch size) that
@@ -181,11 +181,11 @@ O(log n) with either alone; O(n) space.
    that keeps precision ≥ 95% (monotone if precision is monotone in the
    threshold — check, it is not always); the largest learning rate that does
    not diverge (roughly monotone, noisy). [open-ended]
-4. **O(n log n) LIS.** See 16-5: `tails[L]` is the smallest tail of an increasing
+4. **O(n log n) LIS.** See Exercise 5: `tails[L]` is the smallest tail of an increasing
    subsequence of length L + 1, sorted by an exchange argument; each element is
    placed by binary search. `tails` has the right **length** but mixes
    elements from different subsequences; reconstruction needs predecessor
-   indices. [verified] (16-5)
+   indices. [verified] (Exercise 5)
 5. **Autocomplete over 10M queries.** Hash set: O(1) exact lookup but no prefix
    queries (you would scan everything). Sorted array + binary search: compact
    (just the strings), prefix query = two binary searches O(log n · L) plus the

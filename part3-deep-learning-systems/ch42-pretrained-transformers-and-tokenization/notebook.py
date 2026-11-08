@@ -6,15 +6,15 @@
 # %% [markdown]
 # # Chapter 42 · Pretrained transformers & tokenisation
 #
-# **Day 2 · ~90 minutes · T4 GPU (runs on CPU with a reduced budget)**
+# **Part III · Chapter 42 · about 90 minutes · T4 GPU (runs on CPU with a reduced budget)**
 #
-# In practice you rarely train a transformer from scratch: you download a
-# pretrained one and must get the plumbing right. Most production bugs with
-# pretrained models are not in the model; they are in tokenisation, padding,
-# truncation, pooling and loading. This notebook covers that plumbing, and
-# how to make batched inference fast, which is a cost question at scale.
+# In practice a transformer is rarely trained from scratch: one downloads a
+# pretrained model, and the work lies in connecting it correctly to the data. Most
+# production bugs with pretrained models are not in the model itself but in
+# tokenisation, padding, truncation, pooling and loading. This lab covers these
+# steps, and how to make batched inference fast, which at scale is a question of cost.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. explain subword tokenisation (WordPiece, byte-level BPE), special tokens, attention masks, padding side and truncation;
 # 2. run a pretrained encoder and read its hidden states;
@@ -36,6 +36,9 @@
 # **Measured here vs on a T4.** Our verification runs are CPU-only. Numbers in
 # **Expected:** lines were printed by a CPU run unless marked *"on a T4 you should
 # see … (not measured in our verification runs)"*.
+
+# %% [markdown]
+# Read first: [Chapter 42 text](README.md) explains the ideas behind this lab (Pretrained transformers & tokenisation) in more depth; [solutions](solutions.md) has worked answers.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -238,7 +241,7 @@ print("gpt2, left-padded attention mask:\n", left["attention_mask"])
 #
 # *What to notice:* the tokenizer and the pooling step are outside the model, and both can silently break it: a different tokenizer gives different ids, a mask-unaware mean gives a different vector.
 #
-# > **Intuition.** Subword tokenisation works like a box of Lego: a fixed set of common pieces
+# > **Intuition.** Subword tokenisation works like a box of building bricks: a fixed set of common pieces
 # > (frequent words kept whole, rare words built from smaller bricks) can build any word. *Where
 # > it breaks down:* the piece boundaries are statistical, not linguistic (`2024` → `202`, `##4`),
 # > which is one reason models are bad at arithmetic and spelling.
@@ -270,7 +273,7 @@ print(f"max |difference|, masked mean           = {(naive_alone - masked_batch).
 # 0.85 in our run: padding positions still have hidden states, and the
 # naive mean averages them in), while the masked mean matches the unpadded sentence up
 # to ~1e-6 (our run: 6.1e-07). A model whose embeddings change with whatever else is in the batch gives
-# different answers online (batch of 1) and offline (big batches): a classic
+# different answers online (batch of 1) and offline (big batches): a typical
 # train/serve skew bug.
 
 # %% [markdown]
@@ -290,7 +293,7 @@ grade.ex1(mean_pool)
 # %% [markdown]
 # Is CLS or mean pooling a better *sentence embedding* for an off-the-shelf
 # DistilBERT? Measure on a few pairs: related pairs should be more similar than
-# unrelated ones. (A tiny, hand-made set: a sanity check, not a benchmark. Notebook 07
+# unrelated ones. (A tiny, hand-made set: a sanity check, not a benchmark. Chapter 45
 # evaluates retrieval properly with models trained for it.)
 
 # %%
@@ -331,8 +334,8 @@ for pooling in ("cls", "mean"):
 # CLS gave 0.96 for related and 0.90 for unrelated pairs (gap 0.06), mean pooling 0.89 vs
 # 0.69 (gap 0.20). Both rank every related pair above every unrelated one on this easy
 # set, but mean pooling separates them about 3× more clearly. This is why off-the-shelf sentence embeddings come
-# from models *trained* for similarity (notebooks 07–08), and why a classifier on top of CLS
-# works only after fine-tuning (notebook 05).
+# from models *trained* for similarity (Chapters 45–46), and why a classifier on top of CLS
+# works only after fine-tuning (Chapter 43).
 #
 # ## 4.4 · Inference throughput: batch size and sequence length
 #
@@ -578,7 +581,7 @@ for model_id, rev in [(BERT_ID, BERT_REV), (GPT2_ID, GPT2_REV)]:
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question without notes; a complete answer takes about a minute:
 #
 # 1. Why do modern models use subword tokenisation? Compare WordPiece and byte-level BPE, and name a failure mode of tokenisation (numbers, other languages, code).
 # 2. What is the attention mask for, and what goes wrong if you pad a decoder-only model on the right before generating?
@@ -587,4 +590,4 @@ for model_id, rev in [(BERT_ID, BERT_REV), (GPT2_ID, GPT2_REV)]:
 # 5. How do you load a third-party model safely and reproducibly in production?
 # 6. Your classifier's accuracy dropped after a dependency upgrade, with no code change. What could have changed in the tokenizer or model loading, and how would you have caught it?
 #
-# **Next chapter:** [`05_fine_tuning_a_classifier.ipynb`](../ch43-fine-tuning-a-classifier/notebook.ipynb) — put a head on this encoder and fine-tune it, against a linear probe and a TF-IDF baseline.
+# **Next chapter:** [Chapter 43 · Fine-tuning a classifier](../ch43-fine-tuning-a-classifier/notebook.ipynb) — put a head on this encoder and fine-tune it, against a linear probe and a TF-IDF baseline.

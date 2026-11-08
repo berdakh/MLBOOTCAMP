@@ -1,12 +1,18 @@
 # Cheat sheet
 
-Short snippets for the things you will write most often. They are reminders,
-not a substitute for being able to write them from a blank file.
+This appendix collects short code snippets for the operations written most
+often in the book. They are reminders of syntax and of the details that are
+easy to get wrong, not a substitute for being able to write the code from an
+empty file. Each section names the chapters in which its material is
+explained; the explanations of *why* a snippet is written as it is are there,
+not here.
 
 
 ---
 
 ## pandas
+
+*Explained in:* [Chapter 3](../part1-foundations/ch03-data-acquisition-and-validation/README.md), [Chapter 5](../part1-foundations/ch05-leakage-safe-splits-and-baseline/README.md), [Chapter 17](../part1-foundations/ch17-python-and-sql-drills/README.md).
 
 ```python
 import pandas as pd
@@ -51,6 +57,8 @@ mask = (t >= start) & (t < start + pd.Timedelta(days=30))
 ```
 
 ## SQL (DuckDB)
+
+*Explained in:* [Chapter 4](../part1-foundations/ch04-sql-for-ml/README.md), [Chapter 17](../part1-foundations/ch17-python-and-sql-drills/README.md); at scale, [Chapters 19–20](../part2-ml-at-scale/ch19-event-logs-and-columnar-data/README.md).
 
 ```python
 import duckdb
@@ -110,6 +118,8 @@ row counts before and after); filters on the right table in `WHERE` turn a
 
 ## scikit-learn
 
+*Explained in:* [Chapters 5–9](../part1-foundations/ch05-leakage-safe-splits-and-baseline/README.md), [Chapter 16](../part1-foundations/ch16-final-evaluation-and-docs/README.md).
+
 ```python
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
@@ -162,10 +172,12 @@ def group_bootstrap(y, p, groups, metric, n=500, seed=0):
 ```
 
 Break-even threshold with value `V` per true positive and cost `C` per false
-positive, for calibrated `p`: act when `p > C / (V + C)`. With the course's
-assumed V = 150, C = 30: `p > 1/6`.
+positive, for calibrated `p`: act when `p > C / (V + C)`. With the book's
+assumed V = 150, C = 30: `p > 1/6`. The derivation is in [Chapter 8](../part1-foundations/ch08-thresholds-and-calibration/README.md).
 
 ## FastAPI and Pydantic
+
+*Explained in:* [Chapter 10](../part1-foundations/ch10-fastapi-and-contracts/README.md), [Chapter 11](../part1-foundations/ch11-consistent-serving/README.md), [Chapter 12](../part1-foundations/ch12-api-clients-and-tests/README.md), [Chapter 14](../part1-foundations/ch14-health-logs-and-latency/README.md).
 
 ```python
 from fastapi import FastAPI, HTTPException
@@ -231,6 +243,8 @@ def post_with_retry(client: httpx.Client, url, body, retries=3, backoff=0.2):
 
 ## pytest
 
+*Explained in:* [Chapter 10](../part1-foundations/ch10-fastapi-and-contracts/README.md), [Chapter 12](../part1-foundations/ch12-api-clients-and-tests/README.md).
+
 ```python
 # tests/test_api.py
 import pytest
@@ -276,6 +290,8 @@ model metrics.
 
 ## Monitoring
 
+*Explained in:* [Chapter 14](../part1-foundations/ch14-health-logs-and-latency/README.md), [Chapter 15](../part1-foundations/ch15-monitoring-and-rollback/README.md).
+
 ```python
 import numpy as np
 def psi(ref, cur, bins=10, eps=1e-4):
@@ -290,6 +306,8 @@ np.percentile(latencies_ms, [50, 95, 99])
 
 ## Environment variables
 
+*Explained in:* [Chapter 13](../part1-foundations/ch13-packaging-and-configuration/README.md).
+
 ```python
 import os
 registry = os.environ.get("CHURN_REGISTRY_DIR", "artifacts/registry")
@@ -299,3 +317,67 @@ batch = int(os.environ.get("CHURN_MAX_BATCH_SIZE", "1000"))   # convert types ex
 ```bash
 export CHURN_LOG_LEVEL=DEBUG        # Windows PowerShell: $env:CHURN_LOG_LEVEL = "DEBUG"
 ```
+
+## Ranking metrics
+
+*Explained in:* [Chapter 24](../part2-ml-at-scale/ch24-learning-to-rank/README.md), [Chapter 25](../part2-ml-at-scale/ch25-candidate-generation/README.md).
+
+```python
+import numpy as np
+
+def dcg_at_k(rel, k):
+    """rel: graded relevance of the items, in the order they were ranked."""
+    rel = np.asarray(rel, dtype=float)[:k]
+    return float(np.sum((2 ** rel - 1) / np.log2(np.arange(2, rel.size + 2))))
+
+def ndcg_at_k(rel, k):
+    ideal = dcg_at_k(sorted(rel, reverse=True), k)
+    return dcg_at_k(rel, k) / ideal if ideal > 0 else 0.0
+
+def recall_at_k(retrieved, relevant, k):
+    relevant = set(relevant)
+    return len(set(retrieved[:k]) & relevant) / len(relevant) if relevant else 0.0
+```
+
+Compute these per query (or per user) and average over queries. A query with
+no relevant item has no meaningful NDCG; state whether such queries are
+dropped or counted as zero.
+
+## PyTorch training loop
+
+*Explained in:* [Chapter 27](../part2-ml-at-scale/ch27-pytorch-training-done-right/README.md), [Chapter 39](../part3-deep-learning-systems/ch39-gpu-fundamentals-and-profiling/README.md), [Chapter 40](../part3-deep-learning-systems/ch40-training-efficiency-and-memory/README.md).
+
+```python
+import torch
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model.to(device)
+opt = torch.optim.AdamW(model.parameters(), lr=3e-4)
+g = torch.Generator().manual_seed(0)              # dedicated generator for shuffling
+loader = torch.utils.data.DataLoader(train_ds, batch_size=64, shuffle=True, generator=g)
+
+for epoch in range(n_epochs):
+    model.train()
+    running = 0.0
+    for x, y in loader:
+        x, y = x.to(device), y.to(device)
+        opt.zero_grad(set_to_none=True)
+        with torch.autocast(device_type=device, dtype=torch.bfloat16, enabled=(device == "cuda")):
+            loss = loss_fn(model(x), y)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        opt.step()
+        running += loss.item()                    # .item(): do not keep the graph alive
+
+    model.eval()
+    with torch.no_grad():
+        ...                                       # evaluate on held-out data
+
+# Save everything needed to resume, not only the weights
+torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "epoch": epoch}, "ckpt.pt")
+```
+
+On a GPU, call `torch.cuda.synchronize()` before reading a timer: kernels run
+asynchronously. On a T4, which has no fast bfloat16 support, use
+`dtype=torch.float16` together with a gradient scaler
+(`torch.amp.GradScaler`).

@@ -6,14 +6,14 @@
 # %% [markdown]
 # # Chapter 41 · A transformer from scratch
 #
-# **Day 2 · ~90 minutes · T4 GPU (runs on CPU with a reduced budget)**
+# **Part III · Chapter 41 · about 90 minutes · T4 GPU (runs on CPU with a reduced budget)**
 #
-# "Implement multi-head attention" and "what does a KV cache change?" are
-# among the most common ML-coding and ML-depth questions for engineers working near
-# language models. You will build a small GPT-style decoder whose every line you can
-# explain, train it on Shakespeare, sample from it, and make generation fast.
+# "Implement multi-head attention" and "what does a KV cache change?" are among the
+# most common coding and depth questions for engineers who work with language models.
+# In this lab we build a small GPT-style decoder in which every line can be explained,
+# train it on Shakespeare, sample from it, and make generation faster with a KV cache.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. implement causal multi-head self-attention from the formula, and prove the mask works with a perturbation test;
 # 2. assemble a pre-LayerNorm decoder block (attention, MLP, residuals) with weight tying;
@@ -30,6 +30,9 @@
 # budget (a 64-wide, 2-layer model, 1,500 steps). Numbers in **Expected:** lines were
 # printed by such a run unless marked *"on a T4 you should see … (not measured in
 # our verification runs)"*.
+
+# %% [markdown]
+# Read first: [Chapter 41 text](README.md) explains the ideas behind this lab (A transformer from scratch) in more depth; [solutions](solutions.md) has worked answers.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -124,7 +127,7 @@ print(text[:200])
 #
 # A character-level tokenizer keeps the focus on the model: the vocabulary is
 # the set of distinct characters (65 here). Real models use subword
-# tokenizers (notebook 04), which make sequences ~4× shorter for English text.
+# tokenizers (Chapter 42), which make sequences ~4× shorter for English text.
 # We hold out the last 10% of the text for validation: a *contiguous* block, so
 # validation windows never overlap training windows.
 
@@ -243,8 +246,8 @@ print("weights tied:", model.head.weight.data_ptr() == model.tok_emb.weight.data
 # The same perturbation test the grader used, now on the full model: change
 # one token in the middle of a sequence and check that the logits *before* it do
 # not move, while the logits from it onwards do. This is the unit test that
-# catches the most damaging transformer bug, a leaky mask, which otherwise shows up
-# only as a suspiciously low training loss and a model that generates garbage.
+# catches the most harmful transformer bug, a leaky mask, which otherwise shows up
+# only as a suspiciously low training loss and a model that generates meaningless text.
 
 # %%
 model.eval()
@@ -337,7 +340,7 @@ print("saved", OUT / "tinygpt.pt")
 # The model outputs logits for the next token. To generate, divide them by a
 # **temperature** τ (τ < 1 sharpens the distribution, τ > 1 flattens it, τ → 0 is
 # greedy), optionally keep only the **top-k** most likely tokens (removing the long tail
-# of unlikely ones that produce garbage), sample, append, repeat.
+# of unlikely ones that produce meaningless output), sample, append, repeat.
 
 # %% [markdown]
 # > **Exercise 2.** Write `top_k_sample(logits, k, temperature, generator)`: `logits` is
@@ -434,7 +437,7 @@ kv_bytes = 2 * bench_cfg.n_layer * bench_cfg.block_size * bench_cfg.n_embd * 4
 print(f"KV cache size at 512 tokens, batch 1, fp32: {prof.human_bytes(kv_bytes)}")
 
 # %% [markdown]
-# **Expected (CPU, measured):** the cache wins at every length and the gap grows
+# **Expected (CPU, measured):** the cache is faster at every length and the gap grows
 # with the context: in our runs 2.1–2.2× at 64 new tokens, 3.5–4.6× at 256 and 3.8–5.0× at
 # 500 (single timings on a shared CPU: expect ±30%). Without a cache, tokens/s falls steadily
 # (from ~850–1,100 to ~300) because every step re-processes the whole context. With the cache it
@@ -449,7 +452,7 @@ print(f"KV cache size at 512 tokens, batch 1, fp32: {prof.human_bytes(kv_bytes)}
 # (not measured in our verification runs). The cost moves to memory: for a 7B model
 # (32 layers, 4096 wide) in fp16, the cache is 2 × 32 × 4096 × 2 bytes = 0.5 MB *per
 # token*: 2 GB for one 4k-token sequence. Serving systems are designed around that
-# number (notebook 12: paged KV caches, continuous batching; multi-query and
+# number (Chapter 50: paged KV caches, continuous batching; multi-query and
 # grouped-query attention share K and V across heads to shrink it).
 
 # %% [markdown]
@@ -585,7 +588,7 @@ print(f"KV cache, the 3.7 benchmark model (512 tokens, fp32): "
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question without notes; a complete answer takes about a minute:
 #
 # 1. Write the attention formula and explain the role of each part: Q, K, V, the `√d` scaling, the mask, the softmax, multiple heads.
 # 2. Pre-LayerNorm vs post-LayerNorm: what is the difference and why do modern decoders use pre-LN?
@@ -594,4 +597,4 @@ print(f"KV cache, the 3.7 benchmark model (512 tokens, fp32): "
 # 5. Explain the KV cache: what is stored, what computation it saves, what it costs in memory, and how multi-query/grouped-query attention reduce that cost.
 # 6. Why tie the input embedding and output projection weights? When might you not?
 #
-# **Next chapter:** [`04_pretrained_transformers_and_tokenization.ipynb`](../ch42-pretrained-transformers-and-tokenization/notebook.ipynb) — the same architecture at scale, pretrained: subword tokenizers, padding, pooling and batched inference with Hugging Face.
+# **Next chapter:** [Chapter 42 · Pretrained transformers & tokenisation](../ch42-pretrained-transformers-and-tokenization/notebook.ipynb) — the same architecture at scale, pretrained: subword tokenizers, padding, pooling and batched inference with Hugging Face.

@@ -6,24 +6,27 @@
 # %% [markdown]
 # # Chapter 23 · Implicit feedback & position bias
 #
-# **Day 3 · ~90 minutes · CPU only**
+# **Part II · Chapter 23 · about 90 minutes · CPU only**
 #
-# Every ranking system at a large company learns from clicks, and clicks are
-# not labels of relevance: users click what they *see*, and they see the top
-# of the list. If you train or evaluate on raw clicks you mostly learn, and
-# reward, whatever the old ranker already did. This notebook measures that
-# bias on ShopStream, where the hidden truth is available, and removes most
-# of it with exploration traffic and inverse propensity scoring.
+# Ranking systems in industry learn from clicks, and clicks are not labels of
+# relevance: users click what they *see*, and they mostly see the top of the
+# list. A model trained or evaluated on raw clicks mostly learns, and rewards,
+# whatever the old ranker already did. This lab measures that bias on
+# ShopStream, where the hidden truth is available, and removes most of it with
+# exploration traffic and inverse propensity scoring.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
-# 1. state the examination hypothesis and the position-based click model, and show where they bite in the logs;
-# 2. explain why the logging policy's own order "wins" an offline click metric against a better ranking;
+# 1. state the examination hypothesis and the position-based click model, and identify their effects in the logs;
+# 2. explain why the logging policy's own order scores higher on an offline click metric than a better ranking;
 # 3. estimate position propensities from randomised (exploration) traffic and check them against the truth;
 # 4. use inverse propensity scoring (IPS) to evaluate a new ranking offline, and reason about its variance and clipping;
 # 5. train a click model with IPS weights and show, against ground truth, when it beats naive training and when it does not matter.
 #
-# **You will produce:** `artifacts/level2/propensities.json` (estimated examination probabilities by position).
+# **Outputs of this lab:** `artifacts/level2/propensities.json` (estimated examination probabilities by position).
+
+# %% [markdown]
+# Read first: [Chapter 23 text](README.md) — click models, the offline-evaluation paradox, propensity estimation, IPS and its variance, and debiased training, explained in full.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -83,7 +86,7 @@ print(f"train {len(train):,} rows | valid {len(valid):,} rows (test week untouch
 # The first run generates the data (10–60 s).
 #
 # The column `true_p` is P(click | examined) for that (user, item): the
-# simulation's ground truth. We use it the way you would use a perfect A/B
+# simulation's ground truth. We use it as one would use a perfect A/B
 # test: to *grade* methods, never as a training feature or label (except for
 # one clearly labelled "oracle" in 5.6).
 
@@ -115,7 +118,7 @@ print(f"train {len(train):,} rows | valid {len(valid):,} rows (test week untouch
 # $$P(\text{click} \mid u, i, p) = \underbrace{\theta_p}_{\text{examined?}} \cdot \underbrace{r_{u,i}}_{\text{relevant?}}$$
 #
 # ShopStream follows the PBM exactly (real users only approximately: they
-# also stop after a satisfying click, look at images, skip ads). Look at
+# also stop after a satisfying click, look at images, skip ads). We compare
 # click rate by position on the two kinds of traffic:
 #
 # * **policy** traffic: the production ranker chose the order (95% of requests);
@@ -137,25 +140,25 @@ by_pos.round(3)
 # *true* relevance also falls with position (about 0.47 → 0.38: the ranker
 # is not useless), but on random traffic it is flat (about 0.19 everywhere).
 #
-# Read the random columns together: relevance is flat, yet CTR drops by a
+# Consider the random columns together: relevance is flat, yet CTR drops by a
 # factor of about 8. That drop is pure **examination**. On policy traffic the
-# drop is examination *and* relevance, mixed, and from clicks alone you
-# cannot tell how much is which. That is the whole problem.
+# drop is examination *and* relevance, mixed, and clicks alone cannot reveal
+# the proportions. That is the central problem of this chapter.
 
 # %% [markdown]
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-position-bias-ips.svg" alt="Examination probability by position, and the inverse-propensity weights that correct it" width="100%">
 #
-# *What to notice:* the left panel is the drop you just measured on random traffic (pure examination); the right panel is its mirror image, the weight IPS gives a click at each position. The dashed tops are what a clip at 4 throws away.
+# *What to notice:* the left panel is the drop just measured on random traffic (pure examination); the right panel is its mirror image, the weight IPS gives a click at each position. The dashed tops are what a clip at 4 removes.
 #
-# > **Intuition.** A shop window: items at eye level get looked at, items near the floor rarely do. Counting sales per shelf tells you mostly *where* things were, not how good they are. *Tiny example:* an item with relevance 0.4 at position 0 gets clicked 40% of the time; the same item at position 9 ($\theta_9 = 0.13$) only $0.13 \times 0.4 = 5\%$. *Where it breaks down:* real shoppers also stop after finding what they wanted (a cascade), so examination of position 5 depends on what was at positions 0–4, which the PBM ignores.
+# > **Intuition.** Consider a shop window: items at eye level are looked at, items near the floor rarely are. Counting sales per shelf reveals mostly *where* things were placed, not how good they are. *Tiny example:* an item with relevance 0.4 at position 0 gets clicked 40% of the time; the same item at position 9 ($\theta_9 = 0.13$) only $0.13 \times 0.4 = 5\%$. *Where it breaks down:* real shoppers also stop after finding what they wanted (a cascade), so examination of position 5 depends on what was at positions 0–4, which the PBM ignores.
 
 # %% [markdown]
-# ## 5.2 · The paradox: the old ranker wins on logged clicks
+# ## 5.2 · The paradox: the old ranker scores best on logged clicks
 #
 # The standard offline evaluation is: take logged requests, re-rank the shown
-# items with your model, compute NDCG@10 against the clicks. Try it with the
-# best possible "model", the true relevance itself, against the logging
-# policy's own order. `bias.ndcg_matrix` is a vectorised NDCG (same formula
+# items with the new model, compute NDCG@10 against the clicks. We apply it to
+# the best possible "model", the true relevance itself, and compare with the
+# logging policy's own order. `bias.ndcg_matrix` is a vectorised NDCG (same formula
 # as `shoprank.metrics.ndcg_at_k`; requests are rows of a 10-column matrix).
 
 # %%
@@ -185,12 +188,12 @@ paradox.round(3)
 # Why: every logged click happened *at its logged position*, and positions
 # 0–2 get most of the examination. Re-ranking moves clicked items away from
 # the top, so any re-ranking is penalised for disagreeing with the logging
-# policy, regardless of how good it is. NDCG on random traffic is no cure
-# either if you compare against the logged order (try it: logged order still
-# wins there, because clicks still concentrate at the top). Two practical
-# rules follow:
+# policy, regardless of how good it is. NDCG on random traffic does not solve
+# the problem either when compared against the logged order (the logged order
+# still scores higher there, because clicks still concentrate at the top). Two
+# practical rules follow:
 #
-# > **Intuition.** Judging a new seating plan for a concert by the applause recorded under the old plan: the people who clapped loudest sat in the front rows, so any plan that moves them back "loses applause", however good it is. *Where it breaks down:* applause has no exact correction; clicks do, if you know how much each seat (position) is examined, which is what the rest of this notebook estimates.
+# > **Intuition.** Consider judging a new seating plan for a concert by the applause recorded under the old plan: the people who applauded most sat in the front rows, so any plan that moves them back "loses applause", however good it is. *Where it breaks down:* applause has no exact correction; clicks do, if the examination probability of each seat (position) is known, which is what the rest of this lab estimates.
 #
 # * never compare a new ranker against the logging policy on that policy's clicks;
 # * NDCG on clicks is only (roughly) fair between two *new* rankers, and only
@@ -213,7 +216,7 @@ paradox.round(3)
 # > impressions from exploration traffic (columns include `position` and
 # > `clicked`; rows in any order), return a NumPy array of length 10 with the
 # > click rate at each position divided by the click rate at position 0.
-# > The grader simulates a small world and checks your estimate against the
+# > The grader simulates a small world and checks the estimate against the
 # > true examination probabilities.
 
 # %%
@@ -225,7 +228,7 @@ def estimate_propensities(random_imps: pd.DataFrame) -> np.ndarray:
 grade.ex1(estimate_propensities)
 
 # %% [markdown]
-# The notebook continues with the library version, `bias.estimate_propensities`
+# The lab continues with the library version, `bias.estimate_propensities`
 # (read it in `src/shoprank/bias.py`: three lines). We estimate from
 # **training-week** random traffic only and compare with the truth, and with
 # the naive estimate from policy traffic.
@@ -284,16 +287,16 @@ assert np.isclose(bias.power_law_propensities(rand_train)[0], eta_hat)  # the li
 # **Expected:** a fitted η of about 0.88 (true: 0.9) and a maximum error that
 # drops from about 0.044 (raw ratios) to about 0.01 (fit).
 # A one-parameter curve is a strong assumption, and here it happens to be the
-# true model, so this is the best case: in practice check the residuals
-# before trusting it. We use the fitted `theta_hat` from here on.
+# true model, so this is the best case: in practice the residuals should be
+# checked before the fit is trusted. We use the fitted `theta_hat` from here on.
 #
-# In production you re-estimate periodically: examination depends on the UI
+# In production, propensities are re-estimated periodically: examination depends on the UI
 # (a redesign changes θ), the device and the query type, so propensities are
 # often estimated per segment.
 #
-# Other ways to get propensities, for your toolbox (no need to implement):
+# Other ways to obtain propensities (for reference; not implemented here):
 # **RandPair / swap interventions** (swap two positions instead of shuffling
-# all ten: cheaper for users), **intervention harvesting** (reuse the natural
+# all ten: less costly for users), **intervention harvesting** (reuse the natural
 # variation when several rankers were live, no extra exploration), and
 # **regression EM** (fit θ and r jointly from ordinary logs, which needs
 # modelling assumptions instead of randomisation).
@@ -314,13 +317,13 @@ print("wrote", out_path.relative_to(ART))
 #
 # If a click at position p happens with probability θ_p · r, then
 # click / θ_p has expectation r. Weighting every click by 1/θ_p turns
-# "clicks we happened to observe" into "clicks we would have seen if
-# everything had been examined". That is **inverse propensity scoring**.
+# "clicks that happened to be observed" into "clicks that would have been
+# observed had everything been examined". That is **inverse propensity scoring**.
 # Its price: the rare clicks at low positions get large weights (here up to
 # 1/0.126 ≈ 8), which adds variance. **Clipping** the weight at some cap M
 # reduces variance and adds bias (towards under-counting low-position clicks).
 #
-# > **Intuition.** A survey where young people answer only 1 time in 8 and older people every time: weight each young answer by 8 and the totals describe everyone again. IPS does the same with "examined 1 time in 8". *Where it breaks down:* if a group answers 1 time in 1,000, one answer carries a weight of 1,000 and a single respondent swings the result; that is the variance clipping trades away.
+# > **Intuition.** Consider a survey in which young people answer only 1 time in 8 and older people every time: weight each young answer by 8 and the totals describe everyone again. IPS does the same with "examined 1 time in 8". *Where it breaks down:* if a group answers 1 time in 1,000, one answer carries a weight of 1,000 and a single respondent swings the result; that is the variance clipping trades away.
 #
 # > **Exercise 2.** Write `ips_ctr_estimate(clicks, positions, propensities, clip)`:
 # > the mean over impressions of `click * min(1 / propensities[position], clip)`
@@ -336,9 +339,10 @@ def ips_ctr_estimate(clicks, positions, propensities, clip=None) -> float:
 grade.ex2(ips_ctr_estimate)
 
 # %% [markdown]
-# Apply the library version to a question an analyst might ask: *how
+# We apply the library version to a question an analyst might ask: *how
 # relevant are the items the policy shows at the bottom of the feed,
-# compared with the top?* Raw CTR says the bottom is terrible; IPS says...
+# compared with the top?* Raw CTR suggests the bottom is very poor; IPS gives
+# a different answer:
 
 # %%
 vt = valid[~valid["is_random"]]
@@ -361,7 +365,7 @@ pd.DataFrame(rows).set_index("slice").round(3)
 # %% [markdown]
 # ## 5.5 · IPS for offline evaluation of a new ranking
 #
-# Now the evaluation problem from 5.2. To estimate how many clicks a new
+# We now return to the evaluation problem from 5.2. To estimate how many clicks a new
 # ranking of the logged items would get, move each logged click to its new
 # position: a click observed at logged position p, re-ranked to position q,
 # counts θ_q / θ_p clicks. Summed over a request:
@@ -373,7 +377,7 @@ pd.DataFrame(rows).set_index("slice").round(3)
 # old policy never showed (no clicks to re-weight): that is the support
 # problem, and the reason two-stage systems also log exploration *candidates*.
 #
-# Let us evaluate five rankings of the validation requests three ways: naive
+# We evaluate five rankings of the validation requests in three ways: naive
 # NDCG on clicks, the IPS estimate, and the truth.
 
 # %%
@@ -401,20 +405,20 @@ ope.round(3)
 # rankings correctly: oracle (about 1.84) > item CTR (about 1.60) > logged
 # (about 1.41) > random (about 1.34) > reversed (about 1.29). Naive NDCG on
 # clicks puts the **logged order first**, above item CTR and the oracle, for
-# the reasons in 5.2. (Also note how weak the logging policy is: only about
-# 5% more true clicks than a random order. Common, and invisible on its own
-# click logs.)
+# the reasons in 5.2. (The logging policy is also weak: only about 5% more
+# true clicks than a random order. This is common, and invisible in the
+# policy's own click logs.)
 #
 # Note the logged order's IPS estimate equals its observed clicks per request
 # exactly: all its weights are 1. IPS is a correction *relative to the
 # logging policy*: the further a ranking moves from it, the bigger the weights
-# and the noisier the estimate. Next, how noisy.
+# and the noisier the estimate. The next section measures how noisy.
 
 # %% [markdown]
 # ### Variance, and the clipping trade-off
 #
 # Real evaluation sets are smaller than 24,000 requests (one country, one
-# surface, one day). Draw 300 random subsets of 1,000 requests and estimate
+# surface, one day). We draw 300 random subsets of 1,000 requests and estimate
 # the oracle ranking's value each time, with different caps on the weight
 # θ_q / θ_p.
 
@@ -441,17 +445,17 @@ pd.DataFrame(rows).set_index("clip").round(4)
 # credit than it had") cuts the spread by half and is useless (bias about
 # −0.8). RMSE is lowest with no clip here, because the weights are at most
 # about 8. With more positions, steeper decay, or propensities near zero the
-# variance term dominates and a cap pays for itself. Choose the cap on RMSE
-# measured like this (simulation or bootstrap), not by habit.
+# variance term dominates and a cap pays for itself. The cap should be chosen
+# on RMSE measured in this way (simulation or bootstrap), not by habit.
 #
-# Two other standard variance reducers worth naming in an interview:
+# Two other standard variance reducers, often asked about in interviews:
 # **self-normalised IPS** (divide by the mean weight) and **doubly robust**
 # estimators (a reward model plus an IPS correction of its residuals).
 
 # %% [markdown]
 # ## 5.6 · Training on clicks: naive vs IPS vs oracle
 #
-# Evaluation is half the story. A model trained on clicks also learns
+# Evaluation is half of the problem. A model trained on clicks also learns
 # position bias, *through any feature correlated with position*. A very
 # common such feature: the **previous ranker's score**, fed into the new
 # model because it is available at serving time and usually helps. On policy
@@ -514,7 +518,7 @@ display(pd.DataFrame(results).T.round(4))
 pd.DataFrame(coefs).T
 
 # %% [markdown]
-# **Expected (the punchline):** with the policy score as a feature, the
+# **Expected (the main result):** with the policy score as a feature, the
 # naive click model reaches NDCG@10 on truth of about **0.90** and about 1.63
 # true expected clicks, the IPS model about **0.94** and 1.72, the oracle
 # labels about **0.95** and 1.73 (the logged order: 0.81 and 1.41). IPS
@@ -531,24 +535,24 @@ pd.DataFrame(coefs).T
 # **Position bias hurts most through features that encode the old ranking.**
 # And, once more, the last column: on naive click-NDCG the *naive* model
 # looks best (about 0.77, above even the logged order) and the oracle-label
-# model looks worst of the three. Evaluate a debiased model with a debiased
-# metric.
+# model looks worst of the three. A debiased model must be evaluated with a
+# debiased metric.
 #
-# Production alternatives to sample weights, for your interview vocabulary:
-# **position as a training feature** (set to a constant at serving; notebook
-# 06), a separate **"position tower"** whose output is added during training
+# Production alternatives to sample weights (useful vocabulary for interviews):
+# **position as a training feature** (set to a constant at serving; Chapter
+# 24), a separate **"position tower"** whose output is added during training
 # and dropped at serving (the YouTube "shallow tower" pattern), and unbiased
 # pairwise/listwise losses (IPS-weighted LambdaMART).
 
 # %% [markdown]
 # > **Exercise 3.** Exploration traffic shows 5% of requests in random order.
-# > Using this notebook's numbers, estimate what it costs (clicks lost per
-# > day relative to policy traffic), and write the short case you would make
-# > to a product manager for keeping it. Name at least one way to make it
-# > cheaper. Write your answer in the cell below.
+# > Using this lab's numbers, estimate what it costs (clicks lost per
+# > day relative to policy traffic), and write a short case for keeping it,
+# > addressed to a product manager. Name at least one way to make it
+# > cheaper. Write the answer in the cell below.
 
 # %% [markdown]
-# *Your answer:*
+# *Your answer here.*
 
 # %% [markdown]
 # ## Key equations
@@ -599,7 +603,7 @@ print(f"IPS                {(clicks_sim * w).mean():.3f}")
 print(f"IPS clipped at 4   {(clicks_sim * np.minimum(w, 4)).mean():.3f}")
 
 # %% [markdown]
-# **Expected:** raw CTR about 0.097 (the mean of θ_p is 0.32, so examination hides two thirds of the relevance), IPS about 0.300, clipped about 0.24 (biased down). With 200,000 impressions the IPS estimate is within about ±0.005 of the truth; rerun with 2,000 and watch its spread grow.
+# **Expected:** raw CTR about 0.097 (the mean of θ_p is 0.32, so examination hides two thirds of the relevance), IPS about 0.300, clipped about 0.24 (biased down). With 200,000 impressions the IPS estimate is within about ±0.005 of the truth; with 2,000 impressions its spread is much larger.
 
 # %% [markdown]
 # ## Troubleshooting
@@ -609,20 +613,20 @@ print(f"IPS clipped at 4   {(clicks_sim * np.minimum(w, 4)).mean():.3f}")
 # | `estimate_propensities` gives values above 1 or a non-monotone curve | estimated on policy traffic, or on too few requests | filter `is_random`; use all training days; bootstrap to see the noise |
 # | IPS estimates explode or flip sign between runs | tiny propensities (huge weights), or too few requests | clip weights; pool more data; use self-normalised IPS |
 # | `ValueError: cannot reshape array` in `bias.matrix` | the frame is not exactly 10 rows per request, or not sorted by request and position | filter whole requests (by `request_id`), keep the order `store.load` returns |
-# | Your "debiased" model is no better on clicks NDCG | the metric is biased too | evaluate with IPS estimates or (here) the true relevance |
+# | A "debiased" model is no better on clicks NDCG | the metric is biased too | evaluate with IPS estimates or (here) the true relevance |
 # | NDCG on truth barely moves between models | features without position-correlated signal: reweighting cannot change the ordering much | look at coefficients/feature importance; check which features correlate with position |
 # | `KeyError: 'true_p'` | the catch-up cell was not run | run the catch-up cell |
 
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
 # 1. State the examination hypothesis and the position-based model. Name two ways real user behaviour violates the PBM, and a click model that handles one of them.
-# 2. Your new ranker loses to production on offline NDCG computed from production's click logs, then wins the A/B test. Explain how both can be true.
-# 3. How would you estimate position propensities at a company that has never run exploration traffic, and what does each option cost?
+# 2. A new ranker loses to production on offline NDCG computed from production's click logs, then wins the A/B test. Explain how both can be true.
+# 3. How can position propensities be estimated at a company that has never run exploration traffic, and what does each option cost?
 # 4. Write the IPS estimator for the clicks a new ranking would get. When is it unbiased, and what can it never evaluate?
-# 5. Clipping IPS weights: what does it trade, and how would you choose the cap?
-# 6. A colleague adds "the previous model's score" as a feature and offline AUC on clicks jumps. What is your concern, and how would you check it?
+# 5. Clipping IPS weights: what does it trade, and how should the cap be chosen?
+# 6. A colleague adds "the previous model's score" as a feature and offline AUC on clicks jumps. What is the concern, and how can it be checked?
 #
-# **Next chapter:** [`06_learning_to_rank.ipynb`](../ch24-learning-to-rank/notebook.ipynb) — from pointwise click models to learning-to-rank objectives (LambdaMART), with point-in-time features and request-grouped evaluation.
+# **Next chapter:** [Chapter 24 · Learning to rank](../ch24-learning-to-rank/notebook.ipynb) — from pointwise click models to learning-to-rank objectives (LambdaMART), with point-in-time features and request-grouped evaluation.

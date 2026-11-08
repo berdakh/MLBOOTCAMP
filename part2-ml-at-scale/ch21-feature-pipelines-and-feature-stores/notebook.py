@@ -6,15 +6,16 @@
 # %% [markdown]
 # # Chapter 21 · Feature pipelines & feature stores
 #
-# **Day 2 · ~90 minutes · CPU only**
+# **Part II · Chapter 21 · about 90 minutes · CPU only**
 #
-# A ranking model is only as good as the features it gets *at the moment it
-# scores a request*. Most painful bugs in production ML are not in the model
-# but here: a training set that quietly used data from the future, an online
-# service that serves values the model never saw in training, a feature that
-# stopped updating three weeks ago.
+# A ranking model can only be as good as the features it receives *at the
+# moment it scores a request*. Many of the most damaging errors in production
+# machine learning are not in the model but in the feature pipeline: a training
+# set that used data from the future, an online service that supplies values
+# the model never saw in training, a feature that stopped updating three weeks
+# ago.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. explain the parts of a feature store: entities, feature views, offline and online stores, materialisation, TTL;
 # 2. build user and item features as daily snapshots in SQL, with windows that end strictly before the snapshot;
@@ -23,7 +24,10 @@
 # 5. reason about backfills and feature freshness with numbers;
 # 6. serve the same values from an online store with TTL semantics, and test online/offline parity.
 #
-# **You will produce:** nothing on disk besides the cached dataset; the training sets live in memory.
+# **Outputs of this lab:** nothing on disk besides the cached dataset; the training sets are kept in memory.
+
+# %% [markdown]
+# Read first: [Chapter 21 text](README.md) — feature stores, point-in-time joins, time-to-live, leakage, backfills, freshness and parity, explained in full.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -115,13 +119,13 @@ print(f"{len(imps):,} impressions from {START}; train days {store.TRAIN_DAYS}, v
 # The point of the contract: **one definition** of each feature, used both to
 # build training data (offline, as of each past event) and to serve it
 # (online, as of now). Feast, Tecton, Vertex AI and SageMaker Feature Store are
-# implementations of these ideas; this notebook builds a small one so you know
-# what they do.
+# implementations of these ideas; this lab builds a small one so that their
+# behaviour is understood.
 
 # %% [markdown]
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-feature-store.svg" alt="Offline store plus point-in-time join for training; online store with TTL for serving; a parity test between them" width="100%">
 #
-# *What to notice:* both branches start from the *same* snapshots; they differ only in *which* timestamp they read as of (each past event vs now). The dashed parity line is the test that keeps them honest.
+# *What to notice:* both branches start from the *same* snapshots; they differ only in *which* timestamp they read as of (each past event vs now). The dashed parity line is the test that checks that they agree.
 
 # %% [markdown]
 # ## 3.2 · Daily aggregates and snapshots
@@ -162,24 +166,24 @@ con.execute("SELECT * FROM user_snap WHERE user_id = 42 ORDER BY snap_day LIMIT 
 # ## 3.3 · A point-in-time training set
 #
 # For every impression, attach the **latest snapshot strictly before the
-# impression's timestamp**. That is an as-of join (notebook 02) per entity,
+# impression's timestamp**. That is an as-of join (Chapter 20) per entity,
 # with a strict `>`:
 
 # %%
 print(F.PIT_SQL)
 
 # %% [markdown]
-# > **Intuition.** A point-in-time join is reading the newspaper archive: to explain why a stock moved on 3 March, you may only use papers printed *before* 3 March. A same-day snapshot is the evening edition, printed after the event and stamped with that morning's date. *Where it breaks down:* newspapers carry dates you can trust; a feature table only has the timestamp your pipeline wrote, which is why you assert `snapshot_ts < ts` in code rather than trusting the name.
+# > **Intuition.** A point-in-time join resembles work in a newspaper archive: to explain why a stock moved on 3 March, only papers printed *before* 3 March may be used. A same-day snapshot is the evening edition, printed after the event and stamped with that morning's date. *Where it breaks down:* newspapers carry trustworthy dates; a feature table has only the timestamp the pipeline wrote, which is why `snapshot_ts < ts` should be asserted in code rather than assumed from the table's name.
 #
-# One trap. Snapshots only contain entities that were *active* in the window.
+# There is one trap. Snapshots only contain entities that were *active* in the window.
 # If user 7 was inactive last week, there is no day-`d` row for them, and the
-# as-of join happily returns their snapshot from three weeks ago, carrying
+# as-of join returns their snapshot from three weeks ago, carrying
 # stale counts forward as if they were current. A real feature store guards
 # against that with the feature view's **TTL**: a value older than the TTL
 # counts as missing (here: missing activity = 0). Our snapshots are daily, so
-# TTL = 1 day. Build the training set (a 20% request sample of days 14-41, so
+# TTL = 1 day. We build the training set (a 20% request sample of days 14-41, so
 # every 14-day window is full) and the validation set (all of week 7), and
-# count how often the TTL fires.
+# count how often the TTL applies.
 
 # %%
 keep = np.array([scale.stable_bucket(r, 100, salt="nb03") < 20 for r in range(imps.request_id.max() + 1)])
@@ -205,7 +209,7 @@ train[["ts", "user_id", "user_snapshot_ts", "user_imps_7d", "user_clicks_7d", "i
 # snapshot at or after the event. Each
 # `user_snapshot_ts` is the midnight starting the event's day.
 #
-# > **Exercise 1.** Implement the as-of join yourself in pandas:
+# > **Exercise 1.** Implement the as-of join in pandas:
 # > `point_in_time_join(events, snapshots, key, ts_col)` returns `events`
 # > with all other columns of `snapshots` attached from the **latest snapshot
 # > with the same key and a timestamp strictly before** the event's
@@ -216,7 +220,7 @@ train[["ts", "user_id", "user_snapshot_ts", "user_imps_7d", "user_clicks_7d", "i
 # > and unsorted events.
 # >
 # > Hint: `pd.merge_asof` needs both frames sorted by the time column and has
-# > `allow_exact_matches`. How do you get the original order back?
+# > `allow_exact_matches`. How can the original order be restored?
 
 # %%
 def point_in_time_join(events: pd.DataFrame, snapshots: pd.DataFrame, key: str, ts_col: str) -> pd.DataFrame:
@@ -233,9 +237,9 @@ grade.ex1(point_in_time_join)
 # instead of `[d-7, d-1]`. Each row is still "as of" day `d`, nothing looks
 # wrong, and the as-of join still uses `>`. But a snapshot built at the *end*
 # of day `d` and stamped at its *start* contains day `d`'s clicks, including
-# the click being predicted. Train a small logistic regression (log counts,
-# smoothed CTRs, log position; see `F.model_matrix`) three ways and validate
-# on week 7:
+# the click being predicted. We train a small logistic regression (log counts,
+# smoothed CTRs, log position; see `F.model_matrix`) in three settings and
+# validate on week 7:
 
 # %%
 from sklearn.linear_model import LogisticRegression
@@ -271,16 +275,16 @@ results.to_frame()
 
 # %% [markdown]
 # **Expected:** position alone gives AUC about 0.73; honest features about
-# 0.793. The leaky pipeline *reports* about 0.85, a large, exciting
-# improvement that does not exist: served with features that are actually
+# 0.793. The leaky pipeline *reports* about 0.85, a large improvement that
+# does not exist: served with features that are actually
 # available at request time, the leaky model scores about 0.786, **below**
 # the honest model, because it learned to trust a same-day CTR signal that
 # production never has.
 #
 # Two lessons. A validation metric computed with the same leaky pipeline
 # cannot detect the leak: train and validation leak together. And the leak
-# does not crash anything; it shows up only as a model that is great offline
-# and disappointing in the A/B test. Guard against it with code: assert
+# does not cause any failure; it shows up only as a model that is excellent
+# offline and disappointing in the A/B test. The defence is in code: assert
 # `snapshot_ts < event ts` for every row (as in 3.3), and compare offline
 # feature values with values logged at serving time (3.6).
 
@@ -308,11 +312,11 @@ F.build_snapshots(con, START, days=range(56))
 # %% [markdown]
 # **Expected:** `True`.
 #
-# > **Intuition.** A TTL is the use-by date on milk: after it, the value is thrown away and treated as missing, even if it is still in the fridge. Without it, an inactive user's three-week-old counts would be served as if they were yesterday's. *Where it breaks down:* milk goes bad gradually; a TTL is a hard cliff, so a value one second past it is discarded while one second before is trusted fully.
+# > **Intuition.** A TTL is like the use-by date on milk: after it, the value is discarded and treated as missing, even if it is still in the refrigerator. Without it, an inactive user's three-week-old counts would be served as if they were yesterday's. *Where it breaks down:* milk goes bad gradually; a TTL is a hard cliff, so a value one second past it is discarded while one second before is trusted fully.
 #
 # **Freshness** is how old the newest data in a served feature is. A daily
 # batch pipeline that runs at 02:00 serves features 2-26 hours old; if it
-# breaks, features silently age. How much is freshness worth here? Build
+# breaks, features silently age. How much is freshness worth here? We build
 # snapshots that are 1, 3 and 7 days *staler* than necessary (the snapshot
 # for day `d` only sees data up to `d-1-lag`), retrain and validate:
 
@@ -327,12 +331,12 @@ pd.Series(fresh_rows, name="valid AUC").to_frame().T
 
 # %% [markdown]
 # **Expected:** AUC falls only from about 0.793 to 0.792 between lag 0 and
-# lag 7. Honest reading: ShopStream users have *fixed* tastes and items have
-# fixed quality, so last week's CTR is almost as good as yesterday's. Real
-# products are not like that: trends, new items, sales and news make fresh
-# features valuable, which is why notebook 04 builds streaming features. The
-# experiment is the point: before paying for a streaming pipeline, measure what
-# freshness is worth on your own data.
+# lag 7. The interpretation: ShopStream users have *fixed* tastes and items
+# have fixed quality, so last week's CTR is almost as informative as
+# yesterday's. Real products differ: trends, new items, sales and news make
+# fresh features valuable, which is why Chapter 22 builds streaming features.
+# The method matters more than the number: before paying for a streaming
+# pipeline, measure what freshness is worth on the actual data.
 
 # %% [markdown]
 # ## 3.6 · The online store
@@ -372,7 +376,7 @@ grade.ex2(OnlineStore)
 
 # %% [markdown]
 # The package version is `shoprank.features.OnlineStore` (read
-# [`src/shoprank/features.py`](../../src/shoprank/features.py)). Use it to
+# [`src/shoprank/features.py`](../../src/shoprank/features.py)). We use it to
 # serve day 45: materialise the user snapshots of days 40-45 in order (as a
 # daily job would), then read features for every day-45 request at its
 # request time, and compare with the offline point-in-time features of the
@@ -402,10 +406,10 @@ print(f"{len(day45):,} day-45 requests | online == offline for {1 - mismatch.mea
 # about 6% of them served the default (no fresh snapshot), and **100.00%**
 # agreement:
 # because the online store applies the same TTL as the offline join, an
-# inactive user's old value expires in both places. Try `ttl_seconds=7*86_400`
-# and re-run the two cells: the online store now serves stale counts that the
-# training data never contained (agreement drops), training/serving skew
-# created by one configuration value.
+# inactive user's old value expires in both places. With `ttl_seconds=7*86_400`
+# (re-run the two cells to see it), the online store serves stale counts that the
+# training data never contained, and agreement drops: training/serving skew
+# created by a single configuration value.
 #
 # In production, parity is checked continuously: the service **logs the
 # feature values it served** with the request id, and a daily job joins them to
@@ -414,14 +418,14 @@ print(f"{len(day45):,} day-45 requests | online == offline for {1 - mismatch.mea
 # will see.
 
 # %% [markdown]
-# > **Exercise 3 (written).** Your team adds a feature "item CTR over the last
+# > **Exercise 3 (written).** A team adds a feature "item CTR over the last
 # > hour" computed by a streaming job, while all other features stay daily. A
-# > teammate builds training data by joining impressions to the streaming job's
+# > team member builds training data by joining impressions to the streaming job's
 # > output table *as it is today*. List what can go wrong (at least three
-# > distinct problems), and describe how you would produce a point-in-time-
-# > correct training set for this feature and verify it.
+# > distinct problems), and describe how to produce a point-in-time-correct
+# > training set for this feature and how to verify it.
 # >
-# > Write your answer in the cell below.
+# > Write the answer in the cell below.
 
 # %% [markdown]
 # *Your answer here.*
@@ -451,7 +455,7 @@ print(f"{len(day45):,} day-45 requests | online == offline for {1 - mismatch.mea
 # \widetilde{\text{CTR}} = \frac{\text{clicks} + \alpha\, p_0}{\text{impressions} + \alpha}
 # $$
 #
-# * $p_0$: the prior (global) click rate; $\alpha$: the prior's weight in impressions. *Example:* 1 click in 2 impressions with $p_0 = 0.137$ and $\alpha = 20$: $(1 + 2.74) / 22 = 0.17$ instead of a raw 0.50. Compute $p_0$ from past data only, or the prior itself leaks (notebook 06 found that bug).
+# * $p_0$: the prior (global) click rate; $\alpha$: the prior's weight in impressions. *Example:* 1 click in 2 impressions with $p_0 = 0.137$ and $\alpha = 20$: $(1 + 2.74) / 22 = 0.17$ instead of a raw 0.50. Compute $p_0$ from past data only, or the prior itself leaks (Chapter 24 found that bug).
 #
 # **4 · Feature age at serving.** In words: what the model sees online is as old as the newest data behind it.
 #
@@ -459,7 +463,7 @@ print(f"{len(day45):,} day-45 requests | online == offline for {1 - mismatch.mea
 # \text{age} = t_\text{request} - t_\text{newest event in the value}
 # $$
 #
-# * *Example:* a daily job that runs at 02:00 over data up to midnight serves values 2 to 26 hours old; if it fails for three days, 74 to 98 hours. Monitor it.
+# * *Example:* a daily job that runs at 02:00 over data up to midnight serves values 2 to 26 hours old; if it fails for three days, 74 to 98 hours. Feature age should therefore be monitored.
 
 # %% [markdown]
 # ## Troubleshooting
@@ -476,13 +480,13 @@ print(f"{len(day45):,} day-45 requests | online == offline for {1 - mismatch.mea
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
-# 1. Explain the difference between an offline and an online feature store. Why do you need both, and what keeps them consistent?
+# 1. Explain the difference between an offline and an online feature store. Why are both needed, and what keeps them consistent?
 # 2. What is a point-in-time join? Write the SQL for one, and say why the inequality is strict.
-# 3. Your new feature lifts offline AUC from 0.79 to 0.85, but the A/B test is flat or negative. Walk through how you would find out why.
+# 3. A new feature lifts offline AUC from 0.79 to 0.85, but the A/B test is flat or negative. Describe how to find out why.
 # 4. What does a TTL on a feature view protect against, offline and online? How do you choose it?
 # 5. A product manager asks for real-time features. How do you decide whether freshness is worth the cost, and what would you measure first?
 # 6. You must backfill a new 30-day feature for two years of history. What makes a backfill correct, safe to re-run, and affordable?
 #
-# **Next chapter:** [`04_streaming_features.ipynb`](../ch22-streaming-features/notebook.ipynb) — compute features from a live, out-of-order event stream, and prove they match the batch definition.
+# **Next chapter:** [Chapter 22 · Streaming features](../ch22-streaming-features/notebook.ipynb) — computing features from a live, out-of-order event stream, and showing that they match the batch definition.

@@ -6,16 +6,16 @@
 # %% [markdown]
 # # Chapter 13 · Packaging & configuration
 #
-# **Day 4 · ~45 minutes · CPU only**
+# **Part I · Chapter 13 · about 45 minutes · CPU only**
 #
-# On Day 3 the service ran inside a notebook, configured by whoever wrote the
-# cell. In production it runs as a process someone else starts, on a machine
-# you never log into, configured only through its environment. This notebook
-# turns the project into something that can be installed, configured without
-# editing code, put in a container image and tested by CI, and then starts it
-# exactly the way a container would.
+# In Chapters 10–12 the service ran inside a notebook, configured by whoever
+# wrote the cell. In production it runs as a process that someone else starts,
+# on a machine its author may never log into, configured only through its
+# environment. This lab turns the project into something that can be
+# installed, configured without editing code, put in a container image and
+# tested by CI, and then starts it exactly as a container would.
 #
-# By the end you will be able to:
+# After this chapter you should be able to:
 #
 # 1. read a `pyproject.toml` and explain dependency *ranges* versus a *lock file*;
 # 2. configure a service from environment variables, and make a bad value fail at start-up with a clear message;
@@ -23,14 +23,17 @@
 # 4. choose between baking the model into the image and loading it from a registry at start-up;
 # 5. start the service as a separate process, probe `/ready`, call `/predict`, read its logs, and stop it.
 #
-# **You will produce:** `generated/deploy/` (Dockerfile, `.dockerignore`, `serve.py`, `Makefile`,
+# **Lab output:** `generated/deploy/` (Dockerfile, `.dockerignore`, `serve.py`, `Makefile`,
 # `ci-example.yml`, `README.md`), the same files that are committed in the repository's `deploy/`
 # folder, and `artifacts/serve_logs/` with the captured output of the service you start.
 #
 # > **Optional external extension — not runnable in Colab, not executed in our verification.**
 # > Colab cannot run Docker, and nothing in this course builds an image or deploys to a
-# > host. You will *write and explain* the Dockerfile and CI workflow here. Building and
+# > host. This lab *writes and explains* the Dockerfile and CI workflow. Building and
 # > running the image on your own machine is described in `deploy/README.md`.
+
+# %% [markdown]
+# **Read first:** [Chapter 13 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -90,7 +93,7 @@ registry = bootstrap.ensure_registry()
 # | **CI** | automated checks on every push | `ci-example.yml` runs the tests |
 
 # %% [markdown]
-# ## 12.1 · `pyproject.toml`: what makes `churnlab` installable
+# ## 13.1 · `pyproject.toml`: what makes `churnlab` installable
 #
 # Until now the notebooks put `src/` on `sys.path` by hand. A service cannot rely
 # on that: it needs the package *installed*, with its dependencies declared in
@@ -134,7 +137,7 @@ except metadata.PackageNotFoundError:
 # explicitly (or an installed package).
 
 # %% [markdown]
-# ## 12.2 · Ranges versus a lock file
+# ## 13.2 · Ranges versus a lock file
 #
 # `pyproject.toml` and `requirements.txt` declare **ranges** (`pandas>=2.1`):
 # they say what the code is *compatible* with, so the package installs next to
@@ -183,7 +186,7 @@ print(f"\n{lock_table['matches'].sum()} of {len(lock_table)} packages match the 
 # (`matplotlib`, `pytest`) that a lean production image would leave out.
 
 # %% [markdown]
-# ## 12.3 · Configuration comes from the environment
+# ## 13.3 · Configuration comes from the environment
 #
 # The *twelve-factor* rule: anything that differs between deployments (paths,
 # a pinned model version, limits, log level) is read from **environment
@@ -236,7 +239,7 @@ for label, env in [("threshold", {"CHURN_THRESHOLD_OVERRIDE": "1.5"}),
 # `invalid literal for int() with base 10: 'lots'`, does not: whoever reads it
 # in a deployment log has to guess which of a dozen variables was wrong. A good
 # configuration error names the **variable**, the **bad value** and the
-# **allowed values**. You will write one that does in Exercise 2, after the Dockerfile.
+# **allowed values**. Exercise 2, after the Dockerfile, asks for one that does.
 #
 # **Why fail at start-up?** A service that starts with a wrong threshold
 # serves wrong decisions quietly for weeks. A service that refuses to start
@@ -248,18 +251,18 @@ for label, env in [("threshold", {"CHURN_THRESHOLD_OVERRIDE": "1.5"}),
 # already excludes `.env` files and `*.key`; the `.dockerignore` below does the
 # same for the image.
 #
-# > **Research bridge.** This is the experiment-config habit from notebook 01
+# > **Research bridge.** This is the experiment-config habit from chapter 2
 # > applied to a running service: one object, built once, recorded. The
 # > difference is the source: a config file you edit becomes environment
 # > variables someone else sets.
 
 # %% [markdown]
-# ## 12.4 · Writing the deployment files
+# ## 13.4 · Writing the deployment files
 #
 # Six files turn the package into a deployable service. The notebook writes
 # them from strings into `generated/deploy/` (ignored by git), so you can read
 # and change them; the repository's `deploy/` folder holds the same files,
-# committed, and section 12.6 checks that the two agree.
+# committed, and section 13.6 checks that the two agree.
 #
 # **1. The Dockerfile.** Read it once, then read the line-by-line table under it.
 
@@ -334,13 +337,13 @@ print(f"{len(DOCKERFILE.splitlines())} lines")
 # | `RUN useradd ... app` / `USER app` | run as an unprivileged user | if the service is compromised, the attacker is not root inside the container |
 # | `ENV CHURN_REGISTRY_DIR=... CHURN_LOG_LEVEL=...` | **defaults** for configuration | documented in one place; overridden per deployment (`docker run -e ...`). No secrets here: `ENV` values are visible to anyone with the image |
 # | `EXPOSE 8000` | documents the port | documentation only; publishing it is `docker run -p 8000:8000` |
-# | `HEALTHCHECK ... urllib ... /health` | Docker marks the container unhealthy if `/health` stops answering | uses Python's standard library because the slim image has no `curl`. It probes **liveness**, not readiness (notebook 13) |
+# | `HEALTHCHECK ... urllib ... /health` | Docker marks the container unhealthy if `/health` stops answering | uses Python's standard library because the slim image has no `curl`. It probes **liveness**, not readiness (chapter 14) |
 # | `CMD ["uvicorn", "serve:app", ..., "--workers", "2"]` | start the server | exec form (a JSON list): uvicorn is PID 1 and receives the platform's stop signal directly. `--workers 2` = two processes |
 #
 # **What `--workers` really means.** Each worker is a separate process that
 # imports `serve.py` and loads its own copy of the model, so memory grows with
 # the worker count, and CPU-bound prediction gets real parallelism (one
-# process's GIL does not block another). Two consequences you will meet again:
+# process's GIL does not block another). Two consequences recur in later chapters:
 # `/metrics` counts only what *one* worker saw, and `POST /admin/reload` reloads
 # only the worker that received it. On Kubernetes the usual pattern is one
 # worker per container and more replicas; on a single VM, roughly one worker
@@ -351,7 +354,7 @@ print(f"{len(DOCKERFILE.splitlines())} lines")
 # > map at start-up. The manual never fails to load but is out of date the
 # > day a road changes. *Where it breaks down:* a satnav that cannot reach its
 # > server must still have *something* to show, so a registry-loading service
-# > needs a clear "not ready" state (notebook 13).
+# > needs a clear "not ready" state (chapter 14).
 #
 # **Bake the model in, or load it from the registry?** The Dockerfile above
 # mounts the registry at run time. The alternative bakes one bundle into the
@@ -705,8 +708,8 @@ print("serve.py compiles")
 # three jobs `['test', 'smoke', 'image']` (or a note that PyYAML is missing),
 # and `serve.py compiles`.
 #
-# A Dockerfile reviewer looks for a handful of classic problems. You will
-# automate that review.
+# A Dockerfile reviewer looks for a handful of well-known problems. Exercise 1
+# automates that review.
 
 # %% [markdown]
 # > **Exercise 1.** Write `dockerfile_problems(text)` that returns a **sorted list
@@ -749,7 +752,7 @@ grade.ex1(dockerfile_problems)
 # > A missing variable *or an empty string* means "use the default". Other keys
 # > in `env` are ignored. Any invalid value (not an integer, out of range,
 # > unknown level) raises `ValueError` whose message contains the **variable
-# > name**: section 12.3 showed why that matters.
+# > name**: section 13.3 showed why that matters.
 
 # %%
 def settings_from_env(env: dict) -> dict:
@@ -760,16 +763,16 @@ def settings_from_env(env: dict) -> dict:
 grade.ex2(settings_from_env)
 
 # %% [markdown]
-# ## 12.5 · Start the service the way a container would
+# ## 13.5 · Start the service the way a container would
 #
-# You cannot run Docker here, but you can do what the container's `CMD` does:
+# Docker is not available here, but we can do what the container's `CMD` does:
 # start `uvicorn serve:app` as a **separate process**, configured only by
 # environment variables. That is the real test of `serve.py`: it cannot see any
 # variable from this notebook unless it is in the process environment.
 #
 # The child process needs three things from its environment: where the
 # registry is, a port, and `PYTHONPATH` (because `churnlab` is not installed,
-# section 12.1). Its stdout and stderr go to files, so a chatty server can
+# section 13.1). Its stdout and stderr go to files, so a chatty server can
 # never block on a full pipe.
 
 # %%
@@ -860,7 +863,7 @@ print([e for e in events if e.get("request_id") == "nb12-demo-1"])
 # `request` event per call with `path`, `status`, `latency_ms` and
 # `model_version`. The request id you chose is in the log line: that is how a
 # caller's complaint ("request nb12-demo-1 was slow") is found among millions
-# of lines. Notebook 13 analyses these logs properly.
+# of lines. Chapter 14 analyses these logs properly.
 #
 # Now a deployment with a mistake in it: someone sets the threshold override to
 # `1.5` (meaning 15%?) instead of `0.15`.
@@ -880,10 +883,10 @@ print("stderr   :", (LOGS / "bad" / "stderr.log").read_text().strip().splitlines
 # **Expected:** `exit code: 2` and `configuration error: CHURN_THRESHOLD_OVERRIDE
 # must be in (0, 1), got 1.5`. The process never listened on its port. On a
 # real platform the new version fails its rollout and the old one keeps
-# serving: exactly what you want from a typo.
+# serving, which is the desired outcome for a configuration typo.
 
 # %% [markdown]
-# ## 12.6 · Are the committed files the generated ones?
+# ## 13.6 · Are the committed files the generated ones?
 #
 # The repository's `deploy/` folder is meant to be exactly what this notebook
 # generates. A check that compares them catches the day someone edits one
@@ -937,12 +940,12 @@ print("\ngenerated files match deploy/:", all_match)
 # | `address already in use` | a previous server is still running | re-run the cell (it picks a free port); stop old ones with `proc.terminate()` or restart the runtime |
 # | The cell hangs | the child is waiting on a full output pipe | send its output to files, as here, never to `subprocess.PIPE` without reading it |
 # | `docker: command not found` | Colab has no Docker | expected: building the image is an optional external extension on your own machine |
-# | Generated files `DIFFERS` from `deploy/` | a string in section 12.4 was edited | fine while experimenting; to update the reference, copy `generated/deploy/*` into `deploy/` |
+# | Generated files `DIFFERS` from `deploy/` | a string in section 13.4 was edited | fine while experimenting; to update the reference, copy `generated/deploy/*` into `deploy/` |
 
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
 # 1. What is the difference between the dependency list in `pyproject.toml` and `requirements-lock.txt`, and which does the Docker image install from?
 # 2. Why are configuration values read from environment variables, and why should an invalid value stop the process at start-up?
@@ -951,4 +954,5 @@ print("\ngenerated files match deploy/:", all_match)
 # 5. Bake the model into the image or load it from a registry: give one strong argument for each.
 # 6. Where do secrets come from in this design, and name two places they must never appear.
 #
-# **Next chapter:** [`13_health_logs_and_latency.ipynb`](../ch14-health-logs-and-latency/notebook.ipynb) — the service runs; now find out whether it is healthy, what it logs, and how fast it really is.
+# **Next chapter:** [Chapter 14 · Health, logs & latency](../ch14-health-logs-and-latency/notebook.ipynb) — with the service running, we ask whether it is healthy, what it logs, and how fast it is.
+

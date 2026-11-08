@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `tenure_bucket`
 
-[verified] Reference code: [`code/nb08.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 TENURE_EDGES = [0, 30, 90, 180, 365, 730, np.inf]
@@ -27,7 +27,7 @@ reports and plots.
 
 ## Exercise 2 · `worst_slices`
 
-[verified] Reference code: [`code/nb08.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def worst_slices(report, metric, min_rows, n):
@@ -43,7 +43,7 @@ indexing and `sort_values` return new frames, so the input is untouched.
 
 ## Exercise 3 · `write_model_card`
 
-[verified] Reference code: [`code/nb08.py`](solutions.py) (`ex3`). The essentials:
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex3`). The essentials:
 
 ```python
 lines = [f"# Model card · {meta['model_name']} {meta['version']}", "",
@@ -109,7 +109,7 @@ by comparing feature profiles of FN vs TP vs TN, not by guessing.
 **3. `metadata.json`.** `features` / `categorical`: what input, in which order
 (serving contract). `training_data` fingerprint, rows, period: trained on
 what? `libraries`: can I load it safely here? `threshold`: what decision rule
-ships with it? `metrics.validation`: how good, on which period?
+comes with it? `metrics.validation`: how good, on which period?
 `trained_at`, `version`, `params`, `notes`: when, which, how, why.
 `model_sha256`: is this the same file that was evaluated?
 

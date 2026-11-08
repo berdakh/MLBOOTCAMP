@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `time_split_with_embargo`
 
-[verified] Reference code: [`code/nb04.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def time_split_with_embargo(df, train_end, valid_end, gap_days):
@@ -36,7 +36,7 @@ Use a strict inequality for the zero-gap case, or require `gap_days >= 1`.
 
 ## Exercise 2 · `leakage_problems`
 
-[verified] Reference code: [`code/nb04.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def leakage_problems(train, test, label_horizon_days, group_col=None):
@@ -61,7 +61,7 @@ shared customers across periods are correct for the next-month question.
 
 ## Exercise 3 · `rule_scores`
 
-[verified] Reference code: [`code/nb04.py`](solutions.py) (`ex3`). Validation PR-AUC
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex3`). Validation PR-AUC
 0.118 (positive rate 0.052), against 0.1245 for the 5-feature logistic
 regression and 0.061 for the yes/no hand rule.
 

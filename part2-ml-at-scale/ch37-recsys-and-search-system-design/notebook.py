@@ -6,7 +6,7 @@
 # %% [markdown]
 # # Chapter 37 · Recommendation & search system design
 #
-# **Day 10 · ~90 minutes · CPU only**
+# **Part II · Chapter 37 · about 90 minutes · CPU only**
 #
 # "Design the home feed" and "design product search" are the two most common
 # ML system design prompts at large consumer companies, and they reward the
@@ -15,17 +15,20 @@
 # This notebook gives you two complete worked answers, the arithmetic behind
 # them, and six practice prompts with what a strong answer must cover.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
-# 1. run the Level 1 design framework on recommendation and search problems, adding the cascade-specific steps;
+# 1. run the Part I design framework on recommendation and search problems, adding the cascade-specific steps;
 # 2. do the capacity arithmetic out loud: QPS, candidates per stage, scoring load, embedding and index memory;
 # 3. ground ANN choices in a measured recall–latency curve rather than folklore;
 # 4. design a home feed and a product search system end to end, including position bias, freshness, experimentation and monitoring;
 # 5. recognise the failure modes that sink otherwise good answers.
 #
-# **You will produce:** `artifacts/level2/design/ann_tradeoff.csv` and
+# **Outputs:** `artifacts/level2/design/ann_tradeoff.csv` and
 # `artifacts/level2/design/capacity_home_feed.csv`, plus your written design
 # (Exercise 3).
+
+# %% [markdown]
+# Read first: [Chapter 37 text](README.md), which explains the concepts this lab measures. Worked answers are in [solutions.md](solutions.md).
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -89,9 +92,9 @@ SECONDS_PER_DAY = 86_400
 # | Cold start | users or items with no history yet | the fresh-items candidate source |
 
 # %% [markdown]
-# ## 19.0 · The framework, extended for ranking systems
+# ## 37.0 · The framework, extended for ranking systems
 #
-# Level 1 (handbook chapter 7 and Level 1 notebook 17) gave you an eight-step
+# Part I (Chapter 18) gave an eight-step
 # framework. Recommendation and search problems use the same steps with two
 # additions that interviewers explicitly look for: **candidate generation**
 # and **ranking** as separate stages, because no system can score the whole
@@ -114,7 +117,7 @@ SECONDS_PER_DAY = 86_400
 # steer you to the part they want to probe, which is usually 5–7.
 
 # %% [markdown]
-# ## 19.1 · The back-of-envelope toolkit
+# ## 37.1 · The back-of-envelope toolkit
 #
 # Two primitives come up in every ranking design. Write them, then use the
 # helpers below (which build on the same arithmetic) for the full tables.
@@ -151,7 +154,7 @@ grade.ex2(qps)
 # The helpers below cover the rest: ANN index memory by index type, and
 # servers needed at a target utilisation. Every *input* to them in this
 # notebook is an **assumption stated for the design**; in a real design you
-# would measure the per-core throughput (as in notebooks 17 and 18).
+# would measure the per-core throughput (as in Chapters 35 and 36).
 
 # %%
 def gb(n_bytes: float) -> float:
@@ -192,7 +195,7 @@ print(f"100M items x 128 dims: flat fp32 {ann_index_gb(100_000_000, 128):.1f} GB
 # does — at the cost of recall, which is the next section.
 
 # %% [markdown]
-# ## 19.2 · Measure, don't guess: the ANN recall–latency curve
+# ## 37.2 · Measure, don't guess: the ANN recall–latency curve
 #
 # "We'll use HNSW" is not an answer; "we'll pick the index and its search
 # parameter from a recall@10 vs latency curve at our target p99" is. Here is
@@ -270,7 +273,7 @@ ann.round(3)
 # > `efSearch`, at a latency cost you must measure.
 
 # %% [markdown]
-# ## 19.3 · Worked design A: the home feed of a 50M-DAU marketplace
+# ## 37.3 · Worked design A: the home feed of a 50M-DAU marketplace
 #
 # *Prompt: "Design the home-feed recommendations for a marketplace app with
 # 50 million daily active users."* Every number below is an **assumption for
@@ -293,7 +296,7 @@ ann.round(3)
 # * **Online proxies:** feed CTR, add-to-cart rate, purchases from feed,
 #   session length. CTR alone rewards clickbait; tie it to purchases.
 # * **Offline:** recall@K per candidate source; NDCG@20 and calibrated log
-#   loss for the ranker, **IPS-corrected** for position bias (notebook 05) or on
+#   loss for the ranker, **IPS-corrected** for position bias (Chapter 23) or on
 #   exploration traffic.
 # * **Guardrails:** p99 latency, error/fallback rate, catalogue coverage,
 #   seller concentration (share of impressions to top 1 % of sellers),
@@ -310,7 +313,7 @@ ann.round(3)
 #   top slots) to estimate propensities and to evaluate unbiasedly.
 # * Negatives: shown-but-not-clicked, not random catalogue items, for the
 #   ranker; in-batch or sampled negatives for retrieval (with the
-#   popularity correction of notebook 08).
+#   popularity correction of Chapter 26).
 #
 # ### 4. Features
 #
@@ -323,7 +326,7 @@ ann.round(3)
 #   without click" (fatigue), price relative to the user's usual band.
 # * **Context:** time of day, page index, session depth.
 # * Point-in-time training sets from the feature log (log the features *as
-#   served* at request time: the cleanest way to avoid skew, notebook 03).
+#   served* at request time: the cleanest way to avoid skew, Chapter 21).
 #
 # ### 5. Candidate generation (~2,000 per request)
 #
@@ -341,11 +344,11 @@ ann.round(3)
 # ### 6. Ranking
 #
 # * **Pre-ranker:** 2,000 → 500, a cheap two-tower-style dot product or tiny
-#   MLP (distilled from the heavy ranker, notebook 18).
+#   MLP (distilled from the heavy ranker, Chapter 36).
 # * **Heavy ranker:** 500 → ranked list, a multi-task DNN with shared bottom
 #   and heads for P(click), P(add-to-cart), P(purchase | click); final score a
 #   weighted combination tuned by online experiments. Position as a training
-#   feature set to a constant at serving (notebook 17), or a separate
+#   feature set to a constant at serving (Chapter 35), or a separate
 #   position tower.
 # * **Re-ranking:** diversity (category cap / MMR), seller caps, freshness
 #   boost, policy filters, dedupe across pages of the same session.
@@ -394,8 +397,8 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 #   item features live in a **local in-memory cache** on ranker hosts (hot
 #   items repeat across users) and only the user row is a remote read.
 # * **The heavy ranker is the cost centre:** halving its rows (a better
-#   pre-ranker) or its per-row cost (distillation, notebook 18) is worth ~19
-#   servers. That is the business case for notebook 18.
+#   pre-ranker) or its per-row cost (distillation, Chapter 36) is worth ~19
+#   servers. That is the business case for Chapter 36.
 # * **The item index needs sharding or compression:** 77 GB of HNSW goes to
 #   4–8 shards with replicas; IVF-PQ fits one host but loses recall, so
 #   re-score its top few hundred with exact vectors.
@@ -416,7 +419,7 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # * A/B by **user** (feeds have carry-over within a user), 1–2 weeks to cover
 #   weekly cycles and novelty; primary metric purchases per user; guardrails
 #   from step 2. Power the test with CUPED on pre-period purchases
-#   (notebook 12).
+#   (Chapter 30).
 # * **Interleaving** (team-draft) to rank many ranker candidates quickly with
 #   ~10–100× less traffic, then A/B the winner.
 # * Watch for **marketplace interference**: if treatment users buy more of a
@@ -440,7 +443,7 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # features are sensitive; retention limits).
 
 # %% [markdown]
-# ## 19.4 · Worked design B: product search ranking
+# ## 37.4 · Worked design B: product search ranking
 #
 # *Prompt: "Design the ranking for product search in the same marketplace."*
 # Again, every number is an assumption.
@@ -466,7 +469,7 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # **position-biased** and only for shown items). Estimate position
 # propensities from randomisation (swap adjacent results in a small slice of
 # traffic, or the exploration bucket) and train with IPS-weighted LambdaMART
-# (notebooks 05–06), or model position explicitly and set it to a constant at
+# (Chapters 23–24), or model position explicitly and set it to a constant at
 # serving.
 #
 # **4. Query understanding** (before retrieval): normalisation and spelling
@@ -495,7 +498,7 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # out-of-stock filtering, ads slots, diversity for ambiguous queries.
 #
 # **Freshness.** New listings have no engagement features → their CTR
-# features are smoothed toward a category prior (notebook 17's
+# features are smoothed toward a category prior (Chapter 35's
 # `item_ctr` smoothing), and a small, capped **freshness boost** or exploration
 # slot gives them impressions; index updates must be near-real-time (seconds
 # to minutes) because sold items must disappear quickly.
@@ -529,7 +532,7 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # offline relevance labels drifting from what users want.
 
 # %% [markdown]
-# ## 19.5 · Practice prompts
+# ## 37.5 · Practice prompts
 #
 # Do one per day, timed (40 minutes, out loud, recorded). Use the 10 steps.
 # The right column is what an interviewer's rubric typically looks for
@@ -544,7 +547,7 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # | 5 | **Query autocomplete** | prefix tries / FSTs for latency (< 50 ms), popularity + personalisation + freshness (trending), offensive-suggestion filtering, evaluation by keystrokes saved and downstream search success |
 # | 6 | **"Similar items" on a product page** | item–item retrieval (co-visitation vs content embeddings vs substitutes vs complements), cold-start via content, evaluation with add-to-cart from the module, avoiding near-duplicates, precomputation (batch) vs online |
 #
-# ## 19.6 · Common failure modes in design rounds
+# ## 37.6 · Common failure modes in design rounds
 #
 # | Failure | What it sounds like | Fix |
 # |---|---|---|
@@ -566,7 +569,7 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # (who owns the feature store, how a launch is rolled back, on-call load),
 # and says what evidence would change the design.
 #
-# > **Exercise 3 (written design).** Pick prompt 1, 2 or 6 from 19.5. In a
+# > **Exercise 3 (written design).** Pick prompt 1, 2 or 6 from 37.5. In a
 # > Markdown cell, write a design in the 10-step structure, at most one page,
 # > with at least: a capacity table (peak QPS, candidates per stage, scoring
 # > rows/s, embedding memory, computed with your Exercise 1–2 functions or the
@@ -651,4 +654,4 @@ capacity.assign(value=capacity["value"].map(lambda v: f"{v:,.1f}"))
 # 5. How would you A/B test a new feed ranker in a marketplace where treatment and control compete for the same inventory?
 # 6. Walk through what you monitor after launching a new ranker, and the three alerts you would page on.
 #
-# **Next chapter:** [`20_final_evaluation_and_mock_loop.ipynb`](../ch38-final-evaluation-and-mock-loop/notebook.ipynb) — open the test week once, with a pre-registered plan, then run a full timed mock loop.
+# **Next chapter:** [Chapter 38 · Final evaluation & mock loop](../ch38-final-evaluation-and-mock-loop/notebook.ipynb) — open the test week once, with a pre-registered plan, then run a full timed mock loop.

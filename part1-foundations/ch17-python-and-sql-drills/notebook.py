@@ -6,21 +6,24 @@
 # %% [markdown]
 # # Chapter 17 · Python & SQL drills
 #
-# **Day 5 · ~60 minutes · CPU only**
+# **Part I · Chapter 17 · about 60 minutes · CPU only**
 #
 # Most ML engineering loops include a live coding round and, increasingly, a SQL
 # round, and both are timed. You already know how to solve these problems; the
 # skill being tested is solving them **quickly, correctly and out loud**, which
 # only comes from practice against a clock.
 #
-# By the end you will be able to:
+# After this chapter you should be able to:
 #
 # 1. solve five classic Python interview problems with the right complexity, and say what that complexity is;
 # 2. write window-function, cohort and gaps-and-islands SQL against real-shaped tables;
 # 3. use a timer and a self-check to practise under realistic conditions;
 # 4. know which drill types to repeat over the next three weeks, and how.
 #
-# **You will produce:** `artifacts/drills/<date>.json`, your times and results for today, so you can see progress.
+# **Lab output:** `artifacts/drills/<date>.json`, your times and results for today, so you can see progress.
+
+# %% [markdown]
+# **Read first:** [Chapter 17 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -87,7 +90,7 @@ for name, df in tables.items():
 # | **Retention at month +k** | share of a cohort still active k months after its start | `ret_m1`, `ret_m2`, `ret_m3` |
 
 # %% [markdown]
-# ## 16.1 · How to use this notebook
+# ## 17.1 · How to use this notebook
 #
 # Each drill has a **target time**. Treat it like the real thing:
 #
@@ -95,7 +98,7 @@ for name, df in tables.items():
 #    complexity **before** you code. Interviewers grade that sentence.
 # 2. Start the timer cell, write the function, run the check.
 # 3. If you go over the target by more than 50%, stop, read the hint in the
-#    grader message, and **put the drill on your repeat list** (section 16.4).
+#    grader message, and **put the drill on your repeat list** (section 17.4).
 #
 # > **Intuition.** Saying the complexity before coding is reading the map
 # > before driving: an interviewer cares more that you know the route is
@@ -166,7 +169,7 @@ with Timer("demo", target_min=0.1):
 # that is fine, the check status is what is recorded.
 
 # %% [markdown]
-# ## 16.2 · Python drills
+# ## 17.2 · Python drills
 #
 # These five come up again and again in ML engineer screens because each hides
 # one idea: a dictionary pass, sorting first, a monotonic deque, a metric from
@@ -277,7 +280,7 @@ stop("ex5", grade.ex5(stratified_split))
 # > trials across train and test.
 
 # %% [markdown]
-# ## 16.3 · SQL drills on TaskFlow
+# ## 17.3 · SQL drills on TaskFlow
 #
 # Each SQL exercise is a function that **returns the query string**. The grader
 # runs it in DuckDB on the clean tables and compares the result with a reference
@@ -415,7 +418,7 @@ run(grade.REFERENCE_SQL[10])
 # it would be a question to ask the support team, not a conclusion.
 
 # %% [markdown]
-# ## 16.4 · Scoreboard and what to practise
+# ## 17.4 · Scoreboard and what to practise
 #
 # Your results today, saved with the date so that next week's run can be
 # compared:
@@ -518,4 +521,4 @@ print("\npassed:", int((board["status"] == "pass").sum()), "of", len(board), "->
 # 4. Explain the "difference of two row numbers" trick for gaps and islands to someone who has never seen it.
 # 5. Why report the median resolution time rather than the mean, and what would you add to make the comparison between categories honest?
 #
-# **Next chapter:** [`17_system_design_and_mock_interview.ipynb`](../ch18-system-design-and-mock-interview/notebook.ipynb) — the other half of the loop: designing an ML system out loud, and a scored mock interview.
+# **Next chapter:** [Chapter 18 · System design & mock interview](../ch18-system-design-and-mock-interview/notebook.ipynb) — the other half of the loop: designing an ML system out loud, and a scored mock interview.

@@ -1,13 +1,13 @@
 # Solutions · Chapter 22 · Streaming features
 
-Try each exercise before reading its answer. Markers: [verified] verified by running ·
+Attempt each exercise before reading its answer. Markers: [verified] verified by running ·
 [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `TumblingWindowCounter`
 
-[verified] Reference code: [`code/nb04.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 class TumblingWindowCounter:
@@ -61,7 +61,7 @@ instead of all open windows on each event: `O(log n)` per close instead of
 
 ## Exercise 2 · `parity_report`
 
-[verified] Reference code: [`code/nb04.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 The core is an outer merge with `indicator=True`:
 
@@ -74,7 +74,7 @@ both = m[m["_merge"] == "both"]
 then counts of `left_only` / `right_only`, and on `both` a match mask
 `(nan_a & nan_b) | (|a - b| <= tol)`.
 
-**Design choices worth defending.**
+**Design choices and their reasons.**
 
 * **Missing keys are failures, not zeros.** A window the stream never emitted
   is a different bug (a dropped partition, a stuck watermark) from a window
@@ -106,7 +106,7 @@ times.
 **(b) At-least-once, dedup by event id.** Correct, *if* the dedup state
 survived the restart (it is part of checkpointed state) and the replay is
 within the dedup horizon (the watermark/state TTL). If dedup state is
-in-memory only, it is lost on restart, and you are back to (a). Duplicates
+in-memory only, it is lost on restart, and the situation is that of (a). Duplicates
 arriving after their window closed are handled by the late policy (dropped
 or treated as updates: then they must be deduplicated there too). Detect:
 the counter of ignored duplicates (should spike at the restart, then fall

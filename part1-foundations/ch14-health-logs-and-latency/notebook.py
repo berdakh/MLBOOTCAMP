@@ -6,15 +6,16 @@
 # %% [markdown]
 # # Chapter 14 · Health, logs & latency
 #
-# **Day 4 · ~55 minutes · CPU only**
+# **Part I · Chapter 14 · about 55 minutes · CPU only**
 #
 # A running service has to answer three questions for the people and machines
-# around it: *are you alive*, *what did you just do*, and *how fast are you*.
-# Get the first wrong and the platform restarts a healthy process in a loop;
-# get the second wrong and an incident takes hours to diagnose; get the third
-# wrong (by quoting a mean) and you promise a latency your users never see.
+# around it: *is it alive*, *what did it just do*, and *how fast is it*. If the
+# first is answered wrongly, the platform may restart a healthy process in a
+# loop; if the second is answered poorly, an incident takes hours to diagnose;
+# if the third is answered with a mean, the reported latency is one that users
+# do not actually experience.
 #
-# By the end you will be able to:
+# After this chapter you should be able to:
 #
 # 1. explain liveness versus readiness and show both on the real app;
 # 2. capture the service's structured JSON logs, turn them into a table, and follow one request by its id;
@@ -22,8 +23,11 @@
 # 4. measure latency as a distribution (p50/p95/p99), including the cold start and the first request;
 # 5. measure the per-row cost of batching and the effect of concurrent clients, and explain what the GIL, the thread pool and `--workers` change.
 #
-# **You will produce:** `artifacts/latency/` with the measured latency tables (CSV) and the machine
+# **Lab output:** `artifacts/latency/` with the measured latency tables (CSV) and the machine
 # they were measured on (JSON).
+
+# %% [markdown]
+# **Read first:** [Chapter 14 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -88,7 +92,7 @@ print(len(payloads), "request bodies from validation rows; first:", payloads[0][
 # | **SLO** | a target for a service metric over a window | 99.9% of requests under 200 ms over 30 days |
 
 # %% [markdown]
-# ## 13.1 · Liveness versus readiness
+# ## 14.1 · Liveness versus readiness
 #
 # An orchestrator (Kubernetes, a cloud run-time, a load balancer) asks two
 # different questions, on two endpoints:
@@ -98,8 +102,8 @@ print(len(payloads), "request bodies from validation rows; first:", payloads[0][
 # | **Liveness** | is the process alive? | nothing but "I can answer HTTP" | **restarts** the process |
 # | **Readiness** | should I receive traffic? | a model is loaded and can predict | **stops routing** traffic to it, and leaves it running |
 #
-# See the difference on an app whose registry is empty, as on a new machine
-# where the model has not been synced yet:
+# The difference is shown below on an app whose registry is empty, as on a new
+# machine where the model has not yet been copied:
 
 # %%
 import tempfile
@@ -129,7 +133,7 @@ for path in ("/health", "/ready"):
 # **503** with the reason (`no CURRENT model in ...`), and `/predict` is 503 too.
 # With a model, both are 200 and `/ready` names `v1`.
 #
-# Why two probes? Picture a model that takes 40 seconds to load. If the
+# Why two probes? Consider a model that takes 40 seconds to load. If the
 # *liveness* probe checked the model, the platform would kill the process at
 # second 10 for being "dead", start a new one, kill that too, and so on: a
 # restart loop caused by the health check itself. With the split, the process
@@ -152,7 +156,7 @@ for path in ("/health", "/ready"):
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/serving.svg" alt="Serving: client, FastAPI app with health, ready and predict, model loaded from the registry" width="100%">
 
 # %% [markdown]
-# ## 13.2 · Structured logs
+# ## 14.2 · Structured logs
 #
 # The app writes one JSON object per request. In production those lines go to
 # stdout and a log platform indexes them; here a `ListHandler` keeps them in a
@@ -226,10 +230,10 @@ print("sensitive keys found        :", sorted(logged_keys & sensitive) or "none"
 # **Expected:** keys such as `latency_ms`, `model_version`, `path`,
 # `request_id`, `status`; sensitive keys found: `none`. (The app does keep
 # recent *inputs* in memory, `Metrics.recent_inputs`, for drift monitoring in
-# notebook 14. They never reach the log.)
+# chapter 15. They never reach the log.)
 
 # %% [markdown]
-# ## 13.3 · Latency is a distribution
+# ## 14.3 · Latency is a distribution
 #
 # Users experience **every** request, not the average one. A service whose mean
 # is 5 ms can still make one call in twenty take 50 ms, and a page that makes
@@ -467,7 +471,7 @@ print("GET /metrics on a fresh app ->", r.status_code, r.text[:80])
 # found while this course was being written: a monitoring scraper that starts
 # before the first prediction would have recorded the service as broken. The
 # fix (`Metrics.summary` in `api.py`) returns `None` for an empty window. The
-# matching regression test belongs in the suite you wrote in notebook 11.
+# matching regression test belongs in the suite you wrote in chapter 12.
 
 # %% [markdown]
 # > **Exercise 1.** Write `percentiles(latencies, qs=(50, 95, 99))` using the
@@ -489,7 +493,7 @@ def percentiles(latencies, qs=(50, 95, 99)) -> dict:
 grade.ex1(percentiles)
 
 # %% [markdown]
-# > **Exercise 2.** Back to the logs of section 13.2. Write `summarize_logs(records)` that turns parsed log
+# > **Exercise 2.** Back to the logs of section 14.2. Write `summarize_logs(records)` that turns parsed log
 # > records (a list of dicts like `handler.parsed()`) into a DataFrame with **one
 # > row per `path`**, the index named `path` and sorted, and three columns:
 # >
@@ -511,7 +515,7 @@ def summarize_logs(records: list[dict]) -> pd.DataFrame:
 grade.ex2(summarize_logs)
 
 # %% [markdown]
-# ## 13.4 · Batching: the per-row cost
+# ## 14.4 · Batching: the per-row cost
 #
 # A nightly job scoring 5,000 customers can send 5,000 requests or five
 # batches of 1,000. Each request pays fixed costs (HTTP, JSON parsing,
@@ -553,7 +557,7 @@ batch
 # splits large inputs into chunks under the server's `max_batch_size`).
 
 # %% [markdown]
-# ## 13.5 · Concurrent clients, the GIL, and `--workers`
+# ## 14.5 · Concurrent clients, the GIL, and `--workers`
 #
 # How does the service behave when several clients call it at once? The
 # server is again a **separate process** started with uvicorn's CLI (one
@@ -628,7 +632,7 @@ plt.show()
 #   copy of the model. CPU-bound throughput scales with N up to the number of
 #   free cores; memory scales with N too. And everything held in memory is
 #   **per worker**: `/metrics` describes one worker, `/admin/reload` reloads
-#   one worker (notebook 14 relies on a single worker).
+#   one worker (chapter 15 relies on a single worker).
 # * This notebook does not benchmark `--workers 2`, for two reasons. On a
 #   2-core Colab runtime the client threads compete with the server for the
 #   same cores, so the comparison says little about the server. And on the
@@ -641,9 +645,9 @@ plt.show()
 # * In production you usually scale out instead: one or two workers per
 #   container, more containers behind a load balancer, autoscaled on CPU or
 #   on p95.
-# * For *throughput*, batching (13.4) beats concurrency by a wide margin.
+# * For *throughput*, batching (14.4) beats concurrency by a wide margin.
 #
-# > **Research bridge.** You have met this trade-off in PyTorch:
+# > **Research bridge.** The same trade-off appears in PyTorch:
 # > `DataLoader(num_workers=...)` uses processes, not threads, for the same
 # > GIL reason, and inference throughput comes from batching. A web service is
 # > the same problem with HTTP in front.
@@ -694,7 +698,7 @@ plt.show()
 # system. *Symbols:* $L$ = concurrency, $\lambda$ = throughput (req/s), $W$ =
 # latency (s). *Example:* one worker that completes $\lambda = 200$ req/s with
 # 16 clients always waiting ($L = 16$) must have $W = 16/200 = 80$ ms, even if
-# one request takes only 5 ms of CPU: the rest is queueing, which is what 13.5
+# one request takes only 5 ms of CPU: the rest is queueing, which is what 14.5
 # measured.
 #
 # **Single-process ceiling:** $\lambda_{\max} \approx 1 / t_{\text{CPU per request}}$.
@@ -726,13 +730,13 @@ print(f"Little's law: 16 in flight at 200 req/s -> W = {16 / 200 * 1000:.0f} ms"
 # | Latency numbers very different from a classmate's | different machine, other load, first-request effects | expected: report the machine (`machine.json`) next to every number, discard warm-up |
 # | p99 jumps between runs | a few hundred requests estimate a tail poorly | send more requests, or report p95 and say so |
 # | `GET /metrics` shows `null` percentiles | no prediction has been recorded yet | expected; send a prediction first |
-# | With `--workers 2`, every request is ~40 ms slower | multi-process mode on some Linux set-ups (see 13.5) | measure before adopting; compare with one worker per container and more containers |
-# | The notebook takes much longer than 3 minutes | the CPU is shared or slow | reduce `N` and `total` in 13.3 and 13.5 |
+# | With `--workers 2`, every request is ~40 ms slower | multi-process mode on some Linux set-ups (see 14.5) | measure before adopting; compare with one worker per container and more containers |
+# | The notebook takes much longer than 3 minutes | the CPU is shared or slow | reduce `N` and `total` in 14.3 and 14.5 |
 
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
 # 1. What is the difference between a liveness and a readiness probe, and what goes wrong if liveness checks the model?
 # 2. A colleague reports "average latency is 6 ms, we're fine". What do you ask for instead, and why?
@@ -741,4 +745,5 @@ print(f"Little's law: 16 in flight at 200 req/s -> W = {16 / 200 * 1000:.0f} ms"
 # 5. Your service is CPU-bound and p95 doubles at peak traffic. Name three things you could change, and the cost of each.
 # 6. What does `--workers 4` change, and what does it break for in-memory metrics and model reloads?
 #
-# **Next chapter:** [`14_monitoring_and_rollback.ipynb`](../ch15-monitoring-and-rollback/notebook.ipynb) — the service is healthy; now check whether the *model* still is, and practise undoing a bad deploy.
+# **Next chapter:** [Chapter 15 · Monitoring & rollback](../ch15-monitoring-and-rollback/notebook.ipynb) — with the service shown to be healthy, we check whether the *model* still is, and practise undoing a bad deployment.
+

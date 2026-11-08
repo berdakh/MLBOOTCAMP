@@ -6,7 +6,7 @@
 # %% [markdown]
 # # Chapter 5 · Leakage-safe splits & a baseline
 #
-# **Day 1 · ~45 minutes · CPU only**
+# **Part I · Chapter 5 · about 45 minutes · CPU only**
 #
 # A validation score is an answer to a question, and the split decides the
 # question. This notebook picks the split that matches how the churn model will
@@ -24,8 +24,11 @@
 # **You will produce:** `artifacts/baselines.json`, validation PR-AUC and ROC-AUC for three baselines.
 #
 # **One rule for the whole course:** the **test** period (July-November 2024)
-# is touched **once**, in notebook 15. Everything here is measured on
+# is touched **once**, in Chapter 16. Everything here is measured on
 # **validation**.
+
+# %% [markdown]
+# Read first: [Chapter 5 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -77,7 +80,7 @@ features = bootstrap.ensure_features()
 # | **Embargo gap** | a buffer between periods so no training label is decided inside the next period | a 30-day gap for a 30-day label |
 # | **Group split** | every row of one entity (customer) goes to the same side | "customers we have never seen" |
 # | **Leakage** | information at training or evaluation time that would not exist at prediction time | `status` exported after the snapshot |
-# | **Validation vs test** | validation is for choosing and checking; test is touched once at the end | test = Jul-Nov 2024, notebook 15 |
+# | **Validation vs test** | validation is for choosing and checking; test is touched once at the end | test = Jul-Nov 2024, Chapter 16 |
 # | **PR-AUC (average precision)** | quality of the ranking at the top; random scores ≈ the positive rate | honest baseline ≈ 0.12 |
 # | **ROC-AUC** | probability a random positive is scored above a random negative; random = 0.5 | ≈ 0.72 here |
 # | **Baseline** | the simplest model a real one must beat | prior, hand rule, small logistic regression |
@@ -85,7 +88,7 @@ features = bootstrap.ensure_features()
 # | **Hand rule** | an if-then rule written by a person, no fitting | zero sessions or a failed payment |
 
 # %% [markdown]
-# ## 4.1 · The time split, and why it has a gap
+# ## 5.1 · The time split, and why it has a gap
 #
 # The model will run on the first of each month and score the accounts active
 # that day. So the honest rehearsal is: **train on earlier months, validate on
@@ -104,7 +107,7 @@ split.summary()
 # **Expected:** train 25,278 rows (2023-03-01 to 2024-03-01, positive rate
 # ≈ 0.055), valid 6,956 rows (2024-04-01 to 2024-06-01, ≈ 0.052), test 12,127
 # rows (2024-07-01 to 2024-11-01, ≈ 0.059). The test row is shown so you know it
-# exists; its rows are not used until notebook 15.
+# exists; its rows are not used until Chapter 16.
 #
 # **The embargo gap.** The label of a row at snapshot T looks at [T, T + 30d).
 # If T is less than 30 days before the end of training, that label is decided by
@@ -198,7 +201,7 @@ def leakage_problems(train: pd.DataFrame, test: pd.DataFrame, label_horizon_days
 grade.ex2(leakage_problems)
 
 # %% [markdown]
-# ## 4.2 · Measuring leakage (on validation, never test)
+# ## 5.2 · Measuring leakage (on validation, never test)
 #
 # Arguments about leakage are settled by measurement. One small model is used
 # throughout so that only the split or the features change: a scaled logistic
@@ -210,7 +213,7 @@ grade.ex2(leakage_problems)
 # * **ROC-AUC**: the probability a random churner is ranked above a random
 #   non-churner. Useful, but flattered by the many easy negatives at a 5% rate.
 #
-# Day 2 goes deeper (curves, confidence intervals, thresholds).
+# Chapters 7 and 8 go deeper (curves, confidence intervals, thresholds).
 
 # %%
 import warnings
@@ -245,7 +248,7 @@ honest
 # ### (a) Leaky features
 #
 # `build_features(include_leaky=True)` adds two export-time columns from
-# notebook 02: `status_cancelled` (status as of the export) and
+# Chapter 3: `status_cancelled` (status as of the export) and
 # `days_until_last_active` (from `last_active_week`, which is in the future of
 # every snapshot). Same split, same model:
 
@@ -302,7 +305,7 @@ pd.DataFrame({"honest features": honest, "+ leaky columns": leaky}).T
 # %% [markdown]
 # **Expected:** PR-AUC jumps from ≈ 0.12 to ≈ 0.99 and ROC-AUC to ≈ 0.999. No
 # real churn model is that good; a number like this is a **symptom**, and the
-# right reaction is to look for the leak, not to celebrate. The split was
+# right reaction is to look for the leak, not to accept the result. The split was
 # perfectly time-ordered: leakage through **features** is invisible to any
 # split check.
 
@@ -371,7 +374,7 @@ comparison
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l1-leakage-types.svg" alt="Four kinds of leakage with their measured effect on this project: target, temporal, group and preprocessing leaks, and their defences" width="100%">
 #
-# *What to notice:* the leaks that live in the **features** (target, temporal) are enormous and invisible to any split check; the ones that live in the **procedure** (random split, preprocessing fitted on everything) are small on this data. Notebook 05 measures the target and preprocessing leaks.
+# *What to notice:* the leaks that live in the **features** (target, temporal) are enormous and invisible to any split check; the ones that live in the **procedure** (random split, preprocessing fitted on everything) are small on this data. Chapter 6 measures the target and preprocessing leaks.
 #
 # > **Research bridge.** You already know this from EEG/BCI: within-subject
 # > vs cross-subject evaluation answer different questions, and a
@@ -379,7 +382,7 @@ comparison
 # > translation is in Exercise 4.
 
 # %% [markdown]
-# ## 4.3 · Baselines
+# ## 5.3 · Baselines
 #
 # A model is only good relative to something simpler. Three baselines, all
 # trained on train and measured on **validation**:
@@ -522,10 +525,10 @@ grade.ex3(rule_scores)
 # |---|---|---|
 # | A validation PR-AUC above ~0.5 on this data | a leaky column in the features (`status`, `churn_date`, `last_active_week` or something derived) | list the features you used; rebuild with `include_leaky=False` |
 # | PR-AUC ≈ 0.05 for every model | the scores are constant, or reversed (low = churn) | check `np.unique(scores)`; flip the sign |
-# | `ValueError: Input X contains NaN` | a feature such as `features_used_4w` has NaN for accounts with no usage | impute inside a pipeline (notebook 05) or pick columns without NaN |
+# | `ValueError: Input X contains NaN` | a feature such as `features_used_4w` has NaN for accounts with no usage | impute inside a pipeline (Chapter 6) or pick columns without NaN |
 # | Your split's row counts differ from `time_split` by one snapshot | `<` vs `<=` at a boundary, or the gap applied to the wrong side | a row is in an earlier split only if `snapshot_date + gap <= end` |
 # | Results change every run | a random split without a seed | pass `seed=`; better, use the time split |
-# | Tempted to "just check" the test set | - | don't: notebook 15 does it once, with everything decided beforehand |
+# | Tempted to "just check" the test set | - | don't: Chapter 16 does it once, with everything decided beforehand |
 
 # %% [markdown]
 # ## Checkpoint
@@ -538,4 +541,4 @@ grade.ex3(rule_scores)
 # 4. On this data the random split did not inflate the score much. Why, and why is it still the wrong split?
 # 5. Why is the prior's PR-AUC equal to the positive rate, and why report a hand rule at all?
 #
-# **Next chapter:** [`05_pipelines_and_cross_validation.ipynb`](../ch06-pipelines-and-cross-validation/notebook.ipynb) — put preprocessing inside the model and cross-validate in time, so Day 2's comparisons are trustworthy.
+# **Next chapter:** [Chapter 6 · Pipelines & cross-validation](../ch06-pipelines-and-cross-validation/notebook.ipynb) — put preprocessing inside the model and cross-validate in time, so that the comparisons in Chapters 7–9 can be trusted.

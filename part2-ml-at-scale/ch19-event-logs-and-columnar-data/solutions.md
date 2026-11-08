@@ -1,13 +1,13 @@
 # Solutions · Chapter 19 · Event logs & columnar data
 
-Try each exercise before reading its answer. Markers: [verified] verified by running ·
+Attempt each exercise before reading its answer. Markers: [verified] verified by running ·
 [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `user_hash_sample`
 
-[verified] Reference code: [`code/nb01.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def user_hash_sample(user_ids, pct, salt=""):
@@ -19,11 +19,11 @@ def user_hash_sample(user_ids, pct, salt=""):
 
 **Why it works.** SHA-256 is a fixed, standardised function: the same bytes
 give the same digest in every process, language and machine, so the sample
-can be recomputed in a Spark job, in SQL, or next year. Taking the first 16
+can be recomputed in a Spark job, in SQL, or a year later. Taking the first 16
 hex digits (64 bits) before `% 100` keeps the bucket distribution uniform
 (the modulo bias of 2^64 mod 100 is negligible). Because the rule is
 `bucket < pct`, a 5% sample is always inside the 10% sample: you can grow a
-sample without re-drawing it.
+sample without redrawing it.
 
 **Why salts.** Without a salt, every analysis and every experiment that takes
 "bucket < 10" gets the *same* users. Two experiments would then always share
@@ -44,14 +44,14 @@ two salts' 10% samples is about 10%, not 100%.
 
 **Push further.** In SQL, DuckDB has `hash()` (stable within a version, not
 promised across versions) and `md5_number()`; BigQuery has
-`FARM_FINGERPRINT`. Pick one, write it into your team's sampling convention,
+`FARM_FINGERPRINT`. Choose one, record it in the team's sampling convention,
 and never mix two.
 
 ---
 
 ## Exercise 2 · Daily CTR by position over the partitioned log
 
-[verified] Reference code: [`code/nb01.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```sql
 SELECT day, position,
@@ -121,7 +121,7 @@ sampled session's rows. Use a salted stable hash of the unit id.
 **The field you cannot add later:** the logging **propensity** (with
 `model_version` and the exploration flag). Without it, inverse-propensity or
 doubly-robust evaluation of a new carousel model on old logs is impossible,
-and you are left with A/B tests for every idea. Second-best answer:
+and every new idea must be tested with an A/B test. Second-best answer:
 `request_id`, without which no list-level metric can be computed at all.
 
 ---

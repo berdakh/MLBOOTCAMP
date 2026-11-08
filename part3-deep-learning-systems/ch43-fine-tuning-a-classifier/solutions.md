@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `expected_calibration_error`
 
-[verified] Reference code: [`code/nb05.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def expected_calibration_error(probs, labels, n_bins=15):
@@ -35,7 +35,7 @@ model shows a positive ECE.
 
 ## Exercise 2 · `fit_temperature`
 
-[verified] Reference code: [`code/nb05.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def fit_temperature(logits, labels):
@@ -66,7 +66,7 @@ with accuracy unchanged at 0.872. [expected] A longer GPU fine-tune usually give
 
 ## Exercise 3 · When a TF-IDF baseline is the right production choice
 
-[open-ended] A strong answer weighs evidence, not fashion:
+[open-ended] A good answer weighs measured evidence:
 
 * **Accuracy gap and its uncertainty.** In our CPU run TF-IDF + LR scored 0.822 vs
   0.872 fine-tuned on 500 test examples (SE ≈ ±0.015 each): a real gap here, but on a
@@ -75,7 +75,7 @@ with accuracy unchanged at 0.872. [expected] A longer GPU fine-tune usually give
 * **Cost and latency.** TF-IDF + LR fits in ~1 s and predicts in microseconds on a CPU;
   DistilBERT ran at ~36 texts/s on two CPU threads. At 50M articles/day (~580/s on
   average, more at peak) the transformer needs a GPU fleet (or heavy distillation and
-  quantisation, notebook 11); the linear model needs a few CPU cores.
+  quantisation, Chapter 49); the linear model needs a few CPU cores.
 * **Data volume and drift.** With little labelled data, both baselines are competitive;
   with abundant data and stable labels, fine-tuning pays more. Under fast vocabulary
   drift (new names, events), cheap frequent retraining of a linear model can beat a
@@ -87,8 +87,8 @@ with accuracy unchanged at 0.872. [expected] A longer GPU fine-tune usually give
 * **Calibration and thresholds.** Either model needs calibration before using its
   probabilities (TF-IDF + LR was badly under-confident here, ECE 0.21).
 
-**Decision rule.** Ship TF-IDF when the measured gap is within the business tolerance
-(or within noise), latency/cost budgets are tight, or explainability is required; ship
+**Decision rule.** Deploy TF-IDF when the measured gap is within the business tolerance
+(or within noise), latency/cost budgets are tight, or explainability is required; deploy
 (or cascade to) the transformer when the gap is significant and valuable. A common
 hybrid: the cheap model handles confident cases, the expensive one only the uncertain
 ones (a cascade), which you can size from the reliability table. Evidence to collect:

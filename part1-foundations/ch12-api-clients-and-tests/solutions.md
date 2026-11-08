@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `retrying_get`
 
-[verified] Reference code: [`code/nb11.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 RETRYABLE = {429, 502, 503, 504}
@@ -57,7 +57,7 @@ last failure instead of raising; sleeping after the final attempt.
 
 ## Exercise 2 · `test_rejects_negative_sessions`
 
-[verified] Reference code: [`code/nb11.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def test_rejects_negative_sessions(client):
@@ -76,7 +76,7 @@ def test_rejects_negative_sessions(client):
   buggy app catches exactly that.
 * It asserts the **exact** status, not "not 200". The grader's second buggy
   app crashes with a 500 for negative sessions; `assert r.status_code != 200`
-  passes there, although a 500 for bad input is a bug (notebook 09).
+  passes there, although a 500 for bad input is a bug (chapter 10).
 * It checks the error **names the field**, which is part of the contract
   callers rely on.
 * The assertion messages show what was received, so a CI failure is readable
@@ -103,8 +103,8 @@ only appears when the pieces are wired together.
 | Smoke test against the deployed service: `/ready`, a few known requests with expected scores, version header | staging | proves the deployment wiring: config, env vars, registry path, secrets |
 | Load test: p95/p99 latency, throughput, memory at realistic batch sizes | staging | needs production-like hardware; too slow and noisy for CI |
 | Client integration: the CRM's real client calling the staging URL (timeouts, retries, auth, TLS) | staging | real network paths and real callers |
-| Shadow / canary comparison with the live model on real traffic | staging → production | only real inputs reveal online/offline feature skew (notebook 10, exercise 3) |
-| Rollback drill: promote, then roll back, check `/ready` and the version | staging | rehearses the procedure before you need it (notebook 14) |
+| Shadow / canary comparison with the live model on real traffic | staging → production | only real inputs reveal online/offline feature skew (chapter 11, exercise 3) |
+| Rollback drill: promote, then roll back, check `/ready` and the version | staging | rehearses the procedure before you need it (chapter 15) |
 
 Credit three of each with a reason. A strong answer also says **what blocks
 what**: CI must pass to merge; staging checks must pass to promote a model or
@@ -130,7 +130,7 @@ failed at the same moment do not retry at the same moment (the
 **3. Timeouts.** Without one, a hung server holds the caller's thread,
 connection and user request indefinitely, and the hang propagates upstream.
 [verified] The 0.5 s timeout fired after 0.50 s. Choose it from measured latency (a
-few times the p99, notebook 13) and from the caller's own deadline. Set
+few times the p99, chapter 14) and from the caller's own deadline. Set
 connect and read timeouts separately when they differ.
 
 **4. Four categories.** Contract: `test_rejects_out_of_range[sessions_4w]`

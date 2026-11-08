@@ -6,23 +6,27 @@
 # %% [markdown]
 # # Chapter 10 · FastAPI & contracts
 #
-# **Day 3 · ~55 minutes · CPU only**
+# **Part I · Chapter 10 · about 55 minutes · CPU only**
 #
-# A model in a notebook helps one person; a model behind an API helps every
-# system that can send an HTTP request. The hard part is not FastAPI's syntax.
-# It is the **contract**: what callers may send, what they get back, and what
-# happens when they send something wrong.
+# A model in a notebook can be used only by the person running the notebook.
+# A model behind an HTTP API can be used by any program that can send an HTTP
+# request. FastAPI's syntax is the easy part of this chapter. The substantive
+# part is the **contract**: what callers may send, what they receive, and what
+# happens when they send something invalid.
 #
-# By the end you will be able to:
+# After this chapter you should be able to:
 #
 # 1. build a small FastAPI app with `GET /health` and `POST /predict`, and test it in-process without starting a server;
-# 2. read a 422 validation error (`loc`, `msg`, `type`) and explain why it beats a 500;
+# 2. read a 422 validation error (`loc`, `msg`, `type`) and explain why it is preferable to a 500;
 # 3. use Pydantic to forbid unknown fields, bound numbers, allow optional fields and filter responses;
 # 4. explain the app-factory pattern and why there is no model loaded at import time;
 # 5. call every endpoint of the course's real service (`churnlab.api`) and read its OpenAPI document;
 # 6. say which contract changes break existing clients and which do not.
 #
-# **You will produce:** `artifacts/api/openapi.json`, the generated contract of the churn service.
+# **Lab output:** `artifacts/api/openapi.json`, the generated contract of the churn service.
+
+# %% [markdown]
+# **Read first:** [Chapter 10 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -66,7 +70,7 @@ split = bootstrap.ensure_split()
 
 # %% [markdown]
 # **Expected:** `versions ['v1', 'v2'], CURRENT=v1` (v1 is the logistic
-# regression, which won on validation PR-AUC in notebook 06).
+# regression, which had the higher validation PR-AUC in Chapter 7).
 
 # %% [markdown]
 # ## Key terms
@@ -87,7 +91,7 @@ split = bootstrap.ensure_split()
 # | **OpenAPI** | the machine-readable description of the contract | `/openapi.json` |
 
 # %% [markdown]
-# ## 9.1 · What a prediction service is
+# ## 10.1 · What a prediction service is
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/serving.svg" alt="Serving: a request is validated against the schema, scored by the pipeline loaded from the registry, and returned with the model version" width="100%">
 #
@@ -98,7 +102,8 @@ split = bootstrap.ensure_split()
 # trained and saved in the registry. The response carries the score, the
 # decision, the threshold and the **model version**.
 #
-# Three vocabulary items you will use all day:
+# Three terms used throughout this chapter and the next two:
+
 #
 # | Term | Meaning here |
 # |---|---|
@@ -111,21 +116,21 @@ split = bootstrap.ensure_split()
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l1-request-lifecycle.svg" alt="A prediction request is validated (422 on failure), checked for batch size (413), checked for a loaded model (503), then scored and answered with 200 and the model version" width="100%">
 #
-# *What to notice:* the three exits are ordered from "your fault" to "our fault, try later"; only the last one is worth retrying (notebook 11).
+# *What to notice:* the three exits are ordered from "your fault" to "our fault, try later"; only the last one is worth retrying (chapter 12).
 #
 # > **Intuition.** The schema is a bouncer with a guest list at the door:
 # > a wrong name never reaches the bar (the model), and the bouncer tells you
 # > exactly what was wrong with your ticket. *Where it breaks down:* the
 # > bouncer checks the form, not the truth: a well-formed request with
 # > plausible but wrong values (last month's data) walks straight in; that is
-# > monitoring's job (notebook 14).
+# > monitoring's job (chapter 15).
 
 # %% [markdown]
-# ## 9.2 · A minimal FastAPI app, from scratch
+# ## 10.2 · A minimal FastAPI app, from scratch
 #
-# Before reading the real service, build a toy one. The "model" is a hand-made
-# rule: fewer sessions and more failed payments mean higher risk. The point is
-# the shape of the app, not the model.
+# Before reading the real service, we build a toy one. The "model" is a
+# hand-written rule: fewer sessions and more failed payments mean higher risk.
+# The purpose is to show the structure of the app, not to model churn.
 
 # %%
 import math
@@ -169,7 +174,7 @@ print(r.status_code, r.json())
 # **Expected:** `{'status': 'ok'}`, then `200` and a probability of about
 # 0.62 with `flagged: True`.
 #
-# Three things happened that you did not write:
+# Three things happened that the code above does not state explicitly:
 #
 # * FastAPI read the type annotation `customer: ToyCustomer` and parsed the
 #   JSON body into that Pydantic model, converting `2` to `2.0`.
@@ -178,9 +183,9 @@ print(r.status_code, r.json())
 #   app's ASGI interface. No port was opened. This is how API tests run in CI.
 
 # %% [markdown]
-# ## 9.3 · Anatomy of a 422, and why it beats a 500
+# ## 10.3 · Anatomy of a 422, and why it is preferable to a 500
 #
-# Send three wrong requests and read what comes back.
+# We send three invalid requests and read the responses.
 
 # %%
 import json
@@ -234,12 +239,12 @@ print(r.status_code, r.text)
 # > missing"; a 500 is a letter that vanished in the sorting office. The first
 # > tells the sender what to fix; the second makes everyone investigate the
 # > post office. *Where it breaks down:* a 4xx can still be the service's
-# > fault, if the contract changed without telling the callers (section 9.9).
+# > fault, if the contract changed without telling the callers (section 10.9).
 #
 # A 500 for bad input is a bug in the service even when the input is wrong.
 
 # %% [markdown]
-# ## 9.4 · Making the schema strict: forbid, bounds, optional, examples
+# ## 10.4 · Making the schema strict: forbid, bounds, optional, examples
 #
 # The toy schema has a quiet problem. Send a **misspelled** field:
 
@@ -253,7 +258,7 @@ print(r.status_code, r.json())
 # the typo was harmless because `sessions_4w` was also sent; if the caller
 # had sent only the misspelled one *and* the field had a default (as optional
 # fields do), the model would silently have scored an imputed value. No error,
-# a wrong prediction, and nobody notices.
+# a wrong prediction, and nothing in the logs to reveal it.
 #
 # A stricter schema, with each Pydantic feature you will see in the real one:
 
@@ -303,7 +308,7 @@ for name, body in checks.items():
 # have.
 
 # %% [markdown]
-# ## 9.5 · `response_model`: the response is part of the contract too
+# ## 10.5 · `response_model`: the response is part of the contract too
 #
 # Internal values have a way of leaking into responses: a debug field, a raw
 # feature vector, a customer's e-mail. Declaring `response_model` makes
@@ -343,7 +348,7 @@ print("with response_model:   ", sorted(leaky_client.post("/predict", json=body)
 # `customer_id`, `flagged`.
 
 # %% [markdown]
-# ## 9.6 · The app factory: no globals at import time
+# ## 10.6 · The app factory: no globals at import time
 #
 # The toy apps above were built at module level: `toy = FastAPI()` runs when
 # the file is imported. Real services usually load a model, read settings and
@@ -412,11 +417,11 @@ def make_app() -> FastAPI:
 grade.ex1(make_app)
 
 # %% [markdown]
-# ## 9.7 · The real service: `churnlab.api.create_app`
+# ## 10.7 · The real service: `churnlab.api.create_app`
 #
-# Now read the real thing. Open `src/churnlab/schemas.py` (the contract) and
+# We now turn to the real service. Open `src/churnlab/schemas.py` (the contract) and
 # `src/churnlab/api.py` (the app factory) side by side; both are short.
-# Everything in sections 9.2-9.6 appears there:
+# Everything in sections 10.2–10.6 appears there:
 #
 # | Idea | Where in the real code |
 # |---|---|
@@ -426,7 +431,7 @@ grade.ex1(make_app)
 # | no import-time model | the model is loaded inside `create_app`, from `settings.registry_dir` |
 #
 # The service logs one JSON line per request. Here the logs go to an
-# in-memory handler so they do not flood the notebook; notebook 13 reads them.
+# in-memory handler so they do not flood the notebook; chapter 14 reads them.
 
 # %%
 from churnlab.api import create_app, example_payload
@@ -453,10 +458,10 @@ print("validation PR-AUC:", round(info["metrics"]["validation"]["pr_auc"], 3))
 #
 # `/health` answers "is the process alive?" and never touches the model.
 # `/ready` answers "can it serve predictions?". Load balancers and Kubernetes
-# use them differently (notebook 13).
+# use them differently (chapter 14).
 #
 # Predictions, using rows from the **validation** period. The test period stays
-# untouched until notebook 15. `example_payload` turns a feature-table row into
+# untouched until chapter 16. `example_payload` turns a feature-table row into
 # a JSON-ready body (NaN becomes `null`).
 
 # %%
@@ -472,7 +477,7 @@ print("headers:", {k: r.headers[k] for k in ("x-model-version", "x-request-id")}
 # **Expected:** a body with 20 fields; `200` and a prediction with
 # `churn_probability` between 0 and 1, `flagged`, `threshold` and
 # `model_version: 'v1'`. The same version is in the `x-model-version` header,
-# and each response carries an `x-request-id` (notebook 10 uses both).
+# and each response carries an `x-request-id` (chapter 11 uses both).
 
 # %%
 batch = [example_payload(row) for _, row in valid.head(25).iterrows()]
@@ -490,10 +495,10 @@ print("batch of 25 with max_batch_size=10 ->", r.status_code, r.json())
 # %% [markdown]
 # **Expected:** `200 | predictions: 25 | version: v1`, one of them flagged; then a
 # **413** (`Content Too Large`) with a message naming the limit. A batch limit
-# protects memory and latency; the client in notebook 11 splits big jobs into
+# protects memory and latency; the client in chapter 12 splits big jobs into
 # chunks below it.
 #
-# The real schema rejects the same kinds of mistakes you saw in 9.4:
+# The real schema rejects the same kinds of mistakes you saw in 10.4:
 
 # %%
 mistakes = {
@@ -516,7 +521,7 @@ print(api.get("/metrics").json())
 # it is not counted here.)
 
 # %% [markdown]
-# ## 9.8 · The OpenAPI document: the contract, machine-readable
+# ## 10.8 · The OpenAPI document: the contract, machine-readable
 #
 # FastAPI generates an OpenAPI (Swagger) document from the schemas. It is what
 # `/docs` renders, and what other teams generate clients from. It is also a
@@ -545,10 +550,10 @@ _ = (ART / "api" / "openapi.json").write_text(json.dumps(spec, indent=2))
 # `sessions_4w` with `minimum: 0`.
 
 # %% [markdown]
-# ## 9.9 · Contract design decisions
+# ## 10.9 · Contract design decisions
 #
-# Every line of a schema is a decision someone can ask you to defend. The ones
-# in this service:
+# Every line of a schema is a design decision that a reviewer may ask you to
+# justify. The decisions in this service are:
 #
 # | Decision | Chosen | Why | Cost / alternative |
 # |---|---|---|---|
@@ -627,7 +632,7 @@ grade.ex2(make_schema_v2)
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
 # 1. A caller sends `"sesions_4w": 3`. What does this service return, and what would happen without `extra="forbid"`?
 # 2. Read this error aloud and say what the caller should change: `{"loc": ["body", "seat_utilization_4w"], "type": "less_than_equal"}`.
@@ -636,4 +641,4 @@ grade.ex2(make_schema_v2)
 # 5. What is the difference between `/health` and `/ready`, and between a 413, a 422 and a 503?
 # 6. Name two backwards-compatible and two breaking changes to an API contract.
 #
-# **Next chapter:** [`10_consistent_serving.ipynb`](../ch11-consistent-serving/notebook.ipynb) — make sure the API returns exactly the scores the notebook computed, and load models safely.
+# **Next chapter:** [Chapter 11 · Consistent serving](../ch11-consistent-serving/notebook.ipynb) — checking that the API returns exactly the scores computed offline, and loading models safely.

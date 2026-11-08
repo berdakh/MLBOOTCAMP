@@ -6,15 +6,15 @@
 # %% [markdown]
 # # Chapter 40 · Training efficiency & memory
 #
-# **Day 1 · ~90 minutes · T4 GPU (runs on CPU with a reduced budget)**
+# **Part III · Chapter 40 · about 90 minutes · T4 GPU (runs on CPU with a reduced budget)**
 #
-# "CUDA out of memory" is the error you will see most often when training
-# deep models, and "how much memory does training a 7B model need?" is a
-# standard interview question. Both are answered by the same arithmetic: what
-# lives in memory during a training step, how big each piece is, and which
-# technique shrinks which piece.
+# "CUDA out of memory" is the most frequent error in training deep models, and
+# "how much memory does training a 7B model need?" is a standard question in
+# ML engineering interviews. Both are answered by the same arithmetic: what
+# lives in memory during a training step, how large each part is, and which
+# technique reduces which part.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. compute the memory of weights, gradients and optimizer state for any model and optimizer, with and without mixed precision;
 # 2. estimate activation memory and explain why it scales with batch × sequence × hidden × layers (and seq² in attention);
@@ -26,11 +26,14 @@
 # **You will produce:** `artifacts/level3/nb02/memory_report.json` (estimated vs
 # measured memory for a small transformer) and you will use
 # [`src/scaleml/profiling.py`](../../src/scaleml/profiling.py) (memory helpers) and
-# [`src/scaleml/tinygpt.py`](../../src/scaleml/tinygpt.py) (the model you build in notebook 03).
+# [`src/scaleml/tinygpt.py`](../../src/scaleml/tinygpt.py) (the model you build in Chapter 41).
 #
 # **Measured here vs on a T4.** Our verification runs are CPU-only. Numbers in
 # **Expected:** lines were printed by a CPU run unless marked *"on a T4 you should
 # see … (not measured in our verification runs)"*.
+
+# %% [markdown]
+# Read first: [Chapter 40 text](README.md) explains the ideas behind this lab (Training efficiency & memory) in more depth; [solutions](solutions.md) has worked answers.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -151,7 +154,7 @@ print(f"{N_PARAMS:,} parameters | batch {B} x seq {T}")
 #    forward until backward uses it. They scale with **batch × sequence × hidden ×
 #    layers**, plus **batch × heads × seq²** for attention probabilities.
 #
-# Plus framework overhead you cannot remove: the CUDA context (~0.3–0.5 GB),
+# In addition there is framework overhead that cannot be removed: the CUDA context (~0.3–0.5 GB),
 # cuBLAS/cuDNN workspaces, and allocator fragmentation.
 #
 # **Mixed precision does not shrink 1–3.** With `torch.autocast` (what this course
@@ -169,8 +172,8 @@ print(f"{N_PARAMS:,} parameters | batch {B} x seq {T}")
 # | `adam` / `adamw` | 16 | 18 |
 #
 # So fine-tuning a 7B-parameter model with AdamW needs ~112 GB *before*
-# activations. That arithmetic is why parameter-efficient fine-tuning (notebook 06)
-# and sharded optimizers (ZeRO/FSDP, notebook 10) exist.
+# activations. That arithmetic is why parameter-efficient fine-tuning (Chapter 44)
+# and sharded optimizers (ZeRO/FSDP, Chapter 48) exist.
 
 # %% [markdown]
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l3-training-memory.svg" alt="Stacked bars of bytes per parameter: fp32 AdamW 4 + 4 + 8 = 16; autocast adds a 2-byte fp16 copy for 18; ZeRO accounting 2 + 2 + 12 = 16; activations come on top" width="100%">
@@ -487,8 +490,8 @@ else:
 # %% [markdown]
 # **Expected (CPU, measured):** compilation takes ~10–60 s and, for this small
 # model on CPU, the compiled step is about as fast as eager (our runs: 0.95×–1.09×). The matmuls dominate and were already efficient; there is little to fuse
-# that matters at this size. "Break-even" is how many steps it takes to win back the
-# compile time; with no speed-up, it is never: compile is not free.
+# that matters at this size. "Break-even" is the number of steps needed to recover the
+# compile time; with no speed-up there is no break-even point, so compilation has a real cost.
 #
 # **On a T4 you should see** a larger gain for transformer training (often
 # 1.2–2×, from fused LayerNorm/GELU/softmax and fewer launches), with a compile
@@ -498,7 +501,7 @@ else:
 #
 # ## 2.6 · An OOM debugging playbook
 #
-# When you hit `torch.OutOfMemoryError: CUDA out of memory`:
+# When `torch.OutOfMemoryError: CUDA out of memory` occurs, proceed in this order:
 #
 # 1. **Read the message.** It states how much was requested, how much is
 #    allocated by PyTorch and how much is reserved but free. Reserved ≫ allocated
@@ -509,7 +512,7 @@ else:
 # 3. **Reduce the peak**, cheapest first: smaller micro-batch + gradient
 #    accumulation (2.3) → mixed precision (halves activations) → shorter sequences
 #    or truncation → activation checkpointing (2.4) → smaller/8-bit optimizer
-#    state, LoRA (notebook 06) → sharding (FSDP/ZeRO, notebook 10).
+#    state, LoRA (Chapter 44) → sharding (FSDP/ZeRO, Chapter 48).
 # 4. **Evaluation OOM but training fine?** Missing `torch.no_grad()` /
 #    `torch.inference_mode()`, so eval builds graphs; or eval batch size set larger.
 # 5. **After an OOM in a notebook**, the failed step's tensors may still be
@@ -521,7 +524,7 @@ else:
 #    `torch.cuda.memory._record_memory_history()` and view it at
 #    `pytorch.org/memory_viz`.
 #
-# The classic leak, made visible on CPU: accumulating the loss *tensor* (with
+# The most common leak, made visible on CPU: accumulating the loss *tensor* (with
 # its graph) instead of a number. Each step's activations stay reachable through the
 # graph and are never freed.
 
@@ -686,7 +689,7 @@ print("max |manual - torch.optim.AdamW| after 3 steps:", (theta - w.detach()).ab
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question without notes; a complete answer takes about a minute:
 #
 # 1. How much GPU memory does full fine-tuning of a 7B model with AdamW need for weights, gradients and optimizer state, in fp32 and with mixed precision? Which of these does mixed precision actually shrink?
 # 2. What determines activation memory in a transformer, and how does it scale with batch size, sequence length, hidden size and number of layers?
@@ -695,4 +698,4 @@ print("max |manual - torch.optim.AdamW| after 3 steps:", (theta - w.detach()).ab
 # 5. Your training job's memory grows every step and eventually OOMs. Walk through how you find the cause.
 # 6. What does `torch.compile` do, when does it give a speed-up, and what are its operational risks?
 #
-# **Next chapter:** [`03_transformer_from_scratch.ipynb`](../ch41-transformer-from-scratch/notebook.ipynb) — build, train and sample from the decoder you have been measuring, and make generation fast with a KV cache.
+# **Next chapter:** [Chapter 41 · A transformer from scratch](../ch41-transformer-from-scratch/notebook.ipynb) — build, train and sample from the decoder you have been measuring, and make generation fast with a KV cache.

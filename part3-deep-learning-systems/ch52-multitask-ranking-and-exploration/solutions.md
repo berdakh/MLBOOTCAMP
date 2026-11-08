@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `second_price_auction`
 
-[verified] Reference code: [`code/nb14.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def second_price_auction(bids, pctrs, reserve):
@@ -34,7 +34,7 @@ increment (one cent), quality scores beyond pCTR, and per-slot position effects.
 
 ## Exercise 2 · `thompson_sampling`
 
-[verified] Reference code: [`code/nb14.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def thompson_sampling(true_ps, n_rounds, seed):
@@ -61,7 +61,7 @@ the last third of rounds adds less regret than the first third.
 
 ## Exercise 3 · Segment miscalibration and the exploration budget
 
-[open-ended] Model answer:
+[open-ended] One good answer:
 
 (a) Only auctions where a video ad competes with non-video ads are affected. With
 video pCTR ×1.1, a video ad's eCPM rises 10%: it now wins auctions where it was
@@ -73,7 +73,7 @@ video auctions are unchanged (the factor cancels).
 
 (b) Short term: video advertisers win more impressions, often at lower per-click
 prices; their realised clicks are 10% below what the system expected, so platform
-revenue per impression drops on the misallocated auctions (the 14.4 simulation:
+revenue per impression drops on the misallocated auctions (the section 4 simulation:
 a per-advertiser bias moved win share and value/cost while a uniform one barely
 changed anything). Non-video advertisers lose volume and pay more. Long term,
 advertisers' measured ROI shifts, they re-bid (video advertisers who get cheap
@@ -105,7 +105,7 @@ upside, and cap per-ad exploration impressions.
    MMoE has several expert networks and, per task, a softmax gate (a function of the
    input) that mixes experts per example, so tasks can share where they agree and
    specialise where they do not. Not worth it when tasks are highly aligned, data is
-   small, or latency/compute budgets are tight; in 14.2 MMoE and shared-bottom were
+   small, or latency/compute budgets are tight; in section 2 MMoE and shared-bottom were
    within ~0.002 NE of each other on our one-epoch CPU run, which is typical when the
    conflict is mild.
 
@@ -118,11 +118,11 @@ upside, and cap per-ad exploration impressions.
    pCTR propagate into pCVR; it does not fix the selection bias exactly (later work
    adds inverse-propensity or doubly-robust corrections, e.g. ESCM²). In our simulation
    (one epoch, CPU budget) ESMM improved CTR NE but its pCVR ranked worse than the
-   naive multi-task model's: re-measure on your data rather than assuming the paper's gains.
+   naive multi-task model's: the gains must be re-measured on one's own data, not assumed from the paper.
 
 3. [expected] Score = `pCTR^a · pCVR^b · value` (or a weighted sum of calibrated expected values:
    `w₁·pCTR + w₂·pCTR·pCVR·value + …`). Choose weights by mapping the Pareto frontier
-   offline (14.3) and then running online experiments at a few points; pick according
+   offline (section 3) and then running online experiments at a few points; pick according
    to the business objective (e.g. maximise value subject to CTR ≥ x), revisit when
    models change. Products of calibrated probabilities keep a meaning (expected value
    per impression); exponents are tuning knobs and break that meaning.
@@ -133,19 +133,19 @@ upside, and cap per-ad exploration impressions.
    multiplies every eCPM by `k`: the ranking and the per-click price (ratio of pCTRs)
    are unchanged; only comparisons with things not scaled (reserve in eCPM terms, other
    formats, organic content) shift. A segment error changes relative eCPMs, so winners
-   change: the 14.4 simulation showed advertiser 0's win share and value/cost moving
+   change: the section 4 simulation showed advertiser 0's win share and value/cost moving
    when only its pCTR was biased.
 
 5. [expected] ε-greedy: simple, explores uniformly forever (linear regret), wastes impressions on
    clearly bad ads. UCB: deterministic optimism, logarithmic regret, needs care with
    delayed feedback and many arms. Thompson: samples from the posterior, logarithmic
-   regret, handles priors and delayed/batched feedback naturally, best in our 14.5
+   regret, handles priors and delayed/batched feedback naturally, best in our section 5
    runs. For cold start: Thompson with an informative prior from similar ads (category,
    advertiser history), with a capped exploration share or boost only for ads with few
    impressions, and logged propensities for later off-policy evaluation.
 
 6. [open-ended] Labels: conversion events with value, attribution window, delayed-feedback
-   handling (13.8), deduplication. Models: pCTR, pCVR (ESMM/multi-task with shared
+   handling (Chapter 51, section 8), deduplication. Models: pCTR, pCVR (ESMM/multi-task with shared
    embeddings), maybe a value regression model; calibration layers per segment. Ranking:
    `pCTR × pCVR × value` (or advertiser's target CPA/ROAS bidding: bid derived from value).
    Offline metrics: NE/AUC per task, calibration of pCVR and predicted value, a replayed

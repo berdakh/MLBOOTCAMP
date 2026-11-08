@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `bpsn_bnsp_auc`
 
-[verified] Reference code: [`code/nb15.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def bpsn_bnsp_auc(y, s, subgroup):
@@ -26,7 +26,7 @@ normal BPSN/BNSP means the model is simply worse at ranking within that conversa
 
 ## Exercise 2 · `clip_and_noise`
 
-[verified] Reference code: [`code/nb15.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def clip_and_noise(per_example_grads, clip, sigma, rng):
@@ -46,7 +46,7 @@ from `torch.func.vmap(grad(...))` or Opacus's hooks.
 
 ## Exercise 3 · Explaining and mitigating a subgroup gap
 
-[open-ended] Model answer:
+[open-ended] One good answer:
 
 (a) Benign comments that mention Muslims are scored as more toxic than many genuinely
 toxic comments about other topics, so at the production threshold people discussing their
@@ -85,14 +85,14 @@ their confidence interval, or appeals concentrate on one group.
    non-mentions: an identity-term penalty pushes exactly those benign mentions up.
 
 2. [verified] The score distributions of non-toxic comments differ by group, so one threshold
-   cuts them at different quantiles: different FPRs (15.3). Per-group thresholds can
+   cuts them at different quantiles: different FPRs (section 3). Per-group thresholds can
    equalise FPR but then change FNR, and with different base rates no non-trivial
    classifier can equalise FPR, FNR and calibration (positive predictive value)
-   simultaneously (Kleinberg et al.; Chouldechova). You choose which error matters most
-   for the harm in question, and document it.
+   simultaneously (Kleinberg et al.; Chouldechova). One must choose which error matters most
+   for the harm in question, and document the choice.
 
 3. [expected] Shift tests: train on one period/source and evaluate on a later period and other
-   sources (15.4: catches temporal drift, new topics/vocabulary, source-specific labelling);
+   sources (section 4: catches temporal drift, new topics/vocabulary, source-specific labelling);
    slice metrics by segment. Perturbation tests: typos and leetspeak (catches brittle
    tokens, evasion), counterfactual identity swaps (catches spurious identity features),
    paraphrases, negation, length changes. Also check calibration under shift, not just AUC.
@@ -100,7 +100,7 @@ their confidence interval, or appeals concentrate on one group.
 4. [verified] Inferring whether a specific record was in the training set from the model's
    behaviour (loss, confidence). Vulnerability comes from memorisation: over-fitting,
    small datasets, rare/outlier records, large models. Measure with a shadow-model or
-   loss-threshold attack: AUC of distinguishing members from non-members (15.6: weak
+   loss-threshold attack: AUC of distinguishing members from non-members (section 6: weak
    regularisation gave a higher attack AUC than strong regularisation). DP training
    bounds it provably.
 
@@ -110,7 +110,7 @@ their confidence interval, or appeals concentrate on one group.
    for the same privacy); σ (noise multiplier) sets the privacy per step. An accountant
    composes the steps (with the sampling rate) into (ε, δ): for any neighbouring
    datasets, the probability of any outcome changes by at most a factor e^ε (plus δ).
-   Smaller ε, stronger privacy, lower accuracy (15.7: AUC fell as σ grew).
+   Smaller ε, stronger privacy, lower accuracy (section 7: AUC fell as σ grew).
 
 6. [open-ended] Fairness: subgroup AUC/BPSN/BNSP and FPR/FNR per relevant identity and per language
    variety, with CIs, on locally labelled data from that country; threshold choice

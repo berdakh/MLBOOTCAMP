@@ -1,136 +1,190 @@
-# Four-week study plan
+# Study plan
 
-About a month at **3 hours a day**. Week 1 is the bootcamp. Weeks 2–4 turn what
-the bootcamp introduced into skills you can use under pressure: capstones on
-real public data, daily SQL and Python drills, and weekly mock interviews.
+This appendix gives a schedule for the whole book in **sessions of about
+three hours**. At one session a day, Part I takes about a week, the three
+capstones that consolidate it about three weeks, and Parts II and III about
+two weeks each. The plan is organised by chapter ranges rather than by
+calendar dates, so it can be followed at any pace; a section at the end
+adapts it to less time.
 
+The plan alternates two kinds of work. The chapters introduce ideas and
+techniques with step-by-step labs. The capstones, drills and mock interviews
+between the parts turn those techniques into skills that can be exercised
+without the labs' guidance.
 
 ---
 
-## What five days does, and what it does not
+## What Part I provides, and what it does not
 
-Be clear about this, with yourself and with interviewers.
+It is worth being clear about this, both privately and when describing the
+work to others.
 
-| Five days gives you | Needs continued practice (weeks 2–4 and beyond) |
+| Part I provides | What requires continued practice |
 |---|---|
-| One working, tested, documented end-to-end project you can walk through | Building the same kind of project again, on messier data, without step-by-step notebooks |
-| The vocabulary: leakage, embargo, skew, readiness, drift, rollback, calibration | Using that vocabulary naturally, under follow-up questions |
-| Point-in-time SQL you have read and modified | Writing window functions and date joins from a blank editor, quickly and correctly |
-| A FastAPI service and tests you have run | Writing a service and its tests from a blank file in under an hour |
-| One worked system design and one scored mock | Ten or more designs, aloud, timed, with feedback |
+| One working, tested and documented end-to-end project that you can explain | Building the same kind of project again, on less tidy data, without step-by-step labs |
+| The vocabulary: leakage, embargo, skew, readiness, drift, rollback, calibration | Using that vocabulary precisely under follow-up questions |
+| Point-in-time SQL that you have read and modified | Writing window functions and date joins from an empty editor, quickly and correctly |
+| A FastAPI service and tests that you have run | Writing a service and its tests from an empty file in under an hour |
+| One worked system design and one scored mock interview | Ten or more designs, spoken aloud, timed, with feedback |
 | A first measurement of your gaps | Closing them |
 
-Fluency comes from repetition with feedback. No course compresses that.
+Fluency comes from repetition with feedback, and no text can compress that
+process.
 
-## Daily shape in weeks 2–4
+## Stage 1: Part I (Chapters 1–18), seven sessions
 
-| Block | Minutes | What |
+| Session | Chapters | Content |
 |---|---|---|
-| Drills | 30 | SQL or Python, timed, from a blank editor (alternate days). Notebook 16 is the template. |
+| 1 | [Before you start](before-you-start.md); [Chapter 1](../part1-foundations/ch01-diagnostic/README.md); [Chapters 2–3](../part1-foundations/ch02-reproducible-project/README.md) | The skills diagnostic; a reproducible project; data acquisition and validation |
+| 2 | [Chapters 4–5](../part1-foundations/ch04-sql-for-ml/README.md) | SQL for point-in-time features; leakage-safe splits and baselines |
+| 3 | [Chapters 6–9](../part1-foundations/ch06-pipelines-and-cross-validation/README.md) | Pipelines and cross-validation, model selection, thresholds and calibration, error analysis and artifacts |
+| 4 | [Chapters 10–12](../part1-foundations/ch10-fastapi-and-contracts/README.md) | FastAPI and contracts, consistent serving, API clients and tests |
+| 5 | [Chapters 13–15](../part1-foundations/ch13-packaging-and-configuration/README.md) | Packaging and configuration, health checks and latency, monitoring and rollback |
+| 6 | [Chapters 16–18](../part1-foundations/ch16-final-evaluation-and-docs/README.md) | Final evaluation and documentation, Python and SQL drills, system design and a mock interview |
+| 7 | Review | Catch up on unfinished exercises; rate yourself on the [readiness rubric](readiness-rubric.md); choose the first capstone |
+
+**Outcome of Stage 1:** the TaskFlow project in your own git repository, a
+recorded five-minute explanation of it, and a first set of rubric ratings.
+
+## Stage 2: three capstones, drills and mock interviews (about 21 sessions)
+
+### The shape of a session
+
+| Block | Minutes | Content |
+|---|---|---|
+| Drills | 30 | SQL or Python, alternately, timed, from an empty editor. The drills of [Chapter 17](../part1-foundations/ch17-python-and-sql-drills/README.md) are the model |
 | Capstone | 120 | The current capstone, following its brief |
-| Explain | 30 | Explain today's capstone work aloud or in writing, as if to an interviewer; answer two questions from the [question bank](interview-questions.md) |
+| Explanation | 30 | Explain the session's capstone work aloud or in writing, as to an interviewer, and answer two questions from the [interview questions](interview-questions.md) |
 
-On mock-interview days (one per week), replace the capstone block with the
-mock and its review.
+In a session devoted to a mock interview, the mock and its review replace the
+capstone block.
 
-## Week 1 — the bootcamp
+### Capstone A, with SQL fluency (seven sessions)
 
-| Day | Session (~3 h) |
+| Sessions | Capstone (120 min) | Drills (30 min) |
+|---|---|---|
+| 1–4 | Minimum viable project: data download with checksums, validation, a leakage-safe split, a baseline, evaluation with confidence intervals | SQL: joins and aggregation, then window functions (`ROW_NUMBER`, `LAG`, running sums) |
+| 5 | Package, tests, README, model card | Python: a small module with tests, from an empty file |
+| 6 | **Mock interview 1**: a detailed walkthrough of the TaskFlow project (30 min) and a system design (40 min), recorded | — |
+| 7 | Review of the recording; rubric ratings | — |
+
+### Capstone B, with serving and testing fluency (seven sessions)
+
+| Sessions | Capstone (120 min) | Drills (30 min) |
+|---|---|---|
+| 1–4 | Minimum viable project, plus a FastAPI service or a batch scoring job, with tests | SQL: date logic and point-in-time joins, with pandas equivalents |
+| 5 | Monitoring outline (PSI on a later period), README, model card | Python: a retrying client and its tests, from an empty file |
+| 6 | **Mock interview 2**: coding (45 min, pandas or SQL) and behavioural questions (20 min, in the STAR format) | — |
+| 7 | Review; rubric ratings | — |
+
+### Capstone C, with interview readiness (seven sessions)
+
+| Sessions | Capstone (120 min) | Drills (30 min) |
+|---|---|---|
+| 1–4 | Minimum viable project, concentrating on the skill that the rubric rates lowest | Mixed and timed: one SQL, one Python and one evaluation question per session |
+| 5 | Final revision of all three capstones: each has a README with results, intervals, limitations and instructions for running it | Repeat the diagnostic of Chapter 1 |
+| 6 | **Mock interview 3**: a full interview loop, preferably with another person: coding, depth in machine learning, system design, behavioural questions | — |
+| 7 | Final rubric ratings; decide what to continue practising | — |
+
+### Which capstones, in which order
+
+The five capstone briefs are in [Part IV](../part4-capstones/README.md),
+which recommends an order and gives its reasons. At the pace above, **three
+minimum viable projects** fit into Stage 2 alongside drills and mock
+interviews: a minimum viable project takes four to five sessions, and
+extensions take longer. Part IV recommends C-MAPSS first and ERCOT second, as
+capstones A and B, and as capstone C the project closest to the roles you are
+applying for. The remaining two can be done later. To choose the third:
+
+| Target field | Capstone to prioritise |
 |---|---|
-| 1 | Day 0: [before you start](before-you-start.md), the diagnostic, then start [Day 1](../part1-foundations/_dayplans/day-1.md) |
-| 2 | Finish [Day 1](../part1-foundations/_dayplans/day-1.md): reproducible project, validation, SQL, splits |
-| 3 | [Day 2](../part1-foundations/_dayplans/day-2.md): pipelines, model selection, thresholds, artifacts |
-| 4 | [Day 3](../part1-foundations/_dayplans/day-3.md): FastAPI, consistent serving, clients and tests |
-| 5 | [Day 4](../part1-foundations/_dayplans/day-4.md): packaging, health and latency, monitoring and rollback |
-| 6 | [Day 5](../part1-foundations/_dayplans/day-5.md): final evaluation, drills, system design and mock |
-| 7 | Rest, or catch up. Score yourself on the [readiness rubric](readiness-rubric.md). Choose your first capstone |
-
-Week 1 deliverable: the TaskFlow project in your own git repository, a
-recorded five-minute walkthrough, and your first rubric scores.
-
-## Week 2 — first capstone, SQL fluency
-
-| Days | Capstone (120 min) | Drills (30 min) |
-|---|---|---|
-| 8–11 | Capstone A: MVP. Data download with checksums, validation, a leakage-safe split, a baseline, evaluation with intervals | SQL: joins and aggregation; then window functions (`ROW_NUMBER`, `LAG`, running sums) |
-| 12 | Capstone A: package, tests, README, model card | Python: a small module with tests from a blank file |
-| 13 | **Mock interview 1**: a project deep-dive on TaskFlow (30 min) + system design (40 min), recorded | — |
-| 14 | Review the recording; rubric; rest | — |
-
-## Week 3 — second capstone, serving and testing fluency
-
-| Days | Capstone (120 min) | Drills (30 min) |
-|---|---|---|
-| 15–18 | Capstone B: MVP, plus a FastAPI service or batch scoring job with tests | SQL: date logic and point-in-time joins; pandas equivalents |
-| 19 | Capstone B: monitoring sketch (PSI on a later period), README, model card | Python: write a retrying client and its tests from a blank file |
-| 20 | **Mock interview 2**: coding (45 min: pandas or SQL) + behavioural (20 min, STAR) | — |
-| 21 | Review; rubric; rest | — |
-
-## Week 4 — third capstone, interview readiness
-
-| Days | Capstone (120 min) | Drills (30 min) |
-|---|---|---|
-| 22–25 | Capstone C: MVP, focusing on the skill the rubric says is weakest | Mixed, timed: one SQL, one Python, one evaluation question per day |
-| 26 | Portfolio polish: each capstone has a README with results, intervals, limitations, and how to run it | Re-take the diagnostic |
-| 27 | **Mock interview 3**: full loop, ideally with another person: coding, ML depth, system design, behavioural | — |
-| 28 | Final rubric; decide what to keep practising | — |
-
-## Which capstones, in which order
-
-Five capstone briefs are in [Capstones](../part4-capstones/README.md), with a recommended
-order and reasoning. At the pace above, **three capstone MVPs** fit in weeks
-2–4 alongside drills and mocks: an MVP takes roughly 4–5 days at 3 hours a
-day, and extensions take longer. The capstone index recommends C-MAPSS
-first, then ERCOT, then the one closest to the roles you are applying for as
-capstones A, B and C. Do the remaining two afterwards. To choose the third:
-
-| If you are targeting… | Prioritise |
-|---|---|
-| Energy, utilities, forecasting teams | [ERCOT load forecasting](../part4-capstones/cap2-electricity-load-forecasting/README.md) |
+| Energy, utilities, forecasting | [ERCOT load forecasting](../part4-capstones/cap2-electricity-load-forecasting/README.md) |
 | Industrial, IoT, sensor and signal-processing roles (closest to EEG work) | [C-MAPSS predictive maintenance](../part4-capstones/cap1-predictive-maintenance/README.md) |
-| Retail, marketplace, supply chain | [Online Retail forecasting](../part4-capstones/cap3-retail-demand-forecasting/README.md) |
-| Recommendations, ranking, personalisation | [MovieLens recommendations](../part4-capstones/cap4-movie-recommendations/README.md) |
-| Trust and safety, content, NLP-adjacent | [Civil Comments moderation](../part4-capstones/cap5-content-moderation/README.md) |
+| Retail, marketplaces, supply chain | [Online Retail demand forecasting](../part4-capstones/cap3-retail-demand-forecasting/README.md) |
+| Recommendation, ranking, personalisation | [MovieLens recommendations](../part4-capstones/cap4-movie-recommendations/README.md) |
+| Trust and safety, content, natural language processing | [Civil Comments moderation](../part4-capstones/cap5-content-moderation/README.md) |
+
+Each capstone has a guided solution (`walkthrough.ipynb` in its folder).
+Consult it after building your own version, not before; see
+[About the solutions](solutions.md).
 
 ## Mock interviews
 
-- **Record every mock.** Watching it back is uncomfortable and is where most of
-  the learning happens.
-- **Use a real person when you can**: a colleague, a friend in industry, a
-  peer-practice community. Self-scored mocks are better than none, but you
-  will be generous to yourself.
+- **Record every mock interview.** Watching the recording is uncomfortable,
+  and it is where most of the learning happens.
+- **Practise with another person when possible**: a colleague, an
+  acquaintance working in industry, or a peer-practice group. A self-scored
+  mock is better than none, but self-assessment tends to be lenient.
 - **Score with the [readiness rubric](readiness-rubric.md)**, and write down
-  the two weakest moments and what a better answer would have said.
-- **Vary the format**: project deep-dive, live coding, ML system design,
-  ML breadth questions, behavioural.
+  the two weakest moments together with what a better answer would have
+  contained.
+- **Vary the format**: a detailed project walkthrough, live coding, system
+  design, breadth questions on machine learning, and behavioural questions.
 
-## If you have less time
+## Stage 3: Part II (Chapters 19–38), about ten sessions
 
-| Available | Keep | Drop or postpone |
+Stages 1 and 2 prepare for roles centred on modelling at most companies. For
+machine learning engineering roles at large technology companies, continue
+with Parts II and III. Both are dense; some sessions will take longer than
+three hours, and it is more important to identify honestly what remains
+uncertain, using each part's final chapter, than to finish on schedule.
+
+| Session | Chapters | Content |
 |---|---|---|
-| 2 h/day | Bootcamp over 8–9 days; drills daily; one mock per week | Third capstone |
-| 1 h/day | Bootcamp using each day's "If you only have 90 minutes" path, over two weeks; drills | Capstones until the bootcamp is done |
-| Weekends only | One bootcamp day per weekend day; drills on weekday evenings for 20 minutes | Expect the plan to take about three months |
+| 1 | [19–20](../part2-ml-at-scale/ch19-event-logs-and-columnar-data/README.md) | Event logs and columnar data; aggregation and joins at scale |
+| 2 | [21–22](../part2-ml-at-scale/ch21-feature-pipelines-and-feature-stores/README.md) | Feature pipelines and feature stores; streaming features |
+| 3 | [23–24](../part2-ml-at-scale/ch23-implicit-feedback-and-position-bias/README.md) | Implicit feedback and position bias; learning to rank |
+| 4 | [25–26](../part2-ml-at-scale/ch25-candidate-generation/README.md) | Candidate generation; two-tower retrieval and approximate nearest neighbours |
+| 5 | [27–28](../part2-ml-at-scale/ch27-pytorch-training-done-right/README.md) | PyTorch training; sequence models for user behaviour |
+| 6 | [29–30](../part2-ml-at-scale/ch29-ab-testing-fundamentals/README.md) | A/B testing; advanced experimentation |
+| 7 | [31–32](../part2-ml-at-scale/ch31-ml-from-scratch-1/README.md) | Machine learning algorithms implemented from scratch |
+| 8 | [33–34](../part2-ml-at-scale/ch33-coding-patterns-1/README.md) | Coding patterns for interviews |
+| 9 | [35–36](../part2-ml-at-scale/ch35-serving-a-ranking-cascade/README.md) | Serving a ranking cascade; model optimisation for inference |
+| 10 | [37–38](../part2-ml-at-scale/ch37-recsys-and-search-system-design/README.md) | Recommendation and search system design; final evaluation and a mock interview loop |
 
-## After the month
+In parallel, continue with 30 minutes of drills per session, using the
+coding patterns of Chapters 33–34 once they have been studied.
 
-Keep the daily drills going at 20–30 minutes; fluency fades quickly without
-them. Keep adding to the question bank answers you have practised aloud. And
-apply: real interviews are themselves practice, and their feedback is the most
-accurate measure of readiness you will get.
+## Stage 4: Part III (Chapters 39–58), about ten sessions
 
-## Beyond the first month: Levels 2 and 3
+Run the labs on a Colab T4 GPU (see [Working in Colab](colab.md)).
 
-The four weeks above prepare you for modeling-focused roles at most
-companies. For **ML engineer roles at large technology companies**, continue
-with the two advanced levels. At about three hours a day:
-
-| Weeks | Do | Keep going in parallel |
+| Session | Chapters | Content |
 |---|---|---|
-| 5–6 | [Level 2 · Applied ML at Scale](https://github.com/berdakh/MLBOOTCAMP/blob/main/part2-ml-at-scale/README.md), Days 1–10 | 30 min/day of coding-pattern drills (Level 2 notebooks 15–16) |
-| 7–8 | [Level 3 · Deep Learning & Large-Scale Systems](https://github.com/berdakh/MLBOOTCAMP/blob/main/part3-deep-learning-systems/README.md), Days 1–10, on a Colab T4 | the drills; one ML system design per week |
-| 9–10 | One capstone extended with a Level 2–3 technique (e.g. MovieLens with a two-tower retriever and LambdaMART; Civil Comments with a fine-tuned transformer and subgroup analysis) | two full mock loops (Level 3 notebook 20), with a real interviewer if you can |
+| 1 | [39–40](../part3-deep-learning-systems/ch39-gpu-fundamentals-and-profiling/README.md) | GPU fundamentals and profiling; training efficiency and memory |
+| 2 | [41–42](../part3-deep-learning-systems/ch41-transformer-from-scratch/README.md) | A transformer from scratch; pretrained transformers and tokenisation |
+| 3 | [43–44](../part3-deep-learning-systems/ch43-fine-tuning-a-classifier/README.md) | Fine-tuning a classifier; parameter-efficient fine-tuning |
+| 4 | [45–46](../part3-deep-learning-systems/ch45-embeddings-and-semantic-search/README.md) | Embeddings and semantic search; contrastive training and re-ranking |
+| 5 | [47–48](../part3-deep-learning-systems/ch47-distributed-data-parallel/README.md) | Distributed data parallelism; scaling to large models |
+| 6 | [49–50](../part3-deep-learning-systems/ch49-quantization-and-distillation/README.md) | Quantisation and distillation; high-throughput serving |
+| 7 | [51–52](../part3-deep-learning-systems/ch51-ctr-prediction-at-scale/README.md) | Click-through-rate prediction at scale; multi-task ranking and exploration |
+| 8 | [53–54](../part3-deep-learning-systems/ch53-fairness-robustness-and-privacy/README.md) | Fairness, robustness and privacy; evaluating LLM systems and guardrails |
+| 9 | [55–56](../part3-deep-learning-systems/ch55-ml-platform-design/README.md) | ML platform design; large-scale design cases |
+| 10 | [57–58](../part3-deep-learning-systems/ch57-ml-depth-and-research-discussion/README.md) | Depth in machine learning and research discussion; a full interview loop and portfolio |
 
-Levels 2 and 3 are dense, so expect some days to spill over. Being honest
-about what is still shaky, using each level's final mock loop, matters more
-than finishing on schedule.
+In parallel, continue the drills and do one system design, aloud and timed,
+every few sessions.
+
+## Stage 5: integration (about ten sessions)
+
+Extend one capstone with a technique from Parts II–III, for example MovieLens
+with a two-tower retriever and LambdaMART re-ranking, or Civil Comments with
+a fine-tuned transformer and a subgroup analysis. Finish with two full mock
+interview loops in the format of
+[Chapter 58](../part3-deep-learning-systems/ch58-full-interview-loop-and-portfolio/README.md),
+with a real interviewer if possible.
+
+## With less time
+
+| Time available | Keep | Drop or postpone |
+|---|---|---|
+| Two hours a day | Part I over eight to nine sessions; drills in every session; one mock interview after each capstone | The third capstone |
+| One hour a day | Part I over about two weeks, reading each chapter's text and doing the core sections and graded exercises of its lab; drills | Capstones, until Part I is complete |
+| Weekends only | Part I at two to three chapters per weekend day; 20 minutes of drills on weekday evenings | Expect Stages 1 and 2 to take about three months |
+
+## After the plan
+
+Continue the drills at 20–30 minutes a day, since fluency fades quickly
+without them, and keep extending the set of interview questions you have
+practised aloud. Real interviews are themselves practice, and the feedback
+they give is the most accurate measure of readiness available.

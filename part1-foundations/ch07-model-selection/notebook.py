@@ -6,13 +6,13 @@
 # %% [markdown]
 # # Chapter 7 · Model selection
 #
-# **Day 2 · ~45 minutes · CPU core · optional GPU extension**
+# **Part I · Chapter 7 · about 45 minutes · CPU core · optional GPU extension**
 #
 # "Model B scores 0.14 and model A scores 0.16" is not a finding until you know
 # how much those numbers move when the sample moves. This notebook compares a
 # baseline, a linear model and boosted trees with rolling-origin CV and
 # bootstrap intervals, runs a hyperparameter search on a fixed budget, and
-# ends with a written selection decision you could defend in a review.
+# ends with a written selection decision that can be justified in a review.
 #
 # By the end you will be able to:
 #
@@ -20,13 +20,16 @@
 # 2. put a bootstrap confidence interval on a metric, and choose rows or customers as the resampling unit for a reason;
 # 3. decide between two models with a *paired* bootstrap of the difference;
 # 4. run a budgeted random search and keep every trial as an experiment record;
-# 5. explain why boosted trees do not win on this data, and when they would.
+# 5. explain why boosted trees do not outperform the linear model on this data, and when they would.
 #
 # **You will produce:** `artifacts/trials.csv` (every search trial) and
 # `artifacts/selection.json` (the selection memo).
 #
 # Everything here uses **train** and **validation** only. The test period is
-# reserved for notebook 15.
+# reserved for Chapter 16.
+
+# %% [markdown]
+# Read first: [Chapter 7 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -104,11 +107,11 @@ print(f"train {len(train):,} rows, {int(train[LABEL].sum())} positives | "
 # | **Selection memo** | the written decision, with the evidence that supports it | `artifacts/selection.json` |
 
 # %% [markdown]
-# ## 6.1 · Four candidates, two estimates each
+# ## 7.1 · Four candidates, two estimates each
 #
 # * `dummy`: predicts the base rate for everyone. Its PR-AUC *is* the positive
 #   rate, the floor every model must clear.
-# * `logreg`: the logistic-regression pipeline from notebook 05.
+# * `logreg`: the logistic-regression pipeline from Chapter 6.
 # * `hgb`: `HistGradientBoostingClassifier` with the course's conservative
 #   defaults (8 leaves, at least 200 rows per leaf, learning rate 0.03).
 # * `hgb_deeper`: the more typical out-of-the-box setting: 31 leaves, 50 rows
@@ -148,7 +151,7 @@ comparison
 # regularised ones, which is what overfitting looks like with ~1,400 positives.
 
 # %% [markdown]
-# ## 6.2 · How uncertain is a validation PR-AUC?
+# ## 7.2 · How uncertain is a validation PR-AUC?
 #
 # `churnlab.evaluation.bootstrap_ci` resamples the validation set with
 # replacement, recomputes the metric each time, and reports the 2.5th and
@@ -246,7 +249,7 @@ plt.tight_layout()
 plt.show()
 
 # %% [markdown]
-# ## 6.3 · Is logreg really better? Ask the paired question
+# ## 7.3 · Is logreg really better? Ask the paired question
 #
 # The two intervals above overlap. That does **not** mean "no difference":
 # both models are scored on the *same* rows, so most of the sampling noise is
@@ -275,7 +278,7 @@ pd.DataFrame(paired).T.round(4)
 # resamples (2% of row resamples) have hgb ahead or level. The interval excludes zero, but its lower end is close to it.
 # Honest wording: *"on validation, logistic regression ranks better than the
 # boosted trees by about 0.03 PR-AUC (customer-bootstrap 95% CI 0.004 to
-# 0.05); it also won all four rolling-origin folds on train."* Two independent
+# 0.05); it was also ahead on all four rolling-origin folds on train."* Two independent
 # pieces of evidence pointing the same way are worth more than either alone.
 
 # %% [markdown]
@@ -295,7 +298,7 @@ def decide(y, scores_a, scores_b, groups):
 grade.ex1(decide)
 
 # %% [markdown]
-# ## 6.4 · A search on a budget, recorded as experiments
+# ## 7.4 · A search on a budget, recorded as experiments
 #
 # Hyperparameter search is where most compute is wasted and most
 # self-deception happens: try 200 configurations, report the best one, and
@@ -352,7 +355,7 @@ trials_df.sort_values("cv_pr_auc", ascending=False).groupby("family").head(4).ro
 # logistic-regression trial scores between ≈ 0.191 and ≈ 0.193, for `C` from
 # 0.003 to 10: the linear model is insensitive to regularisation here (a
 # plateau). The best tree configuration lands around 0.166, below every `C`.
-# These numbers are higher than the 4-fold numbers in 6.1 because the three
+# These numbers are higher than the 4-fold numbers in 7.1 because the three
 # search folds are different months; compare trials only with each other.
 
 # %%
@@ -388,10 +391,10 @@ def budgeted_search(param_grid_list, evaluate_fn, budget):
 grade.ex2(budgeted_search)
 
 # %% [markdown]
-# ## 6.5 · Why the trees lose here, and when they would not
+# ## 7.5 · Why the trees lose here, and when they would not
 #
-# This is the honest finding of the day: **gradient-boosted trees, the default
-# winner on tabular benchmarks, lose to logistic regression on this data**, on
+# This is the main empirical finding of the chapter: **gradient-boosted trees, the default
+# choice on tabular benchmarks, lose to logistic regression on this data**, on
 # every rolling fold and on validation. The reasons are structural, not luck:
 #
 # 1. **The signal is smooth and roughly monotone.** Churn risk rises steadily
@@ -419,10 +422,10 @@ grade.ex2(budgeted_search)
 # And the linear model has practical advantages that count in a tie:
 # coefficients a product team can read, monotone behaviour that is easy to
 # test, tiny artifacts, microsecond latency, and calibrated probabilities out
-# of the box (notebook 07 checks that).
+# of the box (Chapter 8 checks that).
 
 # %% [markdown]
-# ## 6.6 · The selection memo
+# ## 7.6 · The selection memo
 #
 # A decision nobody wrote down gets re-litigated every month. The memo below is
 # short on purpose, and it is saved next to the trials.
@@ -459,19 +462,19 @@ print(json.dumps(selection, indent=2))
 # search's top `C` is deliberate: the search found a plateau, not a peak, and a
 # change smaller than the noise is not worth a new version.
 #
-# `test_set_used: false` is a promise to your future self. Notebook 15 reads
+# `test_set_used: false` is a promise to your future self. Chapter 16 reads
 # the test period exactly once.
 
 # %% [markdown]
-# ## 6.7 · Optional GPU extension: a small MLP
+# ## 7.7 · Optional GPU extension: a small MLP
 #
 # *Not required, and nothing later depends on it.* A two-layer PyTorch MLP on
 # the same preprocessed features, to check whether a neural network changes
 # the picture. It runs on CPU too (about a minute). **It was not executed in
 # our verification runs** (PyTorch is not installed in either test
 # environment), so no result is claimed here. If you run it, compare its
-# validation PR-AUC against logreg with the paired bootstrap from 6.3, and add
-# it to the trials table. Expect it to tie at best, for the reasons in 6.5.
+# validation PR-AUC against logreg with the paired bootstrap from 7.3, and add
+# it to the trials table. Expect it to tie at best, for the reasons in 7.5.
 
 # %%
 RUN_GPU_EXTENSION = False  # set True to run; needs `pip install torch`
@@ -604,4 +607,4 @@ print(f"rows for +/-0.02 on a 5% rate: {1.96**2 * 0.05 * 0.95 / 0.02**2:.0f}")
 # 4. Why did logistic regression beat gradient boosting on this data? Name a dataset property that would reverse it.
 # 5. You ran 16 configurations and report the best CV score. Why is that number optimistic, and what protects you from fooling yourself?
 #
-# **Next chapter:** [`07_thresholds_and_calibration.ipynb`](../ch08-thresholds-and-calibration/notebook.ipynb) — turn the selected model's scores into a decision: a threshold from stated costs, a call capacity, and probabilities you can trust.
+# **Next chapter:** [Chapter 8 · Thresholds & calibration](../ch08-thresholds-and-calibration/notebook.ipynb) — turn the selected model's scores into a decision: a threshold from stated costs, a call capacity, and probabilities you can trust.

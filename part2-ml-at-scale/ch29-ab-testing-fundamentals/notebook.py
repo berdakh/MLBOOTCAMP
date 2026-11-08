@@ -6,16 +6,16 @@
 # %% [markdown]
 # # Chapter 29 · A/B testing fundamentals
 #
-# **Day 6 · ~90 minutes · CPU only**
+# **Part II · Chapter 29 · about 90 minutes · CPU only**
 #
-# Offline metrics nominate a ranker; an online experiment decides whether it
-# ships. Most bad launch decisions are not caused by exotic statistics. They
-# come from a wrong randomisation unit, an underpowered test, a broken
-# assignment, a peek, or twenty metrics read at once. This notebook *measures*
-# each of these failures on simulated experiments where, unlike in real life,
-# you know the true effect.
+# Offline metrics propose a candidate ranker; an online experiment decides
+# whether it is launched. Most wrong launch decisions are not caused by exotic
+# statistics. They come from a wrong randomisation unit, an underpowered test,
+# a broken assignment, repeated looks at the data, or twenty metrics read at
+# once. This lab *measures* each of these failures on simulated experiments in
+# which, unlike in practice, the true effect is known.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. explain why the randomisation unit drives the variance, and show a naive test's false-positive rate under an A/A test;
 # 2. choose between per-user CTR and pooled CTR, and say what each one estimates;
@@ -24,9 +24,12 @@
 # 5. detect a sample-ratio mismatch and explain why it invalidates the result;
 # 6. quantify how peeking and multiple metrics inflate false positives, and correct for them.
 #
-# **You will produce:** `artifacts/level2/nb11/aa_tests.csv`, the measured false-positive
-# rates of every test in this notebook, and the simulator
-# [`src/shoprank/experiments.py`](../../src/shoprank/experiments.py), reused in notebook 12.
+# **Outputs:** `artifacts/level2/nb11/aa_tests.csv`, the measured false-positive
+# rates of every test in this lab, and the simulator
+# [`src/shoprank/experiments.py`](../../src/shoprank/experiments.py), reused in Chapter 30.
+
+# %% [markdown]
+# Read first: [Chapter 29 text](README.md), which explains the concepts this lab measures. Worked answers are in [solutions.md](solutions.md).
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -91,7 +94,7 @@ print(pop[["activity", "base_ctr"]].describe().round(3).T[["mean", "std", "min",
 # | Randomisation unit | the thing one coin flip assigns to an arm | the user: all of a user's requests see the same ranker |
 # | A/A test | an experiment where both arms get the identical treatment, so every "win" is a false positive | 400 simulated A/A runs measure each test's false-positive rate |
 # | Exposed (triggered) user | an assigned user who actually reached the tested surface | about 5% of assigned users never make a request |
-# | Pooled vs per-user CTR | total clicks ÷ total impressions, versus the average of each user's own click rate | both about 0.145 per arm in 11.2 |
+# | Pooled vs per-user CTR | total clicks ÷ total impressions, versus the average of each user's own click rate | both about 0.145 per arm in 29.2 |
 # | Standard error (SE) | the typical size of an estimate's random error across repeated experiments | naive SE 0.0006 vs a true spread of 0.0017 |
 # | Significance level α | the false-positive rate you accept when there is no effect | α = 0.05 |
 # | Power (1 − β) | the chance the test detects an effect that is really there | 80% power for 10% → 11% at 14,749 users per arm |
@@ -107,7 +110,7 @@ print(pop[["activity", "base_ctr"]].describe().round(3).T[["mean", "std", "min",
 # *What to notice:* steps 1–4 all happen before any metric is visible; that ordering, not the formula, is what protects the result.
 
 # %% [markdown]
-# ## 11.1 · The simulator
+# ## 29.1 · The simulator
 #
 # `ex.simulate_users(pop, n, rng, lift)` draws `n` users from this
 # population, simulates a two-week **pre-period** (no treatment) and a two-week
@@ -115,10 +118,10 @@ print(pop[["activity", "base_ctr"]].describe().round(3).T[["mean", "std", "min",
 # treatment (arm 1). Requests per user are Poisson with the user's activity;
 # each request shows 10 items; clicks are binomial with the user's CTR, which
 # drifts a little between periods and is multiplied by `1 + lift` in treatment.
-# Read the function: 40 lines, no magic.
+# The function is about 40 lines long and can be read in full.
 #
-# Our "new ranker" improves CTR by **2% relative** (0.140 → 0.143): a typical,
-# worthwhile ranking win, and a small one to detect.
+# The "new ranker" improves CTR by **2% relative** (0.140 → 0.143). This is a
+# typical size for a useful ranking change, and it is small enough to be hard to detect.
 
 # %%
 LIFT = 0.02
@@ -131,19 +134,19 @@ one.head(3)
 
 # %% [markdown]
 # **Expected:** about 5% of assigned users make no request in two weeks. An
-# analysis that counts them would dilute any effect; standard practice is to
+# analysis that counts them dilutes any effect. Standard practice is to
 # analyse users who were **exposed** (triggered), assigning them *before*
 # the outcome, so the filter cannot depend on treatment.
 #
-# ## 11.2 · Which CTR? Per-user vs pooled
+# ## 29.2 · Which CTR? Per-user vs pooled
 #
 # * **Pooled CTR** = Σ clicks / Σ impressions over all users of an arm. Heavy users
 #   carry more weight. It answers "what share of impressions get clicked?"
 # * **Per-user CTR** = mean over users of (clicks_u / impressions_u). Every user
 #   counts once. It answers "how does the typical user respond?"
 #
-# They are different *estimands*. Either can be right, but you must pick one
-# before the test, and analyse it with the correct unit of variance.
+# They are different *estimands*. Either can be appropriate, but one must be chosen
+# before the test and analysed with the correct unit of variance.
 
 # %%
 by_arm = exposed.groupby("arm").apply(lambda g: pd.Series({
@@ -163,14 +166,14 @@ print(by_arm.round(4))
 # metrics can move in different directions.) How noisy, and which test is
 # honest about it, is the next section.
 #
-# ## 11.3 · The randomisation unit decides the variance
+# ## 29.3 · The randomisation unit decides the variance
 #
 # Clicks from the same user are correlated: a user with a high CTR clicks a
-# lot on *every* request. If you randomise **users** but test the pooled
-# CTR as if every **impression** were independent (the two-proportion z-test
-# you learned first), the standard error is too small and the test fires too often.
+# lot on *every* request. If we randomise **users** but test the pooled
+# CTR as if every **impression** were independent (the textbook
+# two-proportion z-test), the standard error is too small and the test rejects too often.
 #
-# The way to *measure* that is an **A/A test**: both arms get the same
+# The way to *measure* this is an **A/A test**: both arms get the same
 # ranker (`lift=0`), so every "significant" result is a false positive.
 # A valid test at α = 0.05 should fire about 5% of the time. We run 400 A/A
 # experiments of 20,000 users each:
@@ -214,8 +217,8 @@ print(f"pooled-CTR difference, request-randomised: true SD across experiments {a
 #   valid but still fires about 9% in our runs: heavy users' requests split
 #   unevenly by chance, which a binomial SE ignores.
 #
-# So why not always randomise requests? Because the unit must also match **what the
-# treatment does and what you measure**:
+# Why not always randomise requests? Because the unit must also match **what the
+# treatment does and what is measured**:
 #
 # * a user who sees ranker A in the morning and B at noon has an
 #   inconsistent experience, and *carry-over* (B taught them to scroll more)
@@ -228,14 +231,14 @@ print(f"pooled-CTR difference, request-randomised: true SD across experiments {a
 #
 # Rule: randomise at the level of the unit whose behaviour the treatment
 # changes (usually the user), and compute variance **at that unit**: a
-# per-user metric with a t-test, or a pooled ratio with the delta method (notebook 12).
+# per-user metric with a t-test, or a pooled ratio with the delta method (Chapter 30).
 #
 # > **Intuition.** Treating 1,000 impressions from 50 users as 1,000 independent
 # > data points is like polling 50 people 20 times each and reporting 1,000 opinions:
 # > a person's answers largely repeat, so the honest sample size is much closer to 50.
 # > *Where it breaks down:* repeated impressions are not exact copies, so the effective
 # > sample size lies somewhere between users and impressions; the delta method
-# > (notebook 12) computes exactly where.
+# > (Chapter 30) computes exactly where.
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-x-randomization-unit.svg" alt="Request, user and cluster randomisation compared on variance and interference risk" width="100%">
 #
@@ -245,7 +248,7 @@ print(f"pooled-CTR difference, request-randomised: true SD across experiments {a
 fpr.rename("false_positive_rate").to_frame().to_csv(OUT / "aa_tests.csv")
 
 # %% [markdown]
-# ## 11.4 · Power and sample size
+# ## 29.4 · Power and sample size
 #
 # For a metric that is a **proportion** over independent units (did the user
 # convert?), the sample size per arm to detect an absolute difference `δ`
@@ -253,7 +256,7 @@ fpr.rename("false_positive_rate").to_frame().to_csv(OUT / "aa_tests.csv")
 #
 # $$ n = \frac{(z_{1-\alpha/2} + z_{1-\beta})^2 \, \big(p_0(1-p_0) + p_1(1-p_1)\big)}{\delta^2}, \qquad p_1 = p_0 + \delta. $$
 #
-# Read it as an interview answer: halving the effect **quadruples** the sample
+# Three consequences follow. Halving the effect **quadruples** the sample
 # size; the `z` terms are about 2.8 for α = 0.05 and 80% power; and the
 # variance term is largest for proportions near 0.5.
 #
@@ -261,10 +264,10 @@ fpr.rename("false_positive_rate").to_frame().to_csv(OUT / "aa_tests.csv")
 #
 # *What to notice:* power is the green area of the right curve beyond the line; it grows when δ moves the curves apart or when more users make both curves narrower.
 #
-# > **Intuition.** Detecting a lift is hearing a whisper in a noisy room. The
+# > **Intuition.** Detecting a lift is like hearing a whisper in a noisy room. The
 # > whisper is δ; the noise is the standard error, which falls only like 1/√n. A whisper
 # > half as loud needs four times the listeners. *Where it breaks down:* the "noise"
-# > also depends on the metric (σ), which is why CUPED (notebook 12) can lower it without
+# > also depends on the metric (σ), which is why CUPED (Chapter 30) can lower it without
 # > adding users.
 
 # %% [markdown]
@@ -334,11 +337,11 @@ print(f"measured power over 200 simulated experiments: {np.mean(hits):.2f} ({tim
 #
 # * In real products the pre-period SD is often a little smaller than the
 #   experiment's (novelty, seasonality, new users), so a planned test can be
-#   slightly under-powered. Pad the estimate, or plan for 85–90% power.
-# * Variance reduction (CUPED, notebook 12) cuts that sample size substantially
+#   slightly under-powered. Inflate the estimate, or plan for 85–90% power.
+# * Variance reduction (CUPED, Chapter 30) cuts that sample size substantially
 #   using the same pre-period data.
 #
-# ## 11.5 · t-test vs bootstrap
+# ## 29.5 · t-test vs bootstrap
 #
 # The t-test assumes the *mean* is approximately normal (true for large n by
 # the CLT, even for skewed per-user metrics). The bootstrap assumes only that the
@@ -365,23 +368,23 @@ print(f"bootstrap 95% CI [{lo:+.5f}, {hi:+.5f}] ({time.time() - start:.1f} s for
 # done its job, and the t-test is the cheaper choice. Reach for the bootstrap when the
 # statistic has no simple standard error (a median, a percentile, a ratio of
 # sums), when samples are small and skewed, or as a check on a hand-derived
-# variance, as notebook 12 does for the delta method. Always resample the
+# variance, as Chapter 30 does for the delta method. Always resample the
 # **randomisation unit** (users), never impressions.
 
 # %% [markdown]
-# ## 11.6 · Sample-ratio mismatch: check the assignment before the result
+# ## 29.6 · Sample-ratio mismatch: check the assignment before the result
 #
-# You asked for a 50/50 split. If the arms' user counts are too unequal to be
-# chance, something between assignment and logging is broken, and **any**
+# Suppose the design specifies a 50/50 split. If the arms' user counts are too unequal to be
+# explained by chance, something between assignment and logging is broken, and **any**
 # metric difference is suspect, because the missing users are rarely missing at random.
 #
 # > **Intuition.** An SRM is a survey where, in one arm only, unhappy customers hang
-# > up before answering. The answers you do get look happier, and no amount of
-# > statistics on the answers can tell you that. *Where it breaks down:* a mismatch can
+# > up before answering. The answers that are recorded look happier, and no
+# > analysis of those answers can reveal the problem. *Where it breaks down:* a mismatch can
 # > also be harmless (a bot filter applied evenly but noisily); you only know after
-# > finding the cause, which is why you investigate rather than reweight.
+# > finding the cause, which is why the mismatch is investigated rather than reweighted.
 #
-# A planted bug, modelled on real ones: the new ranker's client code logs
+# A planted bug, modelled on bugs that occur in practice: the new ranker's client code logs
 # the exposure event lazily, on the user's first interaction. Users who never
 # click are logged only half the time in treatment. The ranker itself is
 # **identical** in both arms (an A/A test).
@@ -401,9 +404,9 @@ print(f"per-user CTR 'lift' {res['diff'] / ctr[logged['arm'] == 0].mean():+.2%},
 # %% [markdown]
 # **Expected:** about 2% fewer users in treatment (a share in control of
 # about 0.505), a "lift" of roughly +2% with a p-value around 1e-10: a
-# highly significant win in an A/A test, as large as the real ranker's effect. The bias is large because the lost users are
+# highly significant "improvement" in an A/A test, as large as the real ranker's effect. The bias is large because the lost users are
 # exactly the ones with the lowest CTR. Whether a 0.505 split is suspicious is a statistics
-# question, which you answer with a **chi-square goodness-of-fit test** of the
+# question, answered with a **chi-square goodness-of-fit test** of the
 # observed counts against the expected split.
 
 # %% [markdown]
@@ -429,15 +432,15 @@ print(f"SRM p-value with the bug: {p_srm:.1e} | without it: {stats.chisquare(cle
 # one (anything from 0.05 to 1) without it. With only 40,000 users the same bug gave
 # an SRM p-value of about 0.02 in our runs (not alarming at p < 0.001) while the
 # biased metric was already "significant": a small mismatch can hide a large bias,
-# so treat any SRM as a reason to investigate. Teams commonly alert at
+# so any SRM is a reason to investigate. Teams commonly alert at
 # p < 0.001, because the check runs on every experiment and false alarms are costly.
 # When it fires, **do not** "re-weight the arms" and read the result anyway:
 # find the cause (logging, bots filtered differently, redirects, crashes in one
 # arm), fix it, and restart the experiment.
 #
-# ## 11.7 · Peeking
+# ## 29.7 · Peeking
 #
-# A dashboard updates daily. Someone checks it every morning and stops the test
+# A dashboard updates daily. An analyst checks it every morning and stops the test
 # the first day it is significant. Each look is a fresh chance for noise to
 # cross the threshold, so the false-positive rate of the *procedure* is far
 # above α. Simulated A/A tests: 14 daily looks, conversion rate 10%, 1,000 new users per arm per day.
@@ -465,8 +468,8 @@ plt.show()
 # %% [markdown]
 # **Expected:** about 0.05 for a single test at the end, about **0.2** for daily
 # peeking with stopping (rising with every look; see the plot), and about 0.02 with Bonferroni.
-# The right tools if you need to look early are **sequential tests** designed for
-# it: group-sequential boundaries with alpha spending (O'Brien–Fleming spends little
+# If early looks are needed, the appropriate tools are **sequential tests** designed for
+# them: group-sequential boundaries with alpha spending (O'Brien–Fleming spends little
 # alpha early) or always-valid p-values (mSPRT). Most experimentation platforms
 # offer one. Otherwise: fix the duration from the power calculation, look only for
 # guardrail breakages (crashes, latency), and read the primary metric once.
@@ -475,8 +478,8 @@ plt.show()
 #
 # *What to notice:* the day-5 crossing is pure noise; a sequential boundary demands much stronger evidence early, so the same walk would never have stopped.
 #
-# > **Intuition.** Peeking is rolling a die every morning and stopping the first time
-# > it shows a six: run long enough and you always "find" one. *Where it breaks down:*
+# > **Intuition.** Peeking is like rolling a die every morning and stopping the first time
+# > it shows a six: with enough mornings a six always appears. *Where it breaks down:*
 # > successive looks are correlated (day 6 contains day 5's data), so the inflation grows
 # > more slowly than for independent rolls: about 0.2 after 14 looks, not 1 − 0.95¹⁴ ≈ 0.51.
 
@@ -497,7 +500,7 @@ def aa_false_positive_rate(n_experiments, n_users_per_arm, n_looks, alpha=0.05, 
 grade.ex3(aa_false_positive_rate)
 
 # %% [markdown]
-# ## 11.8 · Many metrics, many chances
+# ## 29.8 · Many metrics, many chances
 #
 # A launch review shows 20 metrics. Even if the ranker changes nothing, each
 # has a 5% chance of a "significant" move. Below, 2,000 simulated experiments
@@ -537,15 +540,15 @@ print(pd.DataFrame(summary).T.round(3).to_string())
 # Benjamini–Hochberg controls the *proportion* of false discoveries (about 3%)
 # and keeps a little more power (about 0.59).
 #
-# In practice, the cleanest defence is a design decision, not a correction:
+# In practice, the most effective protection is a design decision, not a correction:
 # **one** pre-registered primary metric decides the launch; a handful of
 # **guardrails** (latency, crashes, revenue) can only block it; everything else is
-# exploratory and labelled as such. Notebook 12 turns that into launch criteria.
+# exploratory and labelled as such. Chapter 30 turns that into launch criteria.
 
 # %% [markdown]
 # ## Key equations
 #
-# A revision sheet: the formulas behind this notebook, each with a tiny worked example. The code cell after it checks every example numerically.
+# A revision sheet: the formulas behind this lab, each with a tiny worked example. The code cell after it checks every example numerically.
 #
 # **1. Two-proportion z-test** (pooled; valid only if the n trials are independent units)
 #
@@ -575,7 +578,7 @@ print(pd.DataFrame(summary).T.round(3).to_string())
 #
 # *In words:* (how many standard errors of separation you need)² × (noise per unit) ÷ (effect)². The 2 is there because both arms are noisy.
 # *Symbols:* $z_{1-\alpha/2} = 1.96$ for α = 0.05, $z_{1-\beta} = 0.84$ for 80% power, $p$ = baseline rate, $\delta$ = absolute MDE. For a continuous metric replace $p(1-p)$ with $\sigma^2$.
-# *Example:* $p = 0.10$, $\delta = 0.01$: $2 \cdot 2.80^2 \cdot 0.09 / 0.0001 \approx 14{,}128$; the exact two-variance form used in 11.4 gives 14,749. Halve δ and n quadruples.
+# *Example:* $p = 0.10$, $\delta = 0.01$: $2 \cdot 2.80^2 \cdot 0.09 / 0.0001 \approx 14{,}128$; the exact two-variance form used in 29.4 gives 14,749. Halve δ and n quadruples.
 #
 # **4. Sample-ratio mismatch: chi-square goodness of fit**
 #
@@ -647,4 +650,4 @@ print("5. Bonferroni rejects", (p_demo <= 0.05 / len(p_demo)).astype(int),
 # 5. A stakeholder wants to check results daily and stop when significant. Explain the risk with a number, and offer two alternatives.
 # 6. A launch review shows 3 of 25 metrics significantly up. How do you decide whether the launch is a win?
 #
-# **Next chapter:** [`12_advanced_experimentation.ipynb`](../ch30-advanced-experimentation/notebook.ipynb) — make experiments cheaper (CUPED, interleaving), analyse ratio metrics correctly, and decide what to launch.
+# **Next chapter:** [Chapter 30 · Advanced experimentation](../ch30-advanced-experimentation/notebook.ipynb) — making experiments cheaper (CUPED, interleaving), analysing ratio metrics correctly, and writing launch criteria.

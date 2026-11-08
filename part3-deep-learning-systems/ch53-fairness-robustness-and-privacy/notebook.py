@@ -6,11 +6,11 @@
 # %% [markdown]
 # # Chapter 53 · Fairness, robustness & privacy
 #
-# **Day 8 · ~90 minutes · T4 GPU (runs on CPU with a reduced budget)**
+# **Part III · Chapter 53 · about 90 minutes · T4 GPU (runs on CPU with a reduced budget)**
 #
-# A model with a great overall AUC can still flag comments that merely *mention* an identity as
-# toxic, collapse when the data drifts or someone misspells a slur, and leak which records it was
-# trained on. Responsible-AI questions now appear in most ML interview loops ("how would you
+# A model with a high overall AUC can still flag comments that merely *mention* an identity as
+# toxic, degrade sharply when the data drift or someone misspells a slur, and reveal which records it
+# was trained on. Questions on these topics now appear in most ML interview loops ("how would you
 # evaluate this classifier for bias?", "what is differential privacy and what does it cost?"), and
 # the expected answers are quantitative.
 #
@@ -18,7 +18,7 @@
 # > of which are offensive. It **never prints comment text**: only ids, lengths, counts and metrics.
 # > The identity terms used in the template tests are neutral words.
 #
-# By the end you will be able to:
+# By the end of this lab you should be able to:
 #
 # 1. compute subgroup AUC, **BPSN** and **BNSP** AUC (Borkan et al., 2019) and FPR/FNR gaps, and explain what each reveals;
 # 2. show how one global threshold produces different error rates per group, and what per-group thresholds trade;
@@ -33,6 +33,9 @@
 # were printed by our CPU-budget run. Fine-tuning a transformer on this data is the natural
 # extension; on a T4 it would typically raise overall AUC by a few points, but whether it closes the
 # subgroup gaps must be measured, not assumed (not measured in our verification runs).
+
+# %% [markdown]
+# Read first: [Chapter 53 text](README.md), which explains subgroup metrics, robustness testing, membership inference and differential privacy in more detail than this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -125,13 +128,13 @@ print("the original data are released under CC0 (see https://huggingface.co/data
 # | FPR / FNR | Share of negatives flagged / share of positives missed, at a threshold | FPR 0.083 vs 0.010 at 0.5 |
 # | Distribution shift | Test data drawn from a different time or source than training | 2016 → late 2017 comments |
 # | Counterfactual swap | Replacing one identity term with another and checking the score does not move | "gay" → "straight" |
-# | PII | Personally identifiable information: names, emails, phone numbers | the regex redactor in 15.6 |
+# | PII | Personally identifiable information: names, emails, phone numbers | the regex redactor in section 6 |
 # | Membership inference | Guessing whether a record was in the training set from the model's behaviour on it | loss-threshold attack, AUC 0.64 |
 # | Differential privacy (ε, δ) | A guarantee that one record barely changes what training outputs; smaller ε = stronger | ε ≤ 1.0 at σ = 8 |
 # | DP-SGD | SGD with per-example gradient clipping and Gaussian noise | `clip_and_noise` in Exercise 2 |
 
 # %% [markdown]
-# ## 15.1 · Data and a baseline classifier
+# ## 1 · Data and a baseline classifier
 #
 # We keep the official WILDS `split` column (train/val/test are random splits) and sample to the
 # budget. The model is TF-IDF (word 1–2-grams) + logistic regression: fast, strong for its cost,
@@ -169,7 +172,7 @@ print(f"TF-IDF {X_train.shape[1]:,} features, trained in {time.perf_counter() - 
 # toxic rate is much higher among comments mentioning *black*, *white*, *homosexual* or *muslim*
 # (23–33%) than overall (11%). ~190,000 TF-IDF features, trained in ~15–35 s; test AUC ≈ 0.893.
 #
-# ## 15.2 · Subgroup metrics: subgroup AUC, BPSN, BNSP
+# ## 2 · Subgroup metrics: subgroup AUC, BPSN, BNSP
 #
 # Overall AUC hides *where* the errors are. Borkan et al. (2019) define three AUCs per identity
 # subgroup `g`, each on a different slice of the test set:
@@ -251,14 +254,14 @@ RESULTS["jigsaw_final_metric"] = round(final, 4)
 # rarely scores above 0.5, so a real deployment would pick a lower threshold (next section).
 
 # %% [markdown]
-# ## 15.3 · Threshold effects
+# ## 3 · Threshold effects
 #
 # Deployment needs a threshold, and one global threshold gives each group its own error rates. Below:
 # FPR per group at a few thresholds, then **per-group thresholds** chosen to give every group the
 # same FPR as the background (an "equalised false-positive rate" policy) and what that does to FNR.
 # Per-group thresholds need the identity at prediction time (often unavailable, sometimes not
 # legal to use), and equalising one error rate generally un-equalises others: when base rates differ,
-# you cannot equalise FPR, FNR and calibration at once (Kleinberg et al., 2016; Chouldechova, 2017).
+# FPR, FNR and calibration cannot all be equalised at once (Kleinberg et al., 2016; Chouldechova, 2017).
 #
 # > **Intuition.** One threshold is one height bar for everyone; if one group's benign comments are
 # > systematically scored higher, the same bar catches more of them. Moving the bar per group can
@@ -300,7 +303,7 @@ print(pd.DataFrame(rows).round(3).to_string(index=False))
 # FPR was bought with unequal (and worse) FNR, which is the trade-off the impossibility results predict.
 
 # %% [markdown]
-# ## 15.4 · Robustness: distribution shift
+# ## 4 · Robustness: distribution shift
 #
 # A random split measures interpolation. Production data comes from the future and from new
 # sources. Two shift tests, each training a fresh model on one slice and testing it on held-out data
@@ -343,7 +346,7 @@ print(shift.round(3).to_string())
 # this would be visible. A transformer would probably degrade less on vocabulary drift, but that
 # has to be measured with the same protocol.
 #
-# ## 15.5 · Robustness: perturbations and counterfactual identity swaps
+# ## 5 · Robustness: perturbations and counterfactual identity swaps
 #
 # Two perturbation tests on the main model:
 #
@@ -402,17 +405,17 @@ print(swaps.round(3).to_string(index=False))
 # %% [markdown]
 # **Expected (measured):** typos in 20% of the words reduce recall on toxic comments from 0.285 to
 # 0.254 (−11% relative), with a word-level model that has never seen the misspelt tokens (character
-# n-grams or subword models are more robust). The template test is stark: neutral sentences score
+# n-grams or subword models are more robust). The template test gives a clear result: neutral sentences score
 # 0.50 with "gay", 0.30 with "black", 0.20 with "muslim", against ≈ 0.03–0.05 for "american",
 # "straight", "christian" or "young". Swapping the term in real non-toxic comments lowers their mean
 # score (e.g. "gay" → "straight": 0.187 → 0.077, flag rate at 0.5: 5.7% → 0.7%): the model's decision
 # depends on *who* is mentioned, which is exactly what counterfactual fairness forbids.
 
 # %% [markdown]
-# ## 15.6 · Privacy: PII, membership inference
+# ## 6 · Privacy: PII, membership inference
 #
 # **PII.** Training data and logs contain names, emails, phone numbers and addresses. Standard
-# practice: minimise what you collect, redact or tokenise PII before it reaches training data and
+# practice: minimise what is collected, redact or tokenise PII before it reaches training data and
 # logs, restrict access, set retention limits, and honour deletion requests (which is hard once a
 # record has been trained on: one more reason to keep PII out). Regexes catch structured PII (emails,
 # phone numbers, card numbers); names and addresses need an NER model. Below: a regex redactor on
@@ -466,7 +469,7 @@ print(mi.round(3).to_string(index=False))
 # brings the attack down to ≈ 0.57 at a small cost in test AUC (0.785 → 0.774). The attack AUC tracks
 # the train/test loss gap, i.e. memorisation.
 #
-# ## 15.7 · Differential privacy: DP-SGD
+# ## 7 · Differential privacy: DP-SGD
 #
 # **Differential privacy** (DP) bounds how much any single training record can change what the
 # training algorithm outputs: for neighbouring datasets `D`, `D'` (one record added or removed)
@@ -483,7 +486,7 @@ print(mi.round(3).to_string(index=False))
 #
 # > **Intuition.** A vote where each person's ballot can move the result by at most one unit
 # > (clipping), and the official count is then reported with random jitter of a few units (noise):
-# > looking at the result, you cannot tell whether any particular person voted. More voters (a larger
+# > looking at the result, nobody can tell whether any particular person voted. More voters (a larger
 # > batch) make the same jitter matter less. *Where the analogy breaks down:* training repeats this
 # > thousands of times on overlapping data, and the privacy loss accumulates; computing the total ε
 # > needs an accountant, not intuition.
@@ -565,14 +568,14 @@ print("saved", OUT / "results.json")
 # features is possible but slower to write by hand). Plain SGD reaches ≈ 0.72 in 3 epochs; clipping alone
 # changes little (≈ 0.72). Adding noise costs accuracy smoothly: σ = 1 (ε ≤ 9.6 by our bound) ≈ 0.72,
 # σ = 2 (ε ≤ 4.4) ≈ 0.71, σ = 4 (ε ≤ 2.1) ≈ 0.68, σ = 8 (ε ≤ 1.0) ≈ 0.63. That is the privacy/utility
-# trade-off: strong guarantees (ε around 1) cost real accuracy unless you have much more data (the
+# trade-off: strong guarantees (ε around 1) cost real accuracy unless much more data is available (the
 # noise on the mean gradient shrinks as 1/batch size) or a pretrained model (fine-tune few parameters).
 # The ε column comes from the stated zCDP formula, a loose upper bound for this simplified sampling
 # scheme; a real privacy claim needs an accountant (e.g. Opacus with Poisson sampling), which would
 # report a smaller ε for the same σ.
 
 # %% [markdown]
-# > **Exercise 3.** Your toxicity filter's overall AUC is 0.95, but BPSN AUC for comments mentioning
+# > **Exercise 3.** A toxicity filter's overall AUC is 0.95, but BPSN AUC for comments mentioning
 # > *muslim* is 0.80 and the FPR at the production threshold is 3× the background's. (a) Explain to a
 # > product manager what that means for users. (b) Give three likely causes in the data or model.
 # > (c) Propose three mitigations (data, model, policy) and the trade-off of each. (d) What would you
@@ -608,7 +611,7 @@ print("saved", OUT / "results.json")
 # \mathrm{FPR}_g(t) = \Pr(s \ge t \mid y = 0, g), \qquad \mathrm{FNR}_g(t) = \Pr(s < t \mid y = 1, g)
 # $$
 #
-# *Example (15.2):* $\mathrm{FPR}_{\text{black}}(0.5) = 0.083$ vs 0.010 overall: an 8× ratio.
+# *Example (section 2):* $\mathrm{FPR}_{\text{black}}(0.5) = 0.083$ vs 0.010 overall: an 8× ratio.
 #
 # **3 · Jigsaw summary (power mean, $p = -5$).** $M_p(m_1, \dots, m_G) = \big(\tfrac{1}{G} \sum_g m_g^{\,p}\big)^{1/p}$;
 # a negative $p$ pulls the mean towards the *worst* group. *Example:* $M_{-5}(0.9, 0.7) = 0.765$, while the plain mean is 0.80.
@@ -654,7 +657,7 @@ print(f"std of the noise on the mean gradient: measured {np.std(noise_only):.5f}
 
 # %% [markdown]
 # **Expected:** the pairwise probability and `roc_auc_score` agree (to about three decimals, on the
-# same subsample; both close to the BPSN for *muslim* in 15.2); `M_-5 = 0.765` vs a plain mean of 0.800;
+# same subsample; both close to the BPSN for *muslim* in section 2); `M_-5 = 0.765` vs a plain mean of 0.800;
 # gradient norms around 13 before clipping and at most `1.000` after; and a measured noise standard
 # deviation within ~1% of `0.00781`.
 
@@ -683,4 +686,4 @@ print(f"std of the noise on the mean gradient: measured {np.std(noise_only):.5f}
 # 5. Explain DP-SGD step by step. What do the clipping norm and the noise multiplier control, and what does ε mean?
 # 6. Design question: you are launching a comment-moderation model for a new country. What fairness, robustness and privacy checks go into the launch review?
 #
-# **Next chapter:** [`16_evaluating_llm_systems_and_guardrails.ipynb`](../ch54-evaluating-llm-systems-and-guardrails/notebook.ipynb) — the same evaluation discipline for systems built on language models: eval sets, judges, prompt injection and guardrails.
+# **Next chapter:** [Chapter 54 · Evaluating LLM systems & guardrails](../ch54-evaluating-llm-systems-and-guardrails/notebook.ipynb) — the same evaluation discipline for systems built on language models: eval sets, judges, prompt injection and guardrails.

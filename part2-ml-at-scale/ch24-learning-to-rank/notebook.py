@@ -6,15 +6,15 @@
 # %% [markdown]
 # # Chapter 24 · Learning to rank
 #
-# **Day 3 · ~90 minutes · CPU only**
+# **Part II · Chapter 24 · about 90 minutes · CPU only**
 #
-# A ranker is not a classifier that happens to sort: only the *order within
-# a request* matters, the data comes in groups, and the metric (NDCG) cares
-# far more about the top than the bottom. This notebook builds the standard
-# industry recipe, point-in-time features plus LightGBM LambdaMART, and
-# evaluates it the way notebook 05 taught: on clicks, and against the truth.
+# A ranker is not a classifier whose outputs are sorted: only the *order
+# within a request* matters, the data come in groups, and the metric (NDCG)
+# weights the top far more than the bottom. This lab builds the standard
+# industrial approach, point-in-time features with LightGBM LambdaMART, and
+# evaluates it as Chapter 23 recommended: on clicks, and against the truth.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. frame ranking as learning over request groups, and say what a "query" is in a feed;
 # 2. build point-in-time (user, item) features from logs (prior days only) and test that they do not leak;
@@ -22,7 +22,10 @@
 # 4. train `LGBMRanker` with correct group sizes on a request-grouped time split;
 # 5. evaluate NDCG@10 and MRR on clicks *and* on true relevance, read feature importance, and decide what to do with position.
 #
-# **You will produce:** `artifacts/level2/ltr_lambdamart.txt` (the trained LightGBM model) and `artifacts/level2/ltr_results.csv` (the comparison table).
+# **Outputs of this lab:** `artifacts/level2/ltr_lambdamart.txt` (the trained LightGBM model) and `artifacts/level2/ltr_results.csv` (the comparison table).
+
+# %% [markdown]
+# Read first: [Chapter 24 text](README.md) — ranking metrics, point-in-time features, pointwise/pairwise/listwise objectives, LightGBM groups and the treatment of position, explained in full.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -75,7 +78,7 @@ print(f"{len(imps):,} impressions (days 0-48) | fitted eta {eta_hat:.3f} | {time
 
 # %% [markdown]
 # **Expected:** about 2.11 million impressions and a fitted η of about 0.88
-# (notebook 05 explains both). `true_p` is used only to grade rankings.
+# (Chapter 23 explains both). `true_p` is used only to grade rankings.
 
 # %% [markdown]
 # ## Key terms
@@ -128,15 +131,15 @@ print(f"requests with no click: {(req['clicks'] == 0).mean():.1%}")
 # ## 6.2 · Point-in-time features
 #
 # Features for a (user, item) pair at request time, all computed from logs
-# **strictly before the request's day** (a daily batch job; notebook 03's
-# point-in-time rule):
+# **strictly before the request's day** (a daily batch job; the point-in-time
+# rule of Chapter 21):
 #
 # | Feature | Meaning |
 # |---|---|
 # | `u_cat_ctr`, `u_cat_imps`, `u_cat_clicks` | the user's history with this item's category: smoothed CTR, log impressions, log clicks |
 # | `u_ctr`, `u_imps` | the user's overall click rate and activity |
 # | `i_ctr`, `i_imps` | the item's smoothed CTR and log impressions (popularity) |
-# | `i_coec` | item clicks over *expected* clicks given the positions it was shown at (debiased CTR, notebook 05) |
+# | `i_coec` | item clicks over *expected* clicks given the positions it was shown at (debiased CTR, Chapter 23) |
 # | `i_age` | days since the item launched |
 # | `log_price`, `price_vs_cat` | price, and price relative to the category median |
 # | `category`, `segment`, `device` | categorical |
@@ -156,8 +159,8 @@ F.describe().T[["mean", "min", "max"]].round(3)
 # lie between 0 and 1; `i_age` ranges from 0 to 48.
 #
 # Two quick leakage tests. A point-in-time feature for the very first day
-# must be "no history", and features must not change if you delete all
-# rows from the day being scored onward:
+# must be "no history", and features must not change when all rows from the
+# day being scored onward are deleted:
 
 # %%
 first_day = F[imps["day"] == 0]
@@ -173,7 +176,7 @@ print(f"features of day {cut} unchanged when later days are removed: {same}")
 # **Expected:** `0` and `True`. The second test is the useful one in real
 # pipelines: recompute features for a past day from a truncated log and
 # compare. If anything differs, a feature is peeking at the future. (It
-# caught a real bug while this notebook was written: the smoothing prior was
+# caught a real bug while this lab was being written: the smoothing prior was
 # the click rate of *all* rows passed in, future days included. Now it is a
 # fixed constant, `prior_ctr`.)
 #
@@ -182,7 +185,7 @@ print(f"features of day {cut} unchanged when later days are removed: {same}")
 # Position is *not* in the feature list. At serving time it does not exist:
 # position is the **output** of the ranker. Two options for using it anyway:
 #
-# * leave it out, and correct with weights (notebook 05, IPS);
+# * leave it out, and correct with weights (Chapter 23, IPS);
 # * put it in at **training** time, so the model can attribute clicks at the
 #   top to examination rather than to the item, then set it to a **constant
 #   (position 0)** at serving. Under the PBM that recovers the relevance
@@ -209,9 +212,9 @@ print(f"features of day {cut} unchanged when later days are removed: {same}")
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-ltr-objectives.svg" alt="Pointwise versus pairwise (RankNet) versus listwise (LambdaMART), and why LambdaRank weights pairs by the change in NDCG" width="100%">
 #
-# *What to notice:* the three columns differ in *what is compared* (one item, a pair, a pair weighted by the list metric). The numbers under the rule are the whole idea of LambdaRank: the same mistake costs 30× more at the top.
+# *What to notice:* the three columns differ in *what is compared* (one item, a pair, a pair weighted by the list metric). The numbers under the rule are the central idea of LambdaRank: the same mistake costs 30× more at the top.
 #
-# > **Intuition.** Grading a ranked shortlist of job candidates: swapping your 1st and 2nd choice changes who gets the offer; swapping 9th and 10th changes nothing anyone acts on. RankNet charges both swaps the same; LambdaRank charges each by how much the *metric* would change. *Where it breaks down:* NDCG's discount is a modelling choice, not a law; if users scroll deep (a long product grid), the bottom matters more than the metric says.
+# > **Intuition.** Consider grading a ranked shortlist of job candidates: swapping the 1st and 2nd choice changes who receives the offer; swapping 9th and 10th changes nothing anyone acts on. RankNet charges both swaps the same; LambdaRank charges each by how much the *metric* would change. *Where it breaks down:* NDCG's discount is a modelling choice, not a law; if users scroll deep (a long product grid), the bottom matters more than the metric says.
 #
 # The quantity RankNet optimises is easy to state and is a good diagnostic.
 #
@@ -236,8 +239,8 @@ grade.ex1(pairwise_accuracy)
 # `LGBMRanker.fit(X, y, group=sizes)` takes **group sizes**, not group ids:
 # `[10, 10, 7, ...]` means "the first 10 rows are one group, the next 10
 # another...". So the rows *must* be contiguous by group, in the same order
-# as the sizes. Shuffle the rows (or concatenate two frames) and forget to
-# re-sort, and LightGBM silently trains on nonsense groups.
+# as the sizes. If the rows are shuffled (or two frames concatenated) without
+# re-sorting, LightGBM silently trains on meaningless groups.
 #
 # > **Exercise 2.** Write `make_groups(df, group_col)` returning
 # > `(sorted_df, sizes)`: the frame sorted by `group_col` (a **stable** sort,
@@ -322,7 +325,7 @@ pd.DataFrame(results).T.round(4)
 # true expected clicks (policy and random requests together), NDCG on policy
 # clicks about 0.76 and MRR about 0.73; the oracle 1.00 and about 1.80, but
 # only about 0.68 / 0.60 on policy clicks
-# (notebook 05's paradox again). On random-traffic clicks the logged order
+# (the paradox of Chapter 23 again). On random-traffic clicks the logged order
 # still scores higher than the oracle (about 0.67 vs 0.66): the logged
 # positions *are* where clicks happen, even when they were assigned at
 # random. Only compare **new** rankers with each other on that column.
@@ -334,7 +337,7 @@ pd.DataFrame(results).T.round(4)
 #
 # 1. **logistic regression** (pointwise, linear; one-hot categoricals, scaled numerics);
 # 2. **GBDT pointwise** (`LGBMClassifier`, log loss);
-# 3. **GBDT pointwise + IPS** (clicked rows weighted 1/θ̂_p, notebook 05);
+# 3. **GBDT pointwise + IPS** (clicked rows weighted 1/θ̂_p, Chapter 23);
 # 4. **LambdaMART** (`LGBMRanker`, `objective="lambdarank"`, NDCG-driven);
 # 5. **LambdaMART + position feature** (trained with the logged position, served with position 0).
 
@@ -397,24 +400,25 @@ table.round(4)
 #   LambdaMART is slightly *lower* (about 0.976), as is LambdaMART with the
 #   position feature; IPS weighting changes nothing measurable;
 # * on policy clicks every learned ranker scores about 0.67–0.68 NDCG and
-#   0.58–0.60 MRR, *below* the logged order (0.76 / 0.73), the 05 paradox;
+#   0.58–0.60 MRR, *below* the logged order (0.76 / 0.73), the paradox of Chapter 23;
 #   on random-traffic clicks the learned rankers sit at about 0.63, with
 #   differences of the order of the noise;
 # * each model fits and predicts in about 3–12 s on 400,000 rows.
 #
-# Two honest lessons. First, the objective matters less than the features
+# Two lessons follow. First, the objective matters less than the features
 # when the label is binary and lists are short (10 items, one or two
 # clicks): LambdaMART's advantage grows with long lists and graded labels
 # (search relevance grades, purchase > click). Second, IPS and the position
 # feature do little *here* because none of these features encodes the logged
-# position (contrast notebook 05.6, where the policy score did). Check that
-# before assuming debiasing will move your metric.
+# position (in contrast with Section 5.6 of the Chapter 23 lab, where the
+# policy score did). This should be checked before assuming that debiasing
+# will change a metric.
 
 # %% [markdown]
 # ### How much do the models agree?
 #
-# Similar averages can hide different rankings. Pairwise accuracy (your
-# Exercise 1, library version `ltr.pairwise_accuracy`) against the **true**
+# Similar averages can hide different rankings. Pairwise accuracy (Exercise 1,
+# library version `ltr.pairwise_accuracy`) against the **true**
 # relevance, plus the rank correlation of LambdaMART with the other models:
 
 # %%
@@ -485,12 +489,12 @@ print("saved:", sorted(p.name for p in (ART / "level2").glob("ltr_*")))
 # %% [markdown]
 # > **Exercise 3.** Purchases are rarer than clicks but closer to what the
 # > business values. Propose a label (or label + weight) scheme for
-# > LambdaMART that uses both, say how you would choose its parameters, and
-# > how you would evaluate it offline without fooling yourself. Write your
+# > LambdaMART that uses both, explain how to choose its parameters, and
+# > how to evaluate it offline without misleading results. Write the
 # > answer in the cell below.
 
 # %% [markdown]
-# *Your answer:*
+# *Your answer here.*
 
 # %% [markdown]
 # ## Key equations
@@ -525,7 +529,7 @@ print("saved:", sorted(p.name for p in (ART / "level2").glob("ltr_*")))
 # \lambda^{\text{LR}}_{ij} = \lambda_{ij} \cdot \left\lvert \Delta \operatorname{NDCG}_{ij} \right\rvert
 # $$
 #
-# * *Example:* one relevant item at rank 2 vs rank 1: $\lvert\Delta\rvert = 1 - 1/\log_2 3 = 0.369$; at rank 10 vs 9: $1/\log_2 10 - 1/\log_2 11 = 0.012$. LambdaMART fits boosted trees to these $\lambda$ "gradients"; there is no explicit loss whose gradient they are, and it works anyway.
+# * *Example:* one relevant item at rank 2 vs rank 1: $\lvert\Delta\rvert = 1 - 1/\log_2 3 = 0.369$; at rank 10 vs 9: $1/\log_2 10 - 1/\log_2 11 = 0.012$. LambdaMART fits boosted trees to these $\lambda$ "gradients"; they are not the gradient of an explicitly stated loss, and the method works nonetheless.
 #
 # The cell below checks 1, 3 and 4 numerically.
 
@@ -567,23 +571,23 @@ print(f"4. |dNDCG| rank 2 vs 1: {swap(2, 1):.3f} | rank 10 vs 9: {swap(10, 9):.3
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
-# | `LightGBMError: ... sum of group counts ... not equal to number of data` | `group` sizes do not add up to the rows | build sizes with `make_groups` from the same frame you pass as `X` |
+# | `LightGBMError: ... sum of group counts ... not equal to number of data` | `group` sizes do not add up to the rows | build sizes with `make_groups` from the same frame that is passed as `X` |
 # | Ranker trains but NDCG is barely above random | rows not contiguous by group (shuffled or concatenated after computing sizes) | sort by group (stable) right before `fit`; never shuffle afterwards |
 # | Offline NDCG suspiciously high (0.95+ on clicks) | a feature computed with same-day data (label leakage) | recompute features from a truncated log and compare (6.2) |
 # | `ValueError: ... categorical_feature ... must be int` | float or string categoricals | cast to `int32` codes (as `build_features` does) |
-# | Kernel slow or killed while building features | too many rows in memory at once | restrict to the days you need; drop unused columns before `build_features` |
-# | New model loses to production on click NDCG | position bias in the metric (notebook 05) | compare on truth (here), IPS estimates, or random traffic between new models |
+# | Kernel slow or killed while building features | too many rows in memory at once | restrict to the days needed; drop unused columns before `build_features` |
+# | New model loses to production on click NDCG | position bias in the metric (Chapter 23) | compare on truth (here), IPS estimates, or random traffic between new models |
 
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
-# 1. Pointwise, pairwise, listwise: what does each optimise, and when would you pick each? Why can a pointwise model rank well while being badly calibrated, and when does calibration matter?
+# 1. Pointwise, pairwise, listwise: what does each optimise, and when is each appropriate? Why can a pointwise model rank well while being badly calibrated, and when does calibration matter?
 # 2. Derive (or describe) the LambdaRank gradient. Why multiply by |ΔNDCG|, and why does it work although NDCG is not differentiable?
-# 3. In a home feed there is no query. What is the "group" for LTR, and what changes if you group by user-day instead of request?
-# 4. Your ranker's offline NDCG on the training week is 0.95 and 0.70 on the next week. List the leakage and drift checks you run, in order.
-# 5. Should position be a feature? Describe two ways to use it in training, what you set at serving, and how you would know it helped.
-# 6. Your LambdaMART and logistic regression are within 0.002 NDCG offline. Which do you ship, and what else would you measure before deciding?
+# 3. In a home feed there is no query. What is the "group" for LTR, and what changes when grouping by user-day instead of request?
+# 4. A ranker's offline NDCG is 0.95 on the training week and 0.70 on the next week. List the leakage and drift checks to run, in order.
+# 5. Should position be a feature? Describe two ways to use it in training, what is set at serving, and how to know whether it helped.
+# 6. A LambdaMART model and a logistic regression are within 0.002 NDCG offline. Which should be deployed, and what else should be measured before deciding?
 #
-# **Next chapter:** [`07_candidate_generation.ipynb`](../ch25-candidate-generation/notebook.ipynb) — the ranker can only order what it is given: build and measure the retrieval stage that picks a few hundred candidates out of the whole catalogue.
+# **Next chapter:** [Chapter 25 · Candidate generation](../ch25-candidate-generation/notebook.ipynb) — the ranker can only order what it is given: building and measuring the retrieval stage that selects a few hundred candidates from the whole catalogue.

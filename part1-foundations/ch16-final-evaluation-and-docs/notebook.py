@@ -6,15 +6,16 @@
 # %% [markdown]
 # # Chapter 16 · Final evaluation & documentation
 #
-# **Day 5 · ~50 minutes · CPU only**
+# **Part I · Chapter 16 · about 50 minutes · CPU only**
 #
-# Since Day 1 the test period (July-November 2024) has been locked away. Today
-# it is opened **once**, with every decision written down beforehand, so that
-# the number you report is an estimate of future performance and not the best
-# of many attempts. Then you turn that number into the documents a reviewer, a
-# hiring manager or your future self will actually read.
+# Since Chapter 5 the test period (July-November 2024) has been locked away.
+# In this chapter it is opened **once**, with every decision written down
+# beforehand, so that the reported number is an estimate of future performance
+# and not the best of many attempts. The chapter then turns that number into
+# the documents that a reviewer, a hiring manager or a future maintainer will
+# actually read.
 #
-# By the end you will be able to:
+# After this chapter you should be able to:
 #
 # 1. pre-register an evaluation (model version, threshold, metrics, baselines, decision rule) before scoring;
 # 2. report a held-out result with customer-level uncertainty and a paired comparison against baselines;
@@ -22,8 +23,11 @@
 # 4. generate a README "Results" section and a model card whose every number comes from code;
 # 5. give a 60-second pitch and a 5-minute walkthrough of the project, including its limitations.
 #
-# **You will produce:** `artifacts/preregistration.json`, `artifacts/final_report.json`,
+# **Lab output:** `artifacts/preregistration.json`, `artifacts/final_report.json`,
 # `artifacts/README_results.md`, `artifacts/model_card.md`.
+
+# %% [markdown]
+# **Read first:** [Chapter 16 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -68,8 +72,8 @@ print(split.summary().drop(columns=["positive_rate"]))
 # %% [markdown]
 # **Expected:** a registry with versions `['v1', 'v2']` and `CURRENT=v1`, and
 # three periods: train 25,278 rows, valid 6,956, test 12,127. The positive rate
-# column is dropped on purpose: you have not earned a look at test yet, not
-# even its base rate.
+# column is dropped on purpose: nothing about the test period, not even its
+# base rate, is inspected before the plan is written.
 
 # %% [markdown]
 # ## Key terms
@@ -79,16 +83,16 @@ print(split.summary().drop(columns=["positive_rate"]))
 # | **Held-out test set** | data used exactly once, after every decision is fixed | Jul-Nov 2024 |
 # | **Pre-registration** | writing the analysis plan, with its decision rule, before seeing the data | `test_plan.json` and its hash |
 # | **Garden of forking paths** | many small, reasonable choices made after looking, which add up to optimism | changing a threshold after seeing test |
-# | **Exploratory result** | anything decided after looking; reported, but labelled as such | test-period slices in 15.7 |
+# | **Exploratory result** | anything decided after looking; reported, but labelled as such | test-period slices in 16.7 |
 # | **Paired bootstrap difference** | the interval for model B minus model A, on the same resampled customers | ≈ +0.07 PR-AUC vs the 3-feature baseline |
 # | **Operating point** | the threshold or top-k rule actually used to act | the validation threshold, applied to test |
 # | **Precision@k** | share of the k flagged accounts that churn | per month, at the team's capacity |
 # | **Validation-test gap** | how much the score changes on the untouched period | 0.163 on validation vs ≈ 0.197 on test |
 # | **Model card** | intended use, evidence, limits, in one page | updated with test numbers |
-# | **Elevator pitch** | the project in 60 seconds: problem, approach, result with uncertainty, limit | section 15.10 |
+# | **Elevator pitch** | the project in 60 seconds: problem, approach, result with uncertainty, limit | section 16.10 |
 
 # %% [markdown]
-# ## 15.1 · Why "once"
+# ## 16.1 · Why "once"
 #
 # Every time you look at test results and then change something (a feature, a
 # threshold, which model to report), the test set becomes a little more like a
@@ -112,16 +116,16 @@ print(split.summary().drop(columns=["positive_rate"]))
 # > held-out subject's accuracy has influenced a design choice, that subject is
 # > no longer held out. Here the "held-out subject" is a future time period.
 #
-# What has already been fixed on train/validation (Days 1-2), and must not move:
+# What has already been fixed on train/validation (Chapters 2–9), and must not move:
 #
 # | Decision | Fixed where |
 # |---|---|
-# | Features and their point-in-time SQL | notebook 03 (`churnlab/features.py`) |
-# | Split boundaries and the 30-day embargo | notebook 04 (`churnlab/splits.py`) |
-# | Model family and hyperparameters, chosen by validation PR-AUC | notebooks 05-06, `ensure_registry` |
-# | Threshold, chosen by expected value on validation | notebook 07, stored in the bundle metadata |
+# | Features and their point-in-time SQL | chapter 4 (`churnlab/features.py`) |
+# | Split boundaries and the 30-day embargo | chapter 5 (`churnlab/splits.py`) |
+# | Model family and hyperparameters, chosen by validation PR-AUC | chapters 6–7, `ensure_registry` |
+# | Threshold, chosen by expected value on validation | chapter 8, stored in the bundle metadata |
 #
-# ## 15.2 · Candidate and baselines, on validation only
+# ## 16.2 · Candidate and baselines, on validation only
 #
 # First gather everything the pre-registration needs. Nothing here reads the
 # test period.
@@ -165,7 +169,7 @@ valid_summary.round(4)
 # is 1/6 ≈ 0.167).
 
 # %% [markdown]
-# ## 15.3 · Pre-register
+# ## 16.3 · Pre-register
 #
 # This cell writes the analysis plan to disk **before** the test period is
 # read. It records the exact model file hash, so "which model?" can never be
@@ -224,7 +228,7 @@ print(plan["decision_rule"])
 # In a real team this file is committed (or posted in the team channel) before
 # anyone runs the next cell; the timestamp is the point.
 #
-# ## 15.4 · Score the test period
+# ## 16.4 · Score the test period
 #
 # The test rows are read through one function that refuses to work without a
 # pre-registration and logs every access. Re-running the *same* plan is fine
@@ -266,7 +270,7 @@ test_table[["n", "positive_rate", "pr_auc", "roc_auc", "brier", "lift@10%"]].rou
 # validation.
 
 # %% [markdown]
-# ## 15.5 · Uncertainty, and the pre-registered decision
+# ## 16.5 · Uncertainty, and the pre-registered decision
 #
 # Point estimates first, intervals always. Rows of one customer are correlated
 # (the same account appears at up to five test snapshots), so resampling
@@ -308,7 +312,7 @@ pd.DataFrame(comparisons).T.round(4)
 # without a paired test.
 
 # %% [markdown]
-# ## 15.6 · The operating point, month by month
+# ## 16.6 · The operating point, month by month
 #
 # A ranking metric is not a decision. The decision is "call the accounts above
 # the threshold", so report what that does each month: how many calls, what
@@ -365,13 +369,13 @@ ev
 # **Expected:** CURRENT at its threshold has a positive assumed value (a few
 # thousand dollars over the five test months: ≈ 90 true positives × $150 −
 # ≈ 220 unneeded calls × $30); "call everyone" is strongly negative; "call no
-# one" is 0. Say it in an interview exactly like that: *"under assumed costs of
+# one" is 0. In an interview, state it in exactly those terms: *"under assumed costs of
 # $150 and $30, which the business would have to confirm"*. Never present
 # it as money the model made: nobody was called, and the 25% "save rate"
 # behind $150 is an assumption too.
 
 # %% [markdown]
-# ## 15.7 · Calibration and slices on test (exploratory)
+# ## 16.7 · Calibration and slices on test (exploratory)
 #
 # These were listed as *exploratory* in the plan: worth looking at, not part of
 # the headline claim.
@@ -401,7 +405,7 @@ cal.round(4)
 # on test (mean predicted ≈ 0.05 vs observed ≈ 0.059). That is the signature of
 # a base rate that rose after training, not of a broken model. It matters
 # because the threshold was derived from calibrated probabilities: if the
-# shift persists, recalibrating on recent labelled months (notebook 07) is the
+# shift persists, recalibrating on recent labelled months (chapter 8) is the
 # fix, done on a *new* validation window, not on this test set.
 
 # %%
@@ -422,9 +426,10 @@ for by, table in slices.items():
 # method.
 
 # %% [markdown]
-# ## 15.8 · Validation vs test, honestly
+# ## 16.8 · Validation vs test, honestly
 #
-# Test PR-AUC is **higher** than validation. Before celebrating, line them up:
+# Test PR-AUC is **higher** than validation. Before interpreting this, we line
+# up the two periods:
 
 # %%
 val = meta["metrics"]["validation"]
@@ -500,7 +505,7 @@ def results_markdown(report: dict) -> str:
 grade.ex2(results_markdown)
 
 # %% [markdown]
-# ## 15.9 · Write it down: final report, README results, model card
+# ## 16.9 · Write it down: final report, README results, model card
 #
 # Everything below is generated from one dictionary. **No number is typed by
 # hand**: a hand-typed number in a README is a number that will eventually be
@@ -544,7 +549,7 @@ print(json.dumps(final["test"], indent=2))
 
 # %% [markdown]
 # **Expected:** the `test` block printed with the same numbers as sections
-# 15.4-15.6, and `final_report.json` written. Now the documents. A tiny
+# 16.4–16.6, and `final_report.json` written. Now the documents. A tiny
 # formatter keeps them consistent:
 
 # %%
@@ -711,7 +716,7 @@ print(f"{len(numbers)} decimal numbers in the README; not traceable to final_rep
 # **Expected:** `not traceable to final_report.json: none`.
 
 # %% [markdown]
-# ## 15.10 · Saying it: the 60-second pitch and the 5-minute walkthrough
+# ## 16.10 · Saying it: the 60-second pitch and the 5-minute walkthrough
 #
 # The documents are for readers. Interviews are spoken, and the first minute
 # decides how the rest goes. Two outlines to adapt (use your **own** numbers from
@@ -739,13 +744,13 @@ print(f"{len(numbers)} decimal numbers in the README; not traceable to final_rep
 # | 7 | Operations | Health vs readiness, latency, PSI drift with delayed labels, rollback by pointer |
 # | 8 | Limitations & next | Synthetic, offline only, side effects, feedback loops; the experiment you'd run |
 #
-# Record yourself doing both (phone is fine). The day-5 plan lists it as the
-# most important evidence of the day.
+# Record yourself doing both (a phone is sufficient). The recorded walkthrough
+# is the most useful single piece of evidence from Part I.
 #
-# ## 15.11 · Limitations a skeptical interviewer will raise
+# ## 16.11 · Limitations a skeptical interviewer will raise
 #
-# Already in the README, because raising them first is stronger than defending
-# them later:
+# These are already in the README, because raising them first is more
+# convincing than answering them later:
 #
 # * **Synthetic data.** The model can only find what the generator put there.
 # * **Offline evaluation.** A good ranking of who *would* churn is not evidence
@@ -813,7 +818,7 @@ print(f"{len(numbers)} decimal numbers in the README; not traceable to final_rep
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
 # 1. What did you pre-register, and why does the order (plan first, scores second) matter?
 # 2. Test PR-AUC is higher than validation PR-AUC. Is the model better than you thought? Explain with numbers.
@@ -822,4 +827,5 @@ print(f"{len(numbers)} decimal numbers in the README; not traceable to final_rep
 # 5. After deployment the team calls every flagged account. What happens to next quarter's training labels, and what would you log to handle it?
 # 6. Give the three limitations you would raise yourself before an interviewer does.
 #
-# **Next chapter:** [`16_python_and_sql_drills.ipynb`](../ch17-python-and-sql-drills/notebook.ipynb) — timed Python and SQL drills, the fluency half of the interview loop.
+# **Next chapter:** [Chapter 17 · Python & SQL drills](../ch17-python-and-sql-drills/notebook.ipynb) — timed Python and SQL drills, which train the fluency part of a technical interview.
+

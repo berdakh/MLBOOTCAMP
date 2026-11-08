@@ -6,16 +6,16 @@
 # %% [markdown]
 # # Chapter 36 · Model optimisation for inference
 #
-# **Day 9 · ~90 minutes · CPU core · optional GPU extension**
+# **Part II · Chapter 36 · about 90 minutes · CPU core · optional GPU extension**
 #
 # A ranker scores hundreds of candidates for every request, millions of times
 # a day, so a model that is 10× cheaper per row is often worth more than one
-# that is 1 % better. This notebook takes the ranker of notebook 17 and makes
+# that is 1 % better. This notebook takes the ranker of Chapter 35 and makes
 # it cheaper three ways (a portable runtime, lower precision and a smaller
 # model taught by a bigger one), measuring every step on two axes at once:
 # milliseconds and quality.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. export a PyTorch scoring model to ONNX and run it with ONNX Runtime;
 # 2. write a numerical parity check and know when exact parity is the wrong test;
@@ -23,8 +23,11 @@
 # 4. distil a LightGBM teacher into a small MLP student with a tempered soft-label loss;
 # 5. build the size / latency / quality table that decides which model ships, and say when optimisation is not worth it.
 #
-# **You will produce:** `artifacts/level2/optimize/` with `.pt`, `.onnx` and
+# **Outputs:** `artifacts/level2/optimize/` with `.pt`, `.onnx` and
 # `.txt` model files and `optimization_table.csv`.
+
+# %% [markdown]
+# Read first: [Chapter 36 text](README.md), which explains the concepts this lab measures. Worked answers are in [solutions.md](solutions.md).
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -85,13 +88,13 @@ print(f"train rows {len(X_train):,} x {X_train.shape[1]} features | ready in {ti
 
 # %% [markdown]
 # **Expected:** `train rows 300,000 x 10 features` after 15–60 s (data
-# generation plus the LightGBM ranker of notebook 17).
+# generation plus the LightGBM ranker of Chapter 35).
 #
 # Two quality measures on the **validation week**, both against the hidden
 # truth (`world.true_click_prob`), never against clicks:
 #
 # * **Cascade NDCG@10**: for 1,000 validation requests, score the ~300
-#   retrieval candidates of notebook 17's cascade and compare the top 10 with
+#   retrieval candidates of Chapter 35's cascade and compare the top 10 with
 #   the user's true best 10 in the whole catalogue (no category cap). This is
 #   what the ranker is *for*, and it has a wide range (popularity ≈ 0.39,
 #   perfect = 1).
@@ -153,7 +156,7 @@ print("random scores     :", {k: round(v, 3) for k, v in quality(lambda X: rng.r
 # | Parity check | comparing two implementations' outputs element by element within a tolerance | max difference 1.2e-6 after export |
 # | Tolerance (atol) | the largest absolute difference still counted as equal | about 1e-5 for lossless steps |
 # | Dynamic int8 quantisation | weights stored as 8-bit integers ahead of time, activations quantised per batch | `DynamicQuantizedLinear` layers |
-# | Scale and zero-point | the two numbers that map floats to integers and back | see the figure in 18.3 |
+# | Scale and zero-point | the two numbers that map floats to integers and back | see the figure in 36.3 |
 # | Spearman correlation | the correlation of ranks: do two models order items the same way? | 0.997 between ORT int8 and fp32 |
 # | Knowledge distillation | training a small student to match a large teacher's probabilities | a 193-parameter student taught by LightGBM |
 # | Soft labels | the teacher's probabilities used as training targets instead of 0/1 clicks | `teacher_probs` |
@@ -166,13 +169,13 @@ print("random scores     :", {k: round(v, 3) for k, v in quality(lambda X: rng.r
 # *What to notice:* the two rows need different tests: exact parity cannot pass for a lossy step, and ranking checks are too weak to catch a broken export.
 
 # %% [markdown]
-# ## 18.1 · A PyTorch scoring model
+# ## 36.1 · A PyTorch scoring model
 #
 # The model to optimise: a small MLP over the same 10 features
 # (`opt.RankMLP`). One design choice matters for everything that follows:
 # the **input standardisation is a layer** (mean and std stored as buffers),
 # so the exported model contains its own preprocessing. Training/serving skew
-# from a re-implemented scaler (Level 1, notebook 10) becomes impossible.
+# from a re-implemented scaler (Chapter 11) becomes impossible.
 
 # %%
 t0 = time.time()
@@ -187,7 +190,7 @@ print("MLP 128-64:", {k: round(v, 3) for k, v in q_mlp.items()})
 # NDCG@10 0.961 — a little below LightGBM (0.875 / 0.966).
 
 # %% [markdown]
-# ## 18.2 · ONNX and ONNX Runtime
+# ## 36.2 · ONNX and ONNX Runtime
 #
 # **ONNX** is a file format for computation graphs; **ONNX Runtime (ORT)** is
 # a C++ inference engine for it. Why bother when PyTorch can predict?
@@ -243,7 +246,7 @@ def parity(a, b, atol):
 grade.ex1(parity)
 
 # %% [markdown]
-# ## 18.3 · Dynamic int8 quantisation
+# ## 36.3 · Dynamic int8 quantisation
 #
 # *Dynamic* quantisation stores the weights of linear layers as 8-bit
 # integers (4× smaller than float32) and quantises activations on the fly,
@@ -293,7 +296,7 @@ print("torch int8:", {k: round(v, 3) for k, v in q_torch8.items()})
 # > values crowd onto a few marks; per-channel scales and outlier handling exist for that.
 
 # %% [markdown]
-# ## 18.4 · Distillation: a small student taught by a big teacher
+# ## 36.4 · Distillation: a small student taught by a big teacher
 #
 # The LightGBM teacher is good but costs milliseconds per 1,000 rows (you
 # will measure it below). A tiny MLP with one hidden layer of 16 units costs
@@ -366,7 +369,7 @@ print("teacher (LightGBM)   :", {k: round(v, 4) for k, v in q_lgbm.items()})
 # scarce.
 
 # %% [markdown]
-# ## 18.5 · The table that decides
+# ## 36.5 · The table that decides
 #
 # Size on disk, median latency per call (single thread: the serving
 # configuration where many requests run in parallel) for batches of 1, 64
@@ -433,13 +436,13 @@ table.round(3)
 #    product question: what is 0.017 NDCG worth versus 5 ms of budget?
 
 # %% [markdown]
-# ## 18.6 · When is optimisation worth it?
+# ## 36.6 · When is optimisation worth it?
 #
 # Back-of-envelope before engineering: if the ranker is 30 % of a 60 ms p99
 # and you halve it, you save 9 ms of p99, which might let you score 2× the
 # candidates in the same budget (a quality gain) or run 30 % fewer
 # machines (a cost gain). If the ranker is 2 % of the latency, a 10×
-# speed-up is invisible to users. **Profile first** (notebook 17's stage
+# speed-up is invisible to users. **Profile first** (Chapter 35's stage
 # timings); optimise the stage that dominates.
 #
 # | Technique | Typical gain | Typical cost | Worth it when |
@@ -465,7 +468,7 @@ table.round(3)
 # *Your answer here.*
 
 # %% [markdown]
-# ## 18.7 · Optional: GPU inference notes
+# ## 36.7 · Optional: GPU inference notes
 #
 # Not run by default (`RUN_GPU_EXTENSION = False`) and not needed later.
 # Install `onnxruntime-gpu` instead of `onnxruntime` and pick a GPU runtime.
@@ -539,7 +542,7 @@ else:
 # $$
 #
 # *Symbols:* $f$ = the share of latency in the stage you optimise, $k$ = that stage's speed-up.
-# *Example:* the ranker is 30% of a 60 ms p99 and becomes 2× faster: $1 / (0.7 + 0.15) = 1.18$×, i.e. 9 ms saved, as in 18.6. Made infinitely fast, the best you get is $1/0.7 = 1.43$×.
+# *Example:* the ranker is 30% of a 60 ms p99 and becomes 2× faster: $1 / (0.7 + 0.15) = 1.18$×, i.e. 9 ms saved, as in 36.6. Made infinitely fast, the best you get is $1/0.7 = 1.43$×.
 #
 # **6. Model size**
 #
@@ -584,8 +587,8 @@ print(f"6. fp32 MLP weights: {opt.n_params(mlp) * 4 / 1000:.1f} KB")
 # | ORT: `Got invalid dimensions for input` at batch ≠ 2 | exported without `dynamic_axes` | re-export with a dynamic batch dimension |
 # | `RuntimeError: Didn't find engine for operation quantized::linear_prepack` | no quantisation backend (e.g. some ARM builds) | `torch.backends.quantized.engine = "qnnpack"`, or skip the PyTorch int8 row |
 # | "Please consider to run pre-processing before quantization" | ORT's advice for conv nets | harmless for this MLP |
-# | Latency numbers jump between runs | shared CPU, frequency scaling, other notebooks | re-run 18.5; compare ratios, not absolute values |
-# | Quantised model fails the parity test | lossy by design | compare ranking metrics with agreed thresholds instead (18.3) |
+# | Latency numbers jump between runs | shared CPU, frequency scaling, other notebooks | re-run 36.5; compare ratios, not absolute values |
+# | Quantised model fails the parity test | lossy by design | compare ranking metrics with agreed thresholds instead (36.3) |
 
 # %% [markdown]
 # ## Checkpoint
@@ -599,4 +602,4 @@ print(f"6. fp32 MLP weights: {opt.n_params(mlp) * 4 / 1000:.1f} KB")
 # 5. Your ranker takes 45 % of the latency budget. List four ways to cut it, ordered by expected effort, and the risk of each.
 # 6. How would you roll out an optimised model safely (offline checks, shadow traffic, A/B), and which metrics would make you roll back?
 #
-# **Next chapter:** [`19_recsys_and_search_system_design.ipynb`](../ch37-recsys-and-search-system-design/notebook.ipynb) — put cascades, latency budgets and model costs together in two full system-design answers.
+# **Next chapter:** [Chapter 37 · Recommendation & search system design](../ch37-recsys-and-search-system-design/notebook.ipynb) — put cascades, latency budgets and model costs together in two full system-design answers.

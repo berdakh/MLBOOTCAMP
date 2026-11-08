@@ -6,22 +6,22 @@
 # %% [markdown]
 # # Chapter 43 · Fine-tuning a classifier
 #
-# **Day 3 · ~90 minutes · T4 GPU (runs on CPU with a reduced budget)**
+# **Part III · Chapter 43 · about 90 minutes · T4 GPU (runs on CPU with a reduced budget)**
 #
 # "We fine-tuned BERT and got 94 %" is not a result until you know what a TF-IDF model
 # gets on the same split, what the frozen encoder gets with a linear head, whether the
 # validation set was carved from the training data, and whether the probabilities mean
-# anything. This notebook fine-tunes DistilBERT the way you would defend it in a design
-# review: against honest baselines, with proper splits, calibration and error analysis.
+# anything. This lab fine-tunes DistilBERT with the evidence a careful reviewer would
+# ask for: fair baselines, proper splits, calibration and error analysis.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. build two strong cheap baselines: TF-IDF + logistic regression and a linear probe on frozen embeddings;
 # 2. fully fine-tune a pretrained encoder with a sequence-classification head (AMP on a GPU, warmup + cosine, gradient clipping, early stopping on a validation split carved from *train*);
 # 3. evaluate properly: accuracy, macro-F1, a confusion matrix;
 # 4. measure calibration (expected calibration error, reliability table) and fix it with temperature scaling fitted on validation data;
 # 5. do error analysis: the most frequent confusions and the most confident mistakes, with examples;
-# 6. argue when the cheap baseline is the right production choice.
+# 6. explain when the cheap baseline is the right production choice.
 #
 # **You will produce:** `artifacts/level3/nb05/metrics.json` (all models' test metrics,
 # calibration and timings on your device).
@@ -37,6 +37,9 @@
 # budget (1.5k training examples, 64 tokens, 1 epoch). That budget shows the *method*; it
 # under-states what fine-tuning achieves. Numbers in **Expected:** lines were printed by a CPU
 # run unless marked *"on a T4 you should see … (not measured in our verification runs)"*.
+
+# %% [markdown]
+# Read first: [Chapter 43 text](README.md) explains the ideas behind this lab (Fine-tuning a classifier) in more depth; [solutions](solutions.md) has worked answers.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -118,8 +121,8 @@ print("example:", train_df.loc[0, "text"][:120], "->", LABELS[train_df.loc[0, "l
 # 17,000 / 3,000 / 4,000.
 #
 # **Why three splits.** Every decision you make by looking at a number (the learning rate,
-# when to stop, the temperature, *which model to ship*) is fitted to the data that produced
-# the number. Those decisions use **validation**, carved from the training data. The test split
+# when to stop, the temperature, *which model to deploy*) is fitted to the data that produced
+# the number. Those decisions use **validation** data, carved from the training data. The test split
 # is read once, at the end, for the numbers you report. Choosing the epoch by test accuracy
 # is the most common way a fine-tuning result is quietly inflated.
 
@@ -186,7 +189,7 @@ print(f"TF-IDF + LR (C={best_C}): test {results['tfidf_lr']} | fit {timings['tfi
 # ## 5.2 · Baseline 2: a linear probe on frozen DistilBERT embeddings
 #
 # Keep the pretrained encoder **frozen**, embed every text once (mask-aware mean pooling,
-# notebook 04), and train only a logistic regression on top. This tells you how much of
+# Chapter 42), and train only a logistic regression on top. This tells you how much of
 # the task the pretrained representation already solves. It is also a common production
 # pattern: one shared embedding service, many cheap heads.
 
@@ -302,7 +305,7 @@ print(pd.DataFrame(cm, index=LABELS, columns=LABELS))
 # off-diagonal cells are Business → Sci/Tech (19) and World → Business (13); Sports is almost
 # never confused.
 #
-# **Read the comparison honestly.** The test set's standard error is about ±0.013 (500
+# **Reading the comparison carefully.** The test set's standard error is about ±0.013 (500
 # examples). The gap between TF-IDF and the two DistilBERT models (~0.04–0.05) is several
 # standard errors; the gap between the probe and fine-tuning (0.014) is about one, so this CPU
 # run cannot say that fine-tuning beats the probe (a paired test on the same examples, such as
@@ -418,7 +421,7 @@ print(f"test NLL {temp['test_nll_before']:.3f} -> {temp['test_nll_after']:.3f} |
 #
 # **On a T4 you should see** the opposite direction more often: a model fine-tuned for
 # several epochs to near-zero training loss is typically **over**-confident (fitted $T > 1$),
-# the classic finding of Guo et al. (not measured in our verification runs). Either way the
+# the well-known finding of Guo et al. (not measured in our verification runs). Either way the
 # recipe is the same: fit $T$ on validation, check ECE and NLL on test, and re-fit after
 # every retrain.
 #
@@ -460,9 +463,9 @@ summary = {"device": describe(DEVICE), "budget": BUDGET.as_dict(), "results": re
 print("wrote", OUT / "metrics.json")
 
 # %% [markdown]
-# > **Exercise 3.** Your team must ship a news-topic classifier for 50 million articles a day.
+# > **Exercise 3.** Your team must deploy a news-topic classifier for 50 million articles a day.
 # > Using the numbers from this notebook (accuracy, training and inference time, model size)
-# > and what you expect on a GPU, argue **when the TF-IDF + logistic regression baseline is the
+# > and what you expect on a GPU, explain **when the TF-IDF + logistic regression baseline is the
 # > right production choice** and when fine-tuning is worth it. Name at least four factors
 # > (e.g. accuracy gap and its uncertainty, latency and cost per prediction, data volume and
 # > drift, interpretability and debugging, retraining cadence, hardware) and the evidence you
@@ -511,7 +514,7 @@ print("wrote", OUT / "metrics.json")
 # \operatorname{SE} = \sqrt{\frac{\hat p\,(1 - \hat p)}{n}}
 # $$
 #
-# In words: how much an accuracy measured on $n$ examples wobbles from sample to sample.
+# In words: how much an accuracy measured on $n$ examples varies from sample to sample.
 # Example: $\hat p = 0.872$ on $n = 500$ gives $\sqrt{0.872 \cdot 0.128 / 500} \approx 0.015$, so the
 # 0.014 gap between fine-tuning and the probe is about one standard error: not evidence. (For
 # two models on the *same* examples a paired test is sharper.)
@@ -534,7 +537,7 @@ print("wrote", OUT / "metrics.json")
 # | Load report lists `pre_classifier` / `classifier` as **MISSING** | the classification head is new | expected; the head is trained during fine-tuning |
 # | Loss stays at ~1.39 (= ln 4) | learning rate far too high or too low, or labels misaligned with texts | lr 2e-5–1e-4 with warmup; print a few (text, label) pairs from a batch |
 # | Accuracy collapses to ~0.25 after a few steps | divergence (lr too high, no warmup) or fp16 overflow | lower the lr, add warmup; keep the GradScaler on a T4 |
-# | `CUDA out of memory` | batch × sequence length too large | halve `batch_size`, use gradient accumulation (notebook 02), or shorten `max_len` |
+# | `CUDA out of memory` | batch × sequence length too large | halve `batch_size`, use gradient accumulation (Chapter 40), or shorten `max_len` |
 # | Validation accuracy much higher than test | tuned on validation repeatedly, or validation leaked from test | carve validation from train; read test once |
 # | Temperature fitted on test looks "perfect" | you fitted on the data you evaluate on | fit `T` on validation only |
 # | CPU run is slow | DistilBERT on 2 CPU cores | expected; the `cpu` budget is the minimum that shows the method |
@@ -542,7 +545,7 @@ print("wrote", OUT / "metrics.json")
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question without notes; a complete answer takes about a minute:
 #
 # 1. Linear probe vs full fine-tuning vs a TF-IDF baseline: what does each tell you, and how would you choose for a new text-classification product?
 # 2. Why use a small learning rate with warmup when fine-tuning a pretrained transformer? What is catastrophic forgetting?
@@ -551,4 +554,4 @@ print("wrote", OUT / "metrics.json")
 # 5. Your fine-tuned model is 1.5 points better than TF-IDF on a 500-example test set. Is that significant? How would you find out?
 # 6. Error analysis shows most mistakes are Business ↔ Sci/Tech. What are your next three actions, in order?
 #
-# **Next chapter:** [`06_parameter_efficient_fine_tuning.ipynb`](../ch44-parameter-efficient-fine-tuning/notebook.ipynb) — train 1 % of the parameters with LoRA and compare memory, time and accuracy against this full fine-tune.
+# **Next chapter:** [Chapter 44 · Parameter-efficient fine-tuning](../ch44-parameter-efficient-fine-tuning/notebook.ipynb) — train 1 % of the parameters with LoRA and compare memory, time and accuracy against this full fine-tune.

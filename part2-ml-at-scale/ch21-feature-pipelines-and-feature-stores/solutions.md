@@ -1,13 +1,13 @@
 # Solutions · Chapter 21 · Feature pipelines & feature stores
 
-Try each exercise before reading its answer. Markers: [verified] verified by running ·
+Attempt each exercise before reading its answer. Markers: [verified] verified by running ·
 [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `point_in_time_join`
 
-[verified] Reference code: [`code/nb03.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def point_in_time_join(events, snapshots, key, ts_col):
@@ -40,7 +40,7 @@ restore it afterwards.
 
 ## Exercise 2 · `OnlineStore`
 
-[verified] Reference code: [`code/nb03.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 class OnlineStore:
@@ -65,7 +65,7 @@ class OnlineStore:
 **Why ignore older writes?** Writers are distributed and retried: a
 backfill re-materialising last Tuesday, a delayed batch, a streaming job
 replaying a partition. If writes were applied in arrival order, any of them
-could roll a key back to an old value, and nobody would notice. Comparing
+could roll a key back to an old value without anyone noticing. Comparing
 event times makes the store converge to the newest value regardless of
 arrival order (the same idea as "last-writer-wins by event time" in
 distributed databases). Copying the dict on `put`/`get` keeps a caller from
@@ -120,7 +120,7 @@ feature is not suspiciously high, and confirm with an A/B test.
    with timestamps, columnar and cheap, used to build training sets with
    point-in-time joins and for batch scoring. Online: only the latest value
    per entity key, in a low-latency key-value store, read at request time.
-   You need both because training needs history at past event times and
+   Both are needed because training needs history at past event times and
    serving needs now in milliseconds. Consistency comes from one feature
    definition feeding both (materialisation copies offline → online, or one
    streaming job writes both), the same TTL semantics, and continuous parity
@@ -140,7 +140,7 @@ feature is not suspiciously high, and confirm with an A/B test.
    training/serving skew (compare logged served values with offline values),
    population differences (new users, traffic mix), the metric (AUC on
    impressions vs the business metric), position bias and feedback loops
-   (Day 3), and whether the A/B test is powered (Day 6).
+   (Chapters 23–24), and whether the A/B test is powered (Chapters 29–30).
 4. **TTL.** [verified] Offline: stops the as-of join from carrying a stale snapshot
    forward for entities absent from recent snapshots (5% of our training
    rows). Online: stops serving values from a pipeline that stopped updating,

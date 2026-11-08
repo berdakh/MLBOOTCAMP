@@ -6,15 +6,15 @@
 # %% [markdown]
 # # Chapter 52 · Multi-task ranking & exploration
 #
-# **Day 7 · ~90 minutes · T4 GPU (runs on CPU with a reduced budget)**
+# **Part III · Chapter 52 · about 90 minutes · T4 GPU (runs on CPU with a reduced budget)**
 #
-# A production ranker never optimises one number. An ads system predicts clicks *and*
-# conversions, blends them with bids and business value, sells the slot in an auction, and must
-# keep showing new ads it knows little about. Each of these is a classic system-design deep dive:
-# "how would you train CTR and CVR together?", "how is the winner's price set?", "what happens if
-# pCTR is miscalibrated?", "how do you cold-start a new ad?".
+# A production ranker rarely optimises a single quantity. An ads system predicts clicks *and*
+# conversions, combines them with bids and business value, sells the slot in an auction, and must
+# keep showing new ads about which it knows little. Each of these is a standard topic in system-design
+# interviews: "how would you train CTR and CVR together?", "how is the winner's price set?", "what
+# happens if pCTR is miscalibrated?", "how is a new ad cold-started?".
 #
-# By the end you will be able to:
+# By the end of this lab you should be able to:
 #
 # 1. train a **shared-bottom** and an **MMoE** multi-task model for click and conversion, and explain when experts help;
 # 2. explain **sample selection bias** in conversion modelling and the **ESMM** idea (pCTCVR = pCTR × pCVR over the entire space), and measure it with counterfactual labels only a simulator has;
@@ -29,6 +29,9 @@
 # **Measured here vs on a T4.** Our verification runs are CPU-only with the CPU budget
 # (300,000 training impressions). Numbers in **Expected:** lines were printed by such a run.
 # Statements about a T4 are marked *"not measured in our verification runs"*.
+
+# %% [markdown]
+# Read first: [Chapter 52 text](README.md), which explains multi-task models, selection bias, auctions and bandits in more detail than this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -116,19 +119,19 @@ print(f"train impressions: {N_TRAIN:,} | test impressions: {N_TEST:,}")
 # | Regret | Expected reward lost compared with always choosing the best option | clicks lost over 50,000 rounds |
 
 # %% [markdown]
-# ## 14.1 · Clicks, conversions and sample selection bias
+# ## 1 · Clicks, conversions and sample selection bias
 #
-# We reuse notebook 13's generator with two changes: higher base rates (CTR ≈ 8%, CVR ≈ 15% of
+# We reuse Chapter 51's generator with two changes: higher base rates (CTR ≈ 8%, CVR ≈ 15% of
 # clicks) so that a CPU-sized sample holds a few thousand conversions, and a **negative**
 # correlation between the click and conversion logits (`cvr_ctr_corr = −0.3`): some of what makes
-# people click (eye-catching creatives, "clickbait") makes them *less* likely to buy. That is
-# where multi-task learning gets interesting, because the two tasks partly disagree.
+# people click (eye-catching creatives, "clickbait") makes them *less* likely to buy. This is the
+# situation in which multi-task learning becomes non-trivial, because the two tasks partly disagree.
 #
 # A conversion can only be observed after a click. A CVR model trained on clicked impressions is
 # then *used* on every impression (to rank ads before anyone has clicked): it is trained on one
 # distribution and served on another. That is **sample selection bias (SSB)**. Real logs cannot
 # measure it, because nobody knows whether a non-clicked impression *would* have converted. Our
-# simulator knows `true_cvr` for every impression, so we can.
+# simulator knows `true_cvr` for every impression, so here it can be measured.
 
 # %%
 world = ctr.CTRWorld(ctr.CTRConfig(seed=1, base_ctr=0.08, base_cvr=0.15, cvr_ctr_corr=-0.3))
@@ -150,7 +153,7 @@ print(f"correlation of log true CTR and log true CVR: {corr:+.2f}")
 # negative correlation (−0.31): a model trained only on clicks sees the wrong slice of the population.
 
 # %% [markdown]
-# ## 14.2 · Shared-bottom, MMoE and ESMM
+# ## 2 · Shared-bottom, MMoE and ESMM
 #
 # Three ways to predict both tasks with one network (all share the hashed embeddings):
 #
@@ -171,7 +174,7 @@ print(f"correlation of log true CTR and log true CVR: {corr:+.2f}")
 # > different goals. MMoE is a small panel of consultants (experts); each client (task) has its own
 # > rule for how much to listen to each panel member, and the rule can change per question (per
 # > example). *Where the analogy breaks down:* nothing forces the experts to specialise; with mild
-# > task conflict and little data they stay interchangeable, which is what 14.2 measured.
+# > task conflict and little data they stay interchangeable, which is what section 2 measured.
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l3-x-esmm.svg" alt="Nested populations of all impressions, clicked and converted, and the ESMM network where pCTCVR = pCTR × pCVR is trained on all impressions" width="100%">
 #
@@ -179,7 +182,7 @@ print(f"correlation of log true CTR and log true CVR: {corr:+.2f}")
 #
 # The "naive" multi-task loss for shared-bottom and MMoE is `BCE(pCTR, click)` on all rows plus
 # `BCE(pCVR, conversion)` on clicked rows. Output biases start at each task's base-rate log-odds
-# (notebook 13 showed why). One epoch each: we checked in development runs that a second epoch made
+# (Chapter 51 showed why). One epoch each: we checked in development runs that a second epoch made
 # every model worse on test (NE up by ~0.05–0.07), the "one-epoch" overfitting typical of
 # embedding-heavy CTR models.
 
@@ -277,11 +280,11 @@ print(np.round(np.stack([g.mean(0).cpu().numpy() for g in gates.last_gates]), 3)
 #   and ranks much worse (CVR AUC ≈ 0.59), and its pCTCVR AUC (≈ 0.75) is below the naive models' (≈ 0.77).
 #   pCVR only receives gradient through the product `pCTR · pCVR`, which is weak where pCTR is
 #   small, and one epoch on ~3,600 conversions is not enough. The ESMM paper's gains were reported
-#   on billions of impressions; in your system, measure. This is also why later work adds explicit
+#   on billions of impressions; in any new system it has to be measured. This is also why later work adds explicit
 #   corrections (inverse propensity weighting, doubly robust estimators, e.g. ESCM², Wang et al. 2022).
 
 # %% [markdown]
-# ## 14.3 · Blending objectives
+# ## 3 · Blending objectives
 #
 # A ranker needs one score per candidate. A common form is a weighted product,
 #
@@ -348,7 +351,7 @@ RESULTS["blending"] = grid.round(3).to_dict(orient="records")
 # exactly "expected value per impression".
 
 # %% [markdown]
-# ## 14.4 · Auctions: eCPM, first and second price, reserves, calibration
+# ## 4 · Auctions: eCPM, first and second price, reserves, calibration
 #
 # Advertisers bid per click; the platform sells impressions. To compare them, rank by expected
 # revenue per impression, **eCPM = pCTR × bid × 1000**. In a **second-price** (for one slot, the
@@ -356,7 +359,7 @@ RESULTS["blending"] = grid.round(3).to_dict(orient="records")
 # per click, `price = eCPM_runner-up / (pCTR_winner × 1000) = bid₂ · pCTR₂ / pCTR₁`, never more than
 # its own bid. A **reserve price** is a floor: bids below it are ineligible, and the winner pays at
 # least the reserve. In a **first-price** auction the winner pays its own bid, so rational bidders
-# shade their bids below their value; second price makes bidding your true value a dominant
+# shade their bids below their value; second price makes bidding one's true value a dominant
 # strategy (Vickrey), which is why it dominated ads for years (display exchanges moved to first
 # price around 2019, for reasons of transparency between exchanges).
 #
@@ -364,9 +367,9 @@ RESULTS["blending"] = grid.round(3).to_dict(orient="records")
 #
 # *What to notice:* the price depends on the runner-up's eCPM and the winner's own pCTR, so a pCTR error for one advertiser moves both who wins and what everyone pays.
 #
-# > **Intuition.** In a second-price auction your bid only decides *whether* you win, never *what
-# > you pay*: that is set by the next-best competitor. So shading your bid can only make you lose
-# > auctions you wanted, and bidding your true value is the best strategy (Vickrey). *Where the
+# > **Intuition.** In a second-price auction a bidder's bid only decides *whether* it wins, never
+# > *what it pays*: that is set by the next-best competitor. So shading the bid can only lose
+# > auctions the bidder wanted, and bidding the true value is the best strategy (Vickrey). *Where the
 # > analogy breaks down:* that guarantee holds for one slot with truthful values; with budgets,
 # > multiple slots (GSP) and repeated auctions, real advertisers still bid strategically.
 
@@ -473,7 +476,7 @@ print(auc_df.round(3).to_string(index=False))
 # impressions go unsold, others pay the floor).
 
 # %% [markdown]
-# ## 14.5 · Exploration: bandits and cold-start ads
+# ## 5 · Exploration: bandits and cold-start ads
 #
 # A ranker that always shows its current best guess never learns about the alternatives, and a new
 # ad with no history never gets a chance. A **multi-armed bandit** formalises the trade-off: each
@@ -491,10 +494,10 @@ print(auc_df.round(3).to_string(index=False))
 #
 # *What to notice:* regret that keeps growing linearly means the policy never stops paying for exploration; a flattening curve means it has mostly found the best ad.
 #
-# > **Intuition.** Thompson sampling is a tasting menu: for each dish (ad) you have a belief about
-# > how good it is, wide if you have tasted it rarely. Each round you *imagine* one plausible quality
-# > for every dish and order the one that looks best in that imagination. Rarely tasted dishes
-# > sometimes imagine well and get ordered; dishes you know are mediocre almost never do.
+# > **Intuition.** Thompson sampling is a tasting menu: for each dish (ad) the diner holds a belief
+# > about how good it is, wide if it has rarely been tasted. Each round the diner *imagines* one
+# > plausible quality for every dish and orders the one that looks best in that imagination. Rarely
+# > tasted dishes sometimes look good and get ordered; dishes known to be mediocre almost never do.
 # > *Where the analogy breaks down:* the belief must be updated after *every* outcome and the
 # > samples must be fresh each round; reuse them and exploration stops (see Troubleshooting).
 
@@ -643,10 +646,10 @@ print("saved", OUT / "results.json")
 # Production versions add context (contextual bandits such as LinUCB, or Thompson sampling on a
 # Bayesian last layer of the CTR model), cap the exploration budget (e.g. 1–5% of traffic, or a
 # boost only for ads younger than N impressions), and log the propensity of every decision so
-# that the exploration traffic doubles as unbiased data for off-policy evaluation (Level 2).
+# that the exploration traffic doubles as unbiased data for off-policy evaluation (Chapter 23).
 
 # %% [markdown]
-# > **Exercise 3.** You run ads ranking with `score = pCTR · bid` in a second-price auction. A new
+# > **Exercise 3.** An ads system ranks with `score = pCTR · bid` in a second-price auction. A new
 # > CTR model is uniformly 10% over-calibrated for *video* ads only. (a) Which auctions change winner,
 # > and who pays more or less? (b) What happens to platform revenue in the short term, and to
 # > advertisers (and then revenue) in the long term? (c) How would you detect this before and after
@@ -700,7 +703,7 @@ print("saved", OUT / "results.json")
 # $n_k$ arm $k$'s empirical CTR and play count, $r_t \in \{0, 1\}$ the click. *Example:* an ad with 3
 # clicks in 100 shows has the posterior $\mathrm{Beta}(1 + 3, 1 + 97) = \mathrm{Beta}(4, 98)$, mean
 # $4/102 = 3.9\%$; its UCB1 bonus at $t = 10{,}000$ is $\sqrt{2 \ln 10^4 / 100} = 0.43$, huge next to a
-# 3% CTR, which is why UCB1 over-explored in 14.5.
+# 3% CTR, which is why UCB1 over-explored in section 5.
 #
 # The cell below checks 3 and 5 numerically.
 
@@ -756,4 +759,4 @@ print(f"regret of plays {plays.tolist()}: {np.sum(true_ps.max() - true_ps[plays]
 # 5. Compare ε-greedy, UCB and Thompson sampling. Which would you use for cold-start ads, and how would you limit its cost?
 # 6. Design question: your ads system must launch a "conversion value" objective next quarter. Which models, labels, metrics and online experiments do you need?
 #
-# **Next chapter:** [`15_fairness_robustness_and_privacy.ipynb`](../ch53-fairness-robustness-and-privacy/notebook.ipynb) — from revenue to responsibility: subgroup metrics, robustness to shift and perturbations, and differential privacy.
+# **Next chapter:** [Chapter 53 · Fairness, robustness & privacy](../ch53-fairness-robustness-and-privacy/notebook.ipynb) — from revenue to responsibility: subgroup metrics, robustness to shift and perturbations, and differential privacy.

@@ -6,28 +6,32 @@
 # %% [markdown]
 # # Chapter 31 · ML from scratch I
 #
-# **Day 7 · ~90 minutes · CPU only**
+# **Part II · Chapter 31 · about 90 minutes · CPU only**
 #
-# Many ML engineer loops include an "ML coding" round: *implement logistic
-# regression*, *write k-means*, *compute AUC without a library*, in 30-45 minutes,
-# in NumPy, while talking. The method is never the hard part (you know all of
-# these); the round tests whether your code is **correct at the edges,
-# numerically stable, vectorised, and checked**, and whether you can say why.
+# Many interview processes for ML engineers include an "ML coding" round:
+# *implement logistic regression*, *write k-means*, *compute AUC without a
+# library*, in 30–45 minutes, in NumPy, while explaining the work aloud. The
+# method itself is rarely the difficulty. The round tests whether the code is
+# **correct at the edges, numerically stable, vectorised and verified**, and
+# whether the candidate can explain why.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
-# 1. describe how an ML coding round is usually scored, and plan your 45 minutes;
+# 1. describe how an ML coding round is usually scored, and plan the 45 minutes;
 # 2. replace Python loops with broadcasting, and *measure* the difference;
 # 3. make softmax, sigmoid and cross-entropy overflow-proof (log-sum-exp);
 # 4. check any analytic gradient against a numerical one in five lines;
 # 5. implement, under time pressure, logistic and softmax regression, k-means++, kNN, ROC-AUC with ties and NDCG@k.
 #
-# **You will produce:** six graded NumPy implementations (nothing is written to disk).
+# **Outputs:** six graded NumPy implementations (nothing is written to disk).
 #
-# **How to use this notebook.** Every exercise has a **target time**. Start a
+# **How to use this lab.** Every exercise has a **target time**. Start a
 # timer, write the function without looking anything up, run the grader, and
-# only then read the talk-through box and the solution. Rerun the exercises on
-# later days without notes: retrieval practice is what makes them stick.
+# only then read the talk-through box and the solution. Repeat the exercises on
+# later days without notes: retrieval practice is what consolidates them.
+
+# %% [markdown]
+# Read first: [Chapter 31 text](README.md), which explains the concepts this lab measures. Worked answers are in [solutions.md](solutions.md).
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -88,7 +92,7 @@ print("numpy", np.__version__)
 # | NDCG@k | discounted gain of the top k, divided by the best possible | Exercise 6 |
 
 # %% [markdown]
-# ## 13.1 · What the ML coding round actually scores
+# ## 31.1 · What the ML coding round actually scores
 #
 # The format varies between companies and teams, so treat this as the common
 # shape rather than any company's rubric: one or two problems, 30-60 minutes, a
@@ -104,7 +108,7 @@ print("numpy", np.__version__)
 # | **Verification** | writes a 3-line test or gradient check unprompted | "I think it works" |
 # | **Communication** | narrates trade-offs, asks before assuming | silent for ten minutes |
 #
-# A 45-minute plan that works for "implement X":
+# A 45-minute plan for an "implement X" problem:
 #
 # | Minutes | Do |
 # |---|---|
@@ -113,15 +117,14 @@ print("numpy", np.__version__)
 # | 25-35 | Test: a tiny hand-checkable case, an edge case, a gradient check or a library comparison. |
 # | 35-45 | Complexity, stability, what you would change at scale (mini-batches, sparse X, early stopping). |
 #
-# The sections below drill the three habits that separate the strong column from
+# The sections below practise the three habits that separate the strong column from
 # the weak one: vectorisation, stability and gradient checking.
 
 # %% [markdown]
-# ## 13.2 · Vectorisation: measure it
+# ## 31.2 · Vectorisation: measure it
 #
 # Pairwise squared distances between `A (m, d)` and `B (n, d)` appear in kNN,
-# k-means, RBF kernels and retrieval. Three versions, from interview-weak to
-# interview-strong:
+# k-means, RBF kernels and retrieval. Three versions, from slowest to fastest:
 
 # %%
 def pdist_loops(A, B):
@@ -159,11 +162,11 @@ print("max |difference|:", np.abs(d_loop - d_ex).max())
 # the slowest by far. Lesson for benchmarks: take the best of several runs and
 # say what else was running.
 #
-# Why the expansion wins: it turns the work into one matrix multiply (BLAS,
+# Why the expansion is fastest: it turns the work into one matrix multiply (BLAS,
 # multi-threaded, cache-friendly) and never materialises the `(m, n, d)`
-# intermediate. Say the memory cost out loud in an interview: broadcasting
+# intermediate. The memory cost should be stated explicitly: broadcasting
 # needs `m·n·d·8` bytes (here 300·400·32·8 ≈ 31 MB; with 10k × 10k × 128 it
-# would be 102 GB). Mention the `np.maximum(…, 0)` too: catastrophic
+# would be 102 GB). The `np.maximum(…, 0)` also deserves a comment: catastrophic
 # cancellation can make a distance of zero come out as `-1e-15`, and a
 # `sqrt` of that is NaN.
 #
@@ -174,7 +177,7 @@ print("max |difference|:", np.abs(d_loop - d_ex).max())
 # > an intermediate array far larger than memory; the fastest code is the one that never
 # > materialises it.
 #
-# **Measuring complexity.** "It's O(n log n)" is a claim; a growth table is
+# **Measuring complexity.** "It is O(n log n)" is a claim; a growth table is
 # evidence. `growth_table` (in [`src/shoprank/drills.py`](../../src/shoprank/drills.py))
 # times a function at doubling sizes and prints the local exponent
 # `log(t2/t1) / log(n2/n1)`, plus the least-squares slope of log time against
@@ -207,16 +210,16 @@ with Timer("np.sort of 1M floats, timed with Timer"):
 # %% [markdown]
 # **Expected:** a fitted exponent of about 2 for the nested loops (1.8-2.2
 # in our runs) and about 1.1 for `np.sort` (1.11-1.14); single ratios between
-# neighbouring sizes jump around (we saw 1.0 to 2.4), which is why you read the
-# trend, not one ratio. The `Timer` line prints a
-# few milliseconds. Every grader in notebooks 13-16 that has a performance
+# neighbouring sizes vary widely (we saw 1.0 to 2.4), which is why the trend is
+# read, not a single ratio. The `Timer` line prints a
+# few milliseconds. Every grader in Chapters 31–34 that has a performance
 # part uses the same idea: it runs your function at growing sizes with a
-# **2-second** budget per run, and stops early when the growth projects far
-# past it. An O(n log n) solution uses a few
+# **2-second** budget per run, and stops early when the extrapolated growth
+# exceeds it by far. An O(n log n) solution uses a few
 # percent of that budget; an O(n²) one cannot fit.
 
 # %% [markdown]
-# ## 13.3 · Numerical stability: log-sum-exp
+# ## 31.3 · Numerical stability: log-sum-exp
 #
 # `exp(1000)` overflows float64 (max ≈ 1.8e308, i.e. `exp(709.8)`). Logits of
 # a few hundred are routine: an unnormalised feature, a large learning rate, a
@@ -230,7 +233,7 @@ with Timer("np.sort of 1M floats, timed with Timer"):
 # > expensive item: softmax only cares about ratios, which are unchanged, but no number is
 # > astronomically large any more. *Where it breaks down:* very negative entries still
 # > underflow to exactly 0 after `exp`; harmless inside softmax, fatal if you then take
-# > their log, which is why you compute log-probabilities directly.
+# > their log, which is why log-probabilities are computed directly.
 
 # %%
 z = np.array([[1000.0, 1001.0, 999.0], [1.0, 2.0, 3.0]])
@@ -259,7 +262,7 @@ print("stable -log(sigmoid(z)):", np.logaddexp(0, -zb))     # log(1 + e^{-z}) wi
 # `[0.09 0.2447 0.6652]` for the second row. The naive log-loss is `inf` at
 # z = -800 (the true value is 800); `np.logaddexp(0, -z)` gives `[800, 0.6931, 0]`.
 #
-# Rules worth saying in the interview:
+# Rules to follow, and to state in an interview:
 #
 # * compute **log-probabilities**, not probabilities, whenever a log follows;
 # * cross-entropy from logits = `logsumexp(z) - z[y]`; never `log(softmax(z))`;
@@ -267,17 +270,17 @@ print("stable -log(sigmoid(z)):", np.logaddexp(0, -zb))     # log(1 + e^{-z}) wi
 # * for a sigmoid on large negative inputs, use `e^z / (1 + e^z)` there (or `scipy.special.expit`).
 
 # %% [markdown]
-# ## 13.4 · Gradient checking
+# ## 31.4 · Gradient checking
 #
-# If you derive a gradient by hand, check it numerically before you trust it.
+# A gradient derived by hand should be checked numerically before it is trusted.
 # The central difference has error O(ε²):
 #
 # $$\frac{\partial f}{\partial w_i} \approx \frac{f(w + \varepsilon e_i) - f(w - \varepsilon e_i)}{2\varepsilon}$$
 #
 # Compare with the **relative error** `‖g - g_num‖ / (‖g‖ + ‖g_num‖)`. In float64
 # with ε = 1e-5: below ~1e-7 is right; 1e-4 or above is a bug (a wrong factor
-# or a wrong transpose usually gives 0.1-1). Five lines, and interviewers notice
-# when you write them unprompted.
+# or a wrong transpose usually gives 0.1–1). The check takes five lines, and
+# writing it without being asked is good evidence of care.
 #
 # > **Intuition.** A gradient check is measuring a slope with a ruler: nudge one weight
 # > a hair up and down and see how much the loss moves. If the formula and the ruler
@@ -316,12 +319,12 @@ print(f"buggy gradient  rel. error = {relative_error(mse_grad_buggy(wg), num):.1
 # the numerical gradient is meaningless.
 
 # %% [markdown]
-# ## 13.5 · Exercises
+# ## 31.5 · Exercises
 #
 # Six implementations. Each states a **target time**, the signature and
 # conventions, the edge cases the grader checks openly (it also checks hidden
 # ones), and ends with a talk-through box: what to say, in what order, and the
-# complexity you should state. NumPy only.
+# complexity to state. NumPy only.
 #
 # | # | Implement | Target time |
 # |---|---|---|
@@ -342,11 +345,11 @@ print(f"buggy gradient  rel. error = {relative_error(mse_grad_buggy(wg), num):.1
 # > starting from zeros, with `l2` = λ and **no penalty on the intercept**.
 # > `X (n, d)`, `y (n,)` in {0, 1}; return `w (d,)` and a float `b`.
 # >
-# > The grader compares you with `sklearn.linear_model.LogisticRegression`. Its
-# > objective is `C·Σ logloss + ½‖w‖²`; divide by `C·n` and you get yours with
+# > The grader compares the result with `sklearn.linear_model.LogisticRegression`. Its
+# > objective is `C·Σ logloss + ½‖w‖²`; dividing by `C·n` gives the objective above with
 # > `C = 1/(n·λ)`. Checked: coefficients within 0.02 of sklearn's; the loss
 # > decreases with more epochs; no NaN on large-scale separable data; finite
-# > output when every label is 1; your inputs are not modified.
+# > output when every label is 1; the inputs are not modified.
 
 # %%
 def fit_logreg(X, y, lr=0.1, epochs=1000, l2=0.0):
@@ -388,9 +391,9 @@ grade.ex2(softmax_grad)
 # %% [markdown]
 # > **Talk it through.**
 # > 1. *Shapes first:* logits `Z = XW` is `(n, C)`; the one-hot target `Y` is `(n, C)`, built by indexing, not by a loop.
-# > 2. *The key fact:* for softmax + cross-entropy, ∂L/∂Z = (softmax(Z) − Y)/n. Then dW = Xᵀ(P − Y)/n. Offer to derive it (notebook 14, Exercise 7, walks through it).
+# > 2. *The key fact:* for softmax + cross-entropy, ∂L/∂Z = (softmax(Z) − Y)/n. Then dW = Xᵀ(P − Y)/n. Offer to derive it (Chapter 32, Exercise 7, walks through it).
 # > 3. *Stability:* subtract the row max before `exp`; loss = mean(logsumexp(Z) − Z[i, yᵢ]).
-# > 4. *Verify:* say you would run a numerical gradient check on a 5×3 problem, and do it if time allows.
+# > 4. *Verify:* propose a numerical gradient check on a 5×3 problem, and run it if time allows.
 # > 5. *Complexity:* O(n·d·C) time, O(n·C) memory for the probabilities. With a huge C (a vocabulary or item catalogue), mention sampled softmax / negative sampling.
 
 # %% [markdown]
@@ -449,7 +452,7 @@ grade.ex4(knn_predict)
 # > 1. *Clarify:* distance metric? Tie-breaking? Memory limit (m × n distances)?
 # > 2. *Plan:* distances with the expansion trick → `np.argpartition(d2, k-1, axis=1)[:, :k]` (O(n) per row instead of a full sort) → map labels to 0..C−1 with `np.unique(..., return_inverse=True)` → count votes with `np.add.at`.
 # > 3. *Complexity:* O(m·n·d) for distances + O(m·n) for selection; memory O(m·n) → process the test set in chunks if it does not fit.
-# > 4. *Scale story:* exact kNN does not scale to millions of items; approximate nearest neighbours (FAISS, HNSW; notebook 08) trade a little recall for orders of magnitude in latency.
+# > 4. *Scale story:* exact kNN does not scale to millions of items; approximate nearest neighbours (FAISS, HNSW; Chapter 26) trade a little recall for orders of magnitude in latency.
 # > 5. *Edge cases:* ties in distance, ties in votes, k > n, duplicate training points, unscaled features dominating the distance.
 
 # %% [markdown]
@@ -480,7 +483,7 @@ grade.ex5(roc_auc)
 # > 2. *Brute force first, in one sentence:* compare every positive with every negative, O(n₊·n₋), then improve.
 # > 3. *Sort once:* average ranks for tie groups (run boundaries from `np.diff` on the sorted scores), sum the positives' ranks, subtract the minimum possible sum n₊(n₊+1)/2.
 # > 4. *Complexity:* O(n log n) time for the sort, O(n) memory.
-# > 5. *Edge cases:* one class (undefined, raise or return NaN and say which), ties, NaN scores (reject), labels as bool/±1. Mention: AUC ignores calibration and class imbalance; PR-AUC is more informative for rare positives (Level 1, notebook 05).
+# > 5. *Edge cases:* one class (undefined, raise or return NaN and say which), ties, NaN scores (reject), labels as bool/±1. Mention: AUC ignores calibration and class imbalance; PR-AUC is more informative for rare positives (Chapter 8).
 
 # %% [markdown]
 # > **Exercise 6.** *(target 10 min)* Implement `ndcg_at_k(scores, labels, k)`
@@ -491,7 +494,7 @@ grade.ex5(roc_auc)
 # >
 # > where IDCG uses the labels sorted descending. Return 0.0 when no item is
 # > relevant. The grader compares with `shoprank.metrics.ndcg_at_k`, the
-# > implementation every Level 2 notebook uses
+# > implementation every Part II chapter uses
 # > ([`src/shoprank/metrics.py`](../../src/shoprank/metrics.py)) — try it before reading that file.
 
 # %%
@@ -506,12 +509,12 @@ grade.ex6(ndcg_at_k)
 # > **Talk it through.**
 # > 1. *Clarify the conventions out loud* — they change the number: exponential (2^rel − 1) or linear gain? log₂(i+1) discount with 1-based i? How are score ties broken? What is NDCG for a query with no relevant item (0, or skip the query)? Is IDCG computed over the top k of *all* candidates or of the shown list?
 # > 2. *Complexity:* O(n log n) for the sort (O(n + k log k) with `argpartition`); computing many queries at once is a group-by.
-# > 3. *Context:* in notebook 05 you saw that NDCG on logged clicks rewards the logging policy's own order (position bias); the formula is easy, choosing the labels is the hard part.
+# > 3. *Context:* Chapter 23 showed that NDCG on logged clicks rewards the logging policy's own order (position bias); the formula is simple, and choosing the labels is the difficult part.
 
 # %% [markdown]
-# ## 13.6 · Score yourself
+# ## 31.6 · Score yourself
 #
-# After each exercise, give yourself 0-2 on each axis of the table in 13.1
+# After each exercise, score yourself 0–2 on each axis of the table in 31.1
 # (framing, correctness, numerical care, efficiency, verification,
 # communication). A 9-12 is a pass for most loops; below 8, redo the exercise
 # tomorrow from a blank cell. Record the time you took against the target —
@@ -574,7 +577,7 @@ grade.ex6(ndcg_at_k)
 #
 # *Example:* relevance in ranked order (1, 0, 1): DCG $= 1 + 0 + 0.5 = 1.5$; ideal (1, 1, 0): $1 + 0.631 = 1.631$; NDCG@3 = 0.920.
 #
-# **7. Two tools you use to verify everything else**
+# **7. Two tools for verifying everything else**
 #
 # $$
 # \lVert a - b \rVert^2 = \lVert a \rVert^2 - 2\,a^\top b + \lVert b \rVert^2, \qquad \frac{\partial f}{\partial w_i} \approx \frac{f(w + \varepsilon e_i) - f(w - \varepsilon e_i)}{2\varepsilon}
@@ -644,10 +647,10 @@ print(f"6. NDCG@3 of (1, 0, 1): {ndcg_reference([1, 0, 1], 3):.3f}")
 # Answer aloud, without notes, in under two minutes each:
 #
 # 1. Derive the gradient of the binary cross-entropy with respect to the logit. Why does the same "prediction minus target" form appear for softmax, and for linear regression with squared loss?
-# 2. Your softmax returns NaN on some batches in training. Give two causes and the fix for each.
+# 2. A softmax implementation returns NaN on some batches in training. Give two causes and the fix for each.
 # 3. Why does logistic regression's loss have a unique minimum while k-means' does not? What does that imply for how you initialise and evaluate each?
 # 4. ROC-AUC is 0.92 on a dataset with 0.5% positives, yet the model is useless in production. How is that possible, and what would you report instead?
 # 5. kNN works well offline with 50k items. The catalogue grows to 50M items with a 20 ms latency budget. What changes, and what do you give up?
-# 6. An interviewer asks how you know your gradient is right. Describe a gradient check: ε, the error measure, the threshold, and two situations where it misleads.
+# 6. An interviewer asks how you know a gradient is correct. Describe a gradient check: ε, the error measure, the threshold, and two situations where it misleads.
 #
-# **Next chapter:** [`14_ml_from_scratch_2.ipynb`](../ch32-ml-from-scratch-2/notebook.ipynb) — trees, boosting, backprop, attention and batch norm from scratch.
+# **Next chapter:** [Chapter 32 · ML from scratch II](../ch32-ml-from-scratch-2/notebook.ipynb) — trees, boosting, backprop, attention and batch norm from scratch.

@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `peak_qps`
 
-[verified] Reference code: [`code/nb17.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def peak_qps(dau, requests_per_user_per_day, peak_factor):
@@ -28,7 +28,7 @@ single-time-zone or event-driven one. Ask for it or state it.
 
 ## Exercise 2 · `latency_budget`
 
-[verified] Reference code: [`code/nb17.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def latency_budget(total_ms, components):

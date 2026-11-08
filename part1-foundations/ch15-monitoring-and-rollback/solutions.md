@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `psi`
 
-[verified] Reference code: [`code/nb14.py`](solutions.py) (`ex1`), graded in CI against
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI against
 `churnlab.monitoring.psi`.
 
 ```python
@@ -52,7 +52,7 @@ fallback for features with few distinct values: treat them as categories
 
 ## Exercise 2 · `should_rollback`
 
-[verified] Reference code: [`code/nb14.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def should_rollback(candidate, baseline, policy):

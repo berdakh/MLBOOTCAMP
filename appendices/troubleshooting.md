@@ -1,7 +1,11 @@
 # Troubleshooting
 
-Start here when something breaks. Organised by what you see. Each notebook
-also ends with a short troubleshooting table for its own failures.
+This appendix describes common failures and their causes, organised by what
+the reader observes. Each entry states the cause, the fix and, where
+possible, how to prevent a recurrence. The first sections concern Part I and
+the environment shared by all parts; the later sections concern the PyTorch,
+GPU and Hugging Face tools of Parts II and III. Every lab also ends with a
+troubleshooting table for the failures specific to its chapter.
 
 
 ---
@@ -29,7 +33,7 @@ also ends with a short troubleshooting table for its own failures.
 Everything under `/content` is deleted, including the default artifact
 directory.
 
-**Fix.** Rerun the notebook from the top. The catch-up cell rebuilds features,
+**Fix.** Rerun the lab from the top. The catch-up cell rebuilds features,
 the split and the registry deterministically, usually in under a minute.
 
 **Prevent.** Set `USE_DRIVE = True` in the setup cell, or export a zip at the
@@ -56,8 +60,8 @@ ERROR: pip's dependency resolver does not currently take into account all the pa
 Installing or upgrading one package can leave another preinstalled package
 with a version it did not ask for. pip reports it but does not fail.
 
-**Usually harmless** for this course: the notebooks import only what is in
-`requirements.txt`. Continue unless something actually breaks.
+**Usually harmless** for this book: the labs import only what is in the
+part's requirements file. Continue unless something actually breaks.
 
 **When it is not harmless.** If the install upgraded a compiled package that
 was already imported (NumPy is the usual one), you will see strange errors
@@ -186,8 +190,9 @@ con.execute("DESCRIBE SELECT * FROM usage_weekly").df()
 ### My SQL feature differs from the reference by a little
 Usually a boundary: `<` versus `<=`, or using `week_start` where the week's
 *end* (`week_start + INTERVAL 7 DAY`) is meant. Compare on one customer and one
-snapshot, printing the rows each version includes. See
-[Handbook 3](../part1-foundations/_handbook/03-data-sql-and-leakage.md#point-in-time-correctness).
+snapshot, printing the rows each version includes. Point-in-time
+boundaries are explained in
+[Chapter 4](../part1-foundations/ch04-sql-for-ml/README.md).
 
 ---
 
@@ -216,7 +221,7 @@ errors).
    rerun the catch-up cell; `ensure_registry()` retrains in seconds.
 2. **Match the version.** `pip install scikit-learn==<version in metadata.json>`,
    restart the session, rerun.
-3. **Accept the risk knowingly**, for a notebook exercise only: check that the
+3. **Accept the risk knowingly**, for a lab exercise only: check that the
    loaded model's scores on a few rows match the scores recorded at training
    time.
 
@@ -266,7 +271,7 @@ causes:
 | `too_short` on `customers` | An empty batch |
 
 Fix the request, not the server. Do not retry a 422: it will fail the same way
-every time. The course's client raises immediately on 4xx.
+every time. The book's client raises an exception immediately on any 4xx status.
 
 ### 503 from `/ready` or `/predict`
 
@@ -281,7 +286,7 @@ The batch is larger than `max_batch_size` (default 1000). Use the client's
 
 ### The client hangs
 
-Something has no timeout. The course's `ChurnClient` sets one (5 s by
+Something has no timeout. The book's `ChurnClient` sets one (5 s by
 default). If you wrote your own `httpx` or `requests` call, add
 `timeout=...`.
 
@@ -289,10 +294,10 @@ default). If you wrote your own `httpx` or `requests` call, add
 
 ## Tests
 
-### Tests pass locally but a notebook check fails (or the other way round)
+### Tests pass locally but a lab check fails (or the other way round)
 
 Usually different working directories or different artifact directories.
-Tests use temporary directories; notebooks use your artifact directory. Print
+Tests use temporary directories; labs use your artifact directory. Print
 both paths. Stale artifacts from an earlier version of your code are a common
 cause: delete and rebuild.
 
@@ -303,10 +308,111 @@ configures `testpaths` and the import path.
 
 ---
 
+## Parts II and III: data at scale, PyTorch and GPUs
+
+<a id="no-gpu-in-colab"></a>
+
+### The setup cell reports `cpu` in a Part III lab
+
+**Cause.** The Colab runtime has no GPU: either the runtime type is *CPU*,
+or the free GPU allowance has been used up for the moment.
+
+**Fix.** *Runtime → Change runtime type → T4 GPU*, then *Run all*. If no GPU
+is offered, the lab still runs with the reduced `cpu` budget; its numbers will
+be much worse than those quoted for a T4, and the chapter text marks which
+statements depend on a GPU.
+
+### `RuntimeError: CUDA out of memory`
+
+**Cause.** The tensors of this lab, together with anything still held by
+earlier cells (or another notebook on the same runtime), exceed the GPU's
+memory.
+
+**Fix, simplest first:**
+
+1. *Runtime → Restart session* and run from the top, so that memory held by
+   earlier experiments is released.
+2. Reduce the batch size or the sequence length, or use the lab's smaller
+   configuration where one is offered.
+3. Use the memory-saving techniques of
+   [Chapter 40](../part3-deep-learning-systems/ch40-training-efficiency-and-memory/README.md):
+   mixed precision, gradient checkpointing and gradient accumulation.
+
+Deleting a tensor with `del` frees its memory only when no other reference
+to it remains; `torch.cuda.empty_cache()` returns cached blocks to the
+driver but does not free memory that is still referenced.
+
+### GPU timings are implausibly small, or the first run is much slower
+
+GPU kernels run asynchronously, so a timer read without
+`torch.cuda.synchronize()` measures only the time to *queue* the work. The
+first call also pays for CUDA context creation and kernel autotuning. Time with
+the toolkit's timer (`scaleml.device.timer`), warm up first, and report the
+median of several repetitions. See
+[Chapter 39](../part3-deep-learning-systems/ch39-gpu-fundamentals-and-profiling/README.md).
+
+### A `DataLoader` with `num_workers > 0` hangs or fails in a notebook
+
+**Cause.** On platforms that start worker processes with `spawn` (macOS,
+Windows), a dataset class defined in the notebook cannot be pickled by the
+workers; or a worker crashed and its error is hidden.
+
+**Fix.** Set `num_workers=0` to see the real traceback. Define datasets in a
+module rather than in a notebook cell.
+
+### Two runs with the same seed give different results
+
+Common causes: the data loader shuffles with the global random generator,
+which other code also draws from; a library draws random numbers between the
+seeding and the model construction; or a GPU operation has no deterministic
+implementation. Use a dedicated `torch.Generator` for shuffling, seed before
+building the model, and enable deterministic algorithms where the lab offers
+it. See [Chapter 27](../part2-ml-at-scale/ch27-pytorch-training-done-right/README.md).
+
+### Downloads from the Hugging Face Hub fail or time out
+
+**Cause.** A network problem, a Hub outage, or a rate limit on anonymous
+downloads.
+
+**Fix.** Retry after a short wait. Setting an access token (`HF_TOKEN`)
+raises the rate limit. Downloads are cached in the directory named by
+`HF_HOME`, so a model is downloaded only once per runtime or machine.
+
+### A distributed training job hangs without an error
+
+**Cause.** A collective operation (for example an all-reduce) is called by
+some processes and not by others, often inside `if rank == 0:`, or processes
+receive different numbers of batches.
+
+**Fix.** Every process must call every collective operation in the same
+order. Use a `DistributedSampler` (which pads shards to equal length) or
+`drop_last=True`, and pass a `timeout` to `init_process_group` so that a hang
+becomes an error. See
+[Chapter 47](../part3-deep-learning-systems/ch47-distributed-data-parallel/README.md).
+
+### A generated Part II data set looks wrong after a code change
+
+The ShopStream generator writes a `_SUCCESS` marker when it finishes, and a
+data set with a marker is not regenerated. Delete the data set's folder under
+`artifacts/level2/` and rerun the catch-up cell. Generating the large scale
+without a limit on the number of days writes tens of millions of rows and
+takes many minutes; keep the lab's default limit unless the chapter asks
+otherwise.
+
+### DuckDB runs out of memory on a large query
+
+Set a `temp_directory` so that DuckDB can spill to disk, select only the
+columns the query needs, and filter on the partition column itself so that
+whole files are skipped. See
+[Chapter 19](../part2-ml-at-scale/ch19-event-logs-and-columnar-data/README.md).
+
+---
+
 ## Still stuck
 
 - Reduce the problem: one customer, one snapshot, one request.
-- Read the source. The `churnlab` modules are short and commented.
+- Read the source. The `churnlab`, `shoprank` and `scaleml` modules are short
+  and commented.
 - Check [Verification](verification.md) for what was tested in which
   environment.
 - Open an issue on the [repository](https://github.com/berdakh/MLBOOTCAMP/issues)

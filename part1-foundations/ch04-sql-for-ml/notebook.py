@@ -6,7 +6,7 @@
 # %% [markdown]
 # # Chapter 4 · SQL for ML
 #
-# **Day 1 · ~55 minutes · CPU only**
+# **Part I · Chapter 4 · about 55 minutes · CPU only**
 #
 # In most companies the training table does not exist until someone writes the
 # SQL that builds it, and most silent leakage is introduced right there: one
@@ -23,6 +23,9 @@
 # 5. build point-in-time features and a label for a snapshot date T, and explain every inequality.
 #
 # **You will produce:** no file; the feature table itself is cached by `bootstrap.ensure_features()` for later notebooks.
+
+# %% [markdown]
+# Read first: [Chapter 4 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -82,7 +85,7 @@ tables = bootstrap.load_clean()  # raw extract, verified and cleaned (notebook 0
 # | **`COALESCE`** | the first non-NULL argument | "no tickets" becomes 0 after a left join |
 
 # %% [markdown]
-# ## 3.1 · DuckDB: SQL on DataFrames
+# ## 4.1 · DuckDB: SQL on DataFrames
 #
 # DuckDB is an in-process analytical database: no server, nothing to install
 # beyond `pip`. `register` exposes a DataFrame as a table (without copying it),
@@ -109,7 +112,7 @@ sql("SELECT plan, COUNT(*) AS customers, AVG(seats) AS avg_seats FROM customers 
 # cleaning) with about 2,465 / 1,757 / 778 customers.
 
 # %% [markdown]
-# ## 3.2 · Aggregates, and `FILTER`
+# ## 4.2 · Aggregates, and `FILTER`
 #
 # `COUNT(*) FILTER (WHERE ...)` counts only the rows matching a condition,
 # inside an ordinary `GROUP BY`. It replaces the `SUM(CASE WHEN ... THEN 1
@@ -132,7 +135,7 @@ ORDER BY month
 # 60-90 failed.
 
 # %% [markdown]
-# ## 3.3 · Joins, and the fan-out bug
+# ## 4.3 · Joins, and the fan-out bug
 #
 # An **inner** join keeps only matching pairs; a **left** join keeps every row
 # of the left table, with NULLs where there is no match.
@@ -228,7 +231,7 @@ WHERE c.customer_id = 'C00002'
 # feature group this way: one aggregate table per source, joined at the end.
 
 # %% [markdown]
-# ## 3.4 · Window functions
+# ## 4.4 · Window functions
 #
 # A window function computes a value for each row from a set of related rows
 # (its *window*), without collapsing them like `GROUP BY` does.
@@ -346,7 +349,7 @@ ORDER BY week_start
 # > `LAG` is the right tool.
 
 # %% [markdown]
-# ## 3.5 · Point-in-time features for one snapshot, step by step
+# ## 4.5 · Point-in-time features for one snapshot, step by step
 #
 # The prediction task: at a monthly snapshot date **T**, for every account still
 # active at T, predict whether it cancels in **[T, T + 30 days)**. Every
@@ -522,9 +525,9 @@ def tickets_30d_sql(snapshot: str) -> str:
 grade.ex3(tickets_30d_sql)
 
 # %% [markdown]
-# ## 3.6 · Anti-pattern: joining an export-time column
+# ## 4.6 · Anti-pattern: joining an export-time column
 #
-# Notebook 02 showed that `customers.status` describes each account **as of the
+# Chapter 3 showed that `customers.status` describes each account **as of the
 # export**. It is one join away, and very tempting:
 
 # %%
@@ -543,7 +546,7 @@ ORDER BY c.status
 # by export time, and **all** 129 churners are among them. The query is
 # syntactically perfect and the resulting "feature" is the future. No SQL
 # engine will warn you; only the rule "every feature uses only rows before T"
-# does. Notebook 04 measures how much damage it does.
+# does. Chapter 5 measures how much damage it does.
 #
 # Finally, cache the full feature table (all 21 monthly snapshots) for the
 # notebooks that follow:
@@ -557,7 +560,7 @@ print(features.shape, features["snapshot_date"].nunique(), "snapshots,",
 # **Expected:** 44,361 rows, 21 snapshots, positive rate ≈ 0.055.
 
 # %% [markdown]
-# > **Exercise 4 (written).** Back to section 3.3. In your own words: what causes the fan-out bug,
+# > **Exercise 4 (written).** Back to section 4.3. In your own words: what causes the fan-out bug,
 # > how would you **detect** it in a query you are reviewing, and name **two**
 # > different ways to prevent it. Write your answer in the cell below.
 
@@ -628,4 +631,4 @@ print(features.shape, features["snapshot_date"].nunique(), "snapshots,",
 # 5. Write (aloud) the label definition for snapshot T, and say which column is allowed to look into the future and how far.
 # 6. How did you test that your SQL is right, and why compare to an independent implementation rather than eyeballing rows?
 #
-# **Next chapter:** [`04_leakage_safe_splits_and_baseline.ipynb`](../ch05-leakage-safe-splits-and-baseline/notebook.ipynb) — split the feature table without leaking the future, measure what leakage does, and set honest baselines.
+# **Next chapter:** [Chapter 5 · Leakage-safe splits & a baseline](../ch05-leakage-safe-splits-and-baseline/notebook.ipynb) — split the feature table without leaking the future, measure what leakage does, and set honest baselines.

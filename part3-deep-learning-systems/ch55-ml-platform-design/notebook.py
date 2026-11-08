@@ -6,15 +6,15 @@
 # %% [markdown]
 # # Chapter 55 · ML platform design
 #
-# **Day 9 · ~90 minutes · CPU is enough (no GPU work in this notebook)**
+# **Part III · Chapter 55 · about 90 minutes · CPU is enough (no GPU work in this lab)**
 #
-# Level 1 notebook 17 designed *one model* (churn) and Level 2 notebook 19
-# designed *one product* (a feed, a search engine). Staff-level design rounds
-# often go one step up: "design the ML platform that fifty teams will use to
-# build, ship and watch their models", where the hard parts are contracts
-# between teams, cost and adoption as much as algorithms.
+# Chapter 18 designed *one model* (churn) and Chapter 37 designed *one product*
+# (a feed, a search engine). Staff-level design interviews often go one level
+# higher: "design the ML platform that fifty teams will use to build, deploy and
+# monitor their models", where the difficult parts are the contracts between
+# teams, cost and adoption as much as algorithms.
 #
-# By the end you will be able to:
+# By the end of this lab you should be able to:
 #
 # 1. structure a platform design answer around its users, its contracts and its service levels, not around boxes;
 # 2. design a feature platform (offline/online stores, streaming, point-in-time correctness, backfills, ownership) and size it;
@@ -31,6 +31,9 @@
 # real platform. Every number is computed from an input printed under
 # `ASSUMPTIONS`; change the inputs and the conclusions may change. That is
 # the skill being practised.
+
+# %% [markdown]
+# Read first: [Chapter 55 text](README.md), which explains the components of an ML platform, their contracts and their costs in more detail than this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -94,7 +97,7 @@ print("calculators:", ", ".join(n for n, f in vars(ds).items()
 #
 # | Term | Plain meaning | Example here |
 # |---|---|---|
-# | ML platform | Shared infrastructure many teams use to build, ship and watch models | "fifty teams" in the prompt |
+# | ML platform | Shared infrastructure many teams use to build, deploy and monitor models | "fifty teams" in the prompt |
 # | Feature store | A system that defines features once and serves them for training (offline) and serving (online) | offline columnar + online key-value |
 # | Point-in-time correctness | Training rows only use feature values known *at* the label's time | as-of joins on `(entity, label_time)` |
 # | Backfill | Computing a new feature's history over past data with the same code | a new feature over the training window |
@@ -102,15 +105,15 @@ print("calculators:", ", ".join(n for n, f in vars(ds).items()
 # | Gang scheduling | Starting all workers of a multi-GPU job together, or none | distributed training jobs |
 # | Showback / chargeback | Showing each team its cost / actually billing it | per-team GPU spend |
 # | Model registry | A database of model versions with signature, data snapshot, evaluation and approval | the step before deployment |
-# | CI / CD / CT | Continuous integration / delivery / training: automated tests, rollout and retraining | 17.3 |
+# | CI / CD / CT | Continuous integration / delivery / training: automated tests, rollout and retraining | section 3 |
 # | Shadow / canary | New model scores live traffic without effect / serves a small share of real traffic | 1% canary |
 # | Label maturity | Fraction of eventual labels already observed | 30% after 7 days (20-day mean delay) |
 # | ADR | Architecture decision record: one decision, its options, consequences and revisit triggers | `adr-001-online-feature-store.md` |
 
 # %% [markdown]
-# ## 17.0 · From "design a model" to "design a platform"
+# ## 0 · From "design a model" to "design a platform"
 #
-# A platform question changes who your user is. In a product design the user
+# A platform question changes who the user is. In a product design the user
 # is the person scrolling the feed; in a platform design the users are **other
 # engineers and scientists**, and the platform succeeds only if they choose to
 # use it. That changes the answer's skeleton:
@@ -126,7 +129,7 @@ print("calculators:", ", ".join(n for n, f in vars(ds).items()
 # | 7 | **Cost and governance** | Storage, compute, GPU quota, who pays (showback/chargeback), idle capacity | 4 |
 # | 8 | **Risks** | A short register: likelihood × impact, mitigation, owner | 4 |
 #
-# A one-screen picture of the components you will walk through (draw something
+# A one-screen picture of the components to walk through (draw something
 # like it in the first ten minutes, then *stop drawing* and go deep):
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l3-x-ml-platform.svg" alt="Sources feed a feature platform, a training platform, a registry with deployment and serving; a metadata layer spans them and a monitoring platform underneath can trigger retraining" width="100%">
@@ -142,7 +145,7 @@ print("calculators:", ", ".join(n for n, f in vars(ds).items()
 # golden path), and names the organisational failure modes (a platform no one
 # adopts; a feature store nobody owns).
 #
-# Published reading if you want depth (each describes a published design at
+# Published reading for more depth (each describes a published design at
 # the time it was written, not anyone's current practice): *"Hidden Technical
 # Debt in Machine Learning Systems"* (Sculley et al., NeurIPS 2015), *"TFX: A
 # TensorFlow-Based Production-Scale Machine Learning Platform"* (Baylor et al.,
@@ -150,9 +153,9 @@ print("calculators:", ", ".join(n for n, f in vars(ds).items()
 # Embedding Table"* (Liu et al., 2022).
 
 # %% [markdown]
-# ## 17.1 · The feature platform
+# ## 1 · The feature platform
 #
-# Level 2 notebooks 03–04 built point-in-time joins and streaming features
+# Chapters 21–22 built point-in-time joins and streaming features
 # for one project. At platform scale the questions are about **guarantees and
 # ownership**:
 #
@@ -209,7 +212,7 @@ ds.table(cost_rows)
 # **Expected:** about **1,454 GB** for the online store (200M × (16 + 1,600)
 # bytes × 1.5 overhead × 3 replicas) and **29.2 TB** of compressed offline
 # history; with the placeholder prices, roughly 5,800 vs 580 a month. The
-# prices are *placeholders* (look up your provider's current list prices); the
+# prices are *placeholders* (look up the provider's current list prices); the
 # **ratio** is the lesson: the online store costs ~10× the offline one while
 # holding ~1/20 of the bytes.
 #
@@ -235,22 +238,22 @@ def feature_store_storage_gb(entities, features, bytes_per, versions, replicatio
 grade.ex1(feature_store_storage_gb)
 
 # %% [markdown]
-# ## 17.2 · The training platform
+# ## 2 · The training platform
 #
 # | Concern | Design choice | Trade-off |
 # |---|---|---|
 # | **Data versioning** | Training sets are immutable, content-addressed snapshots (a manifest of files + hashes + the feature/label query + its as-of time); a run records the snapshot id | Storage grows; garbage-collect snapshots not referenced by a registered model |
-# | **Scheduling** | A queue with **quotas per team** (guaranteed share + borrowable burst), priorities, **gang scheduling** for multi-GPU jobs (all workers start together or none do), preemption of low-priority jobs with checkpoint/resume (notebook 10) | Strict quotas waste idle GPUs; fully shared pools let one team starve others. "Guaranteed + borrow + preempt" is the usual middle |
+# | **Scheduling** | A queue with **quotas per team** (guaranteed share + borrowable burst), priorities, **gang scheduling** for multi-GPU jobs (all workers start together or none do), preemption of low-priority jobs with checkpoint/resume (Chapter 48) | Strict quotas waste idle GPUs; fully shared pools let one team starve others. "Guaranteed + borrow + preempt" is the usual middle |
 # | **Experiment tracking** | Every run logs code version, config, data snapshot, environment (image digest), metrics, artefacts; searchable | Logging is cheap; *discipline* is not: make it the default in the golden-path template, not a wiki page |
 # | **Reproducibility** | Pinned images, seeds, deterministic data order, recorded hardware; "reproducible" defined as *within a stated tolerance*, not bit-identical (GPU kernels are not always deterministic) | Full determinism costs speed (`torch.use_deterministic_algorithms`); decide which jobs need it (audited models) |
 # | **GPU quota and cost** | Showback (teams see their spend) then chargeback; idle detection; right-sizing (a T4-class card for small fine-tunes, larger cards for large models); spot/preemptible capacity for checkpointed jobs | Chargeback changes behaviour but adds friction; start with showback |
 #
 # **Costing a training workload.** Two ways to estimate GPU-hours: from a
-# measured step time (best; notebooks 01–02 and 09–10 taught you to measure
-# it), or from FLOPs when you have nothing to measure yet. For a dense
+# measured step time (best; Chapters 39–40 and 47–48 showed how to measure
+# it), or from FLOPs when there is nothing to measure yet. For a dense
 # transformer, training compute ≈ **6 × parameters × tokens**; divide by the
-# GPU's peak throughput times the **model FLOPs utilisation (MFU)** you
-# expect to reach.
+# GPU's peak throughput times the **model FLOPs utilisation (MFU)** one
+# expects to reach.
 
 # %%
 tr = {
@@ -309,7 +312,7 @@ grade.ex3(utilization_waste)
 
 # %% [markdown]
 # A team-level view, using the same arithmetic (the module's own helpers, so
-# this cell runs whether or not you have done the exercises):
+# this cell runs whether or not the exercises have been completed):
 
 # %%
 teams = [  # (team, reserved GPUs, average utilisation) - ASSUMED for the illustration
@@ -337,7 +340,7 @@ print(f"\nidle share of the bill: {idle / total:.0%}  ({idle:,.0f} of {total:,.0
 # checkpointed jobs; then right-sizing (small fine-tunes on small cards). Each
 # needs a *policy* agreed between teams, which is why this is a staff topic.
 #
-# ## 17.3 · Registry, CI/CD/CT and safe rollout
+# ## 3 · Registry, CI/CD/CT and safe rollout
 #
 # A model registry is a database of **versions with contracts**: the artefact,
 # its input/output **signature**, the training snapshot and code version, the
@@ -347,13 +350,13 @@ print(f"\nidle share of the bill: {idle / total:.0%}  ({idle:,.0f} of {total:,.0
 # * **CI** (every change): unit tests on feature code, a schema/signature test,
 #   a tiny training run that must reach a sanity loss, a serving smoke test.
 # * **CD** (every candidate model): offline evaluation against the current
-#   champion on the *same* snapshot with intervals (Level 2 notebook 20),
+#   champion on the *same* snapshot with intervals (Chapter 38),
 #   slice checks, latency and memory tests in the serving image, then
 #   staged rollout.
 # * **CT** (continuous training): retraining on a schedule or trigger
 #   (drift, new data volume), producing a *candidate* that goes through the
-#   same CD gates. Automating retraining without automating evaluation is how
-#   bad models ship at 3 a.m.
+#   same CD gates. Automating retraining without automating evaluation lets
+#   bad models reach production unattended.
 #
 # | Stage | What it proves | What it cannot prove |
 # |---|---|---|
@@ -363,7 +366,7 @@ print(f"\nidle share of the bill: {idle / total:.0%}  ({idle:,.0f} of {total:,.0
 # | **Rollback** | one command, previous version still loaded or warm; automatic on guardrail breach | rollback of *data* (a bad feature backfill) is harder: version features too |
 #
 # How long must a canary run? It is a two-proportion test like any A/B test
-# (Level 2 notebook 11). Suppose the guardrail is the request error rate:
+# (Chapter 29). Suppose the guardrail is the request error rate:
 
 # %%
 can = {"baseline error rate": 0.005, "regression to detect (relative)": 0.20,
@@ -383,17 +386,17 @@ for rel in (0.5, 1.0):
 # canary at peak just to see a +20% error-rate regression; a doubling of errors
 # is visible in ~4 minutes. Hence the common staging pattern: a short canary
 # catches *crashes and large* regressions, and small effects are left to the
-# A/B test. Say this out loud: it shows you know what each stage can and cannot catch.
+# A/B test. In an interview this should be stated explicitly: it shows an understanding of what each stage can and cannot detect.
 #
 # > **Intuition.** A 1% canary is a smoke alarm, not a thermometer: it reliably notices a fire (a
 # > crash, a doubling of errors within minutes) but cannot tell whether the room got one degree
 # > warmer (a +2% effect needs far more traffic and time). *Where the analogy breaks down:* the
-# > required sample grows with $1/\Delta^2$, so halving the effect you want to see quadruples the
+# > required sample grows with $1/\Delta^2$, so halving the effect to be detected quadruples the
 # > canary's duration; there is no fixed "canary length".
 #
-# ## 17.4 · The monitoring platform
+# ## 4 · The monitoring platform
 #
-# Level 1 notebook 14 built drift checks (PSI) and a rollback for one model.
+# Chapter 15 built drift checks (PSI) and a rollback for one model.
 # A platform offers them as a **service** every model gets by registering:
 #
 # | Layer | Signals | Page or ticket? |
@@ -428,17 +431,17 @@ print("labels visible:       ", "  ".join(f"{ds.label_maturity(k, mean_delay):>4
 # > label delay can depend on the case itself (big frauds are reported faster), so "same maturity"
 # > is necessary but not always sufficient.
 #
-# ## 17.5 · Organisational trade-offs
+# ## 5 · Organisational trade-offs
 #
 # **Build vs buy.** Decide per component, not for the whole platform:
 #
 # | Criterion | Favours buy (managed service / open source as-is) | Favours build |
 # |---|---|---|
-# | Differentiation | commodity (experiment tracking, object storage, schedulers) | the thing that makes your models better (feature logic at your scale, a custom serving path) |
+# | Differentiation | commodity (experiment tracking, object storage, schedulers) | what makes the organisation's models better (feature logic at its scale, a custom serving path) |
 # | Scale and latency | inside the product's documented limits | far beyond them, or a latency the product cannot meet |
-# | Team capacity | you cannot staff on-call for it | you already run something similar |
-# | Lock-in and cost curve | cost grows gently with use | per-unit pricing becomes the largest line at your scale |
-# | Compliance | vendor meets your data-residency and audit needs | it does not |
+# | Team capacity | the team cannot staff on-call for it | the team already runs something similar |
+# | Lock-in and cost curve | cost grows gently with use | per-unit pricing becomes the largest line at the organisation's scale |
+# | Compliance | vendor meets the data-residency and audit needs | it does not |
 #
 # **Adoption: golden paths.** A platform nobody adopts is a cost. The pattern
 # that tends to work: one *paved road* (a project template with feature
@@ -462,7 +465,7 @@ print("labels visible:       ", "  ".join(f"{ds.label_maturity(k, mean_delay):>4
 # offline store and point-in-time training sets, adding the online store when
 # the first latency-sensitive model needs it.
 #
-# Now write the platform's cost summary to disk, so it can go in your design doc:
+# Now write the platform's cost summary to disk, for inclusion in a design document:
 
 # %%
 platform_costs = cost_rows + [
@@ -483,7 +486,7 @@ print("\nwrote", (OUT / "platform_costs.csv").relative_to(ART))
 # dominate the bill by more than an order of magnitude over feature storage,
 # which is where cost governance should start.
 #
-# ## 17.6 · A risk register
+# ## 6 · A risk register
 #
 # Staff engineers are expected to say what could go wrong *with the
 # programme*, not only with a model. A register scores each risk by
@@ -520,7 +523,7 @@ ds.table([{k: r[k] for k in ("risk", "L", "I", "score", "level", "owner")} for r
 # but severe, which is why its mitigation is designed in from day one). The scores are judgments, not data; their value is forcing
 # the conversation about mitigations and owners.
 #
-# ## 17.7 · An architecture decision record (ADR)
+# ## 7 · An architecture decision record (ADR)
 #
 # Staff-level work is written down. An ADR records one decision: the context,
 # the options, the decision, its consequences, and *when to revisit it*. Here
@@ -563,7 +566,7 @@ print(adr)
 # is *reversible by design* (the API hides the engine), and the "revisit when"
 # triggers are measurable.
 #
-# > **Exercise 4 (written ADR).** Write ADR-002 for one decision from 17.2–17.5,
+# > **Exercise 4 (written ADR).** Write ADR-002 for one decision from sections 2–5,
 # > for example *"GPU quotas: strict per-team reservations vs a shared
 # > preemptible pool"*, *"Continuous training: scheduled vs drift-triggered"* or
 # > *"Experiment tracking: adopt an existing tool vs build"*. Use the same
@@ -587,7 +590,7 @@ print(adr)
 # $$
 #
 # *Symbols:* $E$ entities, $k$ key bytes, $F$ features, $b$ bytes per value, $o$ store overhead, $r$
-# replicas. *Example (17.1):* $2 \times 10^8 \cdot (16 + 400 \cdot 4) \cdot 1.5 \cdot 3 / 10^9 = 1{,}454$ GB.
+# replicas. *Example (section 1):* $2 \times 10^8 \cdot (16 + 400 \cdot 4) \cdot 1.5 \cdot 3 / 10^9 = 1{,}454$ GB.
 #
 # **2 · Training compute and GPU-hours.**
 #
@@ -642,17 +645,17 @@ print(f"label maturity after 7 days (mean delay 20): by hand {1 - math.exp(-7 / 
 
 # %% [markdown]
 # **Expected:** each pair agrees: `1,454` GB, `171` GPU-hours, the same canary size (≈ 85,900; the
-# number printed in 17.3), and `0.295`.
+# number printed in section 3), and `0.295`.
 
 # %% [markdown]
 # ## Troubleshooting
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
-# | Exercise 1 off by ~7% | used 2³⁰ (GiB) instead of 10⁹ | the exercise asks for decimal GB; say which unit you use in an interview |
+# | Exercise 1 off by ~7% | used 2³⁰ (GiB) instead of 10⁹ | the exercise asks for decimal GB; state the unit in an interview |
 # | Exercise 1 off by 1,000× | returned MB or TB | divide bytes by 10⁹ exactly once |
 # | Exercise 3 `wasted_cost` negative | utilisation given as a percentage (72) instead of a fraction (0.72) | validate the range (0, 1] and raise `ValueError` |
-# | Your cost table disagrees with a colleague's by 10× | different hidden assumptions (replicas, overhead, price) | print the assumptions next to every estimate (`ds.show_assumptions`) |
+# | A cost table disagrees with a colleague's by 10× | different hidden assumptions (replicas, overhead, price) | print the assumptions next to every estimate (`ds.show_assumptions`) |
 # | The interviewer keeps asking "who owns this?" | the design has boxes but no contracts | name an owning team, an SLO and an on-call for each platform component |
 # | `ModuleNotFoundError: scaleml` | setup cell not run | run the first code cell |
 
@@ -668,4 +671,4 @@ print(f"label maturity after 7 days (mean delay 20): by hand {1 - math.exp(-7 / 
 # 5. Labels arrive 3–6 weeks after predictions. How does your monitoring platform tell a real performance drop from label immaturity?
 # 6. When would you buy a managed feature store instead of building one, and what would make you reverse that decision?
 #
-# **Next chapter:** [`18_large_scale_design_cases.ipynb`](../ch56-large-scale-design-cases/notebook.ipynb) — the platform's customers: four product designs (ads, video, an LLM assistant, fraud) with numbers, deep dives and failure modes.
+# **Next chapter:** [Chapter 56 · Large-scale design cases](../ch56-large-scale-design-cases/notebook.ipynb) — the platform's customers: four product designs (ads, video, an LLM assistant, fraud) with numbers, deep dives and failure modes.

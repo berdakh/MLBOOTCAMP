@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `zero_memory_per_gpu`
 
-[verified] Reference code: [`code/nb10.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def zero_memory_per_gpu(n_params, world_size, stage):
@@ -36,7 +36,7 @@ with prefetching), communication buckets, the CUDA context and fragmentation.
 
 ## Exercise 2 · `train_flops_and_days`
 
-[verified] Reference code: [`code/nb10.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def train_flops_and_days(n_params, tokens, gpu_tflops, mfu, n_gpus):
@@ -56,7 +56,7 @@ if you recompute the whole forward), so HFU > MFU for the same run.
 
 ## Exercise 3 · `optimal_checkpoint_interval`
 
-[verified] Reference code: [`code/nb10.py`](solutions.py) (`ex3`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex3`).
 
 ```python
 import math

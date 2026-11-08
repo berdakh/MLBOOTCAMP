@@ -1,13 +1,13 @@
 # Solutions · Chapter 37 · Recommendation & search system design
 
-Try each exercise before reading its answer. Markers: [verified] verified by running ·
+Attempt each exercise before reading its answer. Markers: [verified] verified by running ·
 [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `embedding_memory_gb`
 
-[verified] Reference code: [`code/nb19.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def embedding_memory_gb(n, dim, bytes_per):
@@ -23,7 +23,7 @@ copies: ×3), index structures (HNSW links), and replicas.
 
 ## Exercise 2 · `qps`
 
-[verified] Reference code: [`code/nb19.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def qps(dau, req_per_user, peak):
@@ -98,7 +98,7 @@ precomputation of neighbours, evaluation by module add-to-cart.
    intervention harvesting across rankers. Correct with IPS-weighted training
    losses (each click weighted by 1/propensity) and IPS-weighted evaluation;
    or model position explicitly (feature/tower set to a constant at serving).
-   Notebook 20: raw clicks preferred the old policy (0.760 vs 0.664 NDCG),
+   Chapter 38: raw clicks preferred the old policy (0.760 vs 0.664 NDCG),
    IPS reversed it (+0.29 DCG), agreeing with the truth (+0.31).
 5. **Marketplace A/B.** Treatment and control share inventory, so a better
    ranker in treatment can take scarce items from control (SUTVA violated),

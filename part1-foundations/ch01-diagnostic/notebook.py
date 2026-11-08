@@ -6,20 +6,21 @@
 # %% [markdown]
 # # Chapter 1 · Skills diagnostic
 #
-# **Day 0 · ~60 minutes · CPU only**
+# **Part I · Chapter 1 · about 60 minutes · CPU only**
 #
-# The bootcamp is five days long and you will not have time to do everything
-# with the same care. This diagnostic measures the *engineering* skills the
-# course teaches - not your modelling, which is assumed - so you know before
-# Day 1 where to slow down and where you can move quickly.
+# Part I covers a large amount of material, and few readers have time to
+# study every chapter with the same care. This diagnostic measures the
+# *engineering* skills the book teaches (not modelling ability, which is
+# assumed), so that before Chapter 2 you know where to slow down and where
+# you can move more quickly.
 #
 # By the end you will be able to:
 #
 # 1. see, from your own work, which of Python, pandas, SQL, testing, evaluation judgement and APIs are solid and which are rusty;
 # 2. rate yourself honestly on the skills that are hard to auto-grade (deployment, monitoring, explaining under questioning);
-# 3. name the notebooks that deserve extra time for you.
+# 3. name the chapters that deserve extra time in your case.
 #
-# **You will produce:** `artifacts/diagnostic.json`, your profile, to compare against when you retake this at the end of week 4.
+# **You will produce:** `artifacts/diagnostic.json`, your profile, to compare against when you retake the diagnostic at the end of week 4 of the [study plan](../../appendices/study-plan.md).
 #
 # ### How to use it
 #
@@ -30,9 +31,12 @@
 #   that is what you would do at work. Pasting the task into a chatbot measures
 #   the chatbot.
 # * **Score honestly.** Nobody sees this but you. A flattering profile sends
-#   you to the wrong notebooks.
+#   you to the wrong chapters.
 # * Run the setup cell first, then work top to bottom. Every check prints
 #   [verified] / / and never stops the notebook.
+
+# %% [markdown]
+# Read first: [Chapter 1 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -82,7 +86,7 @@ results = []  # every check below appends its result here; the profile reads it
 # | **`LEFT JOIN`** | keep every row of the left table, with NULLs where the right table has no match | customers with no invoices still appear |
 # | **Window function** | a SQL value computed from related rows without collapsing them | "the latest invoice per customer" |
 # | **Positive rate** | share of rows whose label is 1 | 5% of customers churn |
-# | **PR-AUC** | how well a score ranks positives above negatives, focused on the top of the list | the headline metric from Day 1 on |
+# | **PR-AUC** | how well a score ranks positives above negatives, focused on the top of the list | the headline metric from Chapter 5 on |
 # | **Calibrated probability** | a score that matches reality: of accounts scored 0.2, about 20% churn | needed before a cost-based threshold |
 # | **Bootstrap** | resample the evaluation set with replacement to see how much a metric moves | "is 0.745 really above 0.741?" |
 # | **Leakage** | information in training or evaluation that would not exist at prediction time | a column exported after the snapshot date |
@@ -90,7 +94,7 @@ results = []  # every check below appends its result here; the profile reads it
 # | **Test that fails on a bug** | an assertion that a correct function passes and a wrong one does not | the grader runs your test against hidden buggy versions |
 
 # %% [markdown]
-# ## 0.1 · Python
+# ## 1.1 · Python
 #
 # > **Exercise 1.** Write `top_k_frequent(items, k)` that returns a list of the
 # > `k` most frequent items, most frequent first. Ties are broken by the item
@@ -108,7 +112,7 @@ def top_k_frequent(items, k):
 results.append(grade.ex1(top_k_frequent))
 
 # %% [markdown]
-# ## 0.2 · pandas
+# ## 1.2 · pandas
 #
 # A weekly usage log, as it comes out of a real logging pipeline: a duplicated
 # row, a `-1` that means "unknown", a missing value, and a week in which nobody
@@ -143,7 +147,7 @@ def weekly_active(usage: pd.DataFrame) -> pd.Series:
 results.append(grade.ex2(weekly_active))
 
 # %% [markdown]
-# ## 0.3 · SQL
+# ## 1.3 · SQL
 #
 # DuckDB runs SQL directly on pandas DataFrames: register a DataFrame under a
 # table name, run a query, get a DataFrame back. No server, no setup. This is
@@ -188,7 +192,7 @@ def customer_summary_sql() -> str:
 results.append(grade.ex3(customer_summary_sql))
 
 # %% [markdown]
-# ## 0.4 · Testing
+# ## 1.4 · Testing
 #
 # Here is a small, **correct** function. Read its specification carefully.
 
@@ -229,17 +233,17 @@ def test_rolling_mean(fn):
 results.append(grade.ex4(test_rolling_mean))
 
 # %% [markdown]
-# ## 0.5 · Evaluation judgement
+# ## 1.5 · Evaluation judgement
 #
 # Six short scenarios. Pick one letter each. The grader tells you how many are
 # right and which question numbers to revisit, but not the right answers -
-# notebooks 04-07 do that properly.
+# Chapters 5–8 do that properly.
 #
 # **Q1 · A feature.** You predict monthly churn from snapshots taken on the
 # first of each month in 2023. A colleague adds `days_since_last_login`,
 # computed from the `users` table as it was exported this morning. Validation
 # PR-AUC jumps from 0.16 to 0.71.
-# (a) Great feature; ship it. (b) It leaks: it is computed from data after each
+# (a) A strong feature; deploy it. (b) It leaks: it is computed from data after each
 # snapshot date. (c) It is only a problem for tree models. (d) Standardising it
 # would fix the jump.
 #
@@ -262,9 +266,9 @@ results.append(grade.ex4(test_rolling_mean))
 #
 # **Q5 · A comparison.** On one validation set (7,000 rows, ~360 positives),
 # model A has ROC-AUC 0.741 and model B 0.745, each trained once with one seed.
-# (a) Ship B, it is better. (b) The gap is probably within noise: estimate it
+# (a) Deploy B, it is better. (b) The gap is probably within noise: estimate it
 # with a paired bootstrap and across seeds/folds before claiming anything.
-# (c) Always ship the simpler model. (d) Evaluate both on the test set
+# (c) Always deploy the simpler model. (d) Evaluate both on the test set
 # repeatedly until the difference is significant.
 #
 # **Q6 · A production symptom.** On the morning after deployment, before
@@ -285,7 +289,7 @@ def answers() -> dict:
 results.append(grade.ex5(answers))
 
 # %% [markdown]
-# ## 0.6 · APIs
+# ## 1.6 · APIs
 #
 # A prediction service is only as reliable as the validation at its front
 # door. Pydantic models declare what a valid request looks like, and reject
@@ -326,7 +330,7 @@ def make_model():
 results.append(grade.ex6(make_model))
 
 # %% [markdown]
-# ## 0.7 · Self-rating: what is hard to auto-grade
+# ## 1.7 · Self-rating: what is hard to auto-grade
 #
 # Deployment, operations and communication are mostly learned by doing them
 # for real, so a notebook cannot test them in ten minutes. Rate each statement:
@@ -371,30 +375,34 @@ self_ratings = {
 # *Your answer here.*
 
 # %% [markdown]
-# ## 0.8 · Your profile
+# ## 1.8 · Your profile
 #
 # The profile reads the check results above and your self-ratings, prints
-# area → status → which notebooks to prioritise, and saves
+# area → status → which labs to prioritise, and saves
 # `artifacts/diagnostic.json`. Statuses: **strong** (passed / rated ≥ 3),
 # **review** (close), **priority** (failed or rated < 2), **not attempted**.
+#
+# The profile prints lab numbers in their original two-digit form (`01`,
+# `02`, ...). Add one to obtain the chapter number: lab `04` is Chapter 5,
+# lab `11` is Chapter 12. The [chapter text](README.md) has the full table.
 
 # %%
 profile = grade.summary(results, self_ratings)
 
 # %% [markdown]
 # **Expected (unattempted):** every graded area shows `not attempted`, every
-# self-rated area `not rated`, and the list of notebooks to prioritise is the
-# whole course. Once you have done the exercises it becomes your plan.
+# self-rated area `not rated`, and the list of labs to prioritise is the
+# whole of Part I. Once you have done the exercises it becomes your plan.
 #
 # How to use it:
 #
-# * **priority** areas: do those notebooks first each day, do every exercise
+# * **priority** areas: study those chapters first, do every exercise
 #   without the solutions, and attempt the checkpoint questions aloud.
 # * **strong** areas: go faster, but still do the checkpoint questions. Being
 #   able to *do* something and being able to *explain* it under questioning are
 #   different skills.
 # * **Retake this diagnostic at the end of week 4** of the four-week study plan
-#   (`docs/guides/study-plan.md`) with the same rules and compare the two
+#   ([appendices/study-plan.md](../../appendices/study-plan.md)) with the same rules and compare the two
 #   `diagnostic.json` files. The exercises will feel easier; the useful
 #   question is whether you now finish each within the timebox.
 #
@@ -433,4 +441,4 @@ profile = grade.summary(results, self_ratings)
 # 4. What does validating requests at an API boundary protect you from that validating training data does not?
 # 5. Which of your areas came out weakest, and what will you do differently in those notebooks?
 #
-# **Next chapter:** [`01_reproducible_project.ipynb`](../ch02-reproducible-project/notebook.ipynb) — start the project: pin code, data, environment and randomness so every number you produce can be reproduced.
+# **Next chapter:** [Chapter 2 · A reproducible ML project](../ch02-reproducible-project/notebook.ipynb) — start the project: pin code, data, environment and randomness so every number you produce can be reproduced.

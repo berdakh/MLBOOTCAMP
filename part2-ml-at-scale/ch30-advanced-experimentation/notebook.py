@@ -6,16 +6,16 @@
 # %% [markdown]
 # # Chapter 30 · Advanced experimentation
 #
-# **Day 6 · ~90 minutes · CPU only**
+# **Part II · Chapter 30 · about 90 minutes · CPU only**
 #
-# Notebook 11 made experiments *valid*. This one makes them *cheap and
-# decisive*: reuse pre-period data to cut variance (CUPED), analyse ratio
-# metrics such as CTR with the right variance (delta method), compare rankers with a
-# fraction of the traffic (interleaving), and face the uncomfortable fact that
-# offline metrics can rank models in the wrong order. It ends where real
-# experiments end: a launch decision with written criteria.
+# Chapter 29 was about making experiments *valid*. This chapter is about making
+# them *cheaper and more informative*: reusing pre-period data to reduce variance
+# (CUPED), analysing ratio metrics such as CTR with the correct variance (delta
+# method), comparing rankers with a fraction of the traffic (interleaving), and
+# examining a case in which offline metrics order models incorrectly. It ends
+# where experiments end in practice: a launch decision with written criteria.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. apply CUPED and predict its variance reduction from one correlation;
 # 2. compute the variance of a ratio metric with the delta method and check it against the bootstrap;
@@ -24,8 +24,11 @@
 # 5. show an offline metric disagreeing with online behaviour, and explain why;
 # 6. write launch criteria with a primary metric, guardrails and decision rules.
 #
-# **You will produce:** `artifacts/level2/nb12/launch_criteria.md`, a launch-criteria
-# document filled with this notebook's measured numbers, and `artifacts/level2/nb12/power_curves.csv`.
+# **Outputs:** `artifacts/level2/nb12/launch_criteria.md`, a launch-criteria
+# document filled with this lab's measured numbers, and `artifacts/level2/nb12/power_curves.csv`.
+
+# %% [markdown]
+# Read first: [Chapter 30 text](README.md), which explains the concepts this lab measures. Worked answers are in [solutions.md](solutions.md).
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -80,7 +83,7 @@ print(f"{len(imps):,} logged impressions | population of {len(pop):,} users, mea
 
 # %% [markdown]
 # **Expected:** about 2.45 million impressions and a mean base CTR of about 0.139.
-# The simulator is notebook 11's `ex.simulate_users`.
+# The simulator is Chapter 29's `ex.simulate_users`.
 
 # %% [markdown]
 # ## Key terms
@@ -97,10 +100,10 @@ print(f"{len(imps):,} logged impressions | population of {len(pop):,} users, mea
 # | Interleaving | merge two rankers' lists into one and credit each click to the ranker that contributed the item | about 20× fewer users than an A/B test for 80% power |
 # | Offline–online gap | offline and online evaluations disagreeing about which model is better | logging policy first offline, third online |
 # | Guardrail metric | a metric that can block a launch but never justify one | p95 latency, crash rate, purchases per user |
-# | Launch criteria | the decision rule, written before the experiment starts | `launch_criteria.md` in 12.6 |
+# | Launch criteria | the decision rule, written before the experiment starts | `launch_criteria.md` in 30.6 |
 
 # %% [markdown]
-# ## 12.1 · CUPED: subtract what you already knew
+# ## 30.1 · CUPED: subtract what you already knew
 #
 # Much of the variance in "clicks per user during the experiment" is
 # *predictable* from the same user's clicks **before** the experiment: heavy
@@ -175,9 +178,9 @@ print(f"power at this size: raw {(cv['raw'] / cv['raw'].std() > 1.96).mean():.2f
 # noise (±0.02 for the mean of 300 estimates); the CUPED estimate's variance about
 # half the raw one (measured 0.50 vs predicted `1 - ρ²` = 0.49); and power
 # rising from about 0.2 to about 0.35 at the same sample size. Halving the
-# variance halves the users you need, or the duration of the test.
+# variance halves the number of users needed, or the duration of the test.
 #
-# Two limits worth saying in an interview:
+# Two limitations should be stated whenever CUPED is proposed:
 #
 # * CUPED helps as much as the covariate predicts the metric. For **per-user CTR**
 #   (a noisier, bounded metric) the pre/post correlation in this simulator is only
@@ -186,12 +189,12 @@ print(f"power at this size: raw {(cv['raw'] / cv['raw'].std() > 1.96).mean():.2f
 # * The covariate must be unaffected by treatment. Pre-period data is safe by
 #   construction; "clicks during the experiment on another surface" is not.
 #
-# ## 12.2 · Ratio metrics and the delta method
+# ## 30.2 · Ratio metrics and the delta method
 #
 # Pooled CTR per arm is `R = Σ clicks / Σ impressions = mean(c) / mean(n)`, a
 # ratio of two per-user means. Its unit of randomisation is the user, but it is not a
 # mean of per-user values, so the t-test does not apply directly, and
-# notebook 11 showed that the impression-level binomial SE is far too small.
+# Chapter 29 showed that the impression-level binomial SE is far too small.
 # The **delta method** linearises the ratio around the means:
 #
 # $$ \mathrm{Var}(\hat R) \approx \frac{1}{N}\left( \frac{\sigma_c^2}{\mu_n^2} - \frac{2\mu_c\,\sigma_{cn}}{\mu_n^3} + \frac{\mu_c^2\,\sigma_n^2}{\mu_n^4} \right) $$
@@ -264,11 +267,11 @@ print(f"A/A false-positive rate: delta method {np.mean(np.abs(z) > 1.96):.3f} | 
 # delta method for ratio metrics (CTR, revenue per session, clicks per query),
 # and the bootstrap to *validate* it.
 #
-# ## 12.3 · Heterogeneous effects: a caution
+# ## 30.3 · Heterogeneous effects: a caution
 #
-# After every experiment someone asks "did it work better for iOS users in
+# After most experiments someone asks "did it work better for iOS users in
 # Germany?" Slicing is legitimate for **pre-registered** segments with a
-# reason. Here is why slicing *after the fact* is dangerous. One large
+# stated reason. The following demonstration shows why slicing *after the fact* is misleading. One large
 # experiment, **true lift exactly +2% for everyone**, sliced by country × device (15 segments):
 
 # %%
@@ -296,13 +299,13 @@ print(seg.round(4).to_string(index=False))
 # difference between segments here is noise: the simulator applies the same 2% to everyone.
 #
 # What to do instead: pre-register a few segments with a hypothesis; correct for
-# multiple comparisons (notebook 11); expect small segments to be extreme
+# multiple comparisons (Chapter 29); expect small segments to be extreme
 # (shrink them towards the overall effect); and treat a surprising segment
 # result as a hypothesis for a **new** experiment, not as a finding. Real heterogeneity exists
 # (`ex.simulate_users(..., lift_by={"device": {"ios": 0.05}})` simulates it): try
-# it, and see how many users you need before the iOS segment is reliably different.
+# it, and measure how many users are needed before the iOS segment is reliably different.
 #
-# ## 12.4 · Interleaving: let each user judge both rankers
+# ## 30.4 · Interleaving: let each user judge both rankers
 #
 # An A/B test compares *different users* under two rankers, so it must
 # average away how much users differ from each other. **Interleaving** shows
@@ -310,8 +313,8 @@ print(seg.round(4).to_string(index=False))
 # click to the ranker that contributed the item. The comparison is *within*
 # a user and a request, and between-user variance cancels.
 #
-# **Team-draft interleaving** (Radlinski, Kurup & Joachims, 2008): like picking
-# teams in a playground. In each round, a coin decides which ranker picks
+# **Team-draft interleaving** (Radlinski, Kurup & Joachims, 2008) works like two
+# captains choosing teams. In each round, a coin decides which ranker picks
 # first; each ranker then adds its highest-ranked item not already in the
 # list, and that item is credited to its team.
 #
@@ -321,7 +324,7 @@ print(seg.round(4).to_string(index=False))
 #
 # > **Intuition.** An A/B test is two groups each tasting one cola; interleaving is
 # > every person sipping both, side by side. Differences between tasters (some love any
-# > sugar) cancel within the person. *Where it breaks down:* a sip-test cannot tell you
+# > sugar) cancel within the person. *Where it breaks down:* a sip test cannot show
 # > whether people will buy more cola over a month; interleaving cannot measure session-
 # > or user-level outcomes such as revenue or retention.
 
@@ -450,14 +453,14 @@ plt.show()
 # alone varies 100-fold), while the interleaving credit difference compares two
 # rankers *for the same user on the same request*. That is why large search
 # and recommendation teams use interleaving to **screen** many ranker candidates
-# quickly, then confirm the winner with an A/B test. Interleaving says
+# quickly, then confirm the best one with an A/B test. Interleaving says
 # which ranker users prefer; it cannot measure effects on whole-session metrics
 # (revenue, retention, latency), and it needs a clean credit-assignment rule.
 #
-# ## 12.5 · The offline–online gap
+# ## 30.5 · The offline–online gap
 #
-# Before any of this, a ranker is chosen offline: NDCG on logged clicks. Here
-# that choice goes wrong. Take logged **validation-week** requests (logging-policy traffic),
+# Before any experiment, a ranker is chosen offline, usually by NDCG on logged clicks.
+# In this section that choice is wrong. Take logged **validation-week** requests (logging-policy traffic),
 # and re-rank each request's 10 shown items with four rankers. Offline: NDCG@10 with the logged
 # clicks as labels. Online: serve that order to the same users and compute the **expected
 # CTR** under the true click model, which we can do because ShopStream keeps the truth.
@@ -495,24 +498,24 @@ print(gap.round(4).to_string())
 # has by far the highest CTR (about 0.18) and the logging policy is below it (about 0.14),
 # below even a plain popularity ranker (about 0.15), which offline ranks third. Offline evaluation on
 # logged clicks rewards a ranker for *agreeing with the logging policy*: clicks
-# happened mostly at the top positions the policy chose (position bias, notebook 05),
+# happened mostly at the top positions the policy chose (position bias, Chapter 23),
 # so reproducing the policy's order "recovers" them.
 #
 # This is the offline–online gap in one table. Defences, in order of cost:
 # debiased offline metrics (inverse propensity weighting with exploration traffic,
-# notebook 05); offline metrics validated against past A/B results ("does offline
+# Chapter 23); offline metrics validated against past A/B results ("does offline
 # NDCG predict the online winner?"); interleaving as a cheap online filter; and
-# finally the A/B test, which is the only thing that measures the decision you are making.
+# finally the A/B test, which is the only method that measures the quantity the decision depends on.
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-x-offline-online-gap.svg" alt="Slope chart: offline NDCG on logged clicks ranks the logging policy first; online CTR ranks true relevance first and the logging policy third" width="100%">
 #
 # *What to notice:* the red line falls from first to third: logged clicks measured agreement with the old policy, not quality.
 #
-# ## 12.6 · Guardrails and launch criteria
+# ## 30.6 · Guardrails and launch criteria
 #
 # A launch decision should be written **before** the experiment starts, so the
 # result cannot shape the rule. The file below fills a template with numbers measured
-# in notebooks 11–12; read it, then write your own memo in Exercise 4.
+# in Chapters 29–30. Read it before writing the memo in Exercise 4.
 
 # %%
 cuped_factor = cv["cuped"].var() / cv["raw"].var()
@@ -553,14 +556,14 @@ print(criteria)
 
 # %% [markdown]
 # **Expected:** the document prints with a CUPED variance factor of about 0.5 and the
-# interleaving and A/B user counts from 12.4.
+# interleaving and A/B user counts from 30.4.
 
 # %% [markdown]
 # > **Exercise 4 (written).** Write a one-page **launch memo** for this scenario: the A/B test of
 # > ranker A ran for 14 days; clicks per user +1.8% (CUPED, 95% CI +0.6% to +3.0%); purchases per
 # > user -0.4% (95% CI -1.3% to +0.5%); p95 latency +7%; SRM p = 0.21; two of eleven secondary
 # > metrics significant, one of them "iOS users in Germany +9%". State the decision under the criteria
-# > above, what you would do next, and what you would tell the team that built the ranker.
+# > above, the next steps, and what should be reported to the team that built the ranker.
 # >
 # > Write your answer in the cell below.
 
@@ -576,9 +579,9 @@ print(criteria)
 # y^{cv}_i = y_i - \theta\,(x_i - \bar x), \qquad \theta = \frac{\operatorname{cov}(x, y)}{\operatorname{var}(x)}, \qquad \operatorname{Var}(y^{cv}) = \operatorname{Var}(y)\,(1 - \rho^2)
 # $$
 #
-# *In words:* regress the metric on its pre-period value and keep the residual (plus the mean). Because $x$ is fixed before randomisation, the difference between arms is unchanged; only the noise shrinks, by the factor $1 - \rho^2$, and so does the sample size you need.
+# *In words:* regress the metric on its pre-period value and keep the residual (plus the mean). Because $x$ is fixed before randomisation, the difference between arms is unchanged; only the noise shrinks, by the factor $1 - \rho^2$, and the required sample size shrinks with it.
 # *Symbols:* $y$ = metric during the experiment, $x$ = the same user's pre-period value, $\rho = \operatorname{corr}(x, y)$.
-# *Example:* $x = (1, 2, 3, 4)$, $y = (2, 3, 5, 6)$: θ = 2.33 / 1.67 = 1.4, $y^{cv} = (4.1, 3.7, 4.3, 3.9)$, variance 3.33 → 0.067 $= 3.33 \cdot (1 - 0.98)$. In 12.1, ρ = 0.71 gives a factor of about 0.5: half the users.
+# *Example:* $x = (1, 2, 3, 4)$, $y = (2, 3, 5, 6)$: θ = 2.33 / 1.67 = 1.4, $y^{cv} = (4.1, 3.7, 4.3, 3.9)$, variance 3.33 → 0.067 $= 3.33 \cdot (1 - 0.98)$. In 30.1, ρ = 0.71 gives a factor of about 0.5: half the users.
 #
 # **2. Delta method for a ratio of means**
 #
@@ -644,7 +647,7 @@ print(f"3. interleaving t: {0.05 / (0.8 / np.sqrt(400)):.2f} with 400 users, {0.
 # 2. Why can't you put pooled CTR's per-impression clicks into a t-test? What does the delta method do instead, and how would you validate it?
 # 3. An experiment shows +2% overall and +11% for one of 30 segments. What do you tell the team that wants to launch only for that segment?
 # 4. How does team-draft interleaving attribute clicks, why does it need far fewer users than an A/B test, and what can it not measure?
-# 5. Your new ranker wins offline NDCG on logged clicks but loses the A/B test. Give two mechanisms, and how you would make the offline metric more trustworthy.
+# 5. A new ranker scores higher on offline NDCG on logged clicks but loses the A/B test. Give two mechanisms, and how you would make the offline metric more trustworthy.
 # 6. What belongs in launch criteria, and why must they be written before the experiment starts?
 #
-# **Next chapter:** [`13_ml_from_scratch_1.ipynb`](../ch31-ml-from-scratch-1/notebook.ipynb) — Day 7 starts the ML coding interview: logistic regression, k-means, kNN, AUC and NDCG from scratch in NumPy.
+# **Next chapter:** [Chapter 31 · ML from scratch I](../ch31-ml-from-scratch-1/notebook.ipynb) — Chapters 31–32 cover the ML coding interview: logistic regression, k-means, kNN, AUC and NDCG from scratch in NumPy.

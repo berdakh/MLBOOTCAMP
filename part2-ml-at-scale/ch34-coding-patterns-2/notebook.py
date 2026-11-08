@@ -6,28 +6,31 @@
 # %% [markdown]
 # # Chapter 34 · Coding patterns II
 #
-# **Day 8 · ~90 minutes · CPU only**
+# **Part II · Chapter 34 · about 90 minutes · CPU only**
 #
 # The second half of the pattern set: graphs (BFS, DFS, topological order,
 # Dijkstra), binary search on the answer, dynamic programming, tries and
-# union-find. These come up in interviews and in ML systems work — dependency
+# union-find. These appear in interviews and in ML systems work: dependency
 # graphs of pipelines, shortest paths in knowledge graphs, prefix search for
 # query autocomplete, deduplicating near-identical items into clusters.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. write iterative BFS/DFS on grids and adjacency lists without hitting Python's recursion limit;
 # 2. produce a topological order and detect cycles; run Dijkstra with a heap;
 # 3. recognise "binary search on the answer" and write a bug-free binary search with a stated invariant;
 # 4. set up a DP (state, transition, base case, order) and improve LIS from O(n²) to O(n log n);
 # 5. implement a trie and union-find with path compression;
-# 6. follow a 4-week daily practice plan with spaced repetition after the course.
+# 6. follow a 4-week daily practice plan with spaced repetition.
 #
-# **You will produce:** eight graded solutions and your own practice schedule.
+# **Outputs:** eight graded solutions and a personal practice schedule.
 #
-# Same rules as notebook 15: read the worked example, collapse it, solve the
-# exercise against the clock while talking, then score yourself with the sheet
-# from 15.9.
+# The rules are those of Chapter 33: read the worked example, collapse it, solve the
+# exercise against the clock while talking, then score the attempt with the sheet
+# from Section 33.9 of that lab.
+
+# %% [markdown]
+# Read first: [Chapter 34 text](README.md), which explains the concepts this lab measures. Worked answers are in [solutions.md](solutions.md).
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -92,13 +95,13 @@ print("Python recursion limit:", sys.getrecursionlimit())
 # | Dynamic programming | solve each subproblem once, store it, build bigger answers from stored ones | `min_coins`, edit distance |
 # | Trie | a tree of characters in which words with a shared prefix share nodes | Exercise 7; autocomplete |
 # | Union-find | sets that can be merged, with a fast "which set is x in?" | Exercise 8 |
-# | Path compression | pointing every node a `find` passes straight at the root | the 16.6 timing demo |
+# | Path compression | pointing every node a `find` passes straight at the root | the 34.6 timing demo |
 
 # %% [markdown]
-# ## 16.1 · Graphs: representations and BFS
+# ## 34.1 · Graphs: representations and BFS
 #
 # Interview graphs come as an **adjacency list** (`graph[u] = [v, ...]`), an
-# **edge list** you convert into one (O(V + E)), or **implicitly** as a grid
+# **edge list** to be converted into one (O(V + E)), or **implicitly** as a grid
 # where neighbours are the 4 adjacent cells. BFS explores in layers, so the
 # first time it reaches a node is along a path with the fewest edges.
 # Template: a `deque`, a `seen` set marked **when a node is enqueued** (not when
@@ -143,7 +146,7 @@ print(shortest_steps(maze), shortest_steps([[0, 1], [1, 0]]))
 # > **Intuition.** BFS is a ripple in a pond: everything one step away is reached before
 # > anything two steps away. DFS is a maze-walker with a hand on the wall: deep first, back
 # > up only at dead ends. *Where it breaks down:* ripples measure *steps*, not distance; with
-# > unequal edge lengths the first ripple to arrive may have taken the long way (16.3).
+# > unequal edge lengths the first ripple to arrive may have taken the long way (34.3).
 
 # %% [markdown]
 # > **Exercise 1.** *(target 12 min)* **Number of islands.** Implement
@@ -168,13 +171,13 @@ grade.ex1(num_islands)
 # > ask)? Empty grid, ragged rows? *Plan:* scan cells; on unvisited land, count one
 # > island and flood-fill it with BFS/iterative DFS. *Complexity:* O(R·C) time,
 # > O(R·C) space for `seen` (O(min(R, C)) for the BFS frontier in practice).
-# > *Python-specific point worth saying:* a recursive flood fill is fine in Java or
+# > *A Python-specific point worth stating:* a recursive flood fill is fine in Java or
 # > C++ for moderate grids but hits Python's recursion limit — use an explicit
 # > stack. *Follow-ups:* union-find version (Exercise 8); islands arriving online
 # > one cell at a time (union-find again).
 
 # %% [markdown]
-# ## 16.2 · DFS, cycles and topological order
+# ## 34.2 · DFS, cycles and topological order
 #
 # A **topological order** of a directed graph lists every node after all of its
 # prerequisites; it exists if and only if the graph has no cycle. Two classic
@@ -214,9 +217,8 @@ print(has_cycle(3, [(0, 1), (1, 2)]), has_cycle(3, [(0, 1), (1, 2), (2, 0)]), ha
 # O(V + E) time and space.
 
 # %% [markdown]
-# **Expected:** `False True True`. Keeping an iterator per stack frame is how
-# you turn any recursive DFS into an iterative one without changing the visit
-# order.
+# **Expected:** `False True True`. Keeping an iterator per stack frame turns
+# any recursive DFS into an iterative one without changing the visit order.
 
 # %% [markdown]
 # > **Exercise 2.** *(target 15 min)* **Course schedule.** Implement
@@ -237,7 +239,7 @@ def course_order(n, prerequisites):
 grade.ex2(course_order)
 
 # %% [markdown]
-# > **Talk it through.** *Clarify the edge direction out loud* — `[a, b]` means
+# > **Talk it through.** *Clarify the edge direction aloud:* `[a, b]` means
 # > "b before a" here; getting it backwards gives a reversed order. Duplicates?
 # > Self-loops (a cycle)? *Plan:* Kahn's algorithm: in-degrees, queue of zeros,
 # > pop/append/decrement; `len(order) < n` ⇒ cycle. *Complexity:* O(V + E) time
@@ -245,7 +247,7 @@ grade.ex2(course_order)
 # > exactly this order; the cycle check is its "your DAG is not a DAG" error.
 
 # %% [markdown]
-# ## 16.3 · Weighted shortest paths: why BFS is not enough
+# ## 34.3 · Weighted shortest paths: why BFS is not enough
 #
 # BFS minimises the number of **edges**. With weights, the path with fewer
 # edges can cost more. Dijkstra generalises BFS by always expanding the
@@ -304,14 +306,14 @@ grade.ex3(dijkstra)
 # > which is better only for dense graphs (E ≈ V²). *Follow-ups:* the path itself
 # > (store `parent[v]`); one target (stop when it is popped); A* with an
 # > admissible heuristic; many queries on a road-size graph (precomputation such as
-# > contraction hierarchies — just name it).
+# > contraction hierarchies; naming it is enough).
 
 # %% [markdown]
-# ## 16.4 · Binary search, and binary search on the answer
+# ## 34.4 · Binary search, and binary search on the answer
 #
 # Binary search needs a **monotone predicate**, not necessarily a sorted array:
 # `False, False, …, False, True, …, True`; find the first `True`. Write it with an
-# explicit invariant and the off-by-one bugs disappear:
+# explicit invariant and the off-by-one errors disappear:
 
 # %%
 def first_true(lo, hi, pred):
@@ -371,7 +373,7 @@ grade.ex4(min_capacity)
 # > *Naive:* trying every capacity upwards is O(n · (sum − max)).
 
 # %% [markdown]
-# ## 16.5 · Dynamic programming: state, transition, base, order
+# ## 34.5 · Dynamic programming: state, transition, base, order
 #
 # DP applies when a problem has **optimal substructure** (the best answer is
 # built from best answers to subproblems) and **overlapping subproblems** (the
@@ -402,11 +404,11 @@ print("greedy trap:", min_coins([1, 3, 4], 6))
 
 # %% [markdown]
 # **Expected:** `3 -1 0` and `greedy trap: 2`. The same template solves
-# knapsack, path counting and sequence alignment; the art is in step 1.
+# knapsack, path counting and sequence alignment; the difficult part is step 1.
 #
-# > **Intuition.** DP is doing a problem with sticky notes: every time you solve a
-# > subproblem, write the answer down, and never solve it twice. The state definition is
-# > what you write on the note. *Where it breaks down:* it pays only if subproblems repeat;
+# > **Intuition.** DP is solving a problem with sticky notes: each time a subproblem is
+# > solved, its answer is written down, and no subproblem is solved twice. The state
+# > definition is what is written on the note. *Where it breaks down:* it pays only if subproblems repeat;
 # > when they do not (plain divide-and-conquer, e.g. merge sort), the notes are wasted memory.
 
 # %% [markdown]
@@ -431,7 +433,7 @@ grade.ex5(lis_length)
 # > `j < i` with `nums[j] < nums[i]`. *Then improve:* keep `tails[L]` = the
 # > smallest possible tail of an increasing subsequence of length L + 1; `tails` is
 # > sorted, so each new x replaces the first tail ≥ x (`bisect_left`) or extends
-# > the list. *Say clearly:* `tails` is **not** an actual subsequence; its length is
+# > the list. *State clearly:* `tails` is **not** an actual subsequence; its length is
 # > the answer. *Strict vs non-decreasing:* `bisect_left` vs `bisect_right`.
 # > *Complexity:* O(n log n) time, O(n) space. Reconstructing the sequence needs
 # > parent pointers.
@@ -463,7 +465,7 @@ grade.ex6(edit_distance)
 # > words), sequence alignment.
 
 # %% [markdown]
-# ## 16.6 · Tries and union-find
+# ## 34.6 · Tries and union-find
 #
 # A **trie** stores strings by shared prefixes: each node is a dict from
 # character to child plus an end-of-word marker. Lookup and prefix queries
@@ -475,12 +477,12 @@ grade.ex6(edit_distance)
 # `union(a, b)` and answers `find(x)` (the representative of x's set).
 # **Path compression** (point every node visited by `find` at the root) plus
 # **union by size/rank** makes each operation effectively O(1) amortised
-# (O(α(n)), inverse Ackermann). Use it when edges arrive over time and you only
-# need connectivity: deduplicating near-identical items into clusters, merging
+# (O(α(n)), inverse Ackermann). It is the right tool when edges arrive over time and
+# only connectivity is needed: deduplicating near-identical items into clusters, merging
 # user identities across devices, Kruskal's minimum spanning tree.
 #
-# How much does path compression matter? Here is a find without it on the
-# worst kind of input:
+# How much does path compression matter? The next cell times a `find` without it
+# on the worst kind of input:
 
 # %%
 def chain_cost(n, compress):
@@ -582,33 +584,33 @@ grade.ex8(UnionFind)
 # > tree under the larger; decrement the count. *Complexity:* O(α(n)) amortised
 # > per operation with both optimisations; O(log n) with either one alone.
 # > *Compare with BFS:* BFS counts components of a fixed graph in O(V + E);
-# > union-find wins when edges arrive incrementally or you need to answer
-# > "connected?" between insertions.
+# > union-find is preferable when edges arrive incrementally or "connected?" must be
+# > answered between insertions.
 
 # %% [markdown]
-# ## 16.7 · After this notebook: a 4-week practice plan
+# ## 34.7 · After this chapter: a 4-week practice plan
 #
 # Two days teach the patterns; fluency comes from short, daily, *spaced*
 # practice. The plan below assumes 45-60 minutes a day, 5-6 days a week, and
-# reuses notebooks 13-16: rerun an exercise from a **blank cell** (delete your
+# reuses Chapters 31–34: rerun an exercise from a **blank cell** (delete the
 # solution, keep the grader), and add new problems of the same pattern from any
 # practice platform.
 #
 # | Week | Day 1 | Day 2 | Day 3 | Day 4 | Day 5 | Day 6 (review) |
 # |---|---|---|---|---|---|---|
-# | 1 | hash maps, prefix sums (15: Ex1, Ex7) | sliding window, two pointers (15: Ex2) | stacks (15: Ex5 + 2 new) | heaps (15: Ex3 + 2 new) | intervals (15: Ex4 + 1 new) | redo the two lowest-scoring of the week, timed |
-# | 2 | BFS/DFS grids (16: Ex1) | topological sort (16: Ex2) | Dijkstra (16: Ex3) | binary search on the answer (16: Ex4) | ML coding: logistic regression + AUC (13: Ex1, Ex5) | mock: two random problems from weeks 1-2, 45 min each, out loud |
-# | 3 | DP 1-D (16: Ex5 + 2 new) | DP 2-D (16: Ex6 + 1 new) | tries, union-find (16: Ex7, Ex8) | ML coding: k-means, kNN (13: Ex3, Ex4) | ML coding: MLP backprop, attention (14: Ex3, Ex4) | redo week-1 problems scoring < 12 |
-# | 4 | mixed: 2 unseen medium problems | ML coding: GBM + best split (14: Ex1, Ex2) | mixed: 1 hard problem, 60 min | mock loop: 1 coding + 1 ML coding, back to back | redo everything scoring < 12 | full mock loop with a friend (notebook 20's format) |
+# | 1 | hash maps, prefix sums (Ch. 33: Ex1, Ex7) | sliding window, two pointers (Ch. 33: Ex2) | stacks (Ch. 33: Ex5 + 2 new) | heaps (Ch. 33: Ex3 + 2 new) | intervals (Ch. 33: Ex4 + 1 new) | redo the two lowest-scoring of the week, timed |
+# | 2 | BFS/DFS grids (Ch. 34: Ex1) | topological sort (Ch. 34: Ex2) | Dijkstra (Ch. 34: Ex3) | binary search on the answer (Ch. 34: Ex4) | ML coding: logistic regression + AUC (Ch. 31: Ex1, Ex5) | mock: two random problems from weeks 1-2, 45 min each, out loud |
+# | 3 | DP 1-D (Ch. 34: Ex5 + 2 new) | DP 2-D (Ch. 34: Ex6 + 1 new) | tries, union-find (Ch. 34: Ex7, Ex8) | ML coding: k-means, kNN (Ch. 31: Ex3, Ex4) | ML coding: MLP backprop, attention (Ch. 32: Ex3, Ex4) | redo week-1 problems scoring < 12 |
+# | 4 | mixed: 2 unseen medium problems | ML coding: GBM + best split (Ch. 32: Ex1, Ex2) | mixed: 1 hard problem, 60 min | mock loop: 1 coding + 1 ML coding, back to back | redo everything scoring < 12 | full mock loop with a friend (Chapter 38's format) |
 #
-# **Spaced repetition.** Re-attempt every problem you solved on days +1, +3,
+# **Spaced repetition.** Re-attempt every solved problem on days +1, +3,
 # +7 and +21 after first solving it, from a blank cell and against the target
 # time. Drop it from the rotation after two consecutive scores of 12+ on the
-# 15.9 sheet; reset the schedule after any score below 8. A plain spreadsheet
+# Chapter 33 sheet; reset the schedule after any score below 8. A plain spreadsheet
 # with columns *problem, pattern, date, score, next review* is enough.
 #
-# **Using practice platforms honestly.** LeetCode-style platforms are useful
-# for volume and for an automatic judge. Use them well:
+# **Using practice platforms.** LeetCode-style platforms are useful
+# for volume and for an automatic judge. Some guidelines:
 #
 # * pick problems **by pattern**, not by a list claiming to be "what company X
 #   asks": nobody outside a company knows its current question bank, interview
@@ -617,7 +619,7 @@ grade.ex8(UnionFind)
 # * set a timer and work 20-25 minutes before looking at hints or discussions;
 #   after reading a solution, close it and re-implement it from memory the next
 #   day — reading is not practice;
-# * always say the complexity and edge cases out loud, even alone; the judge
+# * always state the complexity and edge cases aloud, even alone; the judge
 #   only checks the output, the interviewer checks the process;
 # * do not treat the platform's runtime percentile as a quality score: it is
 #   noisy and rewards micro-optimisations interviewers do not care about;
@@ -637,9 +639,9 @@ for pattern, days in plan:
     print(f"{pattern:<18}", "  ".join(d.isoformat() for d in days))
 
 # %% [markdown]
-# **Expected:** three lines, each with five dates — today, then +1, +3, +7 and
-# +21 days. Replace the patterns with the problems you solved today and copy the
-# dates into your calendar or spreadsheet.
+# **Expected:** three lines, each with five dates: today, then +1, +3, +7 and
+# +21 days. Replace the patterns with the problems solved today and copy the
+# dates into a calendar or spreadsheet.
 
 # %% [markdown]
 # ## Key equations
@@ -659,8 +661,8 @@ for pattern, days in plan:
 # d(v) \leftarrow \min\big(d(v),\ d(u) + w(u, v)\big), \qquad T = O\big((V + E) \log V\big) \text{ with a binary heap}
 # $$
 #
-# *In words:* when you pop the closest unfinished node u, try every edge out of it; correct because, with $w \ge 0$, nothing popped later can be closer.
-# *Example:* in 16.3, popping node 3 at distance 2 relaxes $d(1) = \min(10,\ 2 + 1) = 3$.
+# *In words:* when the closest unfinished node u is popped, try every edge out of it; correct because, with $w \ge 0$, nothing popped later can be closer.
+# *Example:* in 34.3, popping node 3 at distance 2 relaxes $d(1) = \min(10,\ 2 + 1) = 3$.
 #
 # **3. Binary search iterations**
 #
@@ -683,7 +685,7 @@ for pattern, days in plan:
 # **5. Union-find**
 #
 # $$
-# T(\text{m operations on n elements}) = O\big(m\, \alpha(n)\big), \qquad \alpha(n) \le 4 \text{ for any } n \text{ you will meet}
+# T(\text{m operations on n elements}) = O\big(m\, \alpha(n)\big), \qquad \alpha(n) \le 4 \text{ for any practical } n
 # $$
 #
 # *In words:* with path compression and union by size each operation is effectively constant time; with neither, a chain makes `find` O(n).
@@ -711,10 +713,10 @@ for pattern, days in plan:
 # Answer aloud, without notes, in under two minutes each:
 #
 # 1. When does BFS give shortest paths, when do you need Dijkstra, and when does Dijkstra give wrong answers? What do you use then?
-# 2. You are given the task dependencies of a training pipeline. How do you find an execution order, detect a circular dependency, and find which tasks can run in parallel?
+# 2. Given the task dependencies of a training pipeline: How do you find an execution order, detect a circular dependency, and find which tasks can run in parallel?
 # 3. What makes a problem suitable for "binary search on the answer"? Give an ML-systems example (hint: capacity or thresholds).
 # 4. Explain the O(n log n) LIS algorithm and why `tails` stays sorted. What is the difference between the `tails` array and an actual longest subsequence?
 # 5. Trie vs hash set vs sorted array with binary search for query autocomplete over 10 million queries: compare memory, prefix-query cost and update cost.
-# 6. You must cluster 50 million product listings into groups of near-duplicates, given a stream of candidate pairs from a similarity model. Which data structure, and what are the risks of transitive merging?
+# 6. Suppose 50 million product listings must be clustered into groups of near-duplicates, given a stream of candidate pairs from a similarity model. Which data structure, and what are the risks of transitive merging?
 #
-# **Next chapter:** [`17_serving_a_ranking_cascade.ipynb`](../ch35-serving-a-ranking-cascade/notebook.ipynb) — Day 9: put retrieval, features and a ranker behind one service, with per-stage latency budgets.
+# **Next chapter:** [Chapter 35 · Serving a ranking cascade](../ch35-serving-a-ranking-cascade/notebook.ipynb) — Chapters 35–36: put retrieval, features and a ranker behind one service, with per-stage latency budgets.

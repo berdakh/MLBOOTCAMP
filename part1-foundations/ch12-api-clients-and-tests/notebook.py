@@ -6,16 +6,16 @@
 # %% [markdown]
 # # Chapter 12 · API clients & tests
 #
-# **Day 3 · ~60 minutes · CPU only**
+# **Part I · Chapter 12 · about 60 minutes · CPU only**
 #
 # A service is only as reliable as the code that calls it and the tests that
-# guard it. Networks are slow, servers restart, and someone will eventually
-# send a negative session count. This notebook runs the churn API as a real
-# HTTP server on your machine, calls it the way a production client should,
-# and then writes a test suite that would catch real bugs, and checks that
-# claim by planting bugs on purpose.
+# check it. Networks are slow, servers restart, and sooner or later a caller
+# sends a negative session count. This lab runs the churn API as a real HTTP
+# server on the local machine, calls it as a production client should, writes
+# a test suite intended to catch real bugs, and then verifies that claim by
+# introducing bugs deliberately.
 #
-# By the end you will be able to:
+# After this chapter you should be able to:
 #
 # 1. run a FastAPI app with uvicorn in a background thread on `127.0.0.1`, and stop it cleanly;
 # 2. explain why every call needs a timeout, and show one firing;
@@ -24,7 +24,10 @@
 # 5. write a pytest suite in four categories (contract, behaviour, parity, operations) and run it;
 # 6. use mutation testing to find out which bugs your tests would actually catch.
 #
-# **You will produce:** `generated/tests_api/test_api.py`, a pytest suite for the service, and a mutation-testing table.
+# **Lab output:** `generated/tests_api/test_api.py`, a pytest suite for the service, and a mutation-testing table.
+
+# %% [markdown]
+# **Read first:** [Chapter 12 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -86,12 +89,12 @@ valid = split.valid  # validation rows only; the test period waits for notebook 
 # | **Killed / surviving mutant** | a test caught the change / no test noticed it | a survivor points at a missing test |
 
 # %% [markdown]
-# ## 11.1 · A real server, on your own machine only
+# ## 12.1 · A real server, on your own machine only
 #
-# `TestClient` (notebooks 09-10) skips the network. A client library has to
-# be tried against a real socket: real timeouts, real connection errors. So
-# start uvicorn, the ASGI server FastAPI apps run on in production, in a
-# **background thread** of this notebook.
+# `TestClient` (chapters 10–11) skips the network. A client library has to
+# be tried against a real socket: real timeouts, real connection errors. We
+# therefore start uvicorn, the ASGI server on which FastAPI apps run in
+# production, in a **background thread** of this notebook.
 #
 # Two safety rules, both in the code below:
 #
@@ -170,10 +173,10 @@ print(churn.predict(body))
 # section takes its design decisions one at a time.
 
 # %% [markdown]
-# ## 11.2 · Timeouts: the default is "wait forever"
+# ## 12.2 · Timeouts: the default is "wait forever"
 #
-# To see a timeout you need something slow. A toy app with three endpoints
-# that misbehave on purpose:
+# Observing a timeout requires a slow endpoint. We use a toy app with three
+# endpoints that misbehave on purpose:
 #
 # * `GET /slow?seconds=s` sleeps before answering;
 # * `GET /flaky` returns **503** for the first *N* calls after `POST /flaky/reset?fail_first=N`, then 200;
@@ -245,12 +248,12 @@ except httpx.ConnectError as exc:
 # Without a timeout, a caller waiting on a hung server holds a thread, a
 # connection and often a user's request. When many callers do it at once the
 # hang spreads to everything upstream. A timeout turns "hangs forever" into
-# a fast, handleable error. Pick it from the latency you measure (notebook
-# 13: a few times the p99), not from a guess. `httpx` defaults to 5 s;
+# a fast, handleable error. Choose it from measured latency (Chapter
+# 14: a few times the p99), not from a guess. `httpx` defaults to 5 s;
 # `requests` defaults to **no timeout at all**.
 
 # %% [markdown]
-# ## 11.3 · Retries: only for failures that can succeed next time
+# ## 12.3 · Retries: only for failures that can succeed next time
 #
 # | Response | Meaning | Retry? |
 # |---|---|---|
@@ -280,7 +283,7 @@ except httpx.ConnectError as exc:
 # harmless. Retrying a `POST /orders` after a timeout could charge a customer
 # twice; such endpoints need an idempotency key.
 #
-# The course client implements exactly this table. Watch it against the
+# The course client implements exactly this table. We run it against the
 # flaky endpoint:
 
 # %%
@@ -354,7 +357,7 @@ def retrying_get(http, path: str, retries: int = 3, backoff: float = 0.1) -> dic
 grade.ex1(retrying_get)
 
 # %% [markdown]
-# ## 11.4 · Big jobs: chunk below the batch limit
+# ## 12.4 · Big jobs: chunk below the batch limit
 #
 # The service refuses batches above `max_batch_size` (1000) with a 413.
 # Scoring the whole validation period at once fails; the client's
@@ -382,9 +385,9 @@ print("order preserved:", [p["customer_id"] for p in preds] == [c["customer_id"]
 # in the difference because it happened before `n_before` was read.)
 
 # %% [markdown]
-# ## 11.5 · A test suite for the service
+# ## 12.5 · A test suite for the service
 #
-# Notebooks 09-10 *checked* things by eye. A **test suite** checks them every
+# Chapters 10–11 *checked* things by eye. A **test suite** checks them every
 # time anyone changes anything, in CI, in seconds. Four categories, each
 # answering a different question:
 #
@@ -401,7 +404,7 @@ print("order preserved:", [p["customer_id"] for p in preds] == [c["customer_id"]
 # gets a fresh app from the factory. Tests never touch your artifacts
 # registry.
 #
-# One extra line makes the suite reusable in 11.7: the app factory is read
+# One extra line makes the suite reusable in 12.7: the app factory is read
 # from the environment variable `CHURN_APP_FACTORY` (default
 # `churnlab.api:create_app`).
 
@@ -590,19 +593,19 @@ def test_rejects_negative_sessions(client):
 grade.ex2(test_rejects_negative_sessions)
 
 # %% [markdown]
-# ## 11.6 · Do the tests catch bugs? Mutation testing
+# ## 12.6 · Do the tests catch bugs? Mutation testing
 #
-# A test suite that passes tells you nothing until you know it can **fail**.
-#
-# > **Intuition.** Mutation testing is a fire drill for your tests: start a
-# > small, controlled fire and check that an alarm goes off. *Where it breaks
-# > down:* a drill only covers the fires you thought to start; a suite that
-# > kills every hand-made mutant can still miss a bug nobody imagined.
-# Mutation testing checks that: make a small, realistic change to the code
+# A passing test suite carries no information until it is known that it can
+# **fail**. Mutation testing checks this: make a small, realistic change to the code
 # (a *mutant*), run the suite, and see whether some test fails (the mutant is
 # *killed*) or everything still passes (the mutant *survived*: no test checks
 # that behaviour). Tools such as `mutmut` do this automatically for every line.
-# Here you do it by hand for five mutants of `api.py`.
+# Here we do it by hand for five mutants of `api.py`.
+#
+# > **Intuition.** Mutation testing is a fire drill for the tests: start a
+# > small, controlled fire and check that an alarm goes off. *Where it breaks
+# > down:* a drill only covers the fires someone thought to start; a suite that
+# > kills every hand-made mutant can still miss a bug nobody imagined.
 #
 # Each mutant is a copy of `src/churnlab/api.py` with one edit, written to
 # `generated/tests_api/mutants/`. The original file is never touched.
@@ -696,7 +699,7 @@ print(mutation_table.to_string(index=False))
 # *Your answer here.*
 
 # %% [markdown]
-# ## 11.7 · Stop the servers
+# ## 12.7 · Stop the servers
 #
 # Background threads outlive the cells that started them. Stop them
 # explicitly: `should_exit = True` asks uvicorn to finish in-flight requests
@@ -762,12 +765,12 @@ except httpx.ConnectError:
 # | A call hangs | no timeout on the client | always pass `timeout=`; `httpx` defaults to 5 s, `requests` to none |
 # | `pytest` subprocess: `ModuleNotFoundError: churnlab` | run from a directory other than the repo root | `cwd=ROOT`, as in `run_pytest`; locally run `python -m pytest` from the repo root |
 # | Mutant table: every mutant "killed" by every test | the suite failed for another reason (e.g. import error in the mutant) | print `res.stdout` for one mutant and read the first error |
-# | The notebook kernel will not shut down | a server thread is still running | run section 11.7; threads are daemons, so restarting the runtime also ends them |
+# | The notebook kernel will not shut down | a server thread is still running | run section 12.7; threads are daemons, so restarting the runtime also ends them |
 
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
 # 1. Which failures does a well-behaved client retry, which does it never retry, and why?
 # 2. What is exponential backoff with jitter, and what problem does each part solve?
@@ -776,4 +779,5 @@ except httpx.ConnectError:
 # 5. What is mutation testing? Give an example of a bug that a "probabilities are in [0, 1]" test would miss and the test that catches it.
 # 6. Why is retrying a prediction safe, but retrying a payment request not, and what do you do about it?
 #
-# **Next chapter:** [`12_packaging_and_configuration.ipynb`](../ch13-packaging-and-configuration/notebook.ipynb) — package the service, configure it from the environment, and write the Dockerfile and CI workflow that run these tests.
+# **Next chapter:** [Chapter 13 · Packaging & configuration](../ch13-packaging-and-configuration/notebook.ipynb) — packaging the service, configuring it from the environment, and writing the Dockerfile and CI workflow that run these tests.
+

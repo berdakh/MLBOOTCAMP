@@ -1,13 +1,13 @@
 # Solutions · Chapter 38 · Final evaluation & mock loop
 
-Try each exercise before reading its answer. Markers: [verified] verified by running ·
+Attempt each exercise before reading its answer. Markers: [verified] verified by running ·
 [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `bootstrap_ci_grouped`
 
-[verified] Reference code: [`code/nb20.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def bootstrap_ci_grouped(values, groups, n_boot, seed):
@@ -93,7 +93,7 @@ result? A "next" that shows judgement?
    bucket only, or human relevance labels; then interleaving and A/B online.
 3. **Propensities and IPS.** Estimate examination by position from
    randomised traffic (CTR by position on random lists ∝ examination;
-   20.3 fitted eta 0.88 vs hidden 0.9), or with swap interventions/EM click
+   38.3 fitted eta 0.88 vs hidden 0.9), or with swap interventions/EM click
    models. IPS divides each click by the propensity of the position where it
    was logged, giving an unbiased estimate of relevance-based metrics.
    Weaknesses: high variance from small propensities (clip weights and report
@@ -114,7 +114,7 @@ result? A "next" that shows judgement?
    labels). Report the click-based recall with that caveat, prefer
    exposure-corrected or exploration-traffic versions, and validate with
    online tests (and, in ShopStream, the truth-based number).
-6. **Walkthrough + weakest part.** See 20-2. Honest weaknesses: the primary
+6. **Walkthrough + weakest part.** See Exercise 2. Honest weaknesses: the primary
    metric uses simulator truth (unavailable in real life); one test week (no
    seasonality); the ranker was trained on logged candidates but serves
    retrieval candidates (distribution shift); propensities assume

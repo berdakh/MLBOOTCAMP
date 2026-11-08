@@ -6,16 +6,16 @@
 # %% [markdown]
 # # Chapter 20 · Aggregation & joins at scale
 #
-# **Day 1 · ~90 minutes · CPU only**
+# **Part II · Chapter 20 · about 90 minutes · CPU only**
 #
 # A `GROUP BY` over a billion rows does not run on one machine: the engine
-# splits it into map tasks, a shuffle and reduce tasks, and most slow or
-# failed production jobs come down to that shuffle: too much data moved, or
-# one reducer handed a "hot" key. This notebook builds the machinery by hand on
-# ShopStream so that you can reason about any engine's plan, and then covers
-# the joins and approximations that big pipelines rely on.
+# splits it into map tasks, a shuffle and reduce tasks. Most slow or failed
+# production jobs can be traced to that shuffle: too much data moved, or one
+# reducer given a "hot" key. This lab builds the machinery by hand on
+# ShopStream, so that the plan of any engine can be reasoned about, and then
+# covers the joins and approximations that large pipelines rely on.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. explain map → shuffle → reduce, and why a combiner shrinks the shuffle, with a hand-written partitioned aggregation checked against DuckDB;
 # 2. detect key skew, and fix it with salting (two-stage aggregation);
@@ -24,7 +24,10 @@
 # 5. deduplicate re-delivered events with `ROW_NUMBER`;
 # 6. trade accuracy for speed and memory with HyperLogLog, approximate quantiles and reservoir sampling, and say when that trade is acceptable.
 #
-# **You will produce:** nothing on disk besides the cached ShopStream dataset; this notebook is about how queries execute.
+# **Outputs of this lab:** nothing on disk besides the cached ShopStream dataset; the lab is about how queries execute.
+
+# %% [markdown]
+# Read first: [Chapter 20 text](README.md) — map, shuffle and reduce, skew and salting, join strategies, as-of joins, deduplication and sketches, explained in full.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -112,14 +115,14 @@ print(f"{len(imps):,} impressions, {len(items):,} items, {len(users):,} users")
 #    the expensive step: disk, network, sorting.
 # 3. **Reduce.** Each reducer merges the values per key.
 #
-# Here is all of it in about fifteen lines, checked against DuckDB.
+# The cell below implements all three stages in about fifteen lines and checks the result against DuckDB.
 
 # %% [markdown]
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-map-shuffle-reduce.svg" alt="Map, combine, shuffle by hash(key), reduce: a distributed GROUP BY" width="100%">
 #
 # *What to notice:* the shuffle in the middle is the only step that crosses the network, and the combiner decides how much goes into it.
 #
-# > **Intuition.** A combiner is counting votes at each polling station and phoning in the totals, instead of trucking every ballot to the capital. *Where it breaks down:* totals add up, but "the median voter's age" does not: a polling station cannot pre-compute its share of a median, which is why holistic aggregates are expensive.
+# > **Intuition.** A combiner is like counting votes at each polling station and reporting the totals, instead of transporting every ballot to the capital. *Where it breaks down:* totals add up, but "the median voter's age" does not: a polling station cannot pre-compute its share of a median, which is why holistic aggregates are expensive.
 
 # %%
 def map_shuffle_reduce(df: pd.DataFrame, key: str, n_mappers: int = 4, n_reducers: int = 8,
@@ -157,19 +160,18 @@ print("identical to DuckDB:", by_hand.equals(ref.astype(by_hand.dtypes)))
 # mildly skewed.
 #
 # A combiner works because `count` and `sum` are *algebraic*: partial results
-# merge exactly. `avg` works if you carry `(sum, count)`; `count(DISTINCT)`,
+# merge exactly. `avg` works if the pair `(sum, count)` is carried; `count(DISTINCT)`,
 # medians and "collect all values" do not combine to a fixed size, which is why
-# they are the slow, memory-hungry aggregates (notebook 01 hit exactly that).
+# they are the slow, memory-intensive aggregates (Chapter 19 met exactly that case).
 #
-# You will implement the same map → shuffle → reduce for plain counting in
-# Exercise 2.
+# Exercise 2 implements the same map → shuffle → reduce for plain counting.
 
 # %% [markdown]
 # ## 2.2 · Skew, and salting
 #
 # Real marketplaces are dominated by a few big sellers, real search logs by a
 # few queries, and real pipelines by a few junk keys (`NULL`, `-1`,
-# `"unknown"`). Give each ShopStream item a **seller**, with seller sizes
+# `"unknown"`). We give each ShopStream item a **seller**, with seller sizes
 # following a power law, as in real catalogues.
 
 # %%
@@ -184,7 +186,7 @@ print(f"top seller: {share.iloc[0]:.1%} of impressions | top 5: {share.iloc[:5].
 
 # %% [markdown]
 # Counting impressions per seller is harmless: the combiner shrinks every
-# mapper's output to one row per seller. Now ask a question that does **not**
+# mapper's output to one row per seller. Consider now a question that does **not**
 # combine to a fixed size: *distinct users per seller*. The mapper can only
 # drop duplicate `(seller, user)` pairs it sees itself; every remaining pair
 # must travel to the seller's reducer, and the biggest seller's reducer gets
@@ -201,7 +203,7 @@ print(f"top seller: {share.iloc[0]:.1%} of impressions | top 5: {share.iloc[:5].
 #
 # *What to notice:* the job's time is the *tallest* bar, not the average. Salting makes the bars even, and a tiny second stage adds the partial counts back up.
 #
-# > **Intuition.** Skew is a supermarket where a celebrity's fans all queue at checkout 3 while the other lanes sit idle. Salting hands each fan a ticket number (`hash(user) % S`) that sends them to one of S lanes; at closing, the S lane totals are added. Because a fan always gets the same ticket, nobody is counted twice. *Where it breaks down:* if you do not know which key is hot, salting every key multiplies the work for all the small ones.
+# > **Intuition.** Skew resembles a supermarket in which one large group of customers queues at checkout 3 while the other lanes are idle. Salting gives each customer a ticket number (`hash(user) % S`) that sends them to one of S lanes; at closing, the S lane totals are added. Because a customer always receives the same ticket, nobody is counted twice. *Where it breaks down:* if the hot key is not known, salting every key multiplies the work for all the small ones.
 
 # %%
 N_REDUCERS, S = 64, 16
@@ -237,10 +239,11 @@ print("salted two-stage answer exact:", salted_answer.sort_index().equals(exact.
 # The answer is exact (`True`).
 #
 # Salting costs a second stage and `S×` more partial rows for small keys; in
-# practice you salt only the hot keys (found from a sample or from last
-# run's statistics). Spark 3's adaptive query execution splits skewed
-# partitions automatically for joins. Know the manual version anyway: it is
-# the interview answer, and the fix when the automatic one is not enough.
+# practice only the hot keys are salted (found from a sample or from the
+# previous run's statistics). Spark 3's adaptive query execution splits skewed
+# partitions automatically for joins. The manual technique is still worth
+# knowing: it is the standard interview answer, and the remedy when the
+# automatic one is not sufficient.
 
 # %% [markdown]
 # ## 2.3 · Join strategies, and the skewed-join trap
@@ -253,8 +256,8 @@ print("salted two-stage answer exact:", salted_answer.sort_index().equals(exact.
 #
 # Skew in a join is worse than in an aggregation, because nothing combines:
 # if a key has `a` rows on the left and `b` on the right, the join produces
-# `a × b` rows for it. Join the impressions to a **promotions** table where
-# big sellers run many promotions (rows per seller grow with the seller's size):
+# `a × b` rows for it. We join the impressions to a **promotions** table in which
+# large sellers run many promotions (rows per seller grow with the seller's size):
 
 # %% [markdown]
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-join-strategies.svg" alt="Broadcast hash join versus shuffle hash join" width="100%">
@@ -366,13 +369,13 @@ print(f"impressions whose price differs from the item's latest price: "
 # %% [markdown]
 # **Expected:** about 12,100 price records; `True`; and about **55%** of
 # impressions would get the wrong price from a plain join to "current
-# price". Worse than wrong: the current price is partly a *consequence* of the
-# clicks you are predicting (a seller cuts the price of an item that sells
-# badly), so it leaks the future. Notebook 03 builds whole feature tables
-# this way.
+# price". The error is worse than noise: the current price is partly a
+# *consequence* of the clicks being predicted (a seller lowers the price of an
+# item that sells poorly), so it leaks the future. Chapter 21 builds whole
+# feature tables this way.
 #
 # Strictness matters: `>=` lets an event see a price set at the same instant;
-# for features computed from the event's own outcome you want strict `>`.
+# features computed from the event's own outcome require the strict `>`.
 # DuckDB supports both; `pd.merge_asof` uses `allow_exact_matches=False` for
 # strict.
 
@@ -381,8 +384,8 @@ print(f"impressions whose price differs from the item's latest price: "
 #
 # Logging pipelines are usually **at-least-once**: a client retries when it
 # does not get an acknowledgement, a consumer restarts and re-reads a batch.
-# Duplicates are normal, not exceptional. Re-deliver 2% of one week's
-# impressions and see what they do to the metrics.
+# Duplicates are normal, not exceptional. We re-deliver 2% of one week's
+# impressions and observe their effect on the metrics.
 
 # %%
 week = imps[imps.day.between(42, 48)].drop(columns="seller_id")
@@ -413,8 +416,8 @@ print(f"after dedup: {len(dedup):,} rows; identical to the clean log:",
 # * Keep the **first** delivery (`ORDER BY ingest_ts`) so the result is
 #   deterministic. DuckDB's `QUALIFY rn = 1` is shorthand for the subquery.
 # * Duplicates can cross partition boundaries (an event at 23:59 re-delivered
-#   at 00:01). Dedup over a window that covers your maximum delivery delay, or
-#   partition by *event* time, as here.
+#   at 00:01). Deduplicate over a window that covers the maximum delivery
+#   delay, or partition by *event* time, as here.
 
 # %% [markdown]
 # ## 2.6 · Approximate answers: HyperLogLog, quantile sketches, reservoirs
@@ -430,10 +433,10 @@ print(f"after dedup: {len(dedup):,} rows; identical to the clean log:",
 # * **Reservoir sampling**: a uniform sample of fixed size `k` from a stream of
 #   unknown length, in one pass.
 #
-# > **Intuition (HyperLogLog).** If a friend flips coins all day and tells you only "my longest run of heads was 10", you can guess they flipped about $2^{10}$ times. HLL hashes every value to random-looking bits and remembers, per bucket, the longest run of leading zeros: a few bytes per bucket, whatever the number of values. *Where it breaks down:* one bucket is a very noisy guess (a lucky early run); HLL averages $m$ buckets, which is where the $1.04/\sqrt{m}$ error below comes from.
+# > **Intuition (HyperLogLog).** If a person tosses coins all day and reports only "my longest run of heads was 10", one can estimate that they tossed about $2^{10}$ times. HLL hashes every value to random-looking bits and remembers, per bucket, the longest run of leading zeros: a few bytes per bucket, whatever the number of values. *Where it breaks down:* one bucket is a very noisy guess (a lucky early run); HLL averages $m$ buckets, which is where the $1.04/\sqrt{m}$ error below comes from.
 #
-# Measure accuracy against speed on the impression table (each timing is the
-# best of 3 runs).
+# We measure accuracy against speed on the impression table (each timing is
+# the best of 3 runs).
 
 # %%
 def best_of(sql, n=3):
@@ -479,15 +482,15 @@ add("CTR from a 20,000-row reservoir", f"{ex:.4f}", f"{ap:.4f}", f"{ap - ex:+.4f
 pd.DataFrame(rows).set_index("quantity")
 
 # %% [markdown]
-# **Expected (our run; your times will differ):**
+# **Expected (our run; timings vary between machines):**
 #
 # * distinct `(user, item)` pairs: about 2.06 million exact; DuckDB's HLL
 #   answered about 1.93 million, **about 6% low**, roughly 5× faster
 #   (about 35 ms vs 185 ms);
 # * distinct users per item-day: a median absolute relative error of about
 #   6% and a p99 of about 24%. The error is *relative*, and DuckDB's sketch is
-#   small (it favours memory over precision), so do not read individual small
-#   groups off it;
+#   small (it favours memory over precision), so individual small groups
+#   should not be read from it;
 # * p99 of the policy score: within about 0.01 of exact, but *slower* than
 #   the exact quantile here;
 # * CTR from a 20,000-row reservoir: within about ±0.005 of the exact 0.137
@@ -500,10 +503,11 @@ pd.DataFrame(rows).set_index("quantity")
 # an HLL a few kilobytes, and daily HLL sketches can be stored and merged
 # into weekly or monthly uniques without rescanning the raw log. Error
 # depends on the sketch size: BigQuery's `HLL_COUNT` and Spark's
-# `approx_count_distinct(col, rsd)` let you choose it (about 1% is typical).
+# `approx_count_distinct(col, rsd)` let the user choose it (about 1% is typical).
 # The case for a reservoir is when the *next* step is expensive per row
-# (training, a Python loop, a human labelling). Do not use approximations
-# where an exact count is a contract: billing, payments, legal reporting.
+# (training, a Python loop, manual labelling). Approximations should not be
+# used where an exact count is a contractual requirement: billing, payments,
+# legal reporting.
 
 # %% [markdown]
 # > **Exercise 1.** Implement `reservoir_sample(stream, k, seed)`: one pass
@@ -514,7 +518,7 @@ pd.DataFrame(rows).set_index("quantity")
 # >
 # > (Algorithm R: keep the first `k`; for the `i`-th item, 0-indexed, with
 # > `i >= k`, draw `j` uniformly from `0..i` and replace slot `j` if `j < k`.)
-# > The grader runs your sampler with 2,000 seeds on a 20-item stream and
+# > The grader runs the sampler with 2,000 seeds on a 20-item stream and
 # > applies a chi-square test of uniformity, then checks the edge cases.
 
 # %%
@@ -550,15 +554,15 @@ def partitioned_count(keys, n_partitions: int) -> dict:
 grade.ex2(partitioned_count)
 
 # %% [markdown]
-# > **Exercise 3 (written).** Product asks for a dashboard of **distinct users
+# > **Exercise 3 (written).** A product team requests a dashboard of **distinct users
 # > per item per day** over a 10-billion-row impression log (one year, 200M
-# > users, 50M items), updated daily. Describe how you would compute it:
+# > users, 50M items), updated daily. Describe how to compute it:
 # > exact or approximate (and why), what you store per day so that "distinct
 # > users per item over the last 7 or 30 days" does not rescan the log, how
 # > you deal with a handful of items that appear in 5% of all impressions, and
-# > how you would validate the numbers.
+# > how to validate the numbers.
 # >
-# > Write your answer in the cell below.
+# > Write the answer in the cell below.
 
 # %% [markdown]
 # *Your answer here.*
@@ -599,7 +603,7 @@ grade.ex2(partitioned_count)
 # * Item $i$ (counting from 1, $i > k$) enters with probability $k/i$; each later item $j$ evicts it with probability $\frac{k}{j} \cdot \frac{1}{k} = \frac{1}{j}$. So $\frac{k}{i} \prod_{j=i+1}^{n} \frac{j-1}{j} = \frac{k}{i} \cdot \frac{i}{n} = \frac{k}{n}$.
 # * *Example:* $k = 5$, $n = 20$: every item is kept a quarter of the time, the first and the last alike.
 #
-# The cell below checks equation 4 by simulation (Algorithm R written out in five lines; your Exercise 1 version should behave the same).
+# The cell below checks equation 4 by simulation (Algorithm R written out in five lines; the Exercise 1 implementation should behave the same).
 
 # %%
 # Check P(in reservoir) = k/n by simulation: k = 5, n = 20, 20,000 runs
@@ -635,13 +639,13 @@ print("k/n =", 5 / 20, "| simulated min/max over the 20 items:", freq.min().roun
 # | `merge_asof` raises `left keys must be sorted` | merge_asof needs both frames sorted by the `on` column | `sort_values(ts)` on both, then restore the original order |
 # | `MergeError: incompatible merge keys ... datetime64[us] and datetime64[ns]` | pandas 3 keeps different time resolutions per column | cast both keys with `.astype("datetime64[ns]")` before the join |
 # | Dedup leaves duplicates | the dedup key includes a column that differs between deliveries (`ingest_ts`) | partition by the event's identity only (`request_id, position` / `event_id`) |
-# | The skewed join runs for minutes or exhausts memory | you materialised the `a × b` rows (e.g. `.df()` without aggregation) | aggregate the many-rows side first; never fetch the raw join |
+# | The skewed join runs for minutes or exhausts memory | the `a × b` rows were materialised (e.g. `.df()` without aggregation) | aggregate the many-rows side first; never fetch the raw join |
 # | Reservoir sample changes between runs | global `random` or no seed | use `random.Random(seed)`; never re-seed inside the loop |
 
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
 # 1. Walk through what happens, physically, when Spark runs `SELECT item_id, count(*) FROM logs GROUP BY item_id` on 1 TB. Where is the cost, and what does a combiner change?
 # 2. One task of your job runs for two hours while the other 999 finished in five minutes. What is the likely cause, how do you confirm it, and what are three ways to fix it?
@@ -650,4 +654,4 @@ print("k/n =", 5 / 20, "| simulated min/max over the 20 items:", freq.min().roun
 # 5. Your click count jumped 3% overnight with no product change. How do you check for duplicate delivery, and how do you deduplicate correctly and deterministically?
 # 6. When is HyperLogLog acceptable and when is it not? Why are HLL sketches mergeable, and what does that let you build?
 #
-# **Next chapter:** [`03_feature_pipelines_and_feature_stores.ipynb`](../ch21-feature-pipelines-and-feature-stores/notebook.ipynb) — use these joins to build features that are correct at prediction time, offline and online.
+# **Next chapter:** [Chapter 21 · Feature pipelines & feature stores](../ch21-feature-pipelines-and-feature-stores/notebook.ipynb) — these joins are used to build features that are correct at prediction time, offline and online.

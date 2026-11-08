@@ -6,7 +6,7 @@
 # %% [markdown]
 # # Chapter 35 · Serving a ranking cascade
 #
-# **Day 9 · ~90 minutes · CPU only**
+# **Part II · Chapter 35 · about 90 minutes · CPU only**
 #
 # Every recommender you will be asked about in an interview is a *cascade*:
 # a cheap stage narrows thousands of items to hundreds, an expensive model
@@ -15,7 +15,7 @@
 # each stage, and breaking it on purpose is the fastest way to be able to
 # talk about one with numbers instead of adjectives.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. build retrieval (FAISS + co-visitation + popularity) → feature fetch → ranker → business rules from point-in-time data;
 # 2. measure the cascade's quality against the hidden truth on the validation week, and separate retrieval loss from ranking loss;
@@ -23,8 +23,11 @@
 # 4. make the service degrade gracefully (ranker error or timeout → popularity order; missing features → defaults) and test it;
 # 5. serve it with FastAPI, load-test it with concurrent clients, and fill in a per-stage latency budget from measurements.
 #
-# **You will produce:** `artifacts/level2/serving/latency_budget.csv` and
+# **Outputs:** `artifacts/level2/serving/latency_budget.csv` and
 # `artifacts/level2/serving/load_test.csv`.
+
+# %% [markdown]
+# Read first: [Chapter 35 text](README.md), which explains the concepts this lab measures. Worked answers are in [solutions.md](solutions.md).
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -90,7 +93,7 @@ print("train days", store.TRAIN_DAYS, "| valid days", store.VALID_DAYS, "| test 
 # | Online feature store | a low-latency key–value lookup of features at request time | `OnlineStore`, 1 ms simulated per call |
 # | Retrieval recall | the share of the truly best items that made it into the candidates | about 0.85 of the true top 10 |
 # | Catalogue NDCG@10 | the shown top 10 scored against the user's true best 10 in the whole catalogue | cascade 0.875 without the category cap |
-# | LRU cache | keeps the most recently used entries and evicts the least recently used when full | the user-feature cache in 17.4 |
+# | LRU cache | keeps the most recently used entries and evicts the least recently used when full | the user-feature cache in 35.4 |
 # | Hit rate | the share of lookups the cache answers without a round trip | at most 0.29 for one day of requests |
 # | TTL | time to live: how long a cached value may be served before it must be refreshed | seconds for session features, hours for favourite categories |
 # | Graceful degradation | answering worse but sensibly when a dependency fails | ranker timeout → popularity order |
@@ -98,7 +101,7 @@ print("train days", store.TRAIN_DAYS, "| valid days", store.VALID_DAYS, "| test 
 # | SLO | the service-level objective: the target the service promises | p99 ≤ 100 ms end to end |
 
 # %% [markdown]
-# ## 17.1 · The pieces, built point-in-time
+# ## 35.1 · The pieces, built point-in-time
 #
 # A cascade for one request:
 #
@@ -111,13 +114,13 @@ print("train days", store.TRAIN_DAYS, "| valid days", store.VALID_DAYS, "| test 
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-x-ranking-cascade.svg" alt="Five stages from catalogue to top 10 above a stacked bar splitting a 100 ms p99 budget across retrieval, features, ranking, rules and the unmeasured remainder" width="100%">
 #
-# *What to notice:* a quarter of the budget is reserved for work outside the four stages; 17.7 shows why that slice is not optional.
+# *What to notice:* a quarter of the budget is reserved for work outside the four stages; 35.7 shows why that slice is not optional.
 #
 # > **Intuition.** A cascade is a hiring funnel: a seconds-long CV screen for
 # > everyone, phone screens for a few hundred, onsite interviews for ten. Nobody can
 # > afford onsites for every applicant. *Where it breaks down:* a funnel never rescues a
 # > candidate rejected at the CV screen, and neither does a ranker: retrieval sets the
-# > ceiling for everything after it (the oracle row in 17.3).
+# > ceiling for everything after it (the oracle row in 35.3).
 #
 # Everything the service knows must come from data **before** the day it
 # serves. We do it twice, exactly as a production pipeline would:
@@ -154,7 +157,7 @@ print(pd.Series(ranker.feature_importances_, sv.FEATURES).sort_values(ascending=
 # `user_cat_share`, `item_ctr` and `mf_score` near the top.
 
 # %% [markdown]
-# ## 17.2 · One request, stage by stage
+# ## 35.2 · One request, stage by stage
 #
 # `Cascade` wires the pieces together. Its online store simulates a 1 ms
 # network round trip per call, a realistic cost for Redis or a feature-store
@@ -192,11 +195,11 @@ print("top 10:", top.tolist(), "| dropped by rules:", dropped)
 #
 # The ANN index is `faiss.IndexFlatIP`: exact inner-product search. With
 # 4,000 items exact search costs well under a millisecond; at millions of
-# items you would switch to IVF or HNSW (notebook 08) and trade a little
+# items you would switch to IVF or HNSW (Chapter 26) and trade a little
 # recall for a lot of latency.
 
 # %% [markdown]
-# ## 17.3 · Is the cascade any good? Quality on the validation week
+# ## 35.3 · Is the cascade any good? Quality on the validation week
 #
 # We know the truth: `world.true_click_prob(user, item)` for every item in
 # the catalogue. So for each request we can compute **catalogue NDCG@10**:
@@ -286,7 +289,7 @@ quality.round(3)
 #    value. Report the cost; don't hide it, and don't let the metric veto it.
 
 # %% [markdown]
-# ## 17.4 · Caching
+# ## 35.4 · Caching
 #
 # User features change slowly; fetching them costs a network round trip. An
 # **LRU (least-recently-used) cache** in the service process keeps the most
@@ -361,7 +364,7 @@ print("hit rate by capacity:", hit_rates)
 # > can be stale; the TTL is how long you trust it.
 
 # %% [markdown]
-# ## 17.5 · Business rules
+# ## 35.5 · Business rules
 #
 # Rules run last, on the ranked list: remove what must never be shown, then
 # shape what remains. The order matters: dedupe and eligibility first
@@ -401,11 +404,11 @@ for cap in (2, 3, 5, 10):
 # none, down to 0.65 at a cap of 2) while the distinct categories in a top 10
 # rise from 1.3 to 5.6. Without a cap, most users see a single category. That
 # is the trade-off a product team must choose on, ideally with an online
-# experiment measuring long-term engagement (notebooks 11–12), not this
+# experiment measuring long-term engagement (Chapters 29–30), not this
 # offline metric alone.
 
 # %% [markdown]
-# ## 17.6 · Graceful degradation
+# ## 35.6 · Graceful degradation
 #
 # A ranking service should *always* return something sensible. The usual
 # ladder:
@@ -477,9 +480,9 @@ degradation
 # that silently serves popularity for a week has an outage nobody sees.
 
 # %% [markdown]
-# ## 17.7 · The service, under load
+# ## 35.7 · The service, under load
 #
-# `sv.create_app(cascade)` is an app factory in the style of Level 1's
+# `sv.create_app(cascade)` is an app factory in the style of Part I's
 # `churnlab.api` (read it next to [`src/churnlab/api.py`](../../src/churnlab/api.py)):
 # `POST /recommend` returns the items plus a `timings_ms` debug field and a
 # W3C `Server-Timing` header; `GET /metrics` gives per-stage percentiles,
@@ -579,7 +582,7 @@ stage_lat
 # all `ranker_ok` — in one of our runs a single `ranker_timeout` appeared
 # during the concurrency-16 burst, the 50 ms timeout firing under CPU
 # contention, which is exactly what it is for. User-cache hit rate about 0.13
-# (these requests come mostly from different users; compare the 17.4 curve);
+# (these requests come mostly from different users; compare the 35.4 curve);
 # popular-cache hit rate 0.999 (one entry per day). Server-side p50s of a few
 # milliseconds per stage.
 #
@@ -588,7 +591,7 @@ stage_lat
 # the stages you instrumented. A budget that ignores them will be missed.
 
 # %% [markdown]
-# ## 17.8 · The latency budget
+# ## 35.8 · The latency budget
 #
 # A budget splits the SLO across stages *before* anyone builds anything, and
 # leaves slack for what you did not instrument. For a **p99 ≤ 100 ms**
@@ -693,7 +696,7 @@ budget.round(1)
 # $$
 #
 # *In words:* stage budgets plus slack must fit the SLO; because tail latencies rarely coincide, the p99 of the sum is below the sum of p99s, which makes per-stage budgets conservative.
-# *Example:* 20 + 20 + 30 + 5 + 25 = 100 ms in 17.8.
+# *Example:* 20 + 20 + 30 + 5 + 25 = 100 ms in 35.8.
 #
 # **6. Retrieval recall@K**
 #
@@ -728,4 +731,4 @@ budget.round(1)
 # 5. Your p99 latency doubled after a deploy but p50 did not move. List likely causes and how you would find the culprit stage.
 # 6. Product asks for "at most 3 items per category". What does it cost, how would you measure whether it is worth it, and where in the cascade does it belong?
 #
-# **Next chapter:** [`18_model_optimization_for_inference.ipynb`](../ch36-model-optimization-for-inference/notebook.ipynb) — make the ranker itself cheaper: ONNX, quantisation and distillation, with accuracy measured against latency.
+# **Next chapter:** [Chapter 36 · Model optimisation for inference](../ch36-model-optimization-for-inference/notebook.ipynb) — make the ranker itself cheaper: ONNX, quantisation and distillation, with accuracy measured against latency.

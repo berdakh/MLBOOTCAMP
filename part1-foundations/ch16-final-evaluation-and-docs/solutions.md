@@ -12,7 +12,7 @@ anything else matters.
 
 ## Exercise 1 · `final_report`
 
-[verified] Reference code: [`code/nb15.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def final_report(y, scores, threshold, groups, seed=0):
@@ -48,7 +48,7 @@ row-bootstrap one. On TaskFlow the same thing happens less dramatically
 
 ## Exercise 2 · `results_markdown`
 
-[verified] Reference code: [`code/nb15.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def results_markdown(report):
@@ -62,7 +62,7 @@ floats to `f"{v:.3f}"`. Check `bool` **before** `int` (`True` is an `int` in
 Python), and the tuple before anything else.
 
 **Why bother.** A results table generated from the report dict cannot drift
-from the numbers you computed. Notebook 15's last code cell checks that
+from the numbers you computed. Chapter 16's last code cell checks that
 mechanically: every decimal in the README must appear in `final_report.json`.
 
 ---
@@ -103,7 +103,7 @@ limitation or next step. About 150 words ≈ 60 seconds.
 | "You never showed the model *helps*." | "Correct: offline evaluation measures ranking, not the effect of calling. I'd run a randomised holdout among flagged accounts and measure retention uplift, and log contacts, because once we intervene, saved customers look like false positives and naive retraining would learn to stop flagging them." |
 
 Other valid ones: test positive rate higher than validation (shift, explained
-in 15.8); slices (e.g. `region=unknown` weaker); calibration drifted; contacting
+in 16.8); slices (e.g. `region=unknown` weaker); calibration drifted; contacting
 customers has side effects.
 
 ---

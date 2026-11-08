@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `ring_allreduce_bytes`
 
-[verified] Reference code: [`code/nb09.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def ring_allreduce_bytes(n_params, bytes_per, world_size):
@@ -29,7 +29,7 @@ those reduced chunks for another N−1 steps. Total sent per rank:
 
 ## Exercise 2 · `average_gradients`
 
-[verified] Reference code: [`code/nb09.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def average_gradients(grads_per_rank):
@@ -54,7 +54,7 @@ its buffer).
 
 ## Exercise 3 · `shard_indices`
 
-[verified] Reference code: [`code/nb09.py`](solutions.py) (`ex3`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex3`).
 
 ```python
 def shard_indices(n, world_size, rank, epoch, seed, shuffle):

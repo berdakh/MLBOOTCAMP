@@ -6,7 +6,7 @@
 # %% [markdown]
 # # Chapter 47 · Distributed data parallel
 #
-# **Day 5 · ~90 minutes · T4 GPU (runs on CPU with a reduced budget; the distributed parts use CPU processes either way)**
+# **Part III · Chapter 47 · about 90 minutes · T4 GPU (runs on CPU with a reduced budget; the distributed parts use CPU processes either way)**
 #
 # Every large model is trained on many GPUs, and the most common way to use
 # them is *data parallelism*: each GPU holds a full copy of the model, sees a
@@ -22,7 +22,7 @@
 # own device, and launch on more machines. Speed-ups across GPUs are
 # explained with arithmetic, not measured.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. launch a multi-process job with `torchrun` and explain rank, local rank, world size and the process group;
 # 2. use the collectives (`all_reduce`, `broadcast`, `all_gather`, `barrier`) by hand;
@@ -40,6 +40,9 @@
 # **Expected:** lines were printed by a CPU run unless marked *"on a T4 you should
 # see … (not measured in our verification runs)"*. Multi-GPU numbers are
 # arithmetic with stated assumptions, never measurements.
+
+# %% [markdown]
+# Read first: [Chapter 47 text](README.md) explains the ideas behind this lab (Distributed data parallel) in more depth; [solutions](solutions.md) has worked answers.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -704,7 +707,7 @@ if restart_params is not None and runs.get("ddp") is not None:
 # parameter difference of **0.0**: resuming at an epoch boundary with model + optimizer state +
 # `set_epoch` reproduces the uninterrupted trajectory exactly. Mid-epoch resumption also needs
 # the step inside the epoch and the RNG states, which is why large jobs checkpoint by *step*.
-# How *often* to checkpoint is a trade-off you compute in notebook 10.
+# How *often* to checkpoint is a trade-off you compute in Chapter 48.
 #
 # **`torchrun --max-restarts=k`** does the relaunch for you, in place: it tears down all
 # workers and starts them again with `TORCHELASTIC_RESTART_COUNT` incremented and a fresh
@@ -767,7 +770,7 @@ for name, n in models.items():
 # perfectly on any of these links (all-reducing 51 MB or 220 MB of gradients is short
 # compared with 250 ms of compute). A 1.5B model is fine on NVLink (97%) but drops to ~70%
 # over PCIe and ~54% over 100 Gb Ethernet; a 7B model's 14 GB of fp16 gradients take ~1 s
-# per step even on PCIe (34%): data parallelism *alone* stops scaling, and (notebook 10)
+# per step even on PCIe (34%): data parallelism *alone* stops scaling, and (Chapter 48)
 # its memory does not fit on one GPU anyway.
 #
 # What moves the needle, in order: **bigger per-GPU batches** (more compute per byte
@@ -775,7 +778,7 @@ for name, n in models.items():
 # **overlap** (DDP buckets; tune `bucket_cap_mb`); **compress or shrink the gradients**
 # (fp16/bf16 gradients, `ddp_comm_hooks`, PowerSGD); **faster links** (keep data-parallel
 # groups inside an NVLink node and cross nodes with InfiniBand); and, for big models,
-# **different parallelism** (ZeRO/FSDP, tensor and pipeline parallelism: notebook 10).
+# **different parallelism** (ZeRO/FSDP, tensor and pipeline parallelism: Chapter 48).
 # Also note that per-GPU traffic barely depends on N (2(N−1)/N → 2), but the *latency*
 # term grows with N, and a ring is only as fast as its slowest link: one slow node slows
 # every step (the *straggler* problem).
@@ -873,7 +876,7 @@ print("generated files:", sorted(p.name for p in GEN.iterdir()))
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question without notes; a complete answer takes about a minute:
 #
 # 1. Walk through what happens in one DDP training step, from the forward pass to the optimizer step. Where does communication happen, and how does DDP overlap it with computation?
 # 2. Why is data-parallel training with N ranks mathematically equivalent to single-GPU training with an N-times larger batch? Name two things that break the equivalence.
@@ -882,4 +885,4 @@ print("generated files:", sorted(p.name for p in GEN.iterdir()))
 # 5. One rank of a 512-GPU job crashes; another job hangs with no error. How does each look from the outside, how do you detect it, and how do you recover?
 # 6. You must train with a global batch of 4,096 on 8 GPUs that each fit 64 examples. How do you get there, and what changes in the training recipe?
 #
-# **Next chapter:** [`10_scaling_to_large_models.ipynb`](../ch48-scaling-to-large-models/notebook.ipynb) — when the model itself no longer fits on one GPU: ZeRO/FSDP, tensor and pipeline parallelism, compute budgets and fault tolerance.
+# **Next chapter:** [Chapter 48 · Scaling to large models](../ch48-scaling-to-large-models/notebook.ipynb) — when the model itself no longer fits on one GPU: ZeRO/FSDP, tensor and pipeline parallelism, compute budgets and fault tolerance.

@@ -6,29 +6,33 @@
 # %% [markdown]
 # # Chapter 33 · Coding patterns I
 #
-# **Day 8 · ~90 minutes · CPU only**
+# **Part II · Chapter 33 · about 90 minutes · CPU only**
 #
-# Most ML engineer loops at large tech companies still include one or two
-# classic coding rounds (data structures and algorithms), scored much like a
-# software engineer's. You do not need hundreds of tricks: most interview
-# problems are variations on a dozen patterns, and the round rewards a
-# **visible, structured process** at least as much as the final code.
+# Most interview processes for ML engineers at large technology companies
+# include one or two classic coding rounds (data structures and algorithms),
+# assessed much like a software engineer's. Hundreds of special techniques are
+# not needed: most interview problems are variations on about a dozen patterns,
+# and the round rewards a **visible, structured process** at least as much as
+# the final code.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. run a seven-step communication protocol from "clarify" to "complexity" without prompting;
 # 2. state the cost of common Python operations, and measure it when unsure;
 # 3. recognise and apply six patterns: hash maps, sliding windows, heaps, interval sweeps, stacks, prefix sums/products;
 # 4. solve seven graded problems within 10-20 minutes each, with edge cases and complexity stated;
-# 5. score your own attempt honestly, so practice after this course is deliberate.
+# 5. score your own attempts consistently, so that later practice is deliberate.
 #
-# **You will produce:** seven graded solutions and a filled-in self-scoring sheet.
+# **Outputs:** seven graded solutions and a filled-in self-scoring sheet.
 #
-# **How to use this notebook.** For each pattern, read the worked example,
-# then close it (collapse the cell) and do the exercise against the clock,
-# talking aloud — record yourself if you can bear it. The graders check hidden
+# **How to use this lab.** For each pattern, read the worked example,
+# then collapse the cell and do the exercise against the clock,
+# talking aloud; recording yourself is useful. The graders check hidden
 # edge cases and run a **timing check**: an O(n) or O(n log n) solution uses a
 # few percent of a 2-second budget, an O(n²) one cannot fit.
+
+# %% [markdown]
+# Read first: [Chapter 33 text](README.md), which explains the concepts this lab measures. Worked answers are in [solutions.md](solutions.md).
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -78,45 +82,46 @@ from grading import ch33 as grade
 # | Amortised O(1) | cheap on average over many operations, even if one is occasionally slow | `list.append` when the list resizes |
 # | Invariant | a statement that stays true at every step of a loop | "`s[left:right+1]` has no repeated character" |
 # | Hash map | a dictionary: average O(1) lookup, insert and delete by key | complements in two-sum |
-# | Two pointers / sliding window | two indices that only move forward over a sequence | `min_subarray_len` in 15.4 |
+# | Two pointers / sliding window | two indices that only move forward over a sequence | `min_subarray_len` in 33.4 |
 # | Heap | a tree kept partly ordered so the smallest item is always on top | `heapq`; top-k in O(n log k) |
 # | Sweep | sort events by position, then process them in one pass | merging intervals; meeting rooms |
-# | Monotonic stack | a stack kept in sorted order to answer "next greater / most recent smaller" questions | 15.7 |
+# | Monotonic stack | a stack kept in sorted order to answer "next greater / most recent smaller" questions | 33.7 |
 # | Prefix sum | a running total, so any range sum is one subtraction | `sum(nums[i:j]) = P[j] − P[i]` |
 # | Output-sensitive bound | a cost that depends on the size of the answer, not only the input | two-sum pairs: O(n + p) |
 
 # %% [markdown]
-# ## 15.1 · The communication protocol
+# ## 33.1 · The communication protocol
 #
-# Interviewers usually score four things: **problem solving** (did you find a
-# good approach, and how much help did you need), **coding** (correct, clean,
-# idiomatic), **verification** (did you test and find your own bugs), and
-# **communication** (could they follow your reasoning). A silent correct
-# solution can score lower than a narrated one with a small bug you then
-# catch. Use the same seven steps every time, until they are automatic:
+# Interviewers usually assess four things: **problem solving** (was a good
+# approach found, and how much help was needed), **coding** (correct, clean,
+# idiomatic), **verification** (did the candidate test the code and find their
+# own bugs), and **communication** (could the interviewer follow the reasoning).
+# A silent correct solution can score lower than a narrated one with a small
+# bug that the candidate then finds. Use the same seven steps every time, until
+# they are automatic:
 #
 # | Step | ~Minutes (of 45) | What you do and say |
 # |---|---|---|
 # | 1. **Clarify** | 2-4 | Restate the problem. Ask: input size? types and ranges (negatives? duplicates? empty)? return format? in-place allowed? Write the answers as a comment. |
 # | 2. **Examples** | 2-3 | Work one normal and one edge example by hand. This often reveals the pattern. |
-# | 3. **Brute force** | 1-2 | Say the obvious solution and its cost: "Checking every pair is O(n²)." You need not code it. |
+# | 3. **Brute force** | 1-2 | State the obvious solution and its cost: "Checking every pair is O(n²)." It need not be coded. |
 # | 4. **Optimise** | 3-8 | Name the bottleneck and the pattern that removes it: "The inner loop searches for a complement → a hash map makes that O(1)." Agree the plan before coding. |
 # | 5. **Code** | 10-15 | Clear names, small helpers, narrate the invariants ("left is the first index of a window with no repeats"). |
-# | 6. **Test** | 4-6 | Trace your code on the example **by hand**, line by line, then the edge cases from step 1. Fix bugs calmly, out loud. |
-# | 7. **Complexity** | 1-2 | Time and extra space, and where they come from. Mention what you would do for bigger inputs (streaming, memory). |
+# | 6. **Test** | 4-6 | Trace the code on the example **by hand**, line by line, then the edge cases from step 1. Fix bugs calmly, aloud. |
+# | 7. **Complexity** | 1-2 | Time and extra space, and where they come from. Mention what would change for larger inputs (streaming, memory). |
 #
 # Phrases that help: *"Before I code, can I check the constraints?"*, *"Let me
 # start with a brute force so we have a baseline"*, *"The invariant here is…"*,
 # *"I'll trace through [2, 7, 11] to check"*, *"This is O(n) time and O(n)
-# extra space for the dictionary."* If you are stuck, say what you are
-# considering; interviewers can only give hints to someone they can follow.
+# extra space for the dictionary."* When stuck, say what is being
+# considered; an interviewer can only give hints to a candidate they can follow.
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-x-interview-protocol.svg" alt="Seven steps from clarify to complexity with suggested minutes, and a loop from test back to code" width="100%">
 #
 # *What to notice:* steps 1–4 take up to a third of the time and involve no code; the dashed loop is where verification points are earned.
 
 # %% [markdown]
-# ## 15.2 · Know your costs (and measure when unsure)
+# ## 33.2 · Know your costs (and measure when unsure)
 #
 # | Operation | Cost | Note |
 # |---|---|---|
@@ -154,19 +159,19 @@ _ = growth_table(drain_deque, lambda n: (n,), [12_500, 25_000, 50_000, 100_000])
 # 100,000 with a fitted exponent of 2.0-2.2 (doubling n quadruples the time), while
 # `deque.popleft` took ~4 ms with an exponent near 1.1. A BFS over a
 # 100,000-node graph with a list as its queue is therefore ~200× slower than it
-# needs to be, and an interviewer who sees `queue.pop(0)` will ask about it.
+# needs to be, and an interviewer who sees `queue.pop(0)` is likely to ask about it.
 #
 # > **Intuition.** `list.pop(0)` is a queue at a counter where, every time the first
 # > person is served, everyone else must take one step forward: serving n people costs
 # > about n²/2 steps. A `deque` moves the counter instead. *Where it breaks down:* the
-# > shift is a fast C `memmove`, so for a few thousand items you will not notice; the
-# > quadratic only bites at interview-sized inputs (10⁵ and up).
+# > shift is a fast C `memmove`, so for a few thousand items the cost is negligible; the
+# > quadratic term dominates only at interview-sized inputs (10⁵ and up).
 
 # %% [markdown]
 # ## Which pattern?
 #
 # The sections below teach six patterns one at a time. In an interview the problem does not
-# say which one it is; these questions, asked in order, usually do. Notebook 16 covers the
+# say which one it is; these questions, asked in order, usually do. Chapter 34 covers the
 # graph and DP rows.
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-x-pattern-chooser.svg" alt="Decision ladder: sorted input to two pointers or binary search, contiguous window to sliding window, seen-before to hash map, top-k to heap, overlapping ranges to sort and sweep, graphs to BFS, DFS or topological sort, overlapping subproblems to DP" width="100%">
@@ -174,7 +179,7 @@ _ = growth_table(drain_deque, lambda n: (n,), [12_500, 25_000, 50_000, 100_000])
 # *What to notice:* each question is about the *shape* of the input or of the question, never about the topic of the story it is wrapped in.
 
 # %% [markdown]
-# ## 15.3 · Pattern: hash maps (complements and counts)
+# ## 33.3 · Pattern: hash maps (complements and counts)
 #
 # **Signal:** "find a pair/element with property X", "have we seen this
 # before?", "count occurrences". A dictionary turns an O(n) inner search into
@@ -223,12 +228,12 @@ grade.ex1(two_sum_pairs)
 # > indices with value `target − nums[j]` — keep a dict value → list of indices.
 # > *Complexity:* O(n + p) time, O(n) space. *Why the output term matters:* with
 # > `[0, 0, …, 0]` and target 0 there are n(n−1)/2 pairs, so no algorithm can
-# > beat O(n²) there — say this; it shows you understand output-sensitive bounds.
+# > beat O(n²) there. Stating this shows an understanding of output-sensitive bounds.
 # > *Variants:* sorted input → two pointers, O(1) extra space; count pairs only →
 # > keep counts, not lists, O(n).
 
 # %% [markdown]
-# ## 15.4 · Pattern: two pointers and sliding windows
+# ## 33.4 · Pattern: two pointers and sliding windows
 #
 # **Signal:** contiguous subarray/substring with a constraint ("longest",
 # "shortest", "at most k distinct"), or pairs in a **sorted** array. Two
@@ -295,7 +300,7 @@ grade.ex2(longest_unique)
 # > O(min(n, alphabet)) space.
 
 # %% [markdown]
-# ## 15.5 · Pattern: heaps (top-k, k-way merge, scheduling)
+# ## 33.5 · Pattern: heaps (top-k, k-way merge, scheduling)
 #
 # **Signal:** "k largest/smallest/most frequent", "merge k sorted…", "next
 # event by time". A heap of size k gives O(n log k) instead of sorting
@@ -305,7 +310,7 @@ grade.ex2(longest_unique)
 # of size k and evict its smallest. **Worked example:** merge k sorted lists.
 #
 # > **Intuition.** A size-k min-heap is a bouncer at a club with k places who only
-# > compares each newcomer with the *weakest* person inside: beat them and you swap in.
+# > compares each newcomer with the *weakest* person inside: a stronger newcomer replaces them.
 # > Nobody else needs comparing. *Where it breaks down:* the bouncer knows only who is
 # > weakest; the people inside are not sorted, so sort the final k before returning them.
 
@@ -329,7 +334,7 @@ print(merge_k_sorted([[1, 4, 9], [2, 3, 10], [], [0, 11]]))
 # %% [markdown]
 # **Expected:** `[0, 1, 2, 3, 4, 9, 10, 11]`. This is exactly how a ranking
 # service merges candidate lists from several retrievers by score
-# (notebook 17).
+# (Chapter 35).
 
 # %% [markdown]
 # > **Exercise 3.** *(target 12 min)* **Top-k frequent.** Implement
@@ -356,10 +361,10 @@ grade.ex3(top_k_frequent)
 # > which uses a heap internally. *Complexity:* O(n + u log k) time, O(u) space.
 # > *Alternatives to mention:* sorting O(u log u) (fine if u is small); bucket
 # > sort by count, O(n); for a stream too large for memory, a Count-Min sketch
-# > plus a heap gives approximate heavy hitters (notebook 02).
+# > plus a heap gives approximate heavy hitters (Chapter 20).
 
 # %% [markdown]
-# ## 15.6 · Pattern: intervals (sort, then sweep)
+# ## 33.6 · Pattern: intervals (sort, then sweep)
 #
 # **Signal:** ranges, bookings, sessions, "overlapping". Sort by start, then
 # one pass that compares each interval with the last one kept — or sweep over
@@ -384,7 +389,7 @@ print(min_rooms([[0, 30], [5, 10], [15, 20]]), min_rooms([[7, 10], [2, 4]]), min
 # **Expected:** `2 1 0`. Note the convention: here a meeting ending at 10 frees
 # the room for one starting at 10 (half-open intervals). Exercise 4 uses
 # **closed** intervals, where `[1, 4]` and `[4, 5]` *touch* and merge. Always
-# ask which one the interviewer means.
+# ask which convention the interviewer intends.
 
 # %% [markdown]
 # > **Exercise 4.** *(target 18 min)* **Merge and insert intervals.** Implement
@@ -418,7 +423,7 @@ grade.ex4(merge_intervals)
 # > O(n) output. *Bug to avoid:* `intervals.sort()` sorts the caller's list.
 
 # %% [markdown]
-# ## 15.7 · Pattern: stacks (matching, "most recent", monotonic)
+# ## 33.7 · Pattern: stacks (matching, "most recent", monotonic)
 #
 # **Signal:** nesting and matching (brackets, tags, function calls), "the most
 # recent unmatched…", "next greater element". **Worked example:** valid
@@ -483,7 +488,7 @@ grade.ex5(MinStack)
 # > work. *Complexity:* O(1) per operation, O(n) extra space.
 
 # %% [markdown]
-# ## 15.8 · Pattern: prefix sums and prefix products
+# ## 33.8 · Pattern: prefix sums and prefix products
 #
 # **Signal:** many range-sum queries; "subarray with sum k" where values can be
 # negative; "product of everything except…". Precompute running totals once;
@@ -505,9 +510,9 @@ print("sum(nums[1:4]) =", P[4] - P[1], "| check:", sum(nums_demo[1:4]))
 
 # %% [markdown]
 # **Expected:** `P = [0, 3, 2, 6, 7, 2, 11]` and `sum(nums[1:4]) = 4 | check: 4`.
-# The same idea gives you two exercises: a prefix *product* from each side
+# The same idea gives two exercises: a prefix *product* from each side
 # (Exercise 6), and "how many earlier prefixes equal `P − k`" with a hash map
-# (Exercise 7). In ML code you used it already: `best_split` in notebook 14.
+# (Exercise 7). It was already used in ML code: `best_split` in Chapter 32.
 
 # %% [markdown]
 # > **Exercise 6.** *(target 10 min)* **Product of array except self.**
@@ -559,10 +564,10 @@ grade.ex7(subarray_sum_count)
 # > subarray with sum k" → store the **first** index of each prefix value.
 
 # %% [markdown]
-# ## 15.9 · Self-scoring sheet
+# ## 33.9 · Self-scoring sheet
 #
-# Fill this in after each attempt, honestly. A score is only useful if it is
-# comparable over time. Criteria (0 = no, 1 = partly, 2 = yes):
+# Fill this in after each attempt. A score is only useful if it is
+# applied consistently and comparable over time. Criteria (0 = no, 1 = partly, 2 = yes):
 #
 # | Criterion | 2 means |
 # |---|---|
@@ -574,9 +579,9 @@ grade.ex7(subarray_sum_count)
 # | `complexity_stated` | time and space, with where they come from |
 # | `within_target_time` | finished within the target time (1 = within 1.5×) |
 #
-# 12-14: interview-ready for this pattern. 8-11: redo it in 2-3 days. Below 8:
+# 12-14: the pattern is secure. 8-11: redo it in 2-3 days. Below 8:
 # redo it tomorrow, then again in a week (spaced repetition; the plan is at the
-# end of notebook 16).
+# end of Chapter 34).
 
 # %%
 my_scores = {   # edit: one row per exercise, seven criteria each scored 0-2 (None = not attempted)
@@ -597,12 +602,12 @@ for name, row in my_scores.items():
     print(f"{name:<26} {total:>2}/14  {verdict:<17} weakest: {weakest}")
 
 # %% [markdown]
-# **Expected:** seven lines reading `not scored yet` until you fill the dict in.
+# **Expected:** seven lines reading `not scored yet` until the dict is filled in.
 
 # %% [markdown]
 # ## Key equations
 #
-# Coding rounds have little algebra, but a few lines of arithmetic decide whether an approach can work before you write it.
+# Coding rounds involve little algebra, but a few lines of arithmetic decide whether an approach can work before it is written.
 #
 # **1. Reading growth from timings**
 #
@@ -651,7 +656,7 @@ for name, row in my_scores.items():
 # O(n + p), \qquad p \le \binom{n}{2} = \frac{n(n-1)}{2}
 # $$
 #
-# *Example:* two-sum on `[0] * n` with target 0 has $p = n(n-1)/2$ pairs: any algorithm that lists them is quadratic there, and saying so is part of a strong answer.
+# *Example:* two-sum on `[0] * n` with target 0 has $p = n(n-1)/2$ pairs: any algorithm that lists them is quadratic there, and stating this is part of a complete answer.
 
 # %% [markdown]
 # ## Troubleshooting
@@ -675,9 +680,9 @@ for name, row in my_scores.items():
 #
 # 1. Walk through the seven-step protocol on "find the first non-repeating character in a string". What do you ask in step 1, and what is the final complexity?
 # 2. Why is a sliding window O(n) even though it has a `while` loop inside a `for` loop? When does the sliding window technique fail, and what replaces it?
-# 3. You need the 100 most frequent queries from a log of 10 billion lines that does not fit in memory. What do you do, and what is exact vs approximate in your answer?
+# 3. The 100 most frequent queries are needed from a log of 10 billion lines that does not fit in memory. What do you do, and what is exact vs approximate in your answer?
 # 4. A hash map gives O(1) lookups "on average". What is the worst case, why does it happen, and when could it matter in production?
 # 5. When would you prefer sorting (O(n log n)) over a hash-based O(n) solution, even though it is asymptotically slower?
-# 6. An interviewer says your solution is correct but asks you to reduce extra space from O(n) to O(1). Pick one exercise from this notebook and explain how (or why it is impossible).
+# 6. An interviewer accepts a solution as correct but asks to reduce extra space from O(n) to O(1). Pick one exercise from this lab and explain how (or why it is impossible).
 #
-# **Next chapter:** [`16_coding_patterns_2.ipynb`](../ch34-coding-patterns-2/notebook.ipynb) — graphs, binary search on the answer, dynamic programming, tries and union-find, and a 4-week practice plan.
+# **Next chapter:** [Chapter 34 · Coding patterns II](../ch34-coding-patterns-2/notebook.ipynb) — graphs, binary search on the answer, dynamic programming, tries and union-find, and a 4-week practice plan.

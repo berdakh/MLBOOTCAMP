@@ -6,7 +6,7 @@
 # %% [markdown]
 # # Chapter 3 · Data acquisition & validation
 #
-# **Day 1 · ~45 minutes · CPU only**
+# **Part I · Chapter 3 · about 45 minutes · CPU only**
 #
 # Most production model failures start upstream of the model: a file that
 # downloaded half-way, a re-export with different rows, a code that a parser
@@ -23,6 +23,9 @@
 # 5. recognise columns that describe the *export date* and would leak the future into features.
 #
 # **You will produce:** `artifacts/data_quality.json`, a data-quality summary (checksums, defects found, cleaning decisions, contract results).
+
+# %% [markdown]
+# Read first: [Chapter 3 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -81,7 +84,7 @@ RAW = bootstrap.ensure_raw()
 # | **Export-time column** | a value describing the account on the day of the export, not on an earlier date | `status`, `last_active_week` |
 
 # %% [markdown]
-# ## 2.1 · Acquire, then verify
+# ## 3.1 · Acquire, then verify
 #
 # The raw extract is four gzipped CSV files in `data/raw/`. "I downloaded it"
 # is not evidence that you have the right bytes. A **SHA-256 checksum** is: any
@@ -172,7 +175,7 @@ shutil.rmtree(tmp)
 # a gzip error; the worst case is data that parses fine and is wrong.
 
 # %% [markdown]
-# ## 2.2 · A first look, and the first trap
+# ## 3.2 · A first look, and the first trap
 #
 # Read the customers table the way almost everyone does, then look at
 # `region`. Include missing values in the count (`dropna=False`) - without it,
@@ -228,7 +231,7 @@ for name, df in raw.items():
     print(f"{name:<14}{df.shape[0]:>8,} rows  {df.shape[1]:>2} cols  {list(df.columns)}")
 
 # %% [markdown]
-# ## 2.3 · Data contracts
+# ## 3.3 · Data contracts
 #
 # A **data contract** writes down what each column must look like - type,
 # nullability, allowed values, ranges, uniqueness - so that checking it is a
@@ -262,10 +265,10 @@ for report in reports.values():
 # > **Intuition.** A data contract is a smoke alarm for a table: cheap,
 # > always on, and it tells you which room, not what is burning. *Where it
 # > breaks down:* it only checks what you thought to write down. Export-time
-# > columns (section 2.6) pass every contract and are still wrong to use.
+# > columns (section 3.6) pass every contract and are still wrong to use.
 
 # %% [markdown]
-# ## 2.4 · Investigate each defect, with evidence
+# ## 3.4 · Investigate each defect, with evidence
 #
 # ### Duplicated usage rows
 #
@@ -427,10 +430,10 @@ except NotImplementedError:
 # **Expected (once solved):** sign-ups from 2022-05-16 to 2024-10-31, and
 # usage, invoices and tickets all running from around 1 January 2023 (the first
 # ticket is from 2022-12-31) to the end of December 2024. That end date - the **export date** - matters in
-# section 2.6.
+# section 3.6.
 
 # %% [markdown]
-# ## 2.5 · Clean, with stated decisions, then re-validate
+# ## 3.5 · Clean, with stated decisions, then re-validate
 #
 # `churnlab.validate.clean` applies one reviewable decision per defect. Read
 # its docstring: every decision is written where the code is.
@@ -492,16 +495,16 @@ print(json.dumps(quality, indent=2, default=str)[:800])
 # %% [markdown]
 # > **Exercise 4 (written).** Write a short decision memo (4-6 sentences) for a
 # > colleague: what should happen to `sessions == -1`, and why **not** replace
-# > it with 0? Use the evidence from section 2.4, and say what a model would learn if you
+# > it with 0? Use the evidence from section 3.4, and say what a model would learn if you
 # > used 0. Write your answer in the cell below.
 
 # %% [markdown]
 # *Your answer here.*
 
 # %% [markdown]
-# ## 2.6 · Columns that describe the export date
+# ## 3.6 · Columns that describe the export date
 #
-# Three columns in `customers` look like gifts: `status`, `churn_date` and
+# Three columns in `customers` look very useful: `status`, `churn_date` and
 # `last_active_week`. They describe each account **as of the export** (end of
 # December 2024), not as of any earlier date. Pick one monthly snapshot,
 # T = 2024-01-01, and look at the accounts that were still active then:
@@ -525,14 +528,14 @@ print(pd.crosstab(will_churn.rename("churns in [T, T+30d)"), active_at_T["status
 # cancelled`.
 #
 # At T, nobody could have known any of that. A model given `status` would look
-# brilliant in validation and be useless in production, where every account it
+# excellent in validation and be useless in production, where every account it
 # scores is, by definition, still active. The rule this course follows:
 #
-# * `churn_date` is used **only to build the label** (notebook 03);
+# * `churn_date` is used **only to build the label** (Chapter 4);
 # * `status` and `last_active_week` are **never** features;
 # * features for snapshot T use only rows timestamped **before** T.
 #
-# Notebook 04 measures how badly these columns inflate validation scores.
+# Chapter 5 measures how badly these columns inflate validation scores.
 
 # %% [markdown]
 # ## Troubleshooting
@@ -557,4 +560,4 @@ print(pd.crosstab(will_churn.rename("churns in [T, T+30d)"), active_at_T["status
 # 4. Why is `sessions = -1` not the same as `sessions = 0`, and what would a model learn if you treated it as 0?
 # 5. Name a column that is safe to use as a label input but not as a feature, and explain why.
 #
-# **Next chapter:** [`03_sql_for_ml.ipynb`](../ch04-sql-for-ml/notebook.ipynb) — turn the clean tables into point-in-time features and labels with SQL.
+# **Next chapter:** [Chapter 4 · SQL for ML](../ch04-sql-for-ml/notebook.ipynb) — turn the clean tables into point-in-time features and labels with SQL.

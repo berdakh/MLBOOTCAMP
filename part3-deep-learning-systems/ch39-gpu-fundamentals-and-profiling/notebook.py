@@ -6,15 +6,15 @@
 # %% [markdown]
 # # Chapter 39 · GPU fundamentals & profiling
 #
-# **Day 1 · ~90 minutes · T4 GPU (runs on CPU with a reduced budget)**
+# **Part III · Chapter 39 · about 90 minutes · T4 GPU (runs on CPU with a reduced budget)**
 #
-# Every performance conversation in an ML engineering interview, and every
-# "why is my training slow?" ticket at work, comes down to three questions:
-# is the hardware busy, is it busy with useful arithmetic, and if not, what is
-# it waiting for? This notebook gives you the mental model of a GPU and the
-# measuring tools to answer those questions with numbers instead of guesses.
+# Most questions about training speed, whether asked in an interview or raised
+# when a training job runs slowly, reduce to three questions: is the hardware
+# busy, is it busy with useful arithmetic, and if not, what is it waiting for?
+# This lab builds a working model of how a GPU executes code and the measuring
+# tools needed to answer those questions with numbers rather than guesses.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. explain how a GPU executes work (SMs, warps, kernels, asynchronous launches) and why that changes how you time code;
 # 2. time GPU code correctly (warm-up, `synchronize`, median of repeats);
@@ -25,12 +25,15 @@
 #
 # **You will produce:** `artifacts/level3/nb01/benchmarks.json` (your matmul and
 # elementwise measurements, with the device they came from) and the helper module
-# [`src/scaleml/profiling.py`](../../src/scaleml/profiling.py), reused in notebook 02.
+# [`src/scaleml/profiling.py`](../../src/scaleml/profiling.py), reused in Chapter 40.
 #
 # **Measured here vs on a T4.** Our verification runs are CPU-only. Every number
 # quoted in an **Expected:** line below was printed by a CPU run unless it says
 # *"on a T4 you should see … (not measured in our verification runs)"*. When you
 # run on a T4, your cells print the GPU numbers.
+
+# %% [markdown]
+# Read first: [Chapter 39 text](README.md) explains the ideas behind this lab (GPU fundamentals & profiling) in more depth; [solutions](solutions.md) has worked answers.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -129,7 +132,7 @@ print(f"torch {torch.__version__} | device {DEVICE} | CPU threads {torch.get_num
 # | **HBM/GDDR memory** | the GPU's own DRAM | 16 GB GDDR6, ~320 GB/s |
 # | **PCIe link** | the pipe between host (CPU) RAM and GPU memory | Gen3 x16, ~16 GB/s theoretical |
 #
-# Three consequences drive everything in Day 1:
+# Three consequences follow, and they shape the rest of Chapters 39–40:
 #
 # * **Asynchrony.** `torch.matmul` on a CUDA tensor does not compute anything
 #   on the CPU: it *enqueues* a kernel on a CUDA stream and returns
@@ -283,7 +286,7 @@ for r in mm_rows:
 # Tensor-Core ridge ≈ 65 ÷ 0.32 ≈ 200 FLOP/byte.
 #
 # * `x + y` on fp32 vectors: 1 FLOP per element, 12 bytes moved (read 2 × 4,
-#   write 4) → intensity 1/12. Hopelessly memory-bound on any hardware.
+#   write 4) → intensity 1/12. Memory-bound by a wide margin on any hardware.
 # * `n × n` matmul in fp32: 2n³ FLOPs, at least 3n² × 4 bytes → n/6. Compute-bound
 #   once n/6 exceeds the ridge point (n ≳ 150 on a T4 in fp32).
 
@@ -337,9 +340,9 @@ print("wrote", OUT / "benchmarks.json")
 # 320 GB/s spec) yet only ~0.02 TFLOP/s, and the matmul at several TFLOP/s
 # (not measured in our verification runs).
 #
-# This is why **kernel fusion** matters: `gelu(x @ W + b)` as three separate
+# This is the reason **kernel fusion** matters: `gelu(x @ W + b)` as three separate
 # kernels writes and re-reads the intermediate tensor twice; a fused kernel (what
-# `torch.compile` produces, notebook 02) reads it once. It is also why
+# `torch.compile` produces, Chapter 40) reads it once. It is also why
 # FlashAttention is fast: attention's softmax is memory-bound, and FlashAttention
 # never writes the `seq × seq` matrix to GPU memory.
 #
@@ -423,7 +426,7 @@ print("CPU time per phase over 5 steps (ms):", {k: round(v) for k, v in phases.i
 # %% [markdown]
 # **Expected (CPU, measured):** `aten::mm` and `aten::addmm` (the Linear layers,
 # forward and backward) are the top two rows, 30–45% of self CPU time together
-# in our runs. The surprise is the next block: `aten::sqrt`, `div`, `mul_`,
+# in our runs. The next block is less expected: `aten::sqrt`, `div`, `mul_`,
 # `addcdiv_`, `lerp_`, `addcmul_`, `add_` are the **AdamW update**, and together
 # they take about as much time as the matmuls (`Optimizer.step#AdamW.step` total: ~40%). The optimizer step touches
 # every one of the 5.3M parameters several times with a few FLOPs each:
@@ -441,11 +444,11 @@ print("CPU time per phase over 5 steps (ms):", {k: round(v) for k, v in phases.i
 # comparable to GPU time: launch overhead matters at this size (not measured
 # in our verification runs).
 #
-# Two more profiler features you will use at work:
+# Two further profiler features are useful in practice:
 # `p.key_averages(group_by_input_shape=True)` splits rows by shape (find the one
 # odd-shaped matmul), and `p.export_chrome_trace("trace.json")` gives a timeline
 # you open in `chrome://tracing` or Perfetto, where **gaps** between GPU kernels
-# are the smoking gun for a CPU/data-loading bottleneck.
+# are the clearest evidence of a CPU or data-loading bottleneck.
 
 # %% [markdown]
 # > **Exercise 4.** Read the table below (constructed for this exercise, from a
@@ -544,8 +547,8 @@ for workers in (0, 1, 2):
 # %% [markdown]
 # ## Key equations
 #
-# A revision sheet for this notebook. Each formula: the maths, what it says in words, and a
-# tiny worked example.
+# A summary of the formulas used in this lab. Each entry gives the formula, its meaning in
+# words, and a short worked example.
 #
 # **1. FLOPs of a matrix multiply.**
 #
@@ -633,7 +636,7 @@ for name, intensity in [("x + y (fp32)", 1 / 12), ("LayerNorm (~1)", 1.0), ("mat
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question without notes; a complete answer takes about a minute:
 #
 # 1. A colleague times `y = model(x)` on a GPU with `time.time()` before and after and reports 0.1 ms for a large model. What is wrong, and how do you time it correctly?
 # 2. Explain arithmetic intensity and the roofline model. Is LayerNorm memory-bound or compute-bound on a GPU? A 4096×4096 matmul? Why?
@@ -642,4 +645,4 @@ for name, intensity in [("x + y (fp32)", 1 / 12), ("LayerNorm (~1)", 1.0), ("mat
 # 5. What do `num_workers`, `prefetch_factor`, `pin_memory` and `non_blocking=True` each do? When does adding workers stop helping?
 # 6. A training step has thousands of tiny kernels and the GPU is idle between them. What is this bottleneck called and what are three ways to reduce it?
 #
-# **Next chapter:** [`02_training_efficiency_and_memory.ipynb`](../ch40-training-efficiency-and-memory/notebook.ipynb) — now that you can measure time, measure memory: what fills a GPU during training and how to fit more into it.
+# **Next chapter:** [Chapter 40 · Training efficiency & memory](../ch40-training-efficiency-and-memory/notebook.ipynb) — now that you can measure time, measure memory: what fills a GPU during training and how to fit more into it.

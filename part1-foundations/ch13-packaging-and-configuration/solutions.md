@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `dockerfile_problems`
 
-[verified] Reference code: [`code/nb12.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 The work is in parsing, not in the rules. Turn the text into a list of
 *instructions* first, then each rule is one or two lines:
@@ -59,7 +59,7 @@ bloats every layer, and without a health check nobody notices a hung process.
 
 ## Exercise 2 · `settings_from_env`
 
-[verified] Reference code: [`code/nb12.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")

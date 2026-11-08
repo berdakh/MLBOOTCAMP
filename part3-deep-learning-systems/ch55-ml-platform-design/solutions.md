@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `feature_store_storage_gb`
 
-[verified] Reference code: [`code/nb17.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def feature_store_storage_gb(entities, features, bytes_per, versions, replication):
@@ -23,13 +23,13 @@ follow the number with what it implies: ~2 TB of RAM-class storage is a
 cluster, not a box, so the conversation moves to which features really need
 to be online, and to cheaper tiers for dormant users. The function ignores
 key and index overhead on purpose; `ds.online_store_gb` adds them
-(× 1.3–2 is a common planning range; measure your store).
+(× 1.3–2 is a common planning range; measure the actual store).
 
 ---
 
 ## Exercise 2 · `gpu_cost`
 
-[verified] Reference code: [`code/nb17.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def gpu_cost(hours, gpus, price):
@@ -40,7 +40,7 @@ def gpu_cost(hours, gpus, price):
 
 64 GPUs reserved for a month (730 h) at a placeholder 2.0 per GPU-hour is
 93,440. The arithmetic is trivial; the interview value is in naming what the
-price is (on-demand, reserved, spot; your provider's current list, not a
+price is (on-demand, reserved, spot; the provider's current list, not a
 number from memory) and that reserved capacity is paid whether used or not,
 which is Exercise 3.
 
@@ -48,7 +48,7 @@ which is Exercise 3.
 
 ## Exercise 3 · `utilization_waste`
 
-[verified] Reference code: [`code/nb17.py`](solutions.py) (`ex3`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex3`).
 
 ```python
 def utilization_waste(hours, gpus, price, utilization):
@@ -60,12 +60,12 @@ def utilization_waste(hours, gpus, price, utilization):
             "cost_per_useful_gpu_hour": price / utilization}
 ```
 
-`cost_per_useful_gpu_hour` is the number that persuades: a team at 20%
+`cost_per_useful_gpu_hour` is the most persuasive number: a team at 20%
 utilisation pays five times the list price for every hour of real work.
 "Utilisation" needs a definition before it is a KPI: allocated vs idle
 (scheduler view), or SM busy / MFU (hardware view). A job can hold a GPU at
-100% allocation and 15% MFU because it is input-bound (notebook 01). State
-which one you mean.
+100% allocation and 15% MFU because it is input-bound (Chapter 39). State
+which one is meant.
 
 ---
 
@@ -114,7 +114,7 @@ assumptions, and measurable revisit triggers.
    versioned. Then name the contracts: who owns a feature, how it is
    deprecated, how consumers are tracked (lineage).
 2. **Online store sizing.** [verified] 200M × (400 × 4 B) = 320 GB raw; with 16-byte
-   keys, 1.5× overhead and 3 replicas ≈ **1.45 TB** (17.1). Halving it: keep
+   keys, 1.5× overhead and 3 replicas ≈ **1.45 TB** (section 1). Halving it: keep
    only features read by a production model (usage-based GC; costs a
    governance process); fp16/int8 or bucketed values (costs precision; check
    the model is insensitive); a hot tier for recently active users with
@@ -148,8 +148,8 @@ assumptions, and measurable revisit triggers.
    so a "drop" in last week's recall is expected.
 6. **Buy vs build a feature store.** [expected] Buy when the requirements fit the
    product's documented limits, the team cannot staff a stateful on-call, and
-   features are not your differentiator. Put a thin API in front so the
-   decision is reversible (ADR-001). Reverse it when per-unit cost at your
+   features are not what differentiates the organisation. Put a thin API in front so the
+   decision is reversible (ADR-001). Reverse it when per-unit cost at the organisation's
    scale becomes a top cost line, latency/throughput needs exceed the
    product's limits, compliance needs (residency, deletion audit) are unmet,
-   or you can staff the on-call. State the trigger as a number.
+   or the team can staff the on-call. State the trigger as a number.

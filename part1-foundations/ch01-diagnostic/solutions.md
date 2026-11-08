@@ -8,7 +8,7 @@ are, and reading first measures nothing. Markers: [verified] verified by running
 
 ## Exercise 1 · `top_k_frequent`
 
-[verified] Reference code: [`code/nb00.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 from collections import Counter
@@ -29,13 +29,13 @@ stable sort must sort by the *secondary* key first).
 **Push further.** For huge inputs with small `k`, `heapq.nsmallest(k, counts,
 key=...)` is O(n log k). Say when that matters (rarely, below millions).
 
-**If this took you more than 10 minutes:** notebooks 01, 05, 11 and 16.
+**If this took you more than 10 minutes:** Chapters 2, 6, 12 and 17.
 
 ---
 
 ## Exercise 2 · `weekly_active`
 
-[verified] Reference code: [`code/nb00.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def weekly_active(usage):
@@ -53,13 +53,13 @@ puts it back).
 **Common mistake.** `usage.groupby("week_start")["sessions"].apply(lambda s: (s > 0).sum())`
 counts rows, so the duplicated row is counted twice.
 
-**If this took you more than 10 minutes:** notebooks 02, 03 and 16.
+**If this took you more than 10 minutes:** Chapters 3, 4 and 17.
 
 ---
 
 ## Exercise 3 · `customer_summary_sql`
 
-[verified] Reference code: [`code/nb00.py`](solutions.py) (`ex3`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex3`).
 
 ```sql
 WITH ranked AS (
@@ -89,13 +89,13 @@ survive, and `COALESCE` the count (but not the amount: "no invoice" is not
 `QUALIFY ROW_NUMBER() ... = 1`. An `ORDER BY invoice_date` without `DESC`
 returns the *first* invoice; the fixture catches that.
 
-**If this took you more than 10 minutes:** notebooks 02, 03 and 16.
+**If this took you more than 10 minutes:** Chapters 3, 4 and 17.
 
 ---
 
 ## Exercise 4 · `test_rolling_mean`
 
-[verified] Reference code: [`code/nb00.py`](solutions.py) (`ex4`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex4`).
 
 ```python
 def test_rolling_mean(fn):
@@ -129,25 +129,25 @@ the same algorithm as the implementation tests nothing.
 
 ## Exercise 5 · Evaluation judgement
 
-[verified] Reference code: [`code/nb00.py`](solutions.py) (`ex5`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex5`).
 
 | Q | Answer | Why |
 |---|---|---|
-| 1 | **b** | A value computed at export time describes the future of every 2023 snapshot. A jump from 0.16 to 0.71 is a symptom, not a result. Notebook 02 §2.6, 04 §4.2. |
-| 2 | **c** | The deployment question is "next month", so validate on later months than you train on, with a gap of at least the label window. Notebook 04. |
-| 3 | **a** | Capacity is 200 calls: precision in the top 200 is the business metric; PR-AUC summarises ranking quality at the top. Accuracy is 95% for "nobody churns". Notebooks 04, 07. |
-| 4 | **d** | Call when p × 150 > (1 − p) × 30, i.e. p > 1/6. F1 and precision = recall ignore the costs. Notebook 07. |
-| 5 | **b** | A 0.004 AUC gap on ~360 positives is well inside bootstrap and seed noise. Repeated test-set peeking (d) is the worst option. Notebook 06. |
-| 6 | **a** | Immediate change with no time for behaviour to change points at the pipeline, not the world: training/serving skew. Drift (b) is gradual. Notebooks 10, 14. |
+| 1 | **b** | A value computed at export time describes the future of every 2023 snapshot. A jump from 0.16 to 0.71 is a symptom, not a result. Chapter 3 §3.6, Chapter 5 §5.2. |
+| 2 | **c** | The deployment question is "next month", so validate on later months than you train on, with a gap of at least the label window. Chapter 5. |
+| 3 | **a** | Capacity is 200 calls: precision in the top 200 is the business metric; PR-AUC summarises ranking quality at the top. Accuracy is 95% for "nobody churns". Chapters 5, 8. |
+| 4 | **d** | Call when p × 150 > (1 − p) × 30, i.e. p > 1/6. F1 and precision = recall ignore the costs. Chapter 8. |
+| 5 | **b** | A 0.004 AUC gap on ~360 positives is well inside bootstrap and seed noise. Repeated test-set peeking (d) is the worst option. Chapter 7. |
+| 6 | **a** | Immediate change with no time for behaviour to change points at the pipeline, not the world: training/serving skew. Drift (b) is gradual. Chapters 11, 15. |
 
 **Scoring.** 6/6 strong; 4-5 review the notebooks for the missed numbers; ≤ 3
-make notebooks 04-07 a priority.
+make Chapters 5–8 a priority.
 
 ---
 
 ## Exercise 6 · Pydantic `Order`
 
-[verified] Reference code: [`code/nb00.py`](solutions.py) (`ex6`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex6`).
 
 ```python
 from pydantic import BaseModel, ConfigDict, Field
@@ -168,7 +168,7 @@ def make_model():
 Pydantic's default (lax) mode `quantity=2.5` is rejected but `"5"` is coerced
 to 5; use `strict=True` if you need to refuse strings.
 
-**If this took you more than 10 minutes:** notebooks 09-11.
+**If this took you more than 10 minutes:** Chapters 10–12.
 
 ---
 
@@ -213,4 +213,4 @@ otherwise produce a confident, meaningless score.
 
 **5. Your weakest area.** [open-ended] Personal. A good answer names the area, the
 specific failure (e.g. "my test caught 1/3 bugs: I never checked the input"),
-and a concrete plan (e.g. "do notebook 11's exercises without solutions").
+and a concrete plan (e.g. "do Chapter 12's exercises without solutions").

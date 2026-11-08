@@ -6,7 +6,7 @@
 # %% [markdown]
 # # Chapter 8 · Thresholds & calibration
 #
-# **Day 2 · ~40 minutes · CPU only**
+# **Part I · Chapter 8 · about 40 minutes · CPU only**
 #
 # A churn model does not call customers; a person does, when a score crosses
 # a line someone chose. This notebook chooses that line from stated costs and
@@ -25,7 +25,10 @@
 # with the assumptions it depends on.
 #
 # Scores and decisions here are on the **validation** period; models are fitted
-# on **train**. The test period is reserved for notebook 15.
+# on **train**. The test period is reserved for Chapter 16.
+
+# %% [markdown]
+# Read first: [Chapter 8 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -121,7 +124,7 @@ print(f"validation: {len(y):,} rows, {y.sum()} churners, PR-AUC {average_precisi
 # | **Recalibration** | a monotone map from score to probability, learned on held-out later rows | sigmoid (Platt) or isotonic |
 
 # %% [markdown]
-# ## 7.1 · The precision-recall curve is a menu
+# ## 8.1 · The precision-recall curve is a menu
 #
 # Each point on the curve is a threshold: flag everyone above it, and you get
 # that precision (share of calls that reach a would-be churner) and that
@@ -174,7 +177,7 @@ table.round(3)
 # business case has to work with that.
 
 # %% [markdown]
-# ## 7.2 · A threshold from costs (stated as assumptions)
+# ## 8.2 · A threshold from costs (stated as assumptions)
 #
 # The course's cost model lives in `churnlab/bootstrap.py`. These are
 # **teaching assumptions, not facts** about any business:
@@ -194,8 +197,8 @@ table.round(3)
 # > **Intuition.** Each call is a $30 lottery ticket that pays $150 with
 # > probability p. Buy the ticket when its expected payout beats its price:
 # > $150p > 30(1 - p)$. *Where it breaks down:* "p" must be a real
-# > probability (calibrated, section 7.6), and the $150 hides a save rate
-# > nobody has measured yet (section 7.3). That is
+# > probability (calibrated, section 8.6), and the $150 hides a save rate
+# > nobody has measured yet (section 8.3). That is
 # the theory. `best_threshold_by_value` finds the empirical optimum on
 # validation:
 
@@ -215,13 +218,13 @@ print(f"calls per month: {(c_best['tp'] + c_best['fp']) / 3:.0f}, "
 # recall ≈ 0.14.
 #
 # The empirical optimum lands near the theoretical 1/6. That agreement is
-# itself evidence that the scores are roughly calibrated (section 7.6). If
+# itself evidence that the scores are roughly calibrated (section 8.6). If
 # they were not, the theory would point at the wrong place and only the
 # empirical search would be right.
 #
 # A caution about this number: the threshold is chosen **on** validation, so
 # its expected value on validation is optimistic. The honest check of the
-# whole rule happens once, on the test period, in notebook 15.
+# whole rule happens once, on the test period, in Chapter 16.
 
 # %%
 grid = np.round(np.arange(0.05, 0.45, 0.01), 2)
@@ -243,7 +246,7 @@ plt.show()
 # magnitude, and a reviewer arguing 0.17 vs 0.19 is arguing about noise.
 
 # %% [markdown]
-# ## 7.3 · How fragile is the threshold? A sensitivity table
+# ## 8.3 · How fragile is the threshold? A sensitivity table
 #
 # The save rate (25%) is the shakiest assumption: nobody has measured it yet.
 # Halve it, double it, and double the call cost:
@@ -278,7 +281,7 @@ sensitivity
 # calls vs no calls among flagged customers).
 
 # %% [markdown]
-# ## 7.4 · A capacity constraint: top-k per month
+# ## 8.4 · A capacity constraint: top-k per month
 #
 # In practice the team can make a fixed number of calls per month. Suppose
 # they can call **40 accounts per month**, fewer than the ≈ 64 the cost-based
@@ -309,7 +312,7 @@ pd.DataFrame({"flagged @ cost threshold": per_month_at_tbest,
 # **Expected:** at the cost-based threshold, 60-70 flags per month (more than
 # the team can handle); a single global threshold tuned to 40 a month on average
 # still varies month to month. Validation months are similar, so the drift is
-# small here; it is not small when the score distribution shifts (Day 4).
+# small here; it is not small when the score distribution shifts (Chapter 15).
 
 # %% [markdown]
 # > **Exercise 1.** Write `top_k_per_snapshot(df, scores, k)` returning a boolean
@@ -351,7 +354,7 @@ capacity_df.round(3)
 # a bigger team, and you can now put a dollar figure on it.
 
 # %% [markdown]
-# > **Exercise 2.** Back to the cost-based rule of 7.2: write your own
+# > **Exercise 2.** Back to the cost-based rule of 8.2: write your own
 # > `best_threshold(y, scores, value_tp, cost_fp)` returning
 # > `(threshold, value)`, where flagging means `score >= threshold` and
 # > value = TP × `value_tp` − FP × `cost_fp`. Search every distinct score as a
@@ -383,7 +386,7 @@ print(f"lowest threshold with precision >= 0.30: {t_p30:.3f} -> {(c['tp'] + c['f
 # is not monotone in the threshold, so a few rows can move it.
 
 # %% [markdown]
-# ## 7.5 · Write the policy down
+# ## 8.5 · Write the policy down
 
 # %%
 policy = {
@@ -405,7 +408,7 @@ policy = {
 print(json.dumps(policy, indent=2))
 
 # %% [markdown]
-# ## 7.6 · Can the scores be read as probabilities?
+# ## 8.6 · Can the scores be read as probabilities?
 #
 # The 1/6 rule assumed **calibrated** scores: among accounts scored 0.2, about
 # 20% churn. Check it: sort the validation rows into ten equal-sized score
@@ -520,7 +523,7 @@ calib
 # months to calibrate costs a little ranking quality because the base model
 # sees less data. For this model the honest
 # choice is **not to recalibrate at all** and to keep monitoring calibration
-# (Day 4).
+# (Chapter 15).
 
 # %%
 p_bal_cal = calibrate(make_model("logreg", class_weight="balanced").fit(early[FEATURES], early[LABEL]),
@@ -616,7 +619,7 @@ print(f"notebook compute time: {time.time() - T0:.0f} s")
 #
 # *In words:* mean squared error of the probabilities; the base-rate
 # constant scores $\pi(1-\pi)$. *Example:* $\pi = 0.052$:
-# $0.052 \times 0.948 = 0.0493$, the "constant-base-rate Brier" in 7.6.
+# $0.052 \times 0.948 = 0.0493$, the "constant-base-rate Brier" in 8.6.
 #
 # *Worked example for both* (five accounts): $y = (1, 0, 1, 0, 0)$,
 # $p = (0.8, 0.6, 0.4, 0.2, 0.1)$.
@@ -674,4 +677,4 @@ print(f"EV at t=0.5: ${tp * VALUE_TP - fp * COST_FP:.0f};  p* = {COST_FP / (VALU
 # 4. Does calibration change PR-AUC? ROC-AUC? The best threshold? Why?
 # 5. Where must the calibration map be fitted in a time-ordered problem, and what goes wrong if you fit it on validation?
 #
-# **Next chapter:** [`08_error_analysis_and_artifacts.ipynb`](../ch09-error-analysis-and-artifacts/notebook.ipynb) — find where the model fails, then package it with metadata, a registry and a model card.
+# **Next chapter:** [Chapter 9 · Error analysis & artifacts](../ch09-error-analysis-and-artifacts/notebook.ipynb) — find where the model fails, then package it with metadata, a registry and a model card.

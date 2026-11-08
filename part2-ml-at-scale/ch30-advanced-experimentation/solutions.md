@@ -1,13 +1,13 @@
 # Solutions · Chapter 30 · Advanced experimentation
 
-Try each exercise before reading its answer. Markers: [verified] verified by running ·
+Attempt each exercise before reading its answer. Markers: [verified] verified by running ·
 [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `cuped_adjust`
 
-[verified] Reference code: [`code/nb12.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def cuped_adjust(y, x):
@@ -30,7 +30,7 @@ by default): θ is then off by `n/(n-1)`, a negligible error at large n but the 
 asks for consistency. Dividing by zero for constant `x` (new users with no
 pre-period): return `y`.
 
-Measured in 12.1 ([verified]): ρ = 0.71, variance ratio 0.50 vs predicted 0.49.
+Measured in 30.1 ([verified]): ρ = 0.71, variance ratio 0.50 vs predicted 0.49.
 
 ---
 
@@ -53,7 +53,7 @@ equivalent: compute the per-user **linearised** values
 `ℓ_i = (c_i − R n_i) / μn` with `R = c̄/n̄`; then `Var(R̂) ≈ var(ℓ)/N`, which also plugs
 straight into CUPED (regress `ℓ` on a pre-period covariate).
 
-Measured in 12.2 ([verified]): delta SE 0.00168, bootstrap SE 0.00170, true SD over
+Measured in 30.2 ([verified]): delta SE 0.00168, bootstrap SE 0.00170, true SD over
 400 A/A experiments 0.00169, naive binomial SE 0.00061.
 
 ---
@@ -99,32 +99,32 @@ thanks to the coin flips.
 
 ## Exercise 4 · Launch memo (written)
 
-[open-ended] Personal. A strong memo, under the notebook's criteria:
+[open-ended] Personal. A good memo, under the lab's criteria, covers the following points.
 
-* **Decision: do not ship as is.** The primary metric is positive and
+* **Decision: do not launch in the current form.** The primary metric is positive and
   significant (+1.8%, CI +0.6% to +3.0%), and the SRM check passes (p = 0.21), but the
   **p95 latency guardrail is violated** (+7% against a 5% limit). Guardrails can
-  block a launch, and this one does.
+  block a launch, and this one does so.
 * **Purchases** (-0.4%, CI -1.3% to +0.5%): the lower bound is below the -1%
   non-inferiority margin, so non-inferiority is *not demonstrated*. That is a
-  second reason not to ship, even before latency is fixed.
+  second reason not to launch, even before latency is fixed.
 * **Secondary metrics**: two of eleven significant is weak evidence: 0.55 are
   expected by chance at α = 0.05, and two or more happen about 10% of the time
   even with no effect (independent metrics; correlated metrics make clusters more likely). "iOS in Germany +9%"
   is an unplanned segment result, exploratory only, a hypothesis for a future test.
 * **Next steps:** profile the latency regression (feature fetches? a larger
-  model?) and fix it, or distil the ranker (notebook 18); run a longer or
+  model?) and fix it, or distil the ranker (Chapter 36); run a longer or
   larger test, powered for the purchases margin; keep the same pre-registered
   criteria.
-* **To the team:** the ranker improves engagement, which is real, measured progress;
-  it is blocked by cost and an unresolved commerce risk, not by its quality; a clear
-  path to launch exists.
+* **To the team:** the ranker improves engagement, and the improvement is measured;
+  the launch is blocked by cost and an unresolved commerce risk, not by ranking quality;
+  a path to launch exists.
 
 ---
 
 ## Checkpoint answers
 
-**1. CUPED for a PM.** "We subtract from each user's result the part we could
+**1. CUPED for a product manager.** "We subtract from each user's result the part we could
 already predict from their behaviour before the test, so the test only has to
 see through the unpredictable part. Same answer, fewer users." Expected reduction:
 variance × (1 − ρ²); ρ = 0.71 for clicks per user here, which halves the variance ([verified]).
@@ -140,7 +140,7 @@ sums, valid at the randomisation unit. Validate it with A/A tests (false-positiv
 measured 0.043 vs 0.507 for the naive test, [verified]) and against a user-level bootstrap.
 
 **3. +11% in one of 30 segments.** With 30 segments, one or two extreme
-estimates are expected from noise; small segments are the noisiest. Section 12.3
+estimates are expected from noise; small segments are the noisiest. Section 30.3
 showed a uniform true +2% effect produce segment estimates from +0.1% to +5.4%
 with half of them "significant" ([verified]). Ask: was the segment pre-registered? Does
 it survive multiple-testing correction? Is there a mechanism? If it is still
@@ -149,20 +149,20 @@ interesting, run a new experiment targeted at that segment, with its own pre-reg
 **4. Team-draft interleaving.** Each round, a coin decides which ranker picks first; each picks its
 best unused item; clicks are credited to the picking team. It needs far fewer
 users because each user compares both rankers on the same request, so
-between-user variance (activity, propensity to click) cancels: the notebook
+between-user variance (activity, propensity to click) cancels: the lab
 measured about 900 users for 80% power vs about 20,000 for an A/B test ([verified],
 about 22x). It cannot measure whole-page or long-term effects: revenue,
 retention, latency, diversity of the final page, or effects when the two
 rankers' items interact (e.g. a page of near-duplicates).
 
-**5. Wins offline, loses online.** (a) **Position bias/feedback loop:** logged clicks
+**5. Better offline, worse online.** (a) **Position bias/feedback loop:** logged clicks
 are concentrated where the old policy put items, so offline NDCG rewards
-imitating the old policy: 12.5 showed the logging policy at 0.76 NDCG vs true
+imitating the old policy: 30.5 showed the logging policy at 0.76 NDCG vs true
 relevance at 0.68, while online CTR was the reverse ([verified]). (b) **Distribution
 shift/selection:** offline data only contains items the old policy showed; a
 new ranker surfacing unseen items gets no credit or blame for them. Others: a metric
 mismatch (clicks vs purchases), novelty effects, latency. Fixes: IPS-weighted
-metrics with exploration traffic (notebook 05), validating offline metrics
+metrics with exploration traffic (Chapter 23), validating offline metrics
 against a history of A/B outcomes, interleaving as an online filter.
 
 **6. Launch criteria.** One primary decision metric with its MDE, power,

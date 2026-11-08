@@ -6,7 +6,7 @@
 # %% [markdown]
 # # Chapter 6 · Pipelines & cross-validation
 #
-# **Day 2 · ~50 minutes · CPU only**
+# **Part I · Chapter 6 · about 50 minutes · CPU only**
 #
 # A model that is evaluated with one preprocessing path and served with
 # another is two different models, and only one of them was measured. This
@@ -25,7 +25,10 @@
 # **You will produce:** `artifacts/cv_comparison.csv`, the three estimates side by side.
 #
 # All work here uses the **train** and **validation** periods only. The test
-# period is reserved for notebook 15 and is not touched.
+# period is reserved for Chapter 16 and is not touched.
+
+# %% [markdown]
+# Read first: [Chapter 6 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -97,7 +100,7 @@ split.summary().loc[["train", "valid"]]
 # | **Training/serving skew** | the served model transforms inputs differently from the evaluated one | a forgotten `log1p` in the API |
 
 # %% [markdown]
-# ## 5.1 · One object from raw columns to probability
+# ## 6.1 · One object from raw columns to probability
 #
 # In research code the usual pattern is: clean the whole array, scale it,
 # *then* split and fit. Two things go wrong with that in production.
@@ -107,7 +110,7 @@ split.summary().loc[["train", "valid"]]
 #    later evaluate on has seen those rows.
 # 2. **Skew.** The serving code has to repeat every step exactly, from memory.
 #    One forgotten `log1p` and the API scores a different model from the one
-#    you validated. Notebook 10 shows that failure.
+#    you validated. Chapter 11 shows that failure.
 #
 # The fix for both is the same: the fitted object *is* the whole recipe.
 #
@@ -145,7 +148,7 @@ honest
 # (≈ 0.052) is what a random ranking would score on PR-AUC.
 
 # %% [markdown]
-# ## 5.2 · Leak (a): fitting the imputer and scaler on everything
+# ## 6.2 · Leak (a): fitting the imputer and scaler on everything
 #
 # The textbook leak: fit the preprocessing on train **and** validation rows,
 # then fit the classifier on train only. Here it is, measured rather than
@@ -177,7 +180,7 @@ print("preprocessing on all :", round(float(average_precision_score(valid[LABEL]
 # protects serving.
 
 # %% [markdown]
-# ## 5.3 · Leak (b): a target encoding that includes the answer
+# ## 6.3 · Leak (b): a target encoding that includes the answer
 #
 # A feature that *uses the label* is in a different league. A tempting one:
 # "this customer's historical churn rate". Three versions:
@@ -286,7 +289,7 @@ print("customers with more than one positive label:",
 # information.
 
 # %% [markdown]
-# ## 5.4 · Anatomy of a `ColumnTransformer`
+# ## 6.4 · Anatomy of a `ColumnTransformer`
 #
 # Here is the preprocessor the logistic-regression pipeline uses
 # (`src/churnlab/modeling.py`, `make_preprocessor("linear")`):
@@ -357,7 +360,7 @@ print("scores:", model.predict_proba(probe[FEATURES])[:, 1].round(4))
 # **Expected:** the same output width as before; the unseen row's region
 # block is all zeros, a normal row has exactly one 1; the model still scores
 # all three rows. Whether "ignore" is the *right* behaviour is a product
-# decision. It keeps the service up, and monitoring (Day 4) should count how
+# decision. It keeps the service up, and monitoring (Chapter 15) should count how
 # often it happens.
 
 # %% [markdown]
@@ -378,7 +381,7 @@ def build_preprocessor(numeric, categorical):
 grade.ex1(build_preprocessor)
 
 # %% [markdown]
-# ## 5.5 · Cross-validation that respects time
+# ## 6.5 · Cross-validation that respects time
 #
 # Shuffled k-fold assumes rows are exchangeable. Here they are not: a
 # training fold contains March 2024 while a test fold contains April 2023, and
@@ -390,7 +393,7 @@ grade.ex1(build_preprocessor)
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l1-rolling-origin.svg" alt="Four rolling-origin folds inside the train period: each fits on earlier months, leaves a gap for the label window, and validates on the next two months" width="100%">
 #
-# *What to notice:* the fit window grows fold by fold and never contains a month later than the one being validated; the gap cell is the embargo from notebook 04, applied inside CV.
+# *What to notice:* the fit window grows fold by fold and never contains a month later than the one being validated; the gap cell is the embargo from Chapter 5, applied inside CV.
 #
 # > **Intuition.** Rolling-origin CV is a weather forecaster replaying
 # > history: "using only what I knew on 1 March, how good was my forecast for
@@ -478,7 +481,7 @@ cv_comparison
 #   per-customer effects, shuffled CV can be far more optimistic. The rolling
 #   scheme is the one that matches how the model is used, so it is the default
 #   whatever the gap turns out to be.
-# * Both schemes rank the two models the same way. Notebook 06 asks whether
+# * Both schemes rank the two models the same way. Chapter 7 asks whether
 #   the gap between them is larger than the noise.
 
 # %% [markdown]
@@ -612,4 +615,4 @@ print(f"p at eta=-2.9: {1 / (1 + np.exp(2.9)):.3f};  at eta=-1.9: {1 / (1 + np.e
 # 4. Your rolling CV says 0.186 and the next period scores 0.163. Is the model broken? What would you look at?
 # 5. What does `handle_unknown="ignore"` do, and what should you monitor because of it?
 #
-# **Next chapter:** [`06_model_selection.ipynb`](../ch07-model-selection/notebook.ipynb) — compare models with confidence intervals and a search budget, and find out whether the trees really lose.
+# **Next chapter:** [Chapter 7 · Model selection](../ch07-model-selection/notebook.ipynb) — compare models with confidence intervals and a search budget, and find out whether the trees really lose.

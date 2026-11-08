@@ -6,16 +6,16 @@
 # %% [markdown]
 # # Chapter 44 · Parameter-efficient fine-tuning
 #
-# **Day 3 · ~90 minutes · T4 GPU (runs on CPU with a reduced budget)**
+# **Part III · Chapter 44 · about 90 minutes · T4 GPU (runs on CPU with a reduced budget)**
 #
 # Full fine-tuning updates every weight, so every task needs its own copy of the model and
 # training needs memory for gradients and optimiser state of *all* parameters. LoRA trains
 # a tiny low-rank correction instead: well under 1 % of the parameters, adapters of a few
-# megabytes, and one frozen base model that can serve many tasks. This notebook builds LoRA
+# megabytes, and one frozen base model that can serve many tasks. This lab builds LoRA
 # from scratch, measures what it saves (and what it does not), then checks the result
 # against the `peft` library.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. derive LoRA (frozen $W$ plus $\frac{\alpha}{r} BA$, $B$ initialised to zero) and implement it as a module;
 # 2. inject adapters into DistilBERT's attention projections and count trainable parameters;
@@ -33,9 +33,12 @@
 # (Apache-2.0), pinned to a revision.
 #
 # **Measured here vs on a T4.** Our verification runs are CPU-only and use an even smaller
-# budget than notebook 05 (four training runs must fit in a few minutes), so accuracies are
+# budget than Chapter 43 (four training runs must fit in a few minutes), so accuracies are
 # low and noisy. Numbers in **Expected:** lines were printed by a CPU run unless marked
 # *"on a T4 you should see … (not measured in our verification runs)"*.
+
+# %% [markdown]
+# Read first: [Chapter 44 text](README.md) explains the ideas behind this lab (Parameter-efficient fine-tuning) in more depth; [solutions](solutions.md) has worked answers.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -145,7 +148,7 @@ def new_classifier():
 # %% [markdown]
 # ## 6.1 · Where fine-tuning memory goes
 #
-# Training memory = weights + gradients + optimiser state + activations (notebook 02).
+# Training memory = weights + gradients + optimiser state + activations (Chapter 40).
 # With AdamW in fp32 that is 4 + 4 + 8 = **16 bytes per trained parameter**, plus 4 bytes per
 # *frozen* parameter (it must still be in memory for the forward pass). Freezing 99 % of the
 # model removes almost all gradient and optimiser memory. It does **not** remove
@@ -197,7 +200,7 @@ print(f"\na 7B model in fp32 + AdamW, full fine-tuning: {prof.human_bytes(16 * n
 # > changes turn out to be simple enough for such an overlay, and $B = 0$ means the overlay starts
 # > fully transparent. *Where it breaks down:* when the task needs genuinely new knowledge (a new
 # > language, a new domain's vocabulary), a low-rank overlay can be too little, and full
-# > fine-tuning or a higher rank wins.
+# > fine-tuning or a higher rank performs better.
 
 # %% [markdown]
 # > **Exercise 1.** Complete `LoRALinear`: wrap a pretrained `nn.Linear` called `base`, freeze its
@@ -262,7 +265,7 @@ del reference
 # (one epoch at batch 32 on the CPU budget). What changes is *what* is trained and the
 # learning rate: full fine-tuning 5e-5; LoRA 5e-4 (adapters start at zero and are
 # low-dimensional, so they need larger steps, typically 10× full fine-tuning); the probe is a
-# logistic regression on frozen mean-pooled embeddings (notebook 05).
+# logistic regression on frozen mean-pooled embeddings (Chapter 43).
 #
 # **Memory.** On a GPU we read `torch.cuda.max_memory_allocated`. On a CPU there is no such
 # counter, so we *estimate*: parameter, gradient and AdamW-state bytes by arithmetic
@@ -538,7 +541,7 @@ print(f"1,000 customer-specific models: full copies {1000 * full_bytes / 2**30:.
 #   of adapters; adapters live in CPU memory and are paged into the GPU on demand.
 # * **Merge** only when one adapter serves almost all the traffic (6.5).
 #
-# The trade-off to name in a design interview: merged = fastest per request, one task per
+# The trade-off, as one would state it in a design discussion: merged = fastest per request, one task per
 # replica; unmerged multi-adapter = slightly slower kernels, but one fleet for every tenant and
 # adapters you can hot-swap, roll back and A/B test independently of the base model.
 
@@ -601,17 +604,17 @@ print(f"1,000 customer-specific models: full copies {1000 * full_bytes / 2**30:.
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
-# | `ModuleNotFoundError: peft` | not installed | `pip install peft` (it is in `level3/requirements.txt`) |
+# | `ModuleNotFoundError: peft` | not installed | `pip install peft` (it is in `requirements-part3.txt`) |
 # | LoRA accuracy stays at chance | learning rate too low for adapters, or the new head was left frozen | lr ~10× full fine-tuning (1e-4–1e-3); train `classifier`/`pre_classifier` (`modules_to_save`) |
 # | `ValueError: Target modules ... not found` | module names differ by architecture | print `model.named_modules()`; DistilBERT `q_lin`/`v_lin`, BERT `query`/`value`, Llama `q_proj`/`v_proj` |
 # | Trainable count is 0 or 66M | forgot to freeze the base / to unfreeze the adapters | check `requires_grad` per parameter name |
 # | Outputs differ after merging | merged in fp16, or forgot the `alpha / r` scaling | merge in fp32; `W + (alpha/r) B @ A` |
-# | Memory barely drops with LoRA | activations dominate at this size | gradient checkpointing, shorter sequences, smaller batch + accumulation (notebook 02) |
+# | Memory barely drops with LoRA | activations dominate at this size | gradient checkpointing, shorter sequences, smaller batch + accumulation (Chapter 40) |
 
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question without notes; a complete answer takes about a minute:
 #
 # 1. Derive LoRA's parameter count for one `d × d` layer and explain why $B$ is initialised to zero and why the update is scaled by $\alpha / r$.
 # 2. Which memory does LoRA save during training, and which does it not? How do QLoRA and gradient checkpointing complement it?
@@ -620,4 +623,4 @@ print(f"1,000 customer-specific models: full copies {1000 * full_bytes / 2**30:.
 # 5. Merged vs unmerged adapters at serving time: latency, flexibility, and how you would serve 1,000 per-customer adapters.
 # 6. LoRA matches full fine-tuning on your benchmark but users report worse results on long inputs. What could explain it and how would you investigate?
 #
-# **Next chapter:** [`07_embeddings_and_semantic_search.ipynb`](../ch45-embeddings-and-semantic-search/notebook.ipynb) — from classifying text to *retrieving* it: lexical, dense and hybrid search, evaluated properly.
+# **Next chapter:** [Chapter 45 · Embeddings & semantic search](../ch45-embeddings-and-semantic-search/notebook.ipynb) — from classifying text to *retrieving* it: lexical, dense and hybrid search, evaluated properly.

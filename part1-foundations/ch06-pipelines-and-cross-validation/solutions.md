@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `build_preprocessor`
 
-[verified] Reference code: [`code/nb05.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def build_preprocessor(numeric, categorical):
@@ -44,7 +44,7 @@ often predictive (here: no tickets → no resolution time).
 
 ## Exercise 2 · `rolling_cv_scores`
 
-[verified] Reference code: [`code/nb05.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def rolling_cv_scores(make_model_fn, df, n_folds):
@@ -73,9 +73,9 @@ one-line equivalent.
 
 | # | Line | Problem | Expected size |
 |---|---|---|---|
-| 1 | `cust_churn_rate = groupby("customer_id")[label].mean()` | target encoding over the **whole** table including the row's own label and the validation period. For a churner with k rows, the feature is 1/k; for everyone else 0 | **huge**: in notebook 05 the same feature pushed validation PR-AUC from 0.163 to ≈ 0.58 |
+| 1 | `cust_churn_rate = groupby("customer_id")[label].mean()` | target encoding over the **whole** table including the row's own label and the validation period. For a churner with k rows, the feature is 1/k; for everyone else 0 | **huge**: in Chapter 6 the same feature pushed validation PR-AUC from 0.163 to ≈ 0.58 |
 | 2 | `plan_churn_rate` over the whole table | target encoding with future labels; only 5 plans, so each rate is averaged over thousands of rows and the leak is small, but it is still the future | small |
-| 3 | `sessions_z` with full-table mean/std | preprocessing fitted on validation (and test) rows | tiny (notebook 05 measured ≈ 0.0001 for a similar leak) |
+| 3 | `sessions_z` with full-table mean/std | preprocessing fitted on validation (and test) rows | tiny (Chapter 6 measured ≈ 0.0001 for a similar leak) |
 | 4 | `train = snapshot < 2024-04-01` | **no embargo**: the 2024-03-01 rows have labels that look into April, the validation period | small, but a systematic optimism |
 | 5 | `valid = snapshot >= 2024-04-01` | the "validation" set includes the **test** period too; anything tuned on it has spent the test set | process failure, not a score change |
 
@@ -85,7 +85,7 @@ before the snapshot, is almost always 0 because churn is terminal); use
 `time_split` (embargo, three periods); put scaling inside a `Pipeline`
 fitted on train; if a plan-level rate is wanted, compute it from training
 labels only (or, better, let one-hot encoding of `plan` do the same job).
-Then distrust 0.41 until you can explain it, because notebook 04's honest
+Then distrust 0.41 until you can explain it, because Chapter 5's honest
 baseline was far lower.
 
 ---

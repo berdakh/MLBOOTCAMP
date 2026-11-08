@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `field_f1`
 
-[verified] Reference code: [`code/nb16.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def field_f1(pred_dict, gold_dict):
@@ -24,7 +24,7 @@ def field_f1(pred_dict, gold_dict):
 ```
 
 **Notes.** Decide the normalisation rules (case, whitespace, `#` in order ids, synonyms
-such as "refund request" vs "refund") before you look at results, write them down, and
+such as "refund request" vs "refund") before looking at results, write them down, and
 apply them to every system equally. Exact match answers "is the whole record usable?";
 field-F1 shows *which* fields fail. Report both.
 
@@ -32,7 +32,7 @@ field-F1 shows *which* fields fail. Report both.
 
 ## Exercise 2 · `position_bias_rate`
 
-[verified] Reference code: [`code/nb16.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def position_bias_rate(judgments_ab, judgments_ba):
@@ -49,7 +49,7 @@ order; count only order-consistent verdicts as wins, or average the two probabil
 
 ## Exercise 3 · `guardrail`
 
-[verified] Reference code: [`code/nb16.py`](solutions.py) (`ex3`): rules only, which pass the hidden
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex3`): rules only, which pass the hidden
 set; in the notebook, combining them with the classifier (`rules OR classifier`) is the
 natural answer:
 
@@ -67,19 +67,19 @@ def guardrail(text):
 ```
 
 **Notes.** Rules give precision and explainability on known patterns and catch new
-*families* only if you anticipated their wording; the classifier generalises to
+*families* only if their wording was anticipated; the classifier generalises to
 paraphrases but needs labelled data and a threshold chosen on training/validation data
 (never on the test set). Note the traps in the benign data ("please disregard my duplicate
 ticket", "ignore my previous email"): a bare `ignore|disregard` rule fails the FPR budget.
 Real deployments add a second model-based check on the *output* (schema validation,
 policy checks) and log every block for review. A synthetic test set this regular is easy;
-real attacks are not, so keep red-teaming.
+real attacks are not, so red-teaming must continue.
 
 ---
 
 ## Exercise 4 · Evaluating a cheaper model
 
-[open-ended] Model answer:
+[open-ended] One good answer:
 
 (a) A few hundred tickets sampled from recent production traffic (stratified by
 category, language, length, difficulty; including rare but costly cases: angry customers,
@@ -96,7 +96,7 @@ labels (agreement/κ) before use, and blind to which model produced which reply.
 
 (c) Paired comparison on the same tickets, bootstrap or paired tests for the difference
 with a pre-registered non-inferiority margin ("the cheap model is at most 2 points
-worse"), sample size from a power calculation (16.2 showed how wide intervals are with
+worse"), sample size from a power calculation (section 2 showed how wide intervals are with
 12 tickets); slice results by category so an average does not hide a broken segment.
 
 (d) Prompt-injection suite with attack success rate at or below the current model, toxicity
@@ -113,24 +113,24 @@ p50/p95, cost per ticket, sampled human audits; alert and roll back on regressio
 
 1. [open-ended] Sample real traffic, stratify, label carefully (exact fields or rubric), freeze a
    held-out split, version it. A small set with exact labels gives cheap, deterministic,
-   unbiased metrics you can re-run on every change; an LLM-judged large set adds noise and
-   the judge's own biases (16.3) and may reward style over correctness. Use LLM judges
+   unbiased metrics that can be re-run on every change; an LLM-judged large set adds noise and
+   the judge's own biases (section 3) and may reward style over correctness. Use LLM judges
    for scale only after validating them against human labels.
 
-2. [expected] A confidence interval for the *paired* difference (bootstrap over examples, 16.2:
+2. [expected] A confidence interval for the *paired* difference (bootstrap over examples, section 2:
    with 12 tickets intervals were very wide); a pre-registered metric and normalisation;
    evidence it is not overfitted to the set (fresh held-out examples); per-slice results;
    checking that the gain is not just formatting the parser happens to prefer; and ideally
    an online test. 3 points on 50 examples is usually within noise.
 
-3. [verified] Position bias (swap orders; 16.3 measured it), verbosity bias (compare a padded
-   and an unpadded correct answer; 16.3), self-preference (judge outputs from several model
+3. [verified] Position bias (swap orders; section 3 measured it), verbosity bias (compare a padded
+   and an unpadded correct answer; section 3), self-preference (judge outputs from several model
    families and compare with human preferences). Mitigate: both orders + consistency
    filter, length-controlled comparisons or instructions, a different and stronger judge,
    rubric and references, human calibration.
 
 4. [verified] Untrusted input containing instructions that the model follows because instructions
-   and data share one channel (16.4: the schema prompt told the model not to follow such
+   and data share one channel (section 4: the schema prompt told the model not to follow such
    instructions, and attacks still succeeded on part of the tickets). Instructions in the
    prompt are only a request, not an enforcement mechanism. Layers: least privilege for
    tools, output validation and business rules, human approval for risky actions, input
@@ -140,10 +140,10 @@ p50/p95, cost per ticket, sampled human audits; alert and roll back on regressio
    after: schema validation, policy checks, toxicity/PII on the output. Threshold set on
    validation data for a target FPR on benign traffic (blocking real customers is costly),
    then measure recall per attack family, including families held out from training
-   (16.5), plus latency. Review blocked samples; feed new attacks back into training.
+   (section 5), plus latency. Review blocked samples; feed new attacks back into training.
 
-6. [expected] Needs: tokens in/out per request (16.6 measured them per prompt variant), throughput
-   per accelerator at the target latency (batching!), peak vs average load, price per
+6. [expected] Needs: tokens in/out per request (section 6 measured them per prompt variant), throughput
+   per accelerator at the target latency (with batching), peak vs average load, price per
    accelerator-hour or per token. 10M/day ≈ 116 requests/s average, more at peak; cost =
    requests × (input tokens × input price + output tokens × output price) for an API, or
    accelerators needed × hourly price for self-hosting. Levers: shorter prompts and outputs,

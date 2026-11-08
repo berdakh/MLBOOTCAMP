@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `config_hash`
 
-[verified] Reference code: [`code/nb01.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def config_hash(config: dict) -> str:
@@ -38,7 +38,7 @@ the chance of a collision is negligible, but say how you would detect one
 
 ## Exercise 2 · `record_run`
 
-[verified] Reference code: [`code/nb01.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 The key decisions:
 
@@ -96,4 +96,4 @@ current directory.
 
 **5. Models out of git.** Large binaries, reproducible from pinned inputs, and
 pickles execute code on load. They travel through a registry with metadata
-and hashes (Day 2, notebook 08).
+and hashes (Chapter 9).

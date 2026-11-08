@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `percentiles` (nearest rank)
 
-[verified] Reference code: [`code/nb13.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 import math
@@ -41,7 +41,7 @@ is the nearest-rank definition.
 
 ## Exercise 2 · `summarize_logs`
 
-[verified] Reference code: [`code/nb13.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def summarize_logs(records):

@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `mean_pool`
 
-[verified] Reference code: [`code/nb04.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def mean_pool(last_hidden, attention_mask):
@@ -26,7 +26,7 @@ fp32 (`.float()`) for long sequences.
 
 ## Exercise 2 · `bucket_by_length`
 
-[verified] Reference code: [`code/nb04.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def bucket_by_length(lengths, batch_size):
@@ -61,7 +61,7 @@ excludes that variant on purpose.
 2. **Pooling choice / model choice.** If `some-org/encoder` is a plain
    pretrained encoder (not trained for similarity), neither pooling gives good
    retrieval: use a sentence-embedding model trained with the pooling it expects
-   (check its card), and evaluate recall@k on labelled queries (notebook 07).
+   (check its card), and evaluate recall@k on labelled queries (Chapter 45).
 3. **Pad to 512 (cost).** Most documents are far shorter; padding to 512 wastes
    most of the compute (4.5: 59% wasted at max 128 on short news texts, 2.1–2.7× slower than
    sorted dynamic padding). Use `padding=True` plus length bucketing; restore the
@@ -78,7 +78,7 @@ excludes that variant on purpose.
    corpus whenever it changes.
 7. **Safety and licence.** Use `use_safetensors=True` (no pickle code execution),
    never `trust_remote_code=True` without review, and read the card's licence before
-   shipping. Also: run in `eval()` + `torch.inference_mode()`, fp16 on GPU for throughput,
+   deployment. Also: run in `eval()` + `torch.inference_mode()`, fp16 on GPU for throughput,
    and normalise embeddings if the index uses inner product.
 
 ---
@@ -108,7 +108,7 @@ excludes that variant on purpose.
 4. [expected] Throughput depends on total token positions (including padding) × per-token
    cost, and on hardware utilisation. Maximise it with: length bucketing + dynamic
    padding (4.5: 2.1–2.7× on CPU); the largest batch that fits; fp16/bf16 (Tensor Cores) or int8
-   (notebook 11); truncating to the length you actually need; a smaller/distilled model;
+   (Chapter 49); truncating to the length you actually need; a smaller/distilled model;
    fused attention kernels; overlapping tokenisation (CPU workers) with inference; many GPUs in
    parallel (embarrassingly parallel). Do the arithmetic: 100M docs × ~200 tokens =
    2e10 tokens; at ~5e4 tokens/s per T4 (an order-of-magnitude guess, not measured here)

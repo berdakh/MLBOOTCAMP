@@ -1,10 +1,10 @@
 # Solutions · Chapter 33 · Coding patterns I
 
-Try each exercise against the clock before reading its answer. Markers:
+Attempt each exercise against the clock before reading its answer. Markers:
 [verified] verified by running · [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
-Reference code: [`code/nb15.py`](solutions.py), graded in CI against
-[`src/shoprank/grading/nb15.py`](../../src/grading/ch33.py). Each grader
+Reference code: [`solutions.py`](solutions.py), graded in CI against
+[`src/grading/ch33.py`](../../src/grading/ch33.py). Each grader
 runs visible and hidden edge cases, ~200 random inputs against a brute-force
 reference, and a timing check (2-second budget per size).
 
@@ -12,7 +12,7 @@ reference, and a timing check (2-second budget per size).
 
 ## Exercise 1 · `two_sum_pairs`
 
-[verified] Reference: `ex1` in [`code/nb15.py`](solutions.py).
+[verified] Reference: `ex1` in [`solutions.py`](solutions.py).
 
 ```python
 seen = defaultdict(list)            # value -> indices so far
@@ -39,7 +39,7 @@ grader.
 
 ## Exercise 2 · `longest_unique`
 
-[verified] Reference: `ex2` in [`code/nb15.py`](solutions.py).
+[verified] Reference: `ex2` in [`solutions.py`](solutions.py).
 
 ```python
 last, best, left = {}, 0, 0
@@ -60,7 +60,7 @@ returns 3 instead of 2: at the final `a`, `left` jumps *back* from 2 to 1.
 
 ## Exercise 3 · `top_k_frequent`
 
-[verified] Reference: `ex3` in [`code/nb15.py`](solutions.py) (a size-k heap with a
+[verified] Reference: `ex3` in [`solutions.py`](solutions.py) (a size-k heap with a
 reversed-order wrapper for tie-breaking). A shorter equivalent that is
 perfectly acceptable in an interview:
 
@@ -79,7 +79,7 @@ are not mutually comparable (then tie-break by first occurrence instead).
 
 ## Exercise 4 · `merge_intervals` (merge + insert)
 
-[verified] Reference: `ex4` in [`code/nb15.py`](solutions.py).
+[verified] Reference: `ex4` in [`solutions.py`](solutions.py).
 
 ```python
 if new is None:                                   # O(n log n)
@@ -96,8 +96,8 @@ while i < len(intervals) and intervals[i][0] <= e: s, e = min(s, intervals[i][0]
 out.append([s, e]); out.extend(list(iv) for iv in intervals[i:])
 ```
 
-**Complexity.** Merge O(n log n) time, O(n) output; insert O(n) — you cannot
-beat O(n) because the output is a new list (with in-place deletion you could
+**Complexity.** Merge O(n log n) time, O(n) output; insert O(n) — it is not possible to
+do better than O(n) because the output is a new list (with in-place deletion one could
 find the boundaries by binary search in O(log n), but deleting is still O(n)
 in an array).
 
@@ -109,7 +109,7 @@ several; empty list; negative coordinates.
 
 ## Exercise 5 · `MinStack`
 
-[verified] Reference: `ex5` in [`code/nb15.py`](solutions.py) — a parallel stack
+[verified] Reference: `ex5` in [`solutions.py`](solutions.py) — a parallel stack
 `mins[i] = min(items[:i+1])`.
 
 **Complexity.** O(1) for every operation; O(n) extra space (the space-saving
@@ -122,7 +122,7 @@ timing (2.2 s at 16,000 operations of each kind).
 
 ## Exercise 6 · `product_except_self`
 
-[verified] Reference: `ex6` in [`code/nb15.py`](solutions.py).
+[verified] Reference: `ex6` in [`solutions.py`](solutions.py).
 
 ```python
 out = [1] * n; prefix = 1
@@ -140,7 +140,7 @@ grader's first zero.
 
 ## Exercise 7 · `subarray_sum_count`
 
-[verified] Reference: `ex7` in [`code/nb15.py`](solutions.py).
+[verified] Reference: `ex7` in [`solutions.py`](solutions.py).
 
 ```python
 count, prefix, seen = 0, 0, {0: 1}
@@ -174,9 +174,9 @@ the timing projection at n = 1,000 and n = 4,000.
    at most n times **in total**: amortised O(n). It fails when shrinking the
    window does not move the constraint monotonically — e.g. sums with negative
    numbers, or "exactly k" constraints — and is replaced by prefix sums with a
-   hash map (15-7), or by "at most k" minus "at most k−1" tricks. [verified] (15-2, 15-7)
+   hash map (Exercise 7), or by "at most k" minus "at most k−1" tricks. [verified] (Exercises 2 and 7)
 3. **Top 100 of 10 billion lines.** Exact: hash-partition the log by query
-   into files/shards that fit in memory (a map-reduce shuffle, notebook 02),
+   into files/shards that fit in memory (a map-reduce shuffle, Chapter 20),
    count per shard, keep a size-100 heap per shard, merge the heaps. Two
    passes over the data, exact. Approximate, one pass, small memory: a
    Count-Min sketch (or Space-Saving/Misra-Gries) plus a size-100 heap; the
@@ -189,17 +189,17 @@ the timing projection at n = 1,000 and n = 4,000.
    hard; ints are not randomised (`hash(i) == i` for small ints), so keys that
    are multiples of the table size can collide. It matters for services
    hashing untrusted input (hash-flooding DoS) and for skewed join keys in
-   distributed systems (the same "hot key" effect from notebook 02). [open-ended]
+   distributed systems (the same "hot key" effect from Chapter 20). [open-ended]
 5. **Sort over hash.** When the output must be ordered anyway; when memory is
    tight (in-place sort, O(1) extra vs a hash table's overhead); when data is
    already sorted or nearly sorted (Timsort is O(n) there); for external data
    that does not fit in memory (external merge sort streams well; a hash table
    does not); when worst-case guarantees matter; and when the hash-based
    constants (hashing strings, cache misses) dominate at realistic n. [open-ended]
-6. **O(1) extra space.** 15-6: write prefix products into the output, then
-   multiply by a running suffix — O(1) extra (the output does not count). 15-1
+6. **O(1) extra space.** Exercise 6: write prefix products into the output, then
+   multiply by a running suffix — O(1) extra (the output does not count). Exercise 1
    with a **sorted** input: two pointers from both ends, O(1) extra; on
    unsorted input you must sort first (O(n log n), and indices change unless you
-   sort index pairs, which is O(n) space again). 15-7 with negatives cannot be
+   sort index pairs, which is O(n) space again). Exercise 7 with negatives cannot be
    done in O(1) extra space and O(n) time by any known method: say so and
    explain the trade-off (O(n²) time with O(1) space). [open-ended]

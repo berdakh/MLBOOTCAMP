@@ -1,13 +1,13 @@
 # Solutions · Chapter 35 · Serving a ranking cascade
 
-Try each exercise before reading its answer. Markers: [verified] verified by running ·
+Attempt each exercise before reading its answer. Markers: [verified] verified by running ·
 [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `LRUCache`
 
-[verified] Reference code: [`code/nb17.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 class LRUCache:
@@ -53,7 +53,7 @@ two threads interleaving `move_to_end` and `popitem` can corrupt the order.
 
 ## Exercise 2 · `apply_business_rules`
 
-[verified] Reference code: [`code/nb17.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 One pass in rank order with three pieces of state: `seen` (ids), `per_cat`
 (counts), and `capped` (items skipped only because of the cap). Dedupe and
@@ -71,7 +71,7 @@ than a hard cap, or a cap only within the first screen.
 
 ## Exercise 3 · `with_fallback`
 
-[verified] Reference code: [`code/nb17.py`](solutions.py) (`ex3`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex3`).
 
 ```python
 _POOL = ThreadPoolExecutor(max_workers=8)
@@ -124,7 +124,7 @@ less than 200 because percentiles do not add and you need slack):
 If a new model needs 40 ms more: first take it from slack only if the
 current p99 has room (measure!); otherwise shrink ranker input (fewer
 candidates via a better pre-ranker), distil or quantise the model
-(notebook 18), or move feature fetch to overlap with retrieval (fetch user
+(Chapter 36), or move feature fetch to overlap with retrieval (fetch user
 features and start retrieval in parallel). Cutting the network budget is not
 an option; cutting retrieval below ~20 ms costs recall.
 
@@ -142,7 +142,7 @@ an option; cutting retrieval below ~20 ms costs recall.
 2. **Retrieval vs ranking bottleneck.** Score the candidates with an oracle
    (true relevance, or a strong offline model / human labels in real life).
    The gap from perfect to the oracle is retrieval loss; from the oracle to
-   your ranker is ranking loss. In notebook 17 (no cap): oracle 0.99, ranker
+   your ranker is ranking loss. In Chapter 35 (no cap): oracle 0.99, ranker
    0.875 → ranking loss dominates; retrieval recall of the true top-10 was
    0.85. Online, also check whether the offline gain came from items the
    retrieval never surfaces in production (training/serving candidate
@@ -152,7 +152,7 @@ an option; cutting retrieval below ~20 ms costs recall.
    priors) and skip sources that need them; retrieval failure → a cached
    popular/trending list. Every fallback increments a counter exported to
    metrics, carried in a response header/log field, and alerted on as a rate
-   (in 17.6: ranker raises → NDCG 0.38 vs 0.72 healthy, so the counter
+   (in 35.6: ranker raises → NDCG 0.38 vs 0.72 healthy, so the counter
    matters).
 4. **Caching.** In-process LRU for user feature rows (hit rate bounded by
    repeat requests: 0.29 at most for one ShopStream day, 0.13 in the load
@@ -167,7 +167,7 @@ an option; cutting retrieval below ~20 ms costs recall.
    candidates), CPU throttling, thread-pool saturation/queueing. Find it with
    per-stage timings (Server-Timing / tracing) split by percentile, then by
    request attributes; compare canary vs baseline.
-6. **Category cap.** It costs short-term relevance (17.5: 0.875 → 0.71 NDCG
+6. **Category cap.** It costs short-term relevance (35.5: 0.875 → 0.71 NDCG
    at cap 3) and buys diversity (1.3 → 4.2 categories per page). Measure its
    value online: A/B on long-term engagement, return rate, and purchases per
    user, not CTR on the session. It belongs in re-ranking (after the

@@ -1,13 +1,13 @@
 # Solutions · Chapter 36 · Model optimisation for inference
 
-Try each exercise before reading its answer. Markers: [verified] verified by running ·
+Attempt each exercise before reading its answer. Markers: [verified] verified by running ·
 [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `parity`
 
-[verified] Reference code: [`code/nb18.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def parity(a, b, atol):
@@ -26,15 +26,15 @@ a meaningless number. `NaN > atol` is `False`, so a naive check silently
 passes NaN outputs. `diff.max(initial=0.0)` handles empty arrays.
 
 **Choosing atol.** For a lossless float32 export, 1e-5 on logits is typical
-(notebook 18 measured 1.2e-6). Compare logits *and* probabilities: a
+(Chapter 36 measured 1.2e-6). Compare logits *and* probabilities: a
 sigmoid hides logit differences at the extremes. For lossy steps (int8,
-fp16, distillation), use rank-based checks instead (18.3).
+fp16, distillation), use rank-based checks instead (36.3).
 
 ---
 
 ## Exercise 2 · `distillation_loss`
 
-[verified] Reference code: [`code/nb18.py`](solutions.py) (`ex2`); the module's
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`); the module's
 `opt.distillation_loss` is the same.
 
 ```python
@@ -73,7 +73,7 @@ with a measurement gate at every step:
    batch all 500 candidates in one call. Lossless. Gate: parity atol 1e-5 on
    logits over 100k logged requests; latency p99 at the target batch.
 3. **Precision.** Dynamic int8 for the linear layers (transformers are
-   weight-heavy, unlike notebook 18's tiny MLP, so int8 should actually
+   weight-heavy, unlike Chapter 36's tiny MLP, so int8 should actually
    help); fp16/bf16 if served on GPU. Gate: Spearman ≥ 0.99 with fp32
    scores, top-10 overlap ≥ 0.95, offline NDCG drop ≤ 0.002 with a paired
    bootstrap interval that includes 0 or a pre-agreed tolerance.
@@ -95,7 +95,7 @@ inputs before switching.
 1. **ONNX Runtime vs PyTorch.** ORT runs a pre-planned, fused graph in C++
    with no Python dispatch per op; PyTorch eager pays per-op overhead
    (~µs each). It matters most for small models and small batches, where
-   overhead dominates: 18.5 measured ~0.006 ms (ORT) vs ~0.025 ms (PyTorch) at
+   overhead dominates: 36.5 measured ~0.006 ms (ORT) vs ~0.025 ms (PyTorch) at
    batch 1, but only 0.18 vs 0.24 ms at batch 1,024.
 2. **Dynamic vs static quantisation.** Dynamic: weights stored int8 ahead
    of time, activations quantised per batch at run time (no calibration).
@@ -109,7 +109,7 @@ inputs before switching.
    atol ~1e-5 and also check probabilities and shapes). **0.5 logit
    difference for int8:** don't judge by parity; judge by ranking agreement
    and the offline metric against thresholds agreed beforehand (Spearman
-   0.997, NDCG unchanged in 18.3 → acceptable, then shadow and A/B).
+   0.997, NDCG unchanged in 36.3 → acceptable, then shadow and A/B).
 4. **Distillation.** The student is trained on the teacher's probabilities
    (plus labels). Soft labels carry graded relevance ("0.3 vs 0.05") and the
    teacher's generalisation, smoothing click noise and position bias effects.

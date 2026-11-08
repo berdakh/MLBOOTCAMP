@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `find_duplicate_keys`
 
-[verified] Reference code: [`code/nb02.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def find_duplicate_keys(df, key):
@@ -28,7 +28,7 @@ looking destroys the evidence.
 
 ## Exercise 2 · `orphan_ids`
 
-[verified] Reference code: [`code/nb02.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def orphan_ids(tables):
@@ -49,7 +49,7 @@ IS NULL`.
 
 ## Exercise 3 · `freshness`
 
-[verified] Reference code: [`code/nb02.py`](solutions.py) (`ex3`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex3`).
 
 ```python
 def freshness(tables):
@@ -112,7 +112,7 @@ when data enters (after extraction), after cleaning, and on prediction requests
 
 **4. `-1` vs `0`.** `-1` means unknown; 0 means observed inactivity. Treating
 -1 as 0 teaches the model that logging failures look like disengagement, and
-production outages then move scores. See 02-4.
+production outages then move scores. See lab section 3.4.
 
 **5. Label input, not feature.** `churn_date`: the label for snapshot T is
 "churn_date in [T, T+30d)". As a feature it reveals the future relative to T.

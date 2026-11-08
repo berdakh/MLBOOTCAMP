@@ -1,17 +1,17 @@
 # Solutions · Chapter 31 · ML from scratch I
 
-Try each exercise before reading its answer, with a timer running. Markers:
+Attempt each exercise before reading its answer, with a timer running. Markers:
 [verified] verified by running · [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
-Reference code for every exercise: [`code/nb13.py`](solutions.py), graded in CI
+Reference code for every exercise: [`solutions.py`](solutions.py), graded in CI
 by `tests/test_solutions.py` against the graders in
-[`src/shoprank/grading/nb13.py`](../../src/grading/ch31.py).
+[`src/grading/ch31.py`](../../src/grading/ch31.py).
 
 ---
 
 ## Exercise 1 · `fit_logreg` (logistic regression, batch GD + L2)
 
-[verified] Reference: `ex1` in [`code/nb13.py`](solutions.py).
+[verified] Reference: `ex1` in [`solutions.py`](solutions.py).
 
 ```python
 def fit_logreg(X, y, lr=0.1, epochs=1000, l2=0.0):
@@ -50,7 +50,7 @@ coordinate-wise code).
 
 ## Exercise 2 · `softmax_grad`
 
-[verified] Reference: `ex2` in [`code/nb13.py`](solutions.py).
+[verified] Reference: `ex2` in [`solutions.py`](solutions.py).
 
 ```python
 def softmax_grad(W, X, y):
@@ -65,7 +65,7 @@ def softmax_grad(W, X, y):
 ```
 
 **Why `P − Y`.** With `L = −Σ_c Y_c log softmax(z)_c` and `Σ_c Y_c = 1`,
-`∂L/∂z_k = softmax(z)_k − Y_k` (derivation in 14-7). Chain rule through `Z = XW`
+`∂L/∂z_k = softmax(z)_k − Y_k` (derivation in Chapter 32, Exercise 7). Chain rule through `Z = XW`
 gives `dW = Xᵀ (P − Y) / n`.
 
 **Complexity.** O(n·d·C) time; O(n·C) memory.
@@ -79,7 +79,7 @@ to catch it); forgetting `/ n` in the gradient while the loss is a mean
 
 ## Exercise 3 · `kmeans` with k-means++
 
-[verified] Reference: `ex3` in [`code/nb13.py`](solutions.py).
+[verified] Reference: `ex3` in [`solutions.py`](solutions.py).
 
 Key lines:
 
@@ -110,7 +110,7 @@ sklearn's `n_init`).
 
 ## Exercise 4 · `knn_predict`
 
-[verified] Reference: `ex4` in [`code/nb13.py`](solutions.py).
+[verified] Reference: `ex4` in [`solutions.py`](solutions.py).
 
 ```python
 d2 = (Xte**2).sum(1)[:, None] - 2 * Xte @ Xtr.T + (Xtr**2).sum(1)[None, :]
@@ -133,7 +133,7 @@ grader's timing at 1,600 training points (3.3 s > 2 s budget).
 
 ## Exercise 5 · `roc_auc` with ties
 
-[verified] Reference: `ex5` in [`code/nb13.py`](solutions.py).
+[verified] Reference: `ex5` in [`solutions.py`](solutions.py).
 
 ```python
 order = np.argsort(s, kind="mergesort"); s_sorted = s[order]
@@ -159,7 +159,7 @@ the timing check at n = 16,000 (2.8 s).
 
 ## Exercise 6 · `ndcg_at_k`
 
-[verified] Reference: `ex6` in [`code/nb13.py`](solutions.py).
+[verified] Reference: `ex6` in [`solutions.py`](solutions.py).
 
 ```python
 order = np.argsort(-scores, kind="stable")
@@ -185,7 +185,7 @@ reports how many); IDCG over the full candidate set vs the shown list.
    p − y for the same reason; squared loss with an identity link gives ŷ − y.
    All three are generalised linear models with the **canonical link**, for
    which the gradient of the negative log-likelihood w.r.t. the natural
-   parameter is always "mean minus observation". [verified] (13-1, 13-2 gradient checks)
+   parameter is always "mean minus observation". [verified] (Exercises 1 and 2, gradient checks)
 2. **NaN in softmax.** (a) Overflow: `exp` of logits > ~709 → inf/inf. Fix:
    subtract the row max / use log-softmax. (b) `log(0)` in the loss when a
    probability underflows to 0. Fix: compute CE from logits
@@ -197,18 +197,18 @@ reports how many); IDCG over the full candidate set vs the shown list.
    k-means objective is non-convex in the centers (permutations alone give k!
    equivalent minima, and there are bad local ones), so the init matters: use
    k-means++ and several restarts, report the best inertia, and check stability
-   across seeds. [verified] (13-3: uniform init ~9,100 vs ~790)
+   across seeds. [verified] (Exercise 3: uniform init ~9,100 vs ~790)
 4. **High AUC, useless model.** AUC averages over all thresholds and is
    insensitive to class balance: with 0.5% positives, a model can rank most
-   positives above most negatives yet have terrible precision at any threshold
+   positives above most negatives yet have very low precision at any threshold
    you can afford to act on (e.g. 0.92 AUC with 3% precision at the top 1%).
    Report precision/recall at the operating point, PR-AUC, and the cost-weighted
    outcome; also check calibration if scores are used as probabilities. [open-ended]
 5. **kNN at 50M items / 20 ms.** Exact brute force is O(N·d) per query —
    50M × 128 floats is ~25 GB and seconds per query. Move to approximate
-   nearest-neighbour search (IVF, HNSW, product quantisation; notebook 08),
+   nearest-neighbour search (IVF, HNSW, product quantisation; Chapter 26),
    possibly on GPU, sharded across machines; reduce d; cache popular queries.
-   You give up exact recall (measure recall@k vs exact on a sample), memory
+   The costs are exact recall (measure recall@k vs exact on a sample), memory
    (index overhead), and freshness (index rebuilds/updates). [open-ended]
 6. **Gradient check.** Central differences with ε ≈ 1e-5 in float64 on a small
    problem (few examples, few dimensions); relative error
@@ -216,4 +216,4 @@ reports how many); IDCG over the full candidate set vs the shown list.
    the function has kinks (ReLU at 0, max, hinge) near the test point;
    float32; randomness inside the loss (dropout — fix the mask/seed);
    regularisation terms checked separately from the data term; only a subset
-   of parameters checked. [verified] (13.4: 7.5e-12 vs 0.33 for a missing factor 2)
+   of parameters checked. [verified] (31.4: 7.5e-12 vs 0.33 for a missing factor 2)

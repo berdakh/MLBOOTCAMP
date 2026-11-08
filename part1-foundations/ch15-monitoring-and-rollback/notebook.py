@@ -6,16 +6,16 @@
 # %% [markdown]
 # # Chapter 15 · Monitoring & rollback
 #
-# **Day 4 · ~60 minutes · CPU only**
+# **Part I · Chapter 15 · about 60 minutes · CPU only**
 #
 # A deployed model is scored on data it has never seen, by a world that keeps
 # changing, and its mistakes become visible only when the outcomes arrive, here
 # 30 days later. This notebook simulates the next half-year of production
 # traffic with a deliberate shift in it, measures what monitoring can and
-# cannot tell you, then ships a broken model on purpose, catches it with a
+# cannot reveal, then deploys a broken model on purpose, detects it with a
 # canary check, and rolls it back.
 #
-# By the end you will be able to:
+# After this chapter you should be able to:
 #
 # 1. name the three layers of monitoring and when each becomes available;
 # 2. compute and *interpret* PSI for numeric and categorical features, including where PSI is blind or misleading;
@@ -24,9 +24,12 @@
 # 5. detect a bad deploy with a canary comparison, roll it back in one step, and show the audit trail;
 # 6. choose between shadow, canary and blue/green releases, and between retraining triggers.
 #
-# **You will produce:** `artifacts/registry_nb14/` (a sandbox copy of the registry, with a broken
+# **Lab output:** `artifacts/registry_nb14/` (a sandbox copy of the registry, with a broken
 # `v3`, its promotion and its rollback in `history.jsonl`) and `artifacts/monitoring/` (drift and
 # performance tables as CSV).
+
+# %% [markdown]
+# **Read first:** [Chapter 15 text](README.md) explains the concepts, equations and caveats behind this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -103,13 +106,13 @@ print("sandbox registry:", ops.root, "| versions", ops.versions(), "| CURRENT", 
 # | **Postmortem** | a blameless write-up of an incident and how to prevent it | Exercise 3 |
 
 # %% [markdown]
-# ## 14.1 · Three layers, three clocks
+# ## 15.1 · Three layers, three clocks
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/monitoring.svg" alt="Monitoring layers: service health is available immediately, drift is available immediately, performance arrives after the 30-day label delay" width="100%">
 #
 # | Layer | Examples | Available | Tells you |
 # |---|---|---|---|
-# | **Service health** | error rate, p95 latency, readiness | seconds | the service works (notebook 13) |
+# | **Service health** | error rate, p95 latency, readiness | seconds | the service works (chapter 14) |
 # | **Data & prediction drift** | feature PSI, unseen categories, score distribution, share flagged | as soon as requests arrive | the *inputs* or *outputs* changed: a symptom, not a verdict |
 # | **Performance** | PR-AUC, ROC-AUC, calibration against real outcomes | **30 days later** (the label horizon) | whether the model is still right |
 #
@@ -117,7 +120,7 @@ print("sandbox registry:", ops.root, "| versions", ops.versions(), "| CURRENT", 
 # here"; the signal that decides arrives last.
 
 # %% [markdown]
-# ## 14.2 · Simulating the next half-year
+# ## 15.2 · Simulating the next half-year
 #
 # The raw data was produced by `churnlab.data.generate`. Run it again for a
 # later period (January to early August 2025), with a different seed and two
@@ -176,7 +179,7 @@ by_month
 #   that are already old, and tenure is much longer than in training. Some of
 #   that is also realistic: a customer base ages.
 #
-# ## 14.3 · Input drift with PSI
+# ## 15.3 · Input drift with PSI
 #
 # The **Population Stability Index** compares a current sample with a
 # reference over bins cut at the reference's deciles:
@@ -209,7 +212,7 @@ drift.to_csv(MON / "drift_report.csv", index=False)
 drift[["feature", "kind", "psi", "status", "psi_control", "psi_valid", "ref_mean", "cur_mean"]].round(3)
 
 # %% [markdown]
-# **Expected — read it row by row, it is the lesson:**
+# **Expected** (each row teaches something different):
 #
 # * `weeks_since_last_active` has an enormous PSI (above 3) in production **and
 #   in control**, and a large one even for validation. It is not drift. The
@@ -297,7 +300,7 @@ def my_psi(reference, current, bins: int = 10) -> float:
 grade.ex1(my_psi)
 
 # %% [markdown]
-# ## 14.4 · Prediction drift
+# ## 15.4 · Prediction drift
 #
 # The model's **scores** are a one-dimensional summary of everything it sees,
 # available without labels. Compare the live model's scores on production
@@ -332,7 +335,7 @@ score_drift
 # *right*.
 
 # %% [markdown]
-# ## 14.5 · Performance, once the labels arrive
+# ## 15.5 · Performance, once the labels arrive
 #
 # A prediction made at snapshot T can be judged at T + 30 days. Suppose today
 # is 15 June 2025:
@@ -413,7 +416,7 @@ print(f"pr_auc_ratio = {pr_auc_ratio:.2f}")
 # section could have told the two apart.
 
 # %% [markdown]
-# ## 14.6 · From measurements to alerts
+# ## 15.6 · From measurements to alerts
 #
 # Monitoring is useful only if somebody acts on it. `churnlab.monitoring`
 # holds a small rule set: each rule has a metric, a threshold and a severity
@@ -462,7 +465,7 @@ alerts
 # Read that critically:
 #
 # * One warning fired for the wrong reason (an artifact), one for the right
-#   reason, and neither means the model is wrong (14.5 showed it is not). The
+#   reason, and neither means the model is wrong (15.5 showed it is not). The
 #   rule set also has no calibration check; a good next rule is
 #   `mean_score / observed_rate` on matured cohorts outside [0.8, 1.25].
 # * A drift alert that fires every month for a known artifact teaches people
@@ -472,11 +475,11 @@ alerts
 #   ROC-AUC or lift, so that a base-rate change cannot hide a real drop.
 
 # %% [markdown]
-# ## 14.7 · A bad deploy, caught and rolled back
+# ## 15.7 · A bad deploy, caught and rolled back
 #
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l1-canary-rollback.svg" alt="A retrained model is registered, gated against the current model, run in shadow or canary mode, compared on PR-AUC, error rate and p95 latency, then promoted or rolled back by moving CURRENT" width="100%">
 #
-# *What to notice:* in this section the gate was switched off, so the bad model reaches CURRENT; the canary comparison and the pointer rollback are what still save the day.
+# *What to notice:* in this section the gate was switched off, so the bad model reaches CURRENT; the canary comparison and the pointer rollback are the remaining safeguards.
 #
 # > **Intuition.** A canary is a taste test on one table before the dish
 # > goes to the whole restaurant; rollback is taking the dish off the menu,
@@ -506,7 +509,7 @@ for v in (good_version, v_bad):
 # **Expected:** the new version (`v3`) has a validation PR-AUC near the
 # positive rate (about 0.05: random ranking), against about 0.16 for `v1`. The
 # registry *recorded* the problem; a promotion gate that compared these two
-# numbers would have stopped it. Without the gate, it ships:
+# numbers would have stopped it. Without the gate, it is deployed:
 
 # %%
 canary = prod[prod["snapshot_date"] == pd.Timestamp("2025-06-01")]  # latest matured month
@@ -599,14 +602,14 @@ print([r for r in api_logs.parsed() if r["msg"] == "model_reload"])
 # reason "canary failed: ...")`, each with a UTC timestamp. The service logs
 # show two `model_reload` events: v1 → v3 and v3 → v1.
 #
-# Two caveats from notebooks 12 and 13 apply here. `/admin/reload` has no
+# Two caveats from chapters 13 and 14 apply here. `/admin/reload` has no
 # authentication in this teaching app (in production it sits behind auth or
 # is replaced by a restart), and with several uvicorn workers a reload reaches
 # only one of them; a rollback must restart or reload **every** replica, and
 # then check, as above, that each serves the expected version.
 
 # %% [markdown]
-# ## 14.8 · Release strategies and retraining triggers
+# ## 15.8 · Release strategies and retraining triggers
 #
 # The canary above ran *after* the promotion, on a slice we chose. Real
 # release strategies decide how much traffic a new model sees before anyone
@@ -635,10 +638,10 @@ print([r for r in api_logs.parsed() if r["msg"] == "model_reload"])
 # and retrain **early** when matured performance or calibration crosses a
 # threshold. Every retrain goes through the same gate (validation metrics
 # versus the current model) and the same canary. And with delayed labels,
-# remember that acting on predictions changes outcomes: if the success team
-# calls flagged customers and saves some, those labels no longer show what the
-# model predicted. Keep a small random **holdout** that is not contacted, or
-# you will lose the ability to measure the model at all.
+# acting on predictions changes outcomes: if the success team calls flagged
+# customers and retains some, those labels no longer show what the model
+# predicted. A small random **holdout** that is not contacted is needed to keep
+# the model measurable at all.
 
 # %% [markdown]
 # > **Exercise 2.** Write `should_rollback(candidate, baseline, policy)` that
@@ -668,7 +671,7 @@ grade.ex2(should_rollback)
 
 # %% [markdown]
 # > **Exercise 3 (written).** Write a six-sentence **incident postmortem** for
-# > the bad deploy in section 14.7, one sentence each: **timeline** (what
+# > the bad deploy in section 15.7, one sentence each: **timeline** (what
 # > happened when), **detection** (which signal caught it, which did not),
 # > **impact** (who got what, for how long; estimate it), **root cause** (the
 # > technical cause *and* the process gap), **fix** (what was done), and
@@ -738,7 +741,7 @@ print("churnlab psi :", round(psi(reference_toy, current_toy, bins=5), 4))
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
 # 1. Name the three layers of model monitoring and when each becomes available for this churn model.
 # 2. PSI on an input feature is 0.4. Is the model broken? What do you check next, in what order?
@@ -747,4 +750,5 @@ print("churnlab psi :", round(psi(reference_toy, current_toy, bins=5), 4))
 # 5. Walk through a rollback in this design: what changes on disk, what the service does, and how you verify it worked.
 # 6. Shadow, canary or blue/green for the next model version of this service? Justify, given the 30-day label delay.
 #
-# **Next chapter:** [`15_final_evaluation_and_docs.ipynb`](../ch16-final-evaluation-and-docs/notebook.ipynb) — Day 5: touch the test set once, report with uncertainty, and write the README and model card.
+# **Next chapter:** [Chapter 16 · Final evaluation & documentation](../ch16-final-evaluation-and-docs/notebook.ipynb) — evaluating on the test set once, reporting with uncertainty, and writing the README and model card.
+
