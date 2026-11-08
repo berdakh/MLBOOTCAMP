@@ -9,7 +9,7 @@
 # %% [markdown]
 # # Chapter NN · Title
 #
-# **Day D · ~MM minutes · CPU only**
+# **Part I · Chapter NN · about MM minutes · CPU only**
 #
 # Motivation in two sentences.
 #

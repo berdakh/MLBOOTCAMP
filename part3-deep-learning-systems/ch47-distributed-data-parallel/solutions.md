@@ -81,7 +81,7 @@ exactly why forgetting `set_epoch` repeats the order every epoch.
 
 ## Exercise 4 · Diagnosing a 5.5× speed-up on 8 GPUs
 
-[open-ended] Open-ended; a strong answer covers:
+[open-ended] A good answer covers:
 
 **(a) Where the missing 2.5× goes, and how to measure each.**
 * *Communication not hidden*: profile one step (`torch.profiler` with CUDA
@@ -131,7 +131,7 @@ others wait at a `barrier()` that every rank calls).
    random augmentation/dropout is fine statistically but not bit-identical,
    losses normalised per rank by a variable count (tokens), and the effective
    batch size change itself (learning-rate schedule).
-3. **Ring all-reduce volume.** 2(N−1)/N × S per GPU (09-1). It tends to 2S,
+3. **Ring all-reduce volume.** 2(N−1)/N × S per GPU (Exercise 1). It tends to 2S,
    so per-GPU traffic barely grows with N. DDP still stops scaling because
    (i) compute per GPU stays fixed while communication does not shrink, so
    large models (GB of gradients) are communication-bound on slow links (9.6:

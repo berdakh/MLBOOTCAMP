@@ -861,6 +861,19 @@ val_scores = score_table(ev_valid, val_all)
 val_scores[val_scores.segment == "all"].set_index("method").round(3).sort_values("WAPE")
 
 # %% [markdown]
+# **A forecast combination.** The GBM and the 8-week moving average make different kinds of error (the
+# GBM reacts to recent weeks and seasonality, MA(8) is stable). The equal-weight average of two
+# reasonable forecasts is a classic, hard-to-overfit improvement: it has no parameter to tune. We add
+# it as a candidate and judge it on validation like every other method.
+
+# %%
+wape_of = lambda m: val_scores.query("segment == 'all' and method == @m").WAPE.iloc[0]  # noqa: E731
+BEST_LOSS = "poisson" if wape_of("gbm_poisson") <= wape_of("gbm_squared_error") else "squared_error"
+val_all["gbm_ma8_mean"] = 0.5 * (val_all[f"gbm_{BEST_LOSS}"] + val_all["ma_8"])
+val_scores = score_table(ev_valid, val_all)
+val_scores[val_scores.segment == "all"].set_index("method").round(3).sort_values("WAPE")
+
+# %% [markdown]
 # **Per-segment method choice (on validation).** It is honest, and common in practice, to use the
 # method that works best for each demand segment. We pick, for each segment, the method with the lowest
 # validation WAPE, and fix that choice before looking at the test period.
@@ -868,8 +881,6 @@ val_scores[val_scores.segment == "all"].set_index("method").round(3).sort_values
 # %%
 seg_val = val_scores[val_scores.segment != "all"].pivot(index="segment", columns="method", values="WAPE")
 CHOICE = seg_val.idxmin(axis=1).to_dict()
-BEST_LOSS = "poisson" if val_scores.query("segment == 'all' and method == 'gbm_poisson'").WAPE.iloc[0] <= \
-    val_scores.query("segment == 'all' and method == 'gbm_squared_error'").WAPE.iloc[0] else "squared_error"
 print("validation WAPE by segment:")
 print(seg_val.round(3).to_string())
 print("\nchosen loss:", BEST_LOSS, "| chosen method per segment:", CHOICE)
@@ -902,7 +913,15 @@ gbm = fit_gbm(tr_test, BEST_LOSS)
 test_pred = baseline_forecasts(ev_test)
 test_pred["gbm"] = np.clip(gbm.predict(ev_test[FEATURES]), 0, None)
 seg_of_row = SEGMENT[ev_test["product"].to_numpy()]
-test_pred["per_segment_choice"] = [test_pred.at[i, "gbm" if CHOICE.get(s, "gbm").startswith("gbm") else CHOICE[s]]
+test_pred["gbm_ma8_mean"] = 0.5 * (test_pred["gbm"] + test_pred["ma_8"])
+
+
+def column_for(method: str) -> str:
+    """Validation names gbm_poisson / gbm_squared_error both refer to the retrained test model `gbm`."""
+    return "gbm" if method in ("gbm_poisson", "gbm_squared_error") else method
+
+
+test_pred["per_segment_choice"] = [test_pred.at[i, column_for(CHOICE.get(s, "gbm"))]
                                    for i, s in zip(test_pred.index, seg_of_row)]
 print(f"trained on {len(tr_test):,} rows and scored {len(ev_test):,} test rows in {time.time() - t0:.0f} s")
 test_scores = score_table(ev_test, test_pred)
@@ -934,7 +953,7 @@ def bootstrap_wape(rows, preds, methods, B=500, seed=SEED):
 
 best_baseline = test_scores.query("segment == 'all' and method in ['naive', 'ma_4', 'ma_8', 'seasonal_naive', 'sba']") \
     .sort_values("WAPE").method.iloc[0]
-METHODS = ["gbm", best_baseline, "per_segment_choice"]
+METHODS = ["gbm", best_baseline, "gbm_ma8_mean", "per_segment_choice"]
 ci = bootstrap_wape(ev_test, test_pred, METHODS)
 print(f"best baseline on test: {best_baseline}")
 ci.round(3)
@@ -950,7 +969,9 @@ verdict = "the GBM is better" if diff.ci_low > 0 else ("the baseline is better" 
 print(f"WAPE({best_baseline}) − WAPE(gbm) = {diff.WAPE:+.3f}, 95% CI [{diff.ci_low:+.3f}, {diff.ci_high:+.3f}] → {verdict}")
 seg_test = test_scores[test_scores.segment != "all"].pivot(index="segment", columns="method", values="WAPE")
 print("\ntest WAPE by segment:")
-print(seg_test[["zeros", "naive", "ma_8", "seasonal_naive", "sba", "gbm", "per_segment_choice"]].round(3).to_string())
+print(seg_test[["naive", "ma_8", "seasonal_naive", "sba", "gbm", "gbm_ma8_mean", "per_segment_choice"]].round(3).to_string())
+comb = ci.loc[f"gbm_ma8_mean − gbm"]
+print(f"\nWAPE(gbm_ma8_mean) − WAPE(gbm) = {comb.WAPE:+.3f}, 95% CI [{comb.ci_low:+.3f}, {comb.ci_high:+.3f}]")
 
 # %% [markdown]
 # **Expected (real data, test):** the GBM has the lowest overall WAPE and the bootstrap interval of its
@@ -1063,9 +1084,9 @@ for h in range(1, FORECAST_HORIZON + 1):
     X = features_at(final_origin, h)
     g = np.clip(gbm_final.predict(X[FEATURES]), 0, None)
     for i, code in enumerate(SCOPE):
-        method = CHOICE.get(SEGMENT[i], "gbm")
-        method = "gbm" if method.startswith("gbm") else method
+        method = column_for(CHOICE.get(SEGMENT[i], "gbm"))
         units = {"gbm": g[i], "sba": croston(Y[i]), "ma_4": Y[i, -4:].mean(), "ma_8": Y[i, -8:].mean(),
+                 "gbm_ma8_mean": 0.5 * (g[i] + Y[i, -8:].mean()),
                  "naive": Y[i, -1], "zeros": 0.0, "seasonal_naive": Y[i, final_origin + h - 52]}[method]
         recs.append({"stock_code": code, "segment": SEGMENT[i], "method": method, "horizon": h,
                      "week_start": (WEEKS[-1] + pd.Timedelta(weeks=h)).date().isoformat(), "units": round(float(units), 2)})
@@ -1177,22 +1198,23 @@ def results_markdown() -> str:
              f"({N_TOP} top + {N_TAIL} random active tail); {len(ev_test):,} product-weeks. 95% CIs: bootstrap "
              "over products (500 resamples).", "",
              "| Method | WAPE (95% CI) | MAE | Bias | MASE |", "|---|---|---|---|---|"]
-    for m in ["zeros", "naive", "ma_4", "ma_8", "seasonal_naive", "sba", "gbm", "per_segment_choice"]:
+    for m in ["zeros", "naive", "ma_4", "ma_8", "seasonal_naive", "sba", "gbm", "gbm_ma8_mean", "per_segment_choice"]:
         r = test_scores.query("segment == 'all' and method == @m").iloc[0]
         w = f"{r.WAPE:.3f}"
         if m in ci.index:
             w += f" ({ci.loc[m].ci_low:.3f}–{ci.loc[m].ci_high:.3f})"
         lines.append(f"| {m} | {w} | {r.MAE:.2f} | {r.bias:+.3f} | {r.MASE:.3f} |")
-    lines += ["", "| Segment | Products | WAPE gbm | WAPE " + best_baseline + " | WAPE sba | MAE gbm | Bias gbm |",
-              "|---|---|---|---|---|---|---|"]
+    lines += ["", "| Segment | Products | WAPE gbm | WAPE " + best_baseline + " | WAPE sba | WAPE gbm_ma8_mean | MAE gbm | Bias gbm |",
+              "|---|---|---|---|---|---|---|---|"]
     for s in ["smooth", "erratic", "intermittent", "lumpy"]:
         t = test_scores[test_scores.segment == s].set_index("method")
         if t.empty:
             continue
         lines.append(f"| {s} | {int((SEGMENT == s).sum())} | {t.WAPE['gbm']:.3f} | {t.WAPE[best_baseline]:.3f} | "
-                     f"{t.WAPE['sba']:.3f} | {t.MAE['gbm']:.2f} | {t.bias['gbm']:+.3f} |")
+                     f"{t.WAPE['sba']:.3f} | {t.WAPE['gbm_ma8_mean']:.3f} | {t.MAE['gbm']:.2f} | {t.bias['gbm']:+.3f} |")
     lines += ["", f"GBM ({BEST_LOSS} loss) vs {best_baseline}: WAPE difference {diff.WAPE:+.3f} "
-              f"(95% CI {diff.ci_low:+.3f} to {diff.ci_high:+.3f}). 4-week cumulative WAPE: gbm "
+              f"(95% CI {diff.ci_low:+.3f} to {diff.ci_high:+.3f}; positive = GBM better). gbm_ma8_mean vs gbm: "
+              f"{comb.WAPE:+.3f} ({comb.ci_low:+.3f} to {comb.ci_high:+.3f}). 4-week cumulative WAPE: gbm "
               f"{wape(cum4.y, cum4.gbm):.3f}, {best_baseline} {wape(cum4.y, cum4.base):.3f}."]
     return "\n".join(lines)
 

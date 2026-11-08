@@ -30,9 +30,9 @@ themselves, so it always matches the files in `figures/`.
 
 **[Cheat sheet](cheatsheet.md).** Short reference snippets for the code
 written most often in the book: pandas, SQL in DuckDB, scikit-learn
-pipelines and evaluation, FastAPI and Pydantic, pytest, monitoring, and
-configuration through environment variables, with pointers to the chapters
-that explain each snippet.
+pipelines and evaluation, FastAPI and Pydantic, pytest, monitoring,
+configuration through environment variables, ranking metrics and a PyTorch
+training loop, with pointers to the chapters that explain each snippet.
 
 ## Running the labs
 

@@ -8,11 +8,12 @@
 
 After this chapter you should be able to:
 
-1. State which engineering skills the book assumes and which it teaches, and why modelling ability is not measured here.
-2. Take a short, timed skills test under conditions that make the result informative.
-3. Explain how each exercise is scored and how the scores are combined into a status per area.
-4. Translate your profile into a reading plan: which chapters to study slowly, which to read quickly.
-5. Plan a valid re-measurement and name the main threat to its validity.
+1. Describe the roles the book prepares for, and name the research habits that already transfer to them.
+2. State which engineering skills the book assumes and which it teaches, and why modelling ability is not measured here.
+3. Take a short, timed skills test under conditions that make the result informative.
+4. Explain how each exercise is scored and how the scores are combined into a status per area.
+5. Translate your profile into a reading plan: which chapters to study slowly, which to read quickly.
+6. Plan a valid re-measurement and name the main threat to its validity.
 
 ## 1.1 Introduction
 
@@ -31,14 +32,54 @@ Part I covers all of them, but not every reader needs every chapter at the
 same depth. The purpose of the diagnostic is to find out, before Chapter 2,
 where your time is best spent.
 
-The chapter proceeds as follows. Section 1.2 states what the diagnostic
-measures and what it deliberately leaves out. Section 1.3 describes the items.
-Section 1.4 gives the rules under which the test must be taken, and the reason
-for each. Section 1.5 explains the scoring, and Sections 1.6 and 1.7 explain
-how to read the result and turn it into a plan. Section 1.8 treats a retake
+The chapter proceeds as follows. Section 1.2 describes the roles the book
+prepares for and the research habits that already transfer to them.
+Section 1.3 states what the diagnostic measures and what it deliberately
+leaves out, and Section 1.4 describes the items. Section 1.5 gives the rules
+under which the test must be taken, and the reason for each. Section 1.6
+explains the scoring, and Sections 1.7 and 1.8 explain how to read the result
+and turn it into a plan. Section 1.9 treats a retake
 as a small experiment and discusses its validity.
 
-## 1.2 What is measured, and what is not
+## 1.2 The roles, and what a researcher already brings
+
+Industry job titles are not standardised: the same title means different work
+at different companies, and sometimes in different teams of one company. The
+job description is a better guide than the title. With that caution, the
+usual emphasis of the three roles this book prepares for is:
+
+| | ML Engineer | Applied Scientist | Algorithm Engineer |
+|---|---|---|---|
+| Core question | Does the model work reliably in production, and keep working? | Which method solves this problem, and how do we know? | Is this algorithm correct, fast and robust on the target system? |
+| Typical output | pipelines, services, training and evaluation infrastructure, monitoring | experiments, analyses, prototypes, design documents | optimised implementations, often for constrained or real-time systems |
+| Interviews usually test | coding, SQL, ML fundamentals, ML system design, operations | ML depth, experimental design, statistics, coding, a research deep dive | algorithms, mathematics, numerical methods, domain depth, coding |
+| Where researchers often struggle | testing, APIs, deployment, operational thinking | turning results into business decisions; SQL | systems-level performance; production C++ |
+
+The overlap is large. All three roles expect code that other people can run,
+evaluation that does not deceive its author, and decisions that can be
+explained to a non-specialist. Part I concentrates on that overlap, plus the
+production skills that the ML Engineer role adds.
+
+<img src="../../figures/hb-job-map.svg" alt="ML Engineer, Applied Scientist and Algorithm Engineer, each with its core question and interview focus, pointing to a shared core of runnable code, honest evaluation and explained decisions" width="100%">
+
+*Figure 1.1 — Three roles and their shared core. Whichever title one applies for, the shared core is examined; the role determines what is added.*
+
+Many research habits transfer directly, under a different name:
+
+| Research habit | Engineering name | Where in Part I |
+|---|---|---|
+| leave-one-subject-out evaluation | group-aware splitting; preventing entity leakage | Chapter 5 |
+| not touching the held-out session until the end | a locked test set, evaluated once | Chapters 5, 16 |
+| reporting means with intervals or across seeds | uncertainty in offline metrics | Chapters 2, 7 |
+| fitting filters, ICA or normalisation on training data only | preventing preprocessing leakage; pipeline discipline | Chapter 6 |
+| artefact rejection and channel quality checks | data validation and data contracts | Chapter 3 |
+| building a baseline before a deep model | baselines | Chapter 5 |
+
+<img src="../../figures/hb-research-to-production.svg" alt="Research habits mapped to engineering names: leave-one-subject-out to group split, untouched session to locked test set, CIs across seeds to bootstrap intervals, train-only filters to pipeline discipline" width="100%">
+
+*Figure 1.2 — Research habits and their engineering names. Little on the right is new to a careful researcher; what is new is the vocabulary and the surrounding engineering, which the diagnostic measures.*
+
+## 1.3 What is measured, and what is not
 
 The diagnostic measures whether you can produce **small, correct pieces of
 code, unaided and within a fixed time**, in six areas, and asks you to rate
@@ -68,7 +109,7 @@ judgement.
 | Deployment, monitoring, communication | self-rating, 1 to 4 | what you have actually done before |
 | (written) | Exercise 7, not graded | how you describe a rigorous evaluation to an interviewer |
 
-## 1.3 The items
+## 1.4 The items
 
 Each graded item is built around one or two traps that are common in real
 work. Knowing what the trap is helps you interpret a failure; the lab does not
@@ -122,7 +163,7 @@ in ten minutes.
 evaluation you have done, and its main threat to validity. It is not graded;
 the solutions describe what a strong answer contains.
 
-## 1.4 The rules, and why they matter
+## 1.5 The rules, and why they matter
 
 A measurement is only useful if it is taken under known conditions. The lab
 asks for four things.
@@ -142,7 +183,7 @@ asks for four things.
 Every check prints a result and never stops the notebook, so an unfinished
 exercise costs nothing except the information that it was unfinished.
 
-## 1.5 How the scoring works
+## 1.6 How the scoring works
 
 ### Graded exercises
 
@@ -195,7 +236,7 @@ message.
 ### Time as part of the score
 
 The checker cannot see the clock, so time is your responsibility. When you
-convert the result into a level (Section 1.6), count an item that passed but
+convert the result into a level (Section 1.7), count an item that passed but
 took longer than the timebox as half a pass. If $p$ items in an area passed
 within time and $q$ passed over time, out of $n$ items, the share used below
 is
@@ -209,7 +250,7 @@ areas together it gives a single overall figure. For example, four items
 passed within time, one passed over time and one failed gives
 $s = (4 + 0.5)/6 = 0.75$.
 
-## 1.6 Interpreting your result
+## 1.7 Interpreting your result
 
 The status per area is coarse on purpose: one item per area cannot support a
 fine-grained score. The [diagnostic guide](../../appendices/diagnostic.md)
@@ -233,7 +274,7 @@ Three cautions apply when you read your profile.
   often under-rate themselves; people who have followed tutorials often
   over-rate. The anchor "done it on my own" is meant to reduce this.
 
-## 1.7 From a profile to a reading plan
+## 1.8 From a profile to a reading plan
 
 The profile prints, for each area, the labs to prioritise. **The labs are
 printed with their original two-digit numbers** (`01`, `02`, ...); add one to
@@ -253,7 +294,7 @@ obtain the chapter number. The table gives the translation.
 
 <img src="../../figures/roadmap.svg" alt="Roadmap of Part I: reproducible projects, evaluation, serving, operations and demonstration, followed by the capstones" width="100%">
 
-*Figure 1.1 — The order of Part I. Every lab can rebuild what it needs from earlier chapters, so a priority area can be studied out of order.*
+*Figure 1.3 — The order of Part I. Every lab can rebuild what it needs from earlier chapters, so a priority area can be studied out of order.*
 
 Some patterns recur often enough to be worth describing.
 
@@ -275,7 +316,7 @@ compares against it. In Colab the artifact directory is deleted when the
 runtime is recycled, so either set `USE_DRIVE = True` in the setup cell or
 download the file (see the [Colab guide](../../appendices/colab.md)).
 
-## 1.8 Re-measuring: the diagnostic as a small experiment
+## 1.9 Re-measuring: the diagnostic as a small experiment
 
 The lab suggests retaking the diagnostic at the end of week 4 of the
 [study plan](../../appendices/study-plan.md), and comparing the two
@@ -323,14 +364,15 @@ the quick one.
 
 ## Summary
 
-1. The diagnostic measures small, unaided, timed engineering tasks in six areas, and asks for self-ratings in three more. It does not measure modelling ability.
-2. The rules (timebox, no lookups beyond documentation, honest ratings) make the result a measurement rather than a performance.
-3. Each graded exercise contains specific traps; a failure message names the case that failed.
-4. The profile turns results into a status per area (Table in Section 1.5, Equation 1.1 for self-ratings).
-5. Time counts: an item passed over time is half a pass (Equation 1.2).
-6. The profile prints two-digit lab numbers; add one to obtain the chapter number.
-7. Low scores in SQL and testing are typical for researchers and are what Part I is designed to address.
-8. A retake is a pre-test / post-test comparison; judge it on speed and on written answers to limit the practice effect.
+1. The ML Engineer, Applied Scientist and Algorithm Engineer roles share a core of runnable code, careful evaluation and explained decisions; many research habits already belong to it.
+2. The diagnostic measures small, unaided, timed engineering tasks in six areas, and asks for self-ratings in three more. It does not measure modelling ability.
+3. The rules (timebox, no lookups beyond documentation, honest ratings) make the result a measurement rather than a performance.
+4. Each graded exercise contains specific traps; a failure message names the case that failed.
+5. The profile turns results into a status per area (table in Section 1.6, Equation 1.1 for self-ratings).
+6. Time counts: an item passed over time is half a pass (Equation 1.2).
+7. The profile prints two-digit lab numbers; add one to obtain the chapter number.
+8. Low scores in SQL and testing are typical for researchers and are what Part I is designed to address.
+9. A retake is a pre-test / post-test comparison; judge it on speed and on written answers to limit the practice effect.
 
 ## Exercises
 

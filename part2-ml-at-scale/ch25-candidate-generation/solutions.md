@@ -1,13 +1,13 @@
 # Solutions · Chapter 25 · Candidate generation
 
-Try each exercise before reading its answer. Markers: [verified] verified by running ·
+Attempt each exercise before reading its answer. Markers: [verified] verified by running ·
 [expected] expected, depends on your run · [open-ended] personal / open-ended.
 
 ---
 
 ## Exercise 1 · `covisitation`
 
-[verified] Reference code: [`code/nb07.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def covisitation(pairs_df, top_n):
@@ -40,7 +40,7 @@ neighbours become the global best-sellers.
 
 ## Exercise 2 · `recall_at_k_batch`
 
-[verified] Reference code: [`code/nb07.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def recall_at_k_batch(candidates, truth, k):
@@ -54,11 +54,11 @@ def recall_at_k_batch(candidates, truth, k):
     return float(np.mean(vals)) if vals else float("nan")
 ```
 
-**Design choices to state when you report it.** It is a *macro* average
+**Design choices to state when reporting it.** It is a *macro* average
 (every user counts equally; a micro average, Σ hits / Σ |truth|, weights
 heavy users more). Users missing from `candidates` count as 0, so a
 generator cannot look good by abstaining. Recall@K is capped below 1 when
-|truth| > K: some teams use min(|truth|, K) in the denominator; say which.
+|truth| > K: some teams use min(|truth|, K) in the denominator; state which.
 
 ---
 
@@ -68,7 +68,7 @@ generator cannot look good by abstaining. Recall@K is capped below 1 when
 
 * **Budget split** (15 ms): generators run in parallel, each ≤ 8–10 ms,
   merge + de-dup ≤ 2 ms, leaving headroom for tail latency.
-* **Main generator: two-tower embeddings + ANN** (notebook 08), ~300–500
+* **Main generator: two-tower embeddings + ANN** (Chapter 26), ~300–500
   candidates. The item tower uses content features (category, title/image
   embeddings, price), so new listings get vectors at upload time; the index
   is refreshed incrementally (minutes) because 20% are new each week.
@@ -107,8 +107,8 @@ metric, because the two stages interact.
 **2. Implicit ALS.** p_ui = 1 if the user interacted, else 0; c_ui = 1 + α
 r_ui is the confidence (more clicks → more trust; zeros get weight 1, not
 0, so they act as weak negatives). The loss is a weighted least squares,
-quadratic in X for fixed Y and vice versa, so we alternate closed-form
-solves. One user's solve is cheap because YᵀC_uY = YᵀY + Yᵀ(C_u − I)Y: YᵀY
+quadratic in X for fixed Y and vice versa, so closed-form solves are
+alternated. One user's solve is cheap because YᵀC_uY = YᵀY + Yᵀ(C_u − I)Y: YᵀY
 is shared by all users, and (C_u − I) is non-zero only on that user's few
 items: O(n_u f² + f³) per user.
 

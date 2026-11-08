@@ -10,8 +10,8 @@
 #
 # A ranker scores hundreds of candidates for every request, millions of times
 # a day, so a model that is 10× cheaper per row is often worth more than one
-# that is 1 % better. This notebook takes the ranker of Chapter 35 and makes
-# it cheaper three ways (a portable runtime, lower precision and a smaller
+# that is 1 % better. This lab takes the ranker of Chapter 35 and makes
+# it cheaper in three ways (a portable runtime, lower precision and a smaller
 # model taught by a bigger one), measuring every step on two axes at once:
 # milliseconds and quality.
 #
@@ -19,9 +19,9 @@
 #
 # 1. export a PyTorch scoring model to ONNX and run it with ONNX Runtime;
 # 2. write a numerical parity check and know when exact parity is the wrong test;
-# 3. apply dynamic int8 quantisation in PyTorch and ONNX Runtime, and measure what it really buys;
+# 3. apply dynamic int8 quantisation in PyTorch and ONNX Runtime, and measure what it actually gains;
 # 4. distil a LightGBM teacher into a small MLP student with a tempered soft-label loss;
-# 5. build the size / latency / quality table that decides which model ships, and say when optimisation is not worth it.
+# 5. build the size / latency / quality table that decides which model is deployed, and state when optimisation is not worth it.
 #
 # **Outputs:** `artifacts/level2/optimize/` with `.pt`, `.onnx` and
 # `.txt` model files and `optimization_table.csv`.
@@ -193,7 +193,7 @@ print("MLP 128-64:", {k: round(v, 3) for k, v in q_mlp.items()})
 # ## 36.2 · ONNX and ONNX Runtime
 #
 # **ONNX** is a file format for computation graphs; **ONNX Runtime (ORT)** is
-# a C++ inference engine for it. Why bother when PyTorch can predict?
+# a C++ inference engine for it. Why use them when PyTorch can already predict?
 #
 # * **Overhead.** PyTorch's eager mode dispatches each op through Python;
 #   ORT runs a fused, pre-planned graph. For small models and small batches,
@@ -203,7 +203,7 @@ print("MLP 128-64:", {k: round(v, 3) for k, v in q_mlp.items()})
 # * **Optimisation hooks.** Graph fusions, quantisation, and hardware
 #   providers (CUDA, TensorRT, OpenVINO, CoreML) behind the same API.
 #
-# We export with a *dynamic* batch dimension so one file serves batch 1 and
+# The model is exported with a *dynamic* batch dimension so one file serves batch 1 and
 # batch 1,024.
 #
 # > **Intuition.** PyTorch eager is a chef reading the cookbook aloud at every step:
@@ -279,7 +279,7 @@ print("torch int8:", {k: round(v, 3) for k, v in q_torch8.items()})
 # and 0.88, re-rank NDCG unchanged (0.961) and cascade NDCG down by only
 # 0.003–0.007.
 #
-# That is the lesson: for a lossy optimisation, **exact parity is the wrong
+# The conclusion is that for a lossy optimisation **exact parity is the wrong
 # test**. Test what the model is used for: ranking agreement (Spearman,
 # top-k overlap) and the offline metric, with thresholds agreed in advance.
 # Keep exact parity (`atol` ~1e-5) for *lossless* steps such as the ONNX
@@ -298,8 +298,8 @@ print("torch int8:", {k: round(v, 3) for k, v in q_torch8.items()})
 # %% [markdown]
 # ## 36.4 · Distillation: a small student taught by a big teacher
 #
-# The LightGBM teacher is good but costs milliseconds per 1,000 rows (you
-# will measure it below). A tiny MLP with one hidden layer of 16 units costs
+# The LightGBM teacher is accurate but costs milliseconds per 1,000 rows (measured
+# below). A tiny MLP with one hidden layer of 16 units costs
 # almost nothing, but trained on clicks alone it learns from noisy 0/1
 # labels. **Knowledge distillation** trains the student on the teacher's
 # *probabilities* as well: soft labels carry "this item is a 0.3, that one a
@@ -358,9 +358,9 @@ print("teacher (LightGBM)   :", {k: round(v, 4) for k, v in q_lgbm.items()})
 # **Expected:** 193 parameters (50× fewer). Cascade NDCG@10: student on
 # clicks 0.843, distilled student 0.858, teacher 0.875 — distillation
 # recovers almost half of the gap. Re-rank NDCG barely differs (0.958 vs
-# 0.959). We re-ran seeds 0, 1 and 2 outside the notebook: the distilled
-# student was ahead by 0.015–0.021 every time. Do that before you claim
-# "distillation helps": one seed is an anecdote.
+# 0.959). We re-ran seeds 0, 1 and 2 outside the lab: the distilled
+# student was ahead by 0.015–0.021 every time. Such a check is needed before
+# claiming that "distillation helps": one seed is an anecdote.
 #
 # Why not more? The features are few and dense, and 300,000 rows is plenty
 # for 193 parameters; the student is limited mostly by its capacity. Distillation pays most when
@@ -407,8 +407,8 @@ torch.set_num_threads(2)
 table.round(3)
 
 # %% [markdown]
-# **Expected (our runs; your milliseconds will differ, the ordering should
-# not):**
+# **Expected (our runs; milliseconds will differ on other machines, the ordering
+# should not):**
 #
 # * **Size:** LightGBM's text file about 517 KB; the fp32 MLP about 40 KB;
 #   int8 about 15 KB (the 4× applies to weights only; biases, buffers and
@@ -423,13 +423,13 @@ table.round(3)
 # * **Quality:** every MLP within 0.02 of the teacher on cascade NDCG, and
 #   within 0.007 on re-rank NDCG.
 #
-# Two findings deserve a sentence each in a design review:
+# Two findings deserve a sentence each in a design review.
 #
 # 1. **int8 did not speed this model up.** With 10 inputs and ~10 K weights,
 #    the matrix multiplies are trivial and quantising/dequantising activations
 #    costs as much as it saves. Quantisation pays when weights dominate memory
 #    bandwidth: large embedding tables, wide layers, transformers.
-# 2. **The cheapest big win was changing the model class.** Moving from 150
+# 2. **The largest gain for the least effort came from changing the model class.** Moving from 150
 #    trees to the 128-64 MLP cut batch-1,024 latency 20–35×, and to the
 #    distilled student about 100×, for 0.014–0.017 of cascade NDCG — a cost
 #    the teacher partly recovered. Whether that trade is worth it is a
@@ -438,9 +438,9 @@ table.round(3)
 # %% [markdown]
 # ## 36.6 · When is optimisation worth it?
 #
-# Back-of-envelope before engineering: if the ranker is 30 % of a 60 ms p99
-# and you halve it, you save 9 ms of p99, which might let you score 2× the
-# candidates in the same budget (a quality gain) or run 30 % fewer
+# A back-of-envelope estimate comes before engineering: if the ranker is 30 % of a
+# 60 ms p99 and its time is halved, 9 ms of p99 are saved, which might allow scoring
+# 2× the candidates in the same budget (a quality gain) or running 30 % fewer
 # machines (a cost gain). If the ranker is 2 % of the latency, a 10×
 # speed-up is invisible to users. **Profile first** (Chapter 35's stage
 # timings); optimise the stage that dominates.
@@ -454,13 +454,13 @@ table.round(3)
 # | Pruning / smaller features | varies | feature-pipeline work | features dominate cost (fetch time!) |
 # | Caching scores | ~∞ for hits | staleness | the same (user, item) pairs repeat |
 #
-# > **Exercise 3 (written).** Your ranker is a 6-layer transformer over the
+# > **Exercise 3 (written).** A ranker is a 6-layer transformer over the
 # > user's last 50 actions plus 300 candidates; it takes 45 ms of a 100 ms
 # > p99 budget on CPU, and the product team wants to add 200 more candidates.
-# > Using this notebook's table as evidence of *how* each technique behaves,
-# > propose an optimisation plan: what you would try first, second and
-# > third, what you would measure at each step (name the parity and quality
-# > checks and their thresholds), and what would make you stop.
+# > Using this lab's table as evidence of *how* each technique behaves,
+# > propose an optimisation plan: what to try first, second and
+# > third, what to measure at each step (name the parity and quality
+# > checks and their thresholds), and what would justify stopping.
 # >
 # > Write your answer in the cell below.
 
@@ -541,8 +541,8 @@ else:
 # \text{overall speed-up} = \frac{1}{(1 - f) + f / k}
 # $$
 #
-# *Symbols:* $f$ = the share of latency in the stage you optimise, $k$ = that stage's speed-up.
-# *Example:* the ranker is 30% of a 60 ms p99 and becomes 2× faster: $1 / (0.7 + 0.15) = 1.18$×, i.e. 9 ms saved, as in 36.6. Made infinitely fast, the best you get is $1/0.7 = 1.43$×.
+# *Symbols:* $f$ = the share of latency in the optimised stage, $k$ = that stage's speed-up.
+# *Example:* the ranker is 30% of a 60 ms p99 and becomes 2× faster: $1 / (0.7 + 0.15) = 1.18$×, i.e. 9 ms saved, as in 36.6. Made infinitely fast, the best possible is $1/0.7 = 1.43$×.
 #
 # **6. Model size**
 #
@@ -582,7 +582,7 @@ print(f"6. fp32 MLP weights: {opt.n_params(mlp) * 4 / 1000:.1f} KB")
 #
 # | Symptom | Likely cause | Fix |
 # |---|---|---|
-# | `ModuleNotFoundError: onnxscript` during export | newer PyTorch defaults to the dynamo exporter | `opt.export_onnx` passes `dynamo=False`; if you call `torch.onnx.export` yourself, do the same (or `pip install onnxscript`) |
+# | `ModuleNotFoundError: onnxscript` during export | newer PyTorch defaults to the dynamo exporter | `opt.export_onnx` passes `dynamo=False`; a direct call to `torch.onnx.export` should do the same (or `pip install onnxscript`) |
 # | ORT: `INVALID_ARGUMENT ... Unexpected input data type` | float64 input | cast with `X.astype(np.float32)` |
 # | ORT: `Got invalid dimensions for input` at batch ≠ 2 | exported without `dynamic_axes` | re-export with a dynamic batch dimension |
 # | `RuntimeError: Didn't find engine for operation quantized::linear_prepack` | no quantisation backend (e.g. some ARM builds) | `torch.backends.quantized.engine = "qnnpack"`, or skip the PyTorch int8 row |
@@ -597,9 +597,9 @@ print(f"6. fp32 MLP weights: {opt.n_params(mlp) * 4 / 1000:.1f} KB")
 #
 # 1. Why might an ONNX Runtime model be faster than the same PyTorch model, and in which regime (model size, batch size) does the difference matter most?
 # 2. What does dynamic quantisation quantise, what does static quantisation add, and why did int8 not speed up this model?
-# 3. You exported a model and its outputs differ from PyTorch by 3e-6. Ship or not? And for the int8 version that differs by 0.5 in logits?
-# 4. Explain knowledge distillation for a ranking model: what the soft labels carry that clicks do not, what the temperature does, and when you would expect it to help most.
-# 5. Your ranker takes 45 % of the latency budget. List four ways to cut it, ordered by expected effort, and the risk of each.
-# 6. How would you roll out an optimised model safely (offline checks, shadow traffic, A/B), and which metrics would make you roll back?
+# 3. An exported model's outputs differ from PyTorch by 3e-6. Deploy or not? And for the int8 version that differs by 0.5 in logits?
+# 4. Explain knowledge distillation for a ranking model: what the soft labels carry that clicks do not, what the temperature does, and when it should help most.
+# 5. A ranker takes 45 % of the latency budget. List four ways to cut it, ordered by expected effort, and the risk of each.
+# 6. How would you roll out an optimised model safely (offline checks, shadow traffic, A/B), and which metrics would trigger a rollback?
 #
-# **Next chapter:** [Chapter 37 · Recommendation & search system design](../ch37-recsys-and-search-system-design/notebook.ipynb) — put cascades, latency budgets and model costs together in two full system-design answers.
+# **Next chapter:** [Chapter 37 · Recommendation & search system design](../ch37-recsys-and-search-system-design/notebook.ipynb) — combining cascades, latency budgets and model costs in two complete system-design answers.

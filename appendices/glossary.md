@@ -973,7 +973,7 @@ Each entry links to the chapter where the term is taught.
 
 **Power (1 − β)** — The chance the test detects an effect that is really there. *Example:* 80% power for 10% → 11% at 14,749 users per arm. *Taught in:* [Ch. 29 · A/B testing fundamentals](../part2-ml-at-scale/ch29-ab-testing-fundamentals/README.md).
 
-**PR-AUC (average precision)** — Area under the precision-recall curve. Its no-skill baseline equals the positive rate. *Example:* the headline metric from Day 1 on. *Taught in:* [Ch. 1 · Skills diagnostic](../part1-foundations/ch01-diagnostic/README.md), [Ch. 5 · Leakage-safe splits & a baseline](../part1-foundations/ch05-leakage-safe-splits-and-baseline/README.md). *See also:* [Positive rate](#p), [ROC-AUC](#r).
+**PR-AUC (average precision)** — Area under the precision-recall curve. Its no-skill baseline equals the positive rate. *Example:* the headline metric of Part I from Chapter 5 onward. *Taught in:* [Ch. 1 · Skills diagnostic](../part1-foundations/ch01-diagnostic/README.md), [Ch. 5 · Leakage-safe splits & a baseline](../part1-foundations/ch05-leakage-safe-splits-and-baseline/README.md). *See also:* [Positive rate](#p), [ROC-AUC](#r).
 
 **Precision** — Share of flagged accounts that were going to churn. *Example:* ≈ 0.27 at the cost threshold. *Taught in:* [Ch. 8 · Thresholds & calibration](../part1-foundations/ch08-thresholds-and-calibration/README.md). *See also:* [Precision@k](#p), [Threshold](#t), [Recall](#r).
 
@@ -1343,7 +1343,7 @@ Each entry links to the chapter where the term is taught.
 
 **Validation-test gap** — How much the score changes on the untouched period. *Example:* 0.163 on validation vs ≈ 0.197 on test. *Taught in:* [Ch. 16 · Final evaluation & documentation](../part1-foundations/ch16-final-evaluation-and-docs/README.md).
 
-**Validation vs test** — Validation is for choosing and checking; test is touched once at the end. *Example:* test = Jul-Nov 2024, notebook 15. *Taught in:* [Ch. 5 · Leakage-safe splits & a baseline](../part1-foundations/ch05-leakage-safe-splits-and-baseline/README.md), [Ch. 38 · Final evaluation & mock loop](../part2-ml-at-scale/ch38-final-evaluation-and-mock-loop/README.md), [Ch. 43 · Fine-tuning a classifier](../part3-deep-learning-systems/ch43-fine-tuning-a-classifier/README.md).
+**Validation vs test** — Validation is for choosing and checking; test is touched once at the end. *Example:* test = Jul-Nov 2024, used once in Chapter 16. *Taught in:* [Ch. 5 · Leakage-safe splits & a baseline](../part1-foundations/ch05-leakage-safe-splits-and-baseline/README.md), [Ch. 38 · Final evaluation & mock loop](../part2-ml-at-scale/ch38-final-evaluation-and-mock-loop/README.md), [Ch. 43 · Fine-tuning a classifier](../part3-deep-learning-systems/ch43-fine-tuning-a-classifier/README.md).
 
 **Vectorisation** — Replacing Python loops with whole-array NumPy operations. *Example:* pairwise distances: hundreds of ms with loops, under 1 ms as one matrix product. *Taught in:* [Ch. 31 · ML from scratch I](../part2-ml-at-scale/ch31-ml-from-scratch-1/README.md).
 

@@ -7,7 +7,7 @@ Try each exercise before reading its answer. Markers: [verified] verified by run
 
 ## Exercise 1 · `latency_budget_split`
 
-[verified] Reference code: [`code/nb18.py`](solutions.py) (`ex1`), graded in CI.
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex1`), graded in CI.
 
 ```python
 def latency_budget_split(total_ms, stages):
@@ -36,7 +36,7 @@ waste, it absorbs GC pauses, retries and the next feature.
 
 ## Exercise 2 · `serving_fleet_size`
 
-[verified] Reference code: [`code/nb18.py`](solutions.py) (`ex2`).
+[verified] Reference code: [`solutions.py`](solutions.py) (`ex2`).
 
 ```python
 def serving_fleet_size(peak_qps, per_replica_qps, headroom):
@@ -52,7 +52,7 @@ def serving_fleet_size(peak_qps, per_replica_qps, headroom):
 The ads case needs 3,969 replicas at a (assumed) 50 requests/s each, which is
 the signal to batch requests, cascade (cheap pre-ranker, heavy ranker on
 fewer ads) or distil. Say where `per_replica_qps` comes from: a load test of
-the real serving image at the target p99 latency (notebook 12), not the
+the real serving image at the target p99 latency (Chapter 50), not the
 model's throughput in a benchmark loop. A staff answer adds zone redundancy
 (`ds.replicas_needed(..., zones=3)`: 27 instead of 18 replicas for the fraud
 scorer) and autoscaling lag: if scaling takes 5 minutes, headroom must cover
@@ -97,7 +97,7 @@ the notebook's numbers (all assumptions):
   risk and compliance sign-off; how regulators' explainability needs shape the
   model choice.
 
-Score yourself with the notebook-20 rubric afterwards; time each part.
+Score the design with the rubric of Chapter 58 afterwards; time each part.
 
 ---
 
@@ -105,7 +105,7 @@ Score yourself with the notebook-20 rubric afterwards; time each part.
 
 1. **Calibration in ads.** [verified] (simulation) The auction ranks by bid × pCTR
    and prices by the runner-up's eCPM divided by the winner's pCTR, so a
-   prediction's *scale* moves money. In 18.2, over-predicting one segment by
+   prediction's *scale* moves money. In section 2, over-predicting one segment by
    1.5× raised its win share from 50% to ~69% and lowered both platform
    revenue (3,172 → 3,057) and advertiser value (5,019 → 4,893). A feed ranker
    only needs the order within one request, which a constant scale error
@@ -115,7 +115,7 @@ Score yourself with the notebook-20 rubric afterwards; time each part.
    model's output, then verify with a reliability plot per segment.
 2. **Served length doubled.** [expected] It is a problem if satisfaction did not
    rise with it: the expected-watch-time objective favours long videos by
-   construction (18.3: median 27 min in the top 100 vs 6 min catalogue). Check
+   construction (section 3: median 27 min in the top 100 vs 6 min catalogue). Check
    satisfaction signals (surveys, likes, "not interested", return visits) by
    length bucket and in a long-term holdout; check completion and early
    abandonment. Changes: blend completion/satisfaction heads, normalise

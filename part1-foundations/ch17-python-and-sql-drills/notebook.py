@@ -8,10 +8,11 @@
 #
 # **Part I · Chapter 17 · about 60 minutes · CPU only**
 #
-# Most ML engineering loops include a live coding round and, increasingly, a SQL
-# round, and both are timed. You already know how to solve these problems; the
-# skill being tested is solving them **quickly, correctly and out loud**, which
-# only comes from practice against a clock.
+# Most ML engineering interview loops include a live coding round and,
+# increasingly, a SQL round, and both are timed. A trained researcher can solve
+# these problems given enough time; the skill being tested is solving them
+# **quickly, correctly and while explaining the reasoning aloud**, which comes
+# only from practice against a clock.
 #
 # After this chapter you should be able to:
 #
@@ -106,9 +107,9 @@ for name, df in tables.items():
 # > hides constants; for $n$ = 100, a "slow" $O(n^2)$ loop can beat a clever
 # > structure, so state the input size too.
 #
-# Being slower than target today is normal and is the point: you are measuring
-# where you start. The hints are deliberately one line; the full worked
-# solutions are in `solutions/16_python_and_sql_drills.md`.
+# Being slower than the target on a first attempt is normal: the first run
+# measures the starting point. The hints are deliberately one line; the full
+# worked solutions are in [solutions.md](solutions.md).
 #
 # The timer is a small context manager. Writing one is itself a classic
 # Python question (`__enter__`/`__exit__`).
@@ -448,9 +449,9 @@ print("\npassed:", int((board["status"] == "pass").sum()), "of", len(board), "->
 #
 # ### A 30-minute daily drill plan for weeks 2-4
 #
-# Fluency is the gap five days cannot close (see the README's "Five days is a
-# start" table). Thirty minutes a day, every day, closes it faster than a weekend
-# cram:
+# (Week 1 is the work of Part I itself.) Fluency is the one skill that a short
+# course cannot supply; it comes only from regular practice. Thirty minutes a
+# day is more effective than occasional long sessions:
 #
 # | Minutes | What | How |
 # |---|---|---|
@@ -513,7 +514,7 @@ print("\npassed:", int((board["status"] == "pass").sum()), "of", len(board), "->
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
 # 1. What is the time and space complexity of your sliding-window maximum, and why is each index processed at most twice?
 # 2. `ROW_NUMBER`, `RANK` and `DENSE_RANK`: which would you use for "each customer's third invoice", and what happens on ties with each?
@@ -521,4 +522,5 @@ print("\npassed:", int((board["status"] == "pass").sum()), "of", len(board), "->
 # 4. Explain the "difference of two row numbers" trick for gaps and islands to someone who has never seen it.
 # 5. Why report the median resolution time rather than the mean, and what would you add to make the comparison between categories honest?
 #
-# **Next chapter:** [Chapter 18 · System design & mock interview](../ch18-system-design-and-mock-interview/notebook.ipynb) — the other half of the loop: designing an ML system out loud, and a scored mock interview.
+# **Next chapter:** [Chapter 18 · System design & mock interview](../ch18-system-design-and-mock-interview/notebook.ipynb) — the other main part of the interview: designing an ML system aloud, and a scored mock interview.
+

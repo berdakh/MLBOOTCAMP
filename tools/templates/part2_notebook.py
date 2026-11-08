@@ -9,7 +9,7 @@
 # %% [markdown]
 # # Chapter NN · Title
 #
-# **Day D · ~90 minutes · CPU (a GPU only speeds up the optional parts)**
+# **Part II · Chapter NN · about 90 minutes · CPU (a GPU only speeds up the optional parts)**
 #
 # Motivation in two sentences.
 #

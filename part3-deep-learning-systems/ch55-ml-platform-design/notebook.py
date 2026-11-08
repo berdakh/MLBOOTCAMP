@@ -407,7 +407,7 @@ for rel in (0.5, 1.0):
 # | **Business guardrails** | the product metrics the model can hurt | owned by the product team's dashboards, linked from the model page |
 # | **Cost** | GPU-hours, serving replicas, storage per model | weekly showback |
 #
-# **Delayed labels** are the trap. A fraud chargeback or a subscription
+# **Delayed labels** are the main difficulty. A fraud chargeback or a subscription
 # cancellation can arrive weeks after the prediction. If label delay is roughly
 # exponential with a mean of 20 days, the fraction of eventual labels already
 # visible is:

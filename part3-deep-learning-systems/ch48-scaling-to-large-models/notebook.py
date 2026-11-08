@@ -10,11 +10,11 @@
 #
 # Data parallelism (Chapter 47) assumes a full copy of the model, its gradients and its
 # optimizer state fits on every GPU. For a 7B-parameter model trained with Adam that is
-# ~112 GB, which no single GPU holds. This notebook covers what large-model teams do
+# ~112 GB, which no single GPU holds. This lab covers what large-model teams do
 # instead (shard the state, split the layers, pipeline the stages), how they decide how
-# much compute a run needs and how big the model should be, and how they survive
-# hardware failures during runs that last weeks. These are the numbers behind every
-# "how would you train a 70B model?" interview question.
+# much compute a run needs and how large the model should be, and how they cope with
+# hardware failures during runs that last weeks. These numbers underlie any answer to a
+# question such as "how would you train a 70B model?".
 #
 # After this lab you should be able to:
 #
@@ -476,7 +476,7 @@ RESULTS["flops_per_token_per_param_measured"] = flops / tokens / N
 # **6.33** FLOPs per token per parameter; with Kaplan's attention term the formula predicts
 # 6.42 (the counter sees the masked-out attention entries too, and the embedding lookup costs
 # no FLOPs). For billion-parameter models the attention term is a few percent, so 6·N·D is
-# the number everyone quotes.
+# the figure commonly quoted.
 #
 # Turning FLOPs into time needs the hardware's peak throughput and the fraction of it
 # you actually achieve, the **model FLOPs utilisation (MFU)**: useful model FLOPs per
@@ -551,7 +551,7 @@ for name, n, d, gpu, tf, mfu, g, src in examples:
 #
 # > **Intuition: where 6 comes from.** Every training token visits every weight three times: in
 # > the forward pass (activation × weight), in backward to get the activation gradient, and in
-# > backward to get the weight gradient. Each visit is a multiply and an add: $3 	imes 2 = 6$
+# > backward to get the weight gradient. Each visit is a multiply and an add: $3 \times 2 = 6$
 # > FLOPs per parameter per token.
 
 # %%
@@ -563,7 +563,7 @@ for c in (1e19, 1e21, 1e23, 5.9e23, 1e25):
 # %% [markdown]
 # **Expected (arithmetic):** 1e21 FLOPs → ~2.9B params on ~58B tokens; 5.9e23 (Chinchilla's
 # budget) → ~70B params on ~1.4T tokens, recovering the published configuration; 1e25 →
-# ~289B on ~5.8T tokens. Interview use: given a budget, size the model and data; given a
+# ~289B on ~5.8T tokens. In practice: given a budget, size the model and data; given a
 # model, say whether it is under- or over-trained relative to 20 tokens/param, and why that
 # may be deliberate.
 #

@@ -9,7 +9,7 @@
 # %% [markdown]
 # # Chapter NN · Title
 #
-# **Day D · ~90 minutes · T4 GPU (runs on CPU with a reduced budget)**
+# **Part III · Chapter NN · about 90 minutes · T4 GPU (runs on CPU with a reduced budget)**
 #
 # Motivation in two sentences.
 #

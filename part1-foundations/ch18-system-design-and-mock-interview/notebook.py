@@ -8,10 +8,11 @@
 #
 # **Part I · Chapter 18 · about 70 minutes · CPU only**
 #
-# An ML system design round is not a test of whether you know the newest model.
-# It checks whether you can turn a vague product goal into a system that makes
-# the right decision, is measured honestly, and keeps working after launch, and
-# whether you can say all that in a structured way in 35-45 minutes.
+# An ML system design round does not test knowledge of the newest model. It
+# tests whether a candidate can turn a vague product goal into a system that
+# supports the right decision, is measured honestly and keeps working after
+# launch, and whether the candidate can explain all of this in a structured way
+# in 35-45 minutes.
 #
 # After this chapter you should be able to:
 #
@@ -84,9 +85,9 @@ print(f"train rows: {len(split.train):,}")
 # %% [markdown]
 # ## 18.1 · The framework
 #
-# Use the same nine headings every time, in this order. Interviewers forgive a
-# missing detail; they rarely forgive starting with "I'd use a transformer"
-# before anyone knows what decision the model supports.
+# Use the same nine headings every time, in this order. An omitted detail is
+# rarely held against a candidate; starting with "I'd use a transformer" before
+# anyone knows what decision the model supports usually is.
 #
 # | # | Heading | Questions to answer (out loud) | Typical time |
 # |---|---|---|---|
@@ -100,7 +101,7 @@ print(f"train rows: {len(split.train):,}")
 # | 8 | **Monitoring & iteration** | Data/score drift, delayed-label performance, alert thresholds, retraining triggers, rollback | 3-4 min |
 # | 9 | **Risks & ethics** | Feedback loops, unequal error rates across groups, privacy, abuse, what the model must never do on its own | 2-3 min |
 #
-# Two habits that score points: **state assumptions with numbers** ("say 10M
+# Two habits that interviewers reward: **state assumptions with numbers** ("say 10M
 # accounts, 2% churn a month") and **name the trade-off** every time you choose
 # ("batch is cheaper and simpler; we lose freshness, which matters for X but not Y").
 #
@@ -119,8 +120,8 @@ print(f"train rows: {len(split.train):,}")
 # %% [markdown]
 # ## 18.2 · Back-of-envelope helpers
 #
-# Capacity arithmetic should take you 30 seconds and be done out loud. These
-# helpers exist so you can check your mental arithmetic, not replace it.
+# Capacity arithmetic should take about 30 seconds and be done aloud. These
+# helpers exist to check mental arithmetic, not to replace it.
 #
 # > **Intuition.** A day has 86,400 seconds; call it $10^5$. Then "requests
 # > per day ÷ $10^5$" is the average QPS in your head, and a peak factor of 2-4
@@ -341,8 +342,8 @@ print(f"10M accounts: ~{hours_10m_one_core * 60:.1f} min of model time on one pr
 #
 # > **Research bridge.** "Inference is cheap, the pipeline is the system"
 # > mirrors a BCI pipeline: the classifier is milliseconds; artefact rejection,
-# > filtering and epoching are where real-time systems fail. You already know
-# > how to say that; now say it about features.
+# > filtering and epoching are where real-time systems fail. The same sentence
+# > applies to feature pipelines.
 
 # %% [markdown]
 # ## 18.4 · Worked design #2 (shorter): a moderation triage queue
@@ -402,8 +403,8 @@ table([
 # | 5 | **Short-term electricity load forecasting for a grid operator** | seasonal baselines, weather forecasts as features (and their errors), peak-hour error, probabilistic forecasts, holidays |
 # | 6 | **Search ranking for a help-centre** | query understanding, relevance labels (clicks are biased), NDCG, interleaving, latency, fallback to keyword search |
 #
-# Prompts 3-5 match capstones 3, 2 and 1: a design you have built is a design
-# you can defend in depth.
+# Prompts 3-5 match capstones 3, 2 and 1: a design one has actually built can
+# be discussed in much greater depth.
 
 # %% [markdown]
 # > **Exercise 3 (written).** Pick one practice prompt and write a full design
@@ -630,7 +631,7 @@ progress
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
 # 1. Name the nine headings of the design framework in order, and say why metrics come before the model.
 # 2. 4M daily users, 10 requests each, peak factor 3: what peak QPS, and roughly how many replicas at 100 QPS each with 60% target utilisation?
@@ -639,8 +640,10 @@ progress
 # 5. What is interleaving, and why is it more sensitive than an A/B test for comparing two rankers?
 # 6. Tell your "flaw in my own evaluation" story in STAR form in 90 seconds.
 #
-# **Next chapter:** the capstones. Choose your first one from the
-# [capstones page](https://github.com/berdakh/MLBOOTCAMP/blob/main/part4-capstones/README.md),
-# and score yourself honestly with the
-# [readiness rubric](https://github.com/berdakh/MLBOOTCAMP/blob/main/appendices/readiness-rubric.md)
-# before you start; repeat the rubric and a mock every week.
+# **Next:** [Part II · Machine Learning at Scale](../../part2-ml-at-scale/README.md).
+# Before starting it, score yourself with the
+# [readiness rubric](https://github.com/berdakh/MLBOOTCAMP/blob/main/appendices/readiness-rubric.md),
+# and consider one of the
+# [capstones](https://github.com/berdakh/MLBOOTCAMP/blob/main/part4-capstones/README.md)
+# to apply Part I to real public data; repeat the rubric and a mock every week.
+

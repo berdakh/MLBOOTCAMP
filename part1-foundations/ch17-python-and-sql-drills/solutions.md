@@ -18,7 +18,7 @@ In an interview, say the approach and complexity first, then code.
 * `>=` (not `>`) implements "on a tie keep the later one".
 * Re-assigning an existing dict key does **not** move it, so `list(latest.values())`
   is already in order of first appearance. Say this out loud; it is a Python
-  3.7+ guarantee interviewers like to hear you know.
+  3.7+ guarantee worth stating explicitly.
 
 **Common mistakes.** Sorting by `ts` first (O(n log n), and it destroys
 first-appearance order); using `pandas.drop_duplicates(keep="last")` (keeps the

@@ -6,15 +6,15 @@
 # %% [markdown]
 # # Chapter 25 · Candidate generation
 #
-# **Day 4 · ~90 minutes · CPU only**
+# **Part II · Chapter 25 · about 90 minutes · CPU only**
 #
-# Notebook 06's ranker re-ordered ten items that someone else had already
-# chosen. In a real system, *choosing* those items, a few hundred out of
-# millions in a few milliseconds, is a separate stage with its own models,
+# The ranker of Chapter 24 re-ordered ten items that another system had
+# already chosen. In a real system, *choosing* those items, a few hundred out
+# of millions in a few milliseconds, is a separate stage with its own models,
 # metrics and failure modes. If the right item is not retrieved, no ranker
 # can show it.
 #
-# By the end you will be able to:
+# After this lab you should be able to:
 #
 # 1. explain the two-stage (retrieve → rank) architecture and why retrieval is judged by recall@K, not NDCG;
 # 2. build four classic candidate generators: global popularity, per-category popularity, item-to-item co-visitation and implicit-feedback matrix factorisation (ALS);
@@ -22,7 +22,10 @@
 # 4. show how each behaves for cold-start users and items, and what fills the gap;
 # 5. blend generators with quotas and measure whether the blend helps.
 #
-# **You will produce:** `artifacts/level2/retrieval_results.csv` and the ALS factors `artifacts/level2/als_factors.npz` (reused as a baseline in notebook 08).
+# **Outputs of this lab:** `artifacts/level2/retrieval_results.csv` and the ALS factors `artifacts/level2/als_factors.npz` (reused as a baseline in Chapter 26).
+
+# %% [markdown]
+# Read first: [Chapter 25 text](README.md) — the two-stage architecture, recall and coverage, popularity, co-visitation, implicit ALS, cold start and blending, explained in full.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -105,40 +108,41 @@ print(f"{len(clicks):,} clicks | train {len(train_clicks):,} | valid {len(valid_
 #   catalogue (10^6-10^9 items)
 #        │  retrieval: several cheap generators, ~1-10 ms, recall-oriented
 #        ▼
-#   candidates (10^2-10^3)           ← this notebook and 08
+#   candidates (10^2-10^3)           ← this chapter and Chapter 26
 #        │  ranking: rich features, GBDT / deep model, ~10-50 ms, precision-oriented
 #        ▼
-#   top 10-50 shown                  ← notebook 06
+#   top 10-50 shown                  ← Chapter 24
 # ```
 #
-# The ranker's features (notebook 06) cost microseconds per item; times a
-# million items, per request, is far beyond any latency budget. So the first
-# stage uses models whose scores can be **precomputed or indexed**
+# The ranker's features (Chapter 24) cost microseconds per item; multiplied by
+# a million items per request, the cost is far beyond any latency budget. The
+# first stage therefore uses models whose scores can be **precomputed or indexed**
 # (popularity lists, item→item tables, dot products of embeddings) and is
 # judged only by whether the good items survive: **recall@K**, the share of
 # a user's relevant items found in the K candidates. Order inside the K does
 # not matter much; the ranker re-orders anyway.
 #
-# Our catalogue has 4,000 items, so "retrieve 100" is a 40× cut. The ratios
-# and the lessons carry over; the latency problem is notebook 08's.
+# The ShopStream catalogue has 4,000 items, so "retrieve 100" is a 40× cut. The
+# ratios and the conclusions carry over; the latency problem is treated in
+# Chapter 26.
 
 # %% [markdown]
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-retrieval-cascade.svg" alt="Catalogue, retrieval, candidates, ranking, rules, shown: the two-stage cascade" width="100%">
 #
 # *What to notice:* each stage cuts the item count by one or more orders of magnitude, so each can afford a more expensive model per item. Retrieval is judged by recall@K because the ranker can only reorder what it is given.
 #
-# > **Intuition.** Hiring: a recruiter skims 10,000 CVs for keywords and keeps 100 (retrieval, judged by "did we keep the good people?"), then a panel interviews those 100 carefully and ranks them (ranking, judged by "is the best person on top?"). *Where it breaks down:* recruiters read every CV; real retrieval never scores every item exactly; it relies on precomputed lists and approximate search.
+# > **Intuition.** Consider hiring: a recruiter screens 10,000 CVs for keywords and keeps 100 (retrieval, judged by "were the good people kept?"), then a panel interviews those 100 carefully and ranks them (ranking, judged by "is the best person on top?"). *Where it breaks down:* recruiters read every CV; real retrieval never scores every item exactly; it relies on precomputed lists and approximate search.
 
 # %% [markdown]
 # ## 7.2 · What counts as a hit
 #
 # Two truths, for each user active in the validation week:
 #
-# * **next-week clicks**: what you can measure in production. Limited to
+# * **next-week clicks**: what can be measured in production. Limited to
 #   items the *logging policy* chose to show (exposure bias): a generator that
 #   finds great items the old system never showed gets no credit.
 # * **true top-20**: the 20 eligible items with the highest true click
-#   probability for that user, available only in the simulation. It tells us
+#   probability for that user, available only in the simulation. It shows
 #   whether a generator finds *relevant* items, not just *previously shown* ones.
 
 # %%
@@ -158,7 +162,7 @@ print(f"share of next-week clicks that are in the user's true top-20: {overlap:.
 # the user's true top-20. Clicks are a noisy, exposure-limited sample of relevance: the two
 # truths will rank generators similarly but not identically.
 #
-# > **Exercise 2.** *(Do this one before Exercise 1: everything below uses it.)* Write
+# > **Exercise 2.** *(Complete this one before Exercise 1: everything below uses it.)* Write
 # > `recall_at_k_batch(candidates, truth, k)`: `candidates` maps user →
 # > ranked list of item ids, `truth` maps user → set of relevant items.
 # > Return the **mean over users with a non-empty truth set** of
@@ -210,14 +214,14 @@ evaluate("global popularity", cands_pop)
 # %% [markdown]
 # **Expected:** recall on clicks about 0.12 at K=50 and 0.20 at K=100;
 # against the true top-20 about 0.19 and 0.29; coverage 0.025 (the same 100
-# items for everyone). Not bad for a list with zero personalisation: the
+# items for everyone). This is not negligible for a list with no personalisation: the
 # logging policy shows popular items a lot, and popularity in ShopStream is
 # partly driven by item quality, which every user values.
 
 # %% [markdown]
 # ## 7.4 · Per-category popularity
 #
-# Personalise just a little: split the K slots across the categories the
+# A small amount of personalisation: split the K slots across the categories the
 # user clicked in training, in proportion to their clicks, and fill each
 # share with that category's most popular items (`rt.category_popularity`).
 # Users without history get the global list.
@@ -229,8 +233,8 @@ cands_catpop = rt.category_popularity(user_hist, pop, item_cat, eval_users, 200)
 evaluate("category popularity", cands_catpop)
 
 # %% [markdown]
-# **Expected:** recall on clicks about 0.16 / 0.33 at 50 / 100, and a big
-# jump on the true top-20 (about 0.28 / 0.57), with coverage about 0.46.
+# **Expected:** recall on clicks about 0.16 / 0.33 at 50 / 100, and a large
+# increase on the true top-20 (about 0.28 / 0.57), with coverage about 0.46.
 # Users in ShopStream have strong category preferences, so knowing "which
 # categories" already captures much of relevance. In a real catalogue,
 # replace category with any coarse attribute (brand, topic, price band).
@@ -246,7 +250,7 @@ evaluate("category popularity", cands_catpop)
 # their neighbours merged. It is the generator behind most "related items"
 # carousels: cheap, fresh (recomputed hourly), and explainable.
 #
-# > **Intuition.** Co-visitation is reading supermarket receipts: if crisps and salsa appear on the same receipt again and again, show salsa to whoever just picked up crisps. *Where it breaks down:* milk is on almost every receipt, so it "co-occurs" with everything; that is why production tables down-weight very popular items.
+# > **Intuition.** Co-visitation resembles reading supermarket receipts: if crisps and salsa appear on the same receipt again and again, show salsa to whoever just picked up crisps. *Where it breaks down:* milk is on almost every receipt, so it "co-occurs" with everything; that is why production tables down-weight very popular items.
 #
 # > **Exercise 1.** Write `covisitation(pairs_df, top_n)`. `pairs_df` has one
 # > row per click with columns `session_id` and `item_id`. Return a dict
@@ -265,8 +269,8 @@ def covisitation(pairs_df: pd.DataFrame, top_n: int) -> dict:
 grade.ex1(covisitation)
 
 # %% [markdown]
-# Now the library version on the real sessions, and a sanity check you
-# should always run on a co-visitation table: do neighbours make sense?
+# We now run the library version on the real sessions, with a sanity check
+# that should always be run on a co-visitation table: do neighbours make sense?
 # (Here: do they share the item's category more often than chance?)
 
 # %%
@@ -309,17 +313,17 @@ evaluate("co-visitation", cands_covis)
 # $$\sum_{u,i} c_{ui}\,(p_{ui} - x_u^\top y_i)^2 + \lambda\left(\sum_u \lVert x_u\rVert^2 + \sum_i \lVert y_i\rVert^2\right)$$
 #
 # Fix Y and each x_u has a closed form (a small linear solve); then fix X.
-# The trick that makes it fast: Yᵀ C_u Y = YᵀY + Yᵀ(C_u − I)Y, and C_u − I is
+# The observation that makes it fast: Yᵀ C_u Y = YᵀY + Yᵀ(C_u − I)Y, and C_u − I is
 # non-zero only on the user's clicked items. Read `rt.implicit_als`: about
 # 25 lines of NumPy. (BPR, a pairwise alternative trained by SGD, is the
-# other classic; the two-tower model of notebook 08 generalises both.)
+# other classic; the two-tower model of Chapter 26 generalises both.)
 
 # %% [markdown]
 # <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/l2-matrix-factorization.svg" alt="Matrix factorisation: the click matrix approximated by user vectors times item vectors" width="100%">
 #
-# *What to notice:* the blank cells in R are not zeros you know; they are mostly items the user never saw. Implicit ALS still fits them (with low confidence), which is what makes the problem a cheap weighted least squares.
+# *What to notice:* the blank cells in R are not known zeros; they are mostly items the user never saw. Implicit ALS still fits them (with low confidence), which is what makes the problem a cheap weighted least squares.
 #
-# > **Intuition.** ALS is fitting a lock and key by alternating: hold the key still and file the lock to fit it, then hold the lock still and file the key. Each step is easy (a closed-form least-squares solve); together they converge. *Where it breaks down:* a lock and key converge to one fit; ALS converges to *a* good solution, and many rotations of the vectors fit equally well, so individual dimensions mean nothing on their own.
+# > **Intuition.** ALS resembles fitting a lock and key by alternation: hold the key still and file the lock to fit it, then hold the lock still and file the key. Each step is easy (a closed-form least-squares solve); together they converge. *Where it breaks down:* a lock and key converge to one fit; ALS converges to *a* good solution, and many rotations of the vectors fit equally well, so individual dimensions mean nothing on their own.
 
 # %%
 t0 = time.time()
@@ -388,14 +392,14 @@ print("new items per 100 candidates:", {k: round(v, 2) for k, v in in_cands.item
 # never-clicked item scores 0 and can fill the tail of a list behind items
 # with negative scores). All four learn from past clicks only.
 #
-# Standard fixes, which you will see in every design interview:
+# Standard remedies, which come up in almost every design interview:
 #
 # * cold users: popularity by context (country, device, time), onboarding
 #   questions, then switch to personal generators after a few clicks;
-#   in the two-tower model (notebook 08) features other than the id
+#   in the two-tower model (Chapter 26) features other than the id
 #   (device, country) give a non-empty user vector;
 # * cold items: a **content-based** generator (category, text or image
-#   embeddings: notebook 08's item tower uses category and price, so a new
+#   embeddings: the item tower of Chapter 26 uses category and price, so a new
 #   item gets a usable vector from day one) and a small **exploration
 #   quota** of new items in every candidate set. Without it, a new item never
 #   gets the clicks it would need to become retrievable: the rich-get-richer
@@ -452,7 +456,7 @@ blend_table.round(3)
 # on the true top-20, in exchange for coverage (about 0.57 → 0.65). "70 ALS +
 # 30 category popularity" ties ALS on clicks. The blend with 10 new-item
 # slots puts about 7 new items in every list for about 0.01 of recall on
-# clicks, a cost you pay deliberately: without it new items never collect
+# clicks, a cost paid deliberately: without it new items never collect
 # the clicks that would make them retrievable, and offline recall (computed
 # on clicks the *old* system produced) cannot see that benefit.
 #
@@ -470,14 +474,14 @@ np.savez_compressed(ART / "level2" / "als_factors.npz", users=X_als, items=Y_als
 print("saved:", sorted(p.name for p in (ART / "level2").glob("*") if p.suffix in {".csv", ".npz"}))
 
 # %% [markdown]
-# > **Exercise 3.** You are designing retrieval for a marketplace with 50
-# > million listings, 20% of them new each week, and a 15 ms budget for the
-# > whole retrieval stage. Which generators do you run, how many candidates
-# > from each, how do you evaluate them offline, and what do you monitor
-# > online? Write your answer in the cell below (about 10 bullet points).
+# > **Exercise 3.** Design retrieval for a marketplace with 50 million
+# > listings, 20% of them new each week, and a 15 ms budget for the whole
+# > retrieval stage. Which generators should run, how many candidates from
+# > each, how should they be evaluated offline, and what should be monitored
+# > online? Write the answer in the cell below (about 10 bullet points).
 
 # %% [markdown]
-# *Your answer:*
+# *Your answer here.*
 
 # %% [markdown]
 # ## Key equations
@@ -520,7 +524,7 @@ print("saved:", sorted(p.name for p in (ART / "level2").glob("*") if p.suffix in
 # L_\text{BPR} = -\sum_{(u, i, j)} \log \sigma\!\left(x_u^\top y_i - x_u^\top y_j\right) + \lambda \lVert \Theta \rVert^2
 # $$
 #
-# * $\sigma$: the logistic function; $\Theta$: all parameters. *Example:* scores 2.0 (clicked) and 0.5 (sampled): $-\log \sigma(1.5) = 0.20$; reversed (0.5 vs 2.0): $-\log \sigma(-1.5) = 1.70$. It is RankNet (notebook 06) applied to (clicked, unclicked) pairs.
+# * $\sigma$: the logistic function; $\Theta$: all parameters. *Example:* scores 2.0 (clicked) and 0.5 (sampled): $-\log \sigma(1.5) = 0.20$; reversed (0.5 vs 2.0): $-\log \sigma(-1.5) = 1.70$. It is RankNet (Chapter 24) applied to (clicked, unclicked) pairs.
 
 # %% [markdown]
 # ## Troubleshooting
@@ -537,13 +541,13 @@ print("saved:", sorted(p.name for p in (ART / "level2").glob("*") if p.suffix in
 # %% [markdown]
 # ## Checkpoint
 #
-# Answer aloud, without notes, in under a minute each:
+# Answer each question aloud, without notes, in under a minute:
 #
-# 1. Why is retrieval evaluated with recall@K and ranking with NDCG? What would go wrong if you tuned retrieval on NDCG of the final list?
+# 1. Why is retrieval evaluated with recall@K and ranking with NDCG? What would go wrong if retrieval were tuned on NDCG of the final list?
 # 2. Explain implicit-feedback ALS: what are p_ui and c_ui, why is it "alternating", and what makes one step cheap?
-# 3. How do you build an item-to-item co-visitation table for 100 million sessions a day? Which steps are map, shuffle and reduce, and where is the skew?
-# 4. Your new retrieval model has +8% recall@100 on next-week clicks, but the A/B test is flat. Give three explanations.
+# 3. How can an item-to-item co-visitation table be built for 100 million sessions a day? Which steps are map, shuffle and reduce, and where is the skew?
+# 4. A new retrieval model has +8% recall@100 on next-week clicks, but the A/B test is flat. Give three explanations.
 # 5. Design the cold-start path for a brand-new item and for a brand-new user. When does each "graduate" to the main generators?
-# 6. You blend four generators with fixed quotas. How do you choose the quotas, and what would you replace them with at larger scale?
+# 6. Four generators are blended with fixed quotas. How should the quotas be chosen, and what could replace them at larger scale?
 #
-# **Next chapter:** [`08_two_tower_retrieval_and_ann.ipynb`](../ch26-two-tower-retrieval-and-ann/notebook.ipynb) — learn user and item embeddings with a two-tower model, correct its popularity bias, and serve it with approximate nearest-neighbour search.
+# **Next chapter:** [Chapter 26 · Two-tower retrieval & ANN](../ch26-two-tower-retrieval-and-ann/notebook.ipynb) — learning user and item embeddings with a two-tower model, correcting its popularity bias, and serving it with approximate nearest-neighbour search.

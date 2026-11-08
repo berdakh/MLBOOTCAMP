@@ -159,5 +159,5 @@ far less traffic than an A/B test for the same sensitivity. Its limit: it
 measures preference (clicks), not long-term business metrics, so confirm
 winners with an A/B test.
 
-**6. STAR story.** [open-ended] Personal. Use your 17-4 answer; time it. Ninety seconds
+**6. STAR story.** [open-ended] Personal. Use your Exercise 4 answer; time it. Ninety seconds
 is roughly 220 words; most of it should be the Action.

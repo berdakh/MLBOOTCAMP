@@ -6,16 +6,16 @@
 # %% [markdown]
 # # Chapter 56 · Large-scale design cases
 #
-# **Day 9 · ~90 minutes · CPU is enough (no GPU work in this notebook)**
+# **Part III · Chapter 56 · about 90 minutes · CPU is enough (no GPU work in this lab)**
 #
 # Four prompts cover most of what large consumer companies ask in ML system
-# design rounds at senior and staff level: ads ranking, video
+# design interviews at senior and staff level: ads ranking, video
 # recommendations, an LLM-powered assistant and real-time fraud. Each has a
 # signature difficulty (calibration and auctions; long-term objectives;
 # evaluation of generated text; adversaries and label delay) that a generic
 # "retrieve, rank, serve" answer misses.
 #
-# By the end you will be able to:
+# By the end of this lab you should be able to:
 #
 # 1. run each case through the same twelve-part structure, with numbers stated as assumptions;
 # 2. explain *with a small simulation* why ad predictions must be calibrated, and why budgets must be paced;
@@ -31,6 +31,9 @@
 # **What is measured here.** The simulations are small synthetic models
 # built to show a *mechanism*; their numbers are not estimates of any real
 # system. Traffic, prices and latencies are printed as `ASSUMPTIONS`.
+
+# %% [markdown]
+# Read first: [Chapter 56 text](README.md), which works through the four design cases and their signature difficulties in more detail than this lab.
 
 # %%
 # --- Setup: works in Google Colab and on your own machine ------------------
@@ -103,16 +106,16 @@ NUMBERS: dict = {}  # every case's assumptions and derived numbers, saved at the
 # | Fail-open / fail-closed | When a dependency fails: allow by default / block by default | chosen per fraud risk tier |
 
 # %% [markdown]
-# ## 18.0 · One structure for every case
+# ## 0 · One structure for every case
 #
-# This extends the Level 2 notebook 19 ten-step framework. Each case below is
-# a table with these twelve rows; in an interview you would speak each row in
-# one to four minutes and go deep on the two the interviewer picks.
+# This extends the ten-step framework of Chapter 37. Each case below is
+# a table with these twelve rows; in an interview each row takes one to four
+# minutes, with deeper discussion of the two the interviewer picks.
 #
 # | Part | The question it answers |
 # |---|---|
 # | Requirements | Who, what decision, scale, latency, constraints (policy, money, regulation) |
-# | Metrics | **Online** (the business outcome, from experiments) · **offline** (what you can compute on logs) · **guardrails** (what must not get worse) |
+# | Metrics | **Online** (the business outcome, from experiments) · **offline** (what can be computed on logs) · **guardrails** (what must not get worse) |
 # | Data & labels | Where labels come from, how late, how biased by the current system |
 # | Candidate generation | How the space is narrowed (or "not applicable", said explicitly) |
 # | Ranking / model | Model family and objective; what is predicted and how it is combined |
@@ -131,9 +134,9 @@ NUMBERS: dict = {}  # every case's assumptions and derived numbers, saved at the
 #
 # *What to notice:* the four pipelines have the same shape (narrow, score, decide); what separates a strong answer is the yellow box, the case's signature difficulty, so that is where the deep dives go.
 #
-# ## 18.1 · Two calculators you will use in every case
+# ## 1 · Two calculators used in every case
 #
-# Level 1 notebook 17 had you write a latency budget that returns the
+# Chapter 18 asked for a latency budget that returns the
 # leftover milliseconds. At this level the budget is a *design artefact*:
 # it must validate its inputs, show each stage's share and point at the
 # stage to attack first.
@@ -178,7 +181,7 @@ grade.ex2(serving_fleet_size)
 # losing a whole zone leaves enough capacity.
 
 # %% [markdown]
-# ## 18.2 · Case A: ads ranking and the auction
+# ## 2 · Case A: ads ranking and the auction
 #
 # *Prompt: "Design the system that chooses which ads to show in a feed with
 # 300M daily users."*
@@ -189,7 +192,7 @@ grade.ex2(serving_fleet_size)
 # | Metrics | **Online:** revenue per mille (RPM), advertiser value (conversions per spend, retention of advertisers), user engagement with the feed. **Offline:** normalised entropy / log loss, **calibration** (predicted/observed by bucket and by segment), AUC. **Guardrails:** ad load, hide/report rate, latency, feed engagement |
 # | Data & labels | Impressions with clicks (seconds later) and conversions (hours to **days** later); labels exist only for ads the current system showed (selection bias); heavy negative down-sampling for training |
 # | Candidate generation | Targeting filters (eligibility, budget left, policy) → retrieval of ~1,000 ads (two-tower over user and ad embeddings, plus rules) |
-# | Ranking | Multi-task model (pCTR, pConversion) with sparse ID embeddings and cross features (notebook 13); score = **bid × pCTR (× pCVR)** = expected value per impression (eCPM); auction (second-price-like) sets prices; then quality/ad-load rules |
+# | Ranking | Multi-task model (pCTR, pConversion) with sparse ID embeddings and cross features (Chapter 51); score = **bid × pCTR (× pCVR)** = expected value per impression (eCPM); auction (second-price-like) sets prices; then quality/ad-load rules |
 # | Serving & latency | ~139k peak ad requests/s (below), ~200 ads scored per request; precomputed ad embeddings; feature cache; timeouts with "no ad" as the fallback (never a broken feed) |
 # | Training cadence | Frequent incremental updates (hours) because ads and campaigns churn; daily full retrains; **recalibrate after down-sampling** |
 # | Experimentation | User-level A/B for ranking changes, but advertisers' budgets are shared across arms (budget cannibalisation): use budget-split or advertiser-side experiments for auction changes |
@@ -219,12 +222,12 @@ NUMBERS["ads"] = {"assumptions": ads, "peak_ad_requests_per_s": ad_peak, "ads_sc
 # per second and **3,969** ranker replicas at 50 requests/s each with 30%
 # headroom. The replica count is the interesting number: it says the ranker
 # must be batched and probably distilled or cascaded (a light pre-ranker on
-# 1,000, the heavy model on 200), which is where notebooks 11–12 come in.
+# 1,000, the heavy model on 200), which is where Chapters 49–50 apply.
 #
 # > **Intuition.** Fleet sizing is booking restaurant tables for the dinner rush, not the daily
 # > average, and leaving a few tables empty for the party that walks in unannounced (headroom). The
 # > "at least 2" rule is the second kitchen in case the first catches fire. *Where the analogy breaks
-# > down:* per-replica capacity must be *measured* at your latency target; a replica that does 50
+# > down:* per-replica capacity must be *measured* at the target latency; a replica that does 50
 # > req/s at p99 = 300 ms may do only 30 at p99 = 100 ms.
 #
 # **Deep dive: why calibration matters.** In ranking-only systems a model
@@ -268,7 +271,7 @@ NUMBERS["ads"]["calibration_sim"] = results
 # not actually better. Ranking metrics like AUC barely notice a per-segment
 # scale error; calibration plots by segment do. This is why ads teams track
 # predicted/observed ratios per segment and recalibrate after negative
-# down-sampling (if you keep a fraction *w* of negatives, a calibrated
+# down-sampling (if a fraction *w* of negatives is kept, a calibrated
 # model's odds must be multiplied by *w*).
 #
 # **Deep dive: budget pacing.** An advertiser with a daily budget that would
@@ -306,17 +309,17 @@ NUMBERS["ads"]["pacing"] = {"greedy_exhausted_hour": exhausted, "paced_rate": ra
 # pacer participates at rate **0.40** all day and spends ~109 in the last six
 # hours instead of 0. Real pacers are feedback controllers (they correct for
 # forecast errors every few minutes) and interact with bidding; in an
-# interview, name pacing and say *why* it exists.
+# interview, pacing should be named together with the reason it exists.
 #
 # **Deep dive: delayed feedback.** If conversions arrive with a delay of days,
 # yesterday's impressions look like negatives that will later flip. Options
 # to name: wait (a fixed attribution window; stale model), train on early
 # labels and correct with a delay model (importance weights by the
 # probability the label has arrived), or fake-negative re-labelling when the
-# conversion comes in. Notebook 13 measured this on a synthetic Criteo-like
+# conversion comes in. Chapter 51 measured this on a synthetic Criteo-like
 # stream; `ds.label_maturity` gives the fraction observed for an exponential delay.
 #
-# ## 18.3 · Case B: video recommendations
+# ## 3 · Case B: video recommendations
 #
 # *Prompt: "Design the 'up next' and home recommendations for a video platform
 # with 200M daily users and 1B videos."*
@@ -336,7 +339,7 @@ NUMBERS["ads"]["pacing"] = {"greedy_exhausted_hour": exhausted, "paced_rate": ra
 # | Senior answer | Multi-source retrieval with numbers, multi-task ranker, watch-time objective with its bias, exploration, A/B |
 # | Staff adds | Long-term value vs short-term watch time (holdouts, surveys), creator-side health as a first-class objective, who owns the value function's weights and how they are changed, cost per recommendation |
 #
-# A published design you can cite: *"Deep Neural Networks for YouTube
+# A published design that can be cited: *"Deep Neural Networks for YouTube
 # Recommendations"* (Covington et al., RecSys 2016) describes a two-stage
 # candidate-generation + ranking system and trains the ranker with
 # **weighted logistic regression**, weighting positive impressions by watch
@@ -358,14 +361,14 @@ NUMBERS["video"] = {"assumptions": vid, "peak_qps": vid_peak, "embedding_gb": em
 
 # %% [markdown]
 # **Expected:** ~**144,676** requests/s at peak, **128 GB** of fp16 video
-# embeddings (sharded, or compressed with product quantisation as in Level 2
-# notebook 19), and ~72M heavy-ranker scores per second. Most of the 1B
+# embeddings (sharded, or compressed with product quantisation as in
+# Chapter 37), and ~72M heavy-ranker scores per second. Most of the 1B
 # videos have almost no views: retrieval indexes usually cover the eligible,
 # recently active subset, and the tail is reached through content features
 # and exploration.
 #
-# **Deep dive: the watch-time objective.** Rank by expected watch time and
-# you rank by video *length* as much as by quality. A synthetic catalogue in
+# **Deep dive: the watch-time objective.** Ranking by expected watch time
+# ranks by video *length* as much as by quality. A synthetic catalogue in
 # which click probability does not depend on length, and completion falls
 # with length:
 
@@ -399,10 +402,10 @@ NUMBERS["video"]["objective_sim"] = {k: top(v) for k, v in objectives.items()}
 # watch minutes favours long ones. Real systems blend several heads with
 # weights chosen by experiment and check the length distribution of what
 # they serve. **Exploration** (a few percent of slots for new or uncertain
-# videos, notebook 14's bandits) and **new-creator exposure** guardrails stop
+# videos, Chapter 52's bandits) and **new-creator exposure** guardrails stop
 # the loop from only feeding what already won.
 #
-# ## 18.4 · Case C: an LLM-powered customer-support assistant
+# ## 4 · Case C: an LLM-powered customer-support assistant
 #
 # *Prompt: "Design an assistant that answers customer-support chats for a
 # company with 1M support conversations a day, handing off to humans when needed."*
@@ -410,9 +413,9 @@ NUMBERS["video"]["objective_sim"] = {k: top(v) for k, v in objectives.items()}
 # | Part | Answer |
 # |---|---|
 # | Requirements | Answer from the company's help content and the customer's account data; time to first token ≤ 1.5 s; never take irreversible account actions without confirmation; hand off to a human with a summary |
-# | Metrics | **Online:** resolution without human (verified by no re-contact within 7 days), customer satisfaction, handle time saved. **Offline:** answer correctness and groundedness on a labelled evaluation set, retrieval recall@k, refusal correctness, guardrail precision/recall (notebook 16). **Guardrails:** wrong-action rate, policy violations, escalation latency, cost per conversation |
+# | Metrics | **Online:** resolution without human (verified by no re-contact within 7 days), customer satisfaction, handle time saved. **Offline:** answer correctness and groundedness on a labelled evaluation set, retrieval recall@k, refusal correctness, guardrail precision/recall (Chapter 54). **Guardrails:** wrong-action rate, policy violations, escalation latency, cost per conversation |
 # | Data & labels | Historical conversations with resolutions (noisy), help-centre articles (versioned), human-graded evaluation set stratified by intent; LLM-as-judge only after agreement with humans is measured |
-# | Candidate generation | **Retrieval** (RAG): hybrid lexical + dense over help articles and policies (notebooks 07–08), filtered by product and locale; account data via tools with access control |
+# | Candidate generation | **Retrieval** (RAG): hybrid lexical + dense over help articles and policies (Chapters 45–46), filtered by product and locale; account data via tools with access control |
 # | Ranking / model | Re-ranker over retrieved passages; a hosted or self-served instruction model generates the answer with citations; intent and risk classifiers decide *answer / ask clarification / hand off* |
 # | Serving & latency | Streaming generation; retrieval ≤ 150 ms; guardrail classifiers on input and output; per-turn timeouts with graceful hand-off |
 # | Training cadence | Index updates when articles change (minutes); prompt and policy changes through the same evaluation gates as model changes; fine-tuning only when evaluation shows prompting + retrieval is not enough |
@@ -427,8 +430,8 @@ NUMBERS["video"]["objective_sim"] = {k: top(v) for k, v in objectives.items()}
 # with every turn:
 #
 # > **Intuition.** A model has no memory between calls, so each turn is like sending a letter that
-# > must photocopy the whole correspondence so far. The sixth letter is the thickest, and you pay
-# > per page. *Where the analogy breaks down:* prompt caching (if offered) bills repeated pages at a
+# > must photocopy the whole correspondence so far. The sixth letter is the thickest, and the cost
+# > is per page. *Where the analogy breaks down:* prompt caching (if offered) bills repeated pages at a
 # > discount, and summarising old turns trades cost for possible loss of detail.
 
 # %%
@@ -463,19 +466,19 @@ NUMBERS["llm_assistant"] = {"assumptions": llm, "prompt_tokens_by_turn": rows, "
 # hand-off decisions** (resolve correctly, or hand off early with a good
 # summary) matters far more than shaving tokens. Shaving still matters at
 # scale: summarise history after a few turns, cap retrieved context, cache the
-# static system prompt if your provider supports it (`cached_fraction` in
+# static system prompt if the provider supports it (`cached_fraction` in
 # `ds.llm_cost_per_conversation`).
 #
-# **Evaluation in one paragraph (an interview favourite).** A versioned
+# **Evaluation in one paragraph (a frequent interview topic).** A versioned
 # evaluation set, stratified by intent and risk, with human labels for
 # correctness, groundedness (every claim supported by a cited passage) and
 # correct hand-off; retrieval measured separately (recall@k of the gold
 # article) so failures can be attributed; an LLM judge used only where its
-# agreement with humans is measured and reported (notebook 16); adversarial
+# agreement with humans is measured and reported (Chapter 54); adversarial
 # sets for prompt injection; and every prompt, retrieval or model change goes
 # through the same gate, because a prompt edit is a model change.
 #
-# ## 18.5 · Case D: real-time payment fraud
+# ## 5 · Case D: real-time payment fraud
 #
 # *Prompt: "Design fraud detection for card payments: 5,000 transactions per
 # second at peak, decision within 100 ms."*
@@ -484,9 +487,9 @@ NUMBERS["llm_assistant"] = {"assumptions": llm, "prompt_tokens_by_turn": rows, "
 # |---|---|
 # | Requirements | Approve / decline / step-up (e.g. extra verification) per transaction within **≤ 100 ms p99**; explainable reasons for declines; regulators and card networks set constraints |
 # | Metrics | **Online:** fraud loss (amount), false-decline rate (good customers declined), step-up rate, approval rate. **Offline:** recall at a fixed false-positive rate, PR-AUC, **amount-weighted** recall, calibration. **Guardrails:** latency, decline rate by merchant/segment, complaint rate |
-# | Data & labels | Chargebacks and confirmed fraud arrive **weeks** later; declined transactions never get labels (selective labels: you cannot see whether a declined payment was fraud); analysts' labels are biased toward cases rules flagged |
+# | Data & labels | Chargebacks and confirmed fraud arrive **weeks** later; declined transactions never get labels (selective labels: it is never observed whether a declined payment was fraud); analysts' labels are biased toward cases rules flagged |
 # | Candidate generation | Not applicable: every transaction is scored. Say so explicitly |
-# | Ranking / model | **Rules + model**: hard rules for known patterns and compliance (fast, explainable, editable by analysts the same day); gradient-boosted trees or a neural model on velocity features (counts and sums per card / device / merchant over 1 min–30 d), graph features (shared devices, accounts); cost-based thresholds (Level 1 notebook 07) |
+# | Ranking / model | **Rules + model**: hard rules for known patterns and compliance (fast, explainable, editable by analysts the same day); gradient-boosted trees or a neural model on velocity features (counts and sums per card / device / merchant over 1 min–30 d), graph features (shared devices, accounts); cost-based thresholds (Chapter 8) |
 # | Serving & latency | Synchronous call from the payment path; streaming feature updates (velocity counters); strict per-stage timeouts; **fail-open or fail-closed** decided per risk tier, never by accident |
 # | Training cadence | Weekly retrains with mature labels; fast rule updates for new attack patterns; a small **random holdout of approvals** (or below-threshold sampling) to keep unbiased labels |
 # | Experimentation | Shadow scoring first; A/B with loss measured after label maturity (weeks); champion/challenger thresholds on a small share |
@@ -523,7 +526,7 @@ NUMBERS["fraud"] = {"latency_stages_ms": fraud_stages, "fanout_slow_6": ds.fanou
 # > which can make the tail better or much worse.
 #
 # Fleet size for the scoring service, using the module's helper (equivalent
-# to your Exercise 2, plus zone redundancy):
+# to Exercise 2, plus zone redundancy):
 
 # %%
 fraud_peak, per_replica = 5_000, 400  # TPS at peak; requests/s one replica sustains (ASSUMED, measure it)
@@ -534,17 +537,17 @@ NUMBERS["fraud"]["replicas"] = {z: ds.replicas_needed(fraud_peak, per_replica, 0
 
 # %% [markdown]
 # **Expected:** 18 replicas in one zone; **27** across 3 zones (9 per zone, so
-# losing any one zone leaves 18). Redundancy is a cost you choose on purpose:
+# losing any one zone leaves 18). Redundancy is a deliberate cost:
 # a fraud scorer on the payment path is usually worth it.
 #
 # **Adversarial drift.** Unlike ads or video, the data-generating process
-# fights back. Name: velocity and graph features that are costly for
+# adapts against the system. Defences to name: velocity and graph features that are costly for
 # attackers to fake; fast analyst-editable rules for new patterns; frequent
 # retrains on the freshest *mature* labels plus early signals (customer
 # disputes, analyst confirmations); monitoring of rule-hit and score
 # distributions by merchant/channel to see probing; and red-team exercises.
 #
-# ## 18.6 · Comparing the four cases
+# ## 6 · Comparing the four cases
 #
 # | | Ads | Video | LLM assistant | Fraud |
 # |---|---|---|---|---|
@@ -554,7 +557,7 @@ NUMBERS["fraud"]["replicas"] = {z: ds.replicas_needed(fraud_peak, per_replica, 0
 # | Fallback | no ad | popular / precomputed list | hand off to a human | rules-only decision, per-tier fail-open/closed |
 # | Most likely staff probe | budget-split experiments, advertiser ROI | holdouts, creator ecosystem | evaluation programme, rollout by intent risk | exploration holdout, fail-open policy |
 #
-# Save every number for your write-up:
+# Save every number for the written design:
 
 # %%
 (OUT / "case_numbers.json").write_text(json.dumps(NUMBERS, indent=2, default=float))
@@ -563,17 +566,17 @@ print("wrote", (OUT / "case_numbers.json").relative_to(ART), "with cases:", list
 # %% [markdown]
 # **Expected:** `wrote level3/nb18/case_numbers.json with cases: ['ads', 'video', 'llm_assistant', 'fraud']`.
 #
-# ## 18.7 · The 45-minute format
+# ## 7 · The 45-minute format
 #
 # | Minutes | Do |
 # |---|---|
 # | 0–5 | Clarify: users, decision, scale, latency, constraints; write assumptions on the board |
-# | 5–9 | Metrics: online, offline, guardrails; the one you would ship on |
+# | 5–9 | Metrics: online, offline, guardrails; the one the launch decision rests on |
 # | 9–14 | Data and labels: sources, delay, bias; the training set's unit and time split |
 # | 14–24 | Architecture with numbers: stages, QPS, per-stage latency, fleet size, memory |
 # | 24–34 | Two deep dives (the interviewer usually picks one; offer the other) |
 # | 34–40 | Experimentation, rollout, monitoring, failure modes and fallbacks |
-# | 40–45 | Trade-offs you made, what you would build first, what would change the design; questions |
+# | 40–45 | Trade-offs made, what to build first, what would change the design; questions |
 #
 # > **Exercise 3 (written: a full design).** Pick one of the four cases (or a
 # > variation: ads for a search engine, short-video feed, an internal-docs
@@ -581,7 +584,7 @@ print("wrote", (OUT / "case_numbers.json").relative_to(ART), "with cases:", list
 # > design in the twelve-part structure, with: at least one capacity number
 # > from `ds` or your Exercise 2, a latency budget checked with your
 # > Exercise 1, two deep dives (one must be the case's *signature difficulty*
-# > from 18.6), three failure modes with their fallbacks, and a final
+# > from section 6), three failure modes with their fallbacks, and a final
 # > paragraph "what a staff-level answer would add" in your own words. Then
 # > present it aloud in 15 minutes.
 # >
@@ -632,7 +635,7 @@ print("wrote", (OUT / "case_numbers.json").relative_to(ART), "with cases:", list
 # **5 · Blended cost with a human fallback.** $c = c_{\text{LLM}} + (1 - d)\, c_{\text{human}}$, with deflection $d$.
 # *Example:* $0.0114 + 0.5 \times 4.00 = \$2.01$: the human term dominates, so hand-off quality matters more than tokens.
 #
-# **6 · eCPM** (ads, notebook 14): $\mathrm{eCPM} = \mathrm{pCTR} \times \text{bid} \times 1000$, which is why a per-segment calibration error moves money.
+# **6 · eCPM** (ads, Chapter 52): $\mathrm{eCPM} = \mathrm{pCTR} \times \text{bid} \times 1000$, which is why a per-segment calibration error moves money.
 #
 # The cell below recomputes 1–4 by hand and compares them with the numbers this notebook printed.
 
@@ -663,7 +666,7 @@ print(f"prompt tokens by turn {P} | cost by hand {cost:.5f} | notebook "
 # | Exercise 2 returns a float | `math.ceil` result divided again, or `/` at the end | compute the ratio, then `int(math.ceil(...))`, then `max(2, ...)` |
 # | Exercise 2 one replica short | rounded instead of ceiling | capacity must be ≥ load: always round **up** |
 # | Exercise 1 crashes on `{}` | `max()` of an empty sequence | return `largest_stage=None` when there are no stages |
-# | Your QPS is 86,400× too big or too small | per day vs per second | write the unit next to every number |
+# | The QPS is 86,400× too big or too small | per day vs per second | write the unit next to every number |
 # | The design runs out of time at "architecture" | too long on clarification and metrics | timebox 0–14 minutes strictly; state assumptions and move on |
 # | Interviewer: "but how do you know it is better?" | no evaluation story | for each case, name offline metric + online experiment + guardrail, and when labels mature |
 
@@ -679,4 +682,4 @@ print(f"prompt tokens by turn {P} | cost by hand {cost:.5f} | notebook "
 # 5. Declined transactions never get labels. How does that bias your next model, and what do you build to fix it?
 # 6. Pick one case and say, concretely, what a staff-level answer adds over a strong senior answer.
 #
-# **Next chapter:** [`19_ml_depth_and_research_discussion.ipynb`](../ch57-ml-depth-and-research-discussion/notebook.ipynb) — Day 10: the depth round. Optimisation, generalisation, transformers and recsys questions with small experiments, and how to critique a paper.
+# **Next chapter:** [Chapter 57 · ML depth & research discussion](../ch57-ml-depth-and-research-discussion/notebook.ipynb) — the depth round. Optimisation, generalisation, transformers and recsys questions with small experiments, and how to critique a paper.

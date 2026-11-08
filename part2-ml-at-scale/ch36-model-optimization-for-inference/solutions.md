@@ -49,7 +49,7 @@ return alpha * soft + (1 - alpha) * hard
 logits) by `T`. Use the `_with_logits` form: it is numerically stable
 (log-sum-exp inside), unlike `BCE(sigmoid(z), y)`. The `T²` factor: the
 gradient of the soft term w.r.t. the logits scales like `1/T²`, so
-multiplying by `T²` keeps the soft and hard terms comparable when you tune
+multiplying by `T²` keeps the soft and hard terms comparable when tuning
 `T`. `alpha = 0` is plain click training; `alpha = 1, T = 1` is regression
 on the teacher's probabilities.
 
@@ -105,7 +105,7 @@ inputs before switching.
    not help because the model is tiny (10 inputs, ~10 K weights): matmuls are
    not the cost; quantise/dequantise overhead is. PyTorch int8 was slower
    (0.42 vs 0.24 ms at 1,024).
-3. **3e-6 difference:** ship (float32 rounding in a lossless export; set
+3. **3e-6 difference:** deploy (float32 rounding in a lossless export; set
    atol ~1e-5 and also check probabilities and shapes). **0.5 logit
    difference for int8:** don't judge by parity; judge by ranking agreement
    and the offline metric against thresholds agreed beforehand (Spearman

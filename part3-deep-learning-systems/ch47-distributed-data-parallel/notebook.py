@@ -12,9 +12,8 @@
 # them is *data parallelism*: each GPU holds a full copy of the model, sees a
 # different slice of each batch, and the gradients are averaged before every
 # optimizer step. "What does DDP actually do?", "why is my 8-GPU job only 5×
-# faster?" and "what happens when a node dies?" are standard ML-engineering
-# interview questions, and this notebook answers them with real
-# `torch.distributed` code.
+# faster?" and "what happens when a node dies?" are standard questions in ML
+# engineering, and this lab answers them with real `torch.distributed` code.
 #
 # Free Colab has one GPU, so we run **several processes on one machine** with
 # the `gloo` backend (CPU tensors). The code is the code you would run on a
@@ -581,7 +580,7 @@ for mode, params in runs.items():
 # shuffle is seeded with `seed + epoch`, and the epoch is whatever you last passed to
 # `sampler.set_epoch(epoch)`. **Forget to call it, and every epoch uses the same order**:
 # not a crash, just silently worse training (the same mini-batches in the same order every
-# epoch). It is one of the classic DDP bugs, because nothing fails.
+# epoch). It is one of the most common DDP bugs, because nothing fails.
 
 # %%
 ds_demo = list(range(12))
@@ -659,7 +658,7 @@ for name, d in (("with set_epoch   ", GEN / "run_ddp"), ("WITHOUT set_epoch", ou
 # * **A rank hangs** (deadlock, a skipped collective, a dead network link): nobody exits;
 #   the others wait in the collective until the process-group **timeout** (`timeout=` in
 #   `init_process_group`; NCCL's watchdog then aborts). Set it deliberately and log
-#   heartbeats: a silent hang burns the whole cluster's time.
+#   heartbeats: a silent hang wastes the whole cluster's time.
 # * **Recovery** is a restart from the last checkpoint. `torchrun --max-restarts=k` restarts
 #   *all* workers of the job (up to k times) in place; with `--nnodes=MIN:MAX` and a rendezvous
 #   backend (*elastic* training) the job can also continue with fewer or more nodes. In
@@ -773,7 +772,7 @@ for name, n in models.items():
 # per step even on PCIe (34%): data parallelism *alone* stops scaling, and (Chapter 48)
 # its memory does not fit on one GPU anyway.
 #
-# What moves the needle, in order: **bigger per-GPU batches** (more compute per byte
+# What improves scaling, in order of usual effectiveness: **bigger per-GPU batches** (more compute per byte
 # communicated; gradient accumulation with `no_sync()` all-reduces once per k micro-batches);
 # **overlap** (DDP buckets; tune `bucket_cap_mb`); **compress or shrink the gradients**
 # (fp16/bf16 gradients, `ddp_comm_hooks`, PowerSGD); **faster links** (keep data-parallel

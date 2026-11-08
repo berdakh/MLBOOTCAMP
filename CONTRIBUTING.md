@@ -72,7 +72,11 @@ running anything. It has the following structure, in this order:
    by a description of the checkpoint questions.
 9. **`## Further reading`**: books, papers and documentation, each with the
    relevant chapter or section and, for papers, the venue and year.
-10. **Next**: a final line `**Next:** [Chapter N+1 · Title](../chNN-slug/README.md)`.
+10. **Next**: a final line linking to the next chapter's text:
+
+    ```markdown
+    **Next:** [Chapter N+1 · Title](../chNN-slug/README.md)
+    ```
 
 `tests/test_teaching_content.py` checks that every chapter text has
 `## Learning objectives`, `## Key terms`, `## Summary` and
@@ -139,8 +143,13 @@ A lab contains the following, in this order:
 11. **`## Checkpoint`**: four to six questions that a reader should be able
     to answer aloud, without notes. They are written in the style of interview
     questions.
-12. **Next chapter**: a final line
-    `**Next chapter:** [Chapter N+1 · Title](../chNN-slug/notebook.ipynb) — one sentence on why it follows.`
+12. **Next chapter**: a final line linking to the next lab, with one
+    sentence on why it follows:
+
+    ```markdown
+    **Next chapter:** [Chapter N+1 · Title](../chNN-slug/notebook.ipynb) — why it follows.
+    ```
+
     Inside a part the link is to the sibling folder; across parts it is
     `../../partY-.../chNN-slug/notebook.ipynb`.
 
@@ -199,10 +208,15 @@ seeing them, and in the same repository so that they stay consistent.
 * A figure should be simple: at most about eight boxes, one idea, short
   labels. `Canvas.box` raises `OverflowError` when text does not fit.
 * Every figure must be used. In a chapter text, embed it with a relative
-  path, `<img src="../../figures/NAME.svg" alt="…" width="100%">`; in a lab,
-  with the raw GitHub URL, so that it also renders in Colab:
-  `<img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/NAME.svg" alt="…" width="100%">`.
-  The `alt` text describes what the figure shows.
+  path; in a lab, with the raw GitHub URL, so that it also renders in Colab.
+  The `alt` text describes what the figure shows:
+
+  ```html
+  <!-- chapter text (README.md) -->
+  <img src="../../figures/NAME.svg" alt="What the figure shows" width="100%">
+  <!-- lab (notebook.py) -->
+  <img src="https://raw.githubusercontent.com/berdakh/MLBOOTCAMP/main/figures/NAME.svg" alt="What the figure shows" width="100%">
+  ```
 
 ## Tables of contents
 

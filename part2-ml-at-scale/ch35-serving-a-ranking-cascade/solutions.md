@@ -94,7 +94,7 @@ def with_fallback(primary_fn, fallback_fn, timeout_s):
   costs more than the work, and a `with ThreadPoolExecutor()` block would
   *wait for the slow call on exit*, defeating the timeout.
 * The timed-out call keeps running: Python cannot kill a thread. Under
-  overload this wastes CPU exactly when you have none, so real services
+  overload this wastes CPU exactly when none is available, so real services
   also bound the pool (reject when full: load shedding), make the work
   itself cancellable, or run models in a separate process/service with its
   own deadline.
@@ -108,7 +108,7 @@ def with_fallback(primary_fn, fallback_fn, timeout_s):
 ## Exercise 4 · Latency budget for a 200 ms SLO (written)
 
 [open-ended] One reasonable answer (numbers are p99 budgets; they intentionally sum to
-less than 200 because percentiles do not add and you need slack):
+less than 200 because percentiles do not add and slack is needed):
 
 | Stage | Budget (ms) | Why | Fallback when blown |
 |---|---|---|---|
