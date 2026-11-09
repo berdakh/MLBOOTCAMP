@@ -1,6 +1,17 @@
-# Capstone 1 · Day-ahead hourly load forecasting for the Texas grid (ERCOT)
+# Capstone 2 · Electricity load forecasting (ERCOT)
+
+*Day-ahead hourly load forecasting for the Texas grid.*
 
 **Recommended order: 2nd** · MVP ≈ 4–5 days at 3 h/day · CPU only
+
+**Guided solution:** [walkthrough.ipynb](walkthrough.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part4-capstones/cap2-electricity-load-forecasting/walkthrough.ipynb) — a
+step-by-step worked solution of the MVP below, written so that you attempt
+each step first and then compare. **Verification status:** ercot.com could
+not be reached from the machine on which the walkthrough was written, so it
+was executed end to end only on a synthetic sample with the archive's file
+layout (yearly ZIPs with `Native_Load_YYYY.xlsx`, `Hour Ending` text labels,
+23- and 25-hour days). The run on the official files has **not** been
+executed; the [results table](#results) is therefore still empty.
 
 A public-data demonstration inspired by energy-industry forecasting problems.
 It uses load data that ERCOT publishes on its website; it is not work for,
@@ -248,7 +259,8 @@ Response:
 
 **Validation rules:** `target_date` must be the day after the last history
 hour (local time) — anything else would need a different horizon; history
-must cover at least the 168 h (+ 24 h) the features need, hourly, strictly
+must cover at least the 168 h (+ 24 h) the features need (28 days for the
+walkthrough's feature set, which uses a 4-week same-weekday mean), hourly, strictly
 increasing, no duplicates in UTC; `load_mw` finite and within a plausible
 range (e.g. 0 < x < 150,000 — choose from training data and document it);
 timezone must be `America/Chicago`. Respond with 24, 23 or 25 forecasts on
@@ -259,6 +271,19 @@ feature list and holiday calendar. Features are computed online from the
 posted history with the **same** feature function as training. For a
 dashboard, forecasts for the backtest period can be precomputed in batch and
 served by `GET /forecast/{date}`.
+
+## Results
+
+Filled by the final step of the [walkthrough](walkthrough.ipynb), which
+prints this table from the computed numbers of a run on the official files.
+That run has not been executed for this repository (the walkthrough was
+verified on a synthetic sample only), so every cell is still empty.
+
+| Model | Evaluation | MAE, MW (95% CI) | MAPE | Peak-window MAE, MW | Daily-peak bias, MW |
+|---|---|---|---:|---:|---:|
+| Best seasonal-naive baseline | test year, 12 monthly folds | TBD — fill from your run | TBD | TBD | TBD |
+| Gradient-boosted trees (chosen on validation) | test year, 12 monthly folds | TBD — fill from your run | TBD | TBD | TBD |
+| Each baseline and candidate | validation year, 12 monthly folds | TBD — fill from your run | TBD | TBD | TBD |
 
 ## Limitations
 
@@ -311,13 +336,13 @@ served by `GET /forecast/{date}`.
 - [ ] Parser tests: hour-ending 24:00, spring-forward and fall-back days, row counts per year
 - [ ] Backtest harness with an explicit origin; test that all lags ≥ 24 h
 - [ ] Baselines (lag 24, lag 168) and at least one model on identical folds
-- [ ] Results table: MAE, MAPE, peak-hour MAE, daily-peak bias, per fold and final test year — **TBD — fill from your run**
+- [ ] Results table: MAE, MAPE, peak-hour MAE, daily-peak bias, per fold and final test year — **TBD — fill from your run** (the walkthrough's final step prints it from computed numbers; see [Results](#results))
 - [ ] Error by hour of day and month; extreme-event section
 - [ ] FastAPI `/forecast` with DST-aware output and validation tests
 - [ ] `MODEL_CARD.md` and Limitations (no weather, archive lag, revisions)
 - [ ] CI green without downloading ERCOT data (toy series in tests)
 
-## Stretch: connect to the bootcamp's churnlab patterns
+## Stretch: connect to the churnlab patterns of Part I
 
 * **Registry:** register a model per monthly retrain with its training cut-off
   in the metadata; promote only if the last backtest month beats the current

@@ -1,6 +1,12 @@
-# Capstone 2 · Predictive maintenance on NASA C-MAPSS
+# Capstone 1 · Predictive maintenance (NASA C-MAPSS)
 
 **Recommended order: 1st** · MVP ≈ 4 days at 3 h/day · CPU only (GPU optional)
+
+**Guided solution:** [walkthrough.ipynb](walkthrough.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/berdakh/MLBOOTCAMP/blob/main/part4-capstones/cap1-predictive-maintenance/walkthrough.ipynb) — a
+step-by-step worked solution of the MVP below, written so that you attempt
+each step first and then compare. It was executed end to end on the official
+FD001 files (about 1–7 minutes on a CPU, depending on load); its final step
+produced the [results table](#results) below.
 
 A public-data demonstration inspired by industrial and energy-asset
 maintenance problems. It uses **simulated** turbofan degradation data
@@ -42,10 +48,11 @@ is asymmetric.
 | Distributed as a ZIP of space-separated text files with 26 numeric columns | **verified from an official page snippet** |
 | A separate catalogue entry for the C-MAPSS *simulator software* exists and is not downloadable — do not confuse the two | **verified from an official page snippet** |
 | Training trajectories run to failure; test trajectories stop some time before failure; a separate file gives the true remaining cycles for each test engine | **verified from an official page snippet** |
-| File names `CMAPSSData.zip`, `train_FD00x.txt`, `test_FD00x.txt`, `RUL_FD00x.txt` (x = 1–4) | **to verify** |
-| Columns: unit number, cycle, 3 operational settings, 21 sensor measurements | **to verify** (the count of 26 is verified; the breakdown is not) |
-| FD001 and FD003: one operating condition; FD002 and FD004: six. FD001/FD002: one fault mode; FD003/FD004: two | **to verify** |
-| Number of engines per subset (commonly reported as ~100 train / ~100 test for FD001) | **to verify** — count them yourself |
+| Download used by the walkthrough: <https://phm-datasets.s3.amazonaws.com/NASA/6.+Turbofan+Engine+Degradation+Simulation+Data+Set.zip> (the link NASA's PCoE data repository points to), 12,429,152 bytes, SHA-256 `c9c5dec12a945a82e8bb4446589d7fb3cc057b5e5d81fa1a12e25ee9912ad3b2` | **verified by download** (November 2026); confirm on the landing page that it is still the current link |
+| The outer ZIP contains a second ZIP, `CMAPSSData.zip`, with `train_FD00x.txt`, `test_FD00x.txt`, `RUL_FD00x.txt` (x = 1–4), `readme.txt` and the Saxena et al. PDF | **verified by opening the archive** |
+| Columns: unit number, cycle, 3 operational settings, 21 sensor measurements | **verified** from the archive's `readme.txt` and the data (its readme lists "sensor measurement 26", a typo: the files have 21 sensors) |
+| FD001 and FD003: one operating condition; FD002 and FD004: six. FD001/FD002: one fault mode; FD003/FD004: two | **verified** from the archive's `readme.txt` |
+| FD001: 100 training engines (20,631 rows) and 100 test engines (13,096 rows); 100 RUL values | **verified by counting** in the walkthrough |
 | The S3 "Data Set 2" on NASA's page is **N-CMAPSS** (Chao et al., 2021), a different, much larger dataset — not FD001–FD004 | **verified from an official page snippet** |
 
 **Licence / terms.** NASA data is generally a US Government work and in the
@@ -60,16 +67,20 @@ what you found in `DATA_CARD.md`. Even if no licence restricts you, cite it.
 > Prognostics and Health Management (PHM08)*, 2008.
 > DOI: 10.1109/PHM.2008.4711414
 
-**Known gotchas** (all **to verify** on your copy):
+**Known gotchas** (checked on FD001 in the walkthrough; **to verify** for
+the other subsets):
 
-* Lines end with trailing spaces, so a naive whitespace split produces one or
-  two empty trailing columns. Use `sep=r"\s+"` and assert 26 columns.
+* Lines end with two trailing spaces, so a naive split on single spaces
+  produces 28 fields. Use `sep=r"\s+"` and assert 26 columns.
 * Several sensors are (near-)constant in FD001/FD003. Drop them by a rule
   computed on **training engines only** (e.g. std below a threshold), not by
-  copying a list from a blog.
-* Test trajectories have different lengths; some are shorter than a typical
-  window. Decide how to pad (repeat first row, or zero-pad with a mask) and
-  test it.
+  copying a list from a blog. In FD001, `setting3`, `s1`, `s5`, `s10`, `s16`,
+  `s18` and `s19` take a single value and `s6` two.
+* Unit IDs restart at 1 in every file: test engine 1 is not training engine 1.
+  Never join files on `unit`.
+* Test trajectories have different lengths (31–303 cycles in FD001); in
+  other subsets some are shorter than a typical window. Decide how to pad
+  (repeat first row, or zero-pad with a mask) and test it.
 * The RUL file has one number per test engine, aligned to the **last** cycle
   of that engine's test trajectory — not to every row.
 * MVP uses **FD001 only** (one condition, one fault mode). FD002/FD004 need
@@ -225,6 +236,40 @@ scaling are computed online with **the same function** used in training
 (import it, do not copy it). Load the PyTorch model once at startup, run with
 `torch.no_grad()` and `model.eval()`.
 
+## Results
+
+Produced by Step 10 of the [walkthrough](walkthrough.ipynb) from its own
+computed numbers, on the official FD001 files, executed on a CPU in November
+2026 (python 3.12, scikit-learn 1.6, PyTorch 2.8). Test metrics use the
+**uncapped** truth at the last cycle of each test engine; intervals are 95%
+bootstrap intervals over test engines. Your numbers will differ slightly on
+other hardware (PyTorch) and will differ more if you make other choices —
+which is the point: your repository's table must come from your run.
+
+| Model | Split | RMSE, cycles (95% CI) | NASA score | Late predictions (95% CI) |
+|---|---|---|---:|---|
+| constant (mean capped RUL) | official FD001 test, 100 engines, uncapped truth | 43.1 (38.6–47.4) | 33629 | 50% (40%–60%) |
+| ridge on window features | official FD001 test, 100 engines, uncapped truth | 17.2 (15.0–19.4) | 472 | 53% (43%–63%) |
+| gradient boosting | official FD001 test, 100 engines, uncapped truth | 14.4 (12.2–16.6) | 338 | 61% (51%–70%) |
+| 1D-CNN (3-seed mean) | official FD001 test, 100 engines, uncapped truth | 16.1 (13.7–18.5) | 500 | 59% (49%–69%) |
+| constant (mean capped RUL) | 5-fold engine-level CV on train, 500 cuts | 45.5 | – | 60% |
+| ridge on window features | 5-fold engine-level CV on train, 500 cuts | 19.3 | – | 60% |
+| gradient boosting | 5-fold engine-level CV on train, 500 cuts | 16.8 | – | 56% |
+| 1D-CNN, pool head (1 seed per fold) | 5-fold engine-level CV on train, 500 cuts | 23.7 | – | 52% |
+| 1D-CNN, flatten head (1 seed per fold) | 5-fold engine-level CV on train, 500 cuts | 18.6 | – | 54% |
+| gradient boosting, **random window split** | 5-fold, window-level, capped truth | 7.0 (vs 13.7 engine-level) | – | – |
+
+RUL cap 125 (chosen by CV among 100/125/150), window 30 cycles, served model: gradient boosting. CNN: flatten head, 8,705 parameters, 3 seeds; 5-fold CV took 9s and all final training 70s on CPU.
+
+What the numbers say, in one paragraph: the engine-level split matters (a
+random window split roughly halves the apparent error); gradient boosting on
+window features was the best model on cross-validation and on the test set;
+the compact CNN improved markedly when its head kept the temporal position
+(flatten rather than global average pooling) but still did not beat the
+trees, and on the test set the paired difference was not significant (see
+Step 7). The NASA score is
+dominated by a handful of late predictions in the 25–75-cycle range (Step 8).
+
 ## Limitations
 
 * **Simulated data.** C-MAPSS is generated by a simulator with injected
@@ -279,14 +324,14 @@ scaling are computed online with **the same function** used in training
 - [ ] Test: no engine ID in both train and validation in any fold
 - [ ] Unit tests for RUL label, windowing/padding, NASA score
 - [ ] Baselines + temporal model, same folds, seeds reported
-- [ ] Results table (RMSE, NASA score, % late, 95% CI over engines) — **TBD — fill from your run**
-- [ ] Random-split vs engine-split comparison — **TBD — fill from your run**
+- [ ] Results table (RMSE, NASA score, % late, 95% CI over engines) — filled by the walkthrough's final step from computed numbers (see [Results](#results)); in your repository, **TBD — fill from your run**
+- [ ] Random-split vs engine-split comparison — likewise produced by the walkthrough (Step 6b)
 - [ ] Early/late analysis figure and RUL-binned errors
 - [ ] FastAPI service with validation tests and not-ready test
 - [ ] `MODEL_CARD.md` stating "simulated data" and the RUL cap prominently
 - [ ] CI green (ruff + pytest on toy data, no download)
 
-## Stretch: connect to the bootcamp's churnlab patterns
+## Stretch: connect to the churnlab patterns of Part I
 
 * Save each trained configuration (cap, window, architecture) as an
   immutable registry version with metadata, using the pattern in
@@ -297,4 +342,5 @@ scaling are computed online with **the same function** used in training
   [`monitoring.py`](https://github.com/berdakh/MLBOOTCAMP/blob/main/src/churnlab/monitoring.py);
   then simulate a sensor offset on a few engines and check whether drift
   alerts fire before RMSE degrades.
-* Add a `/metrics` endpoint with latency percentiles, as in the bootcamp API.
+* Add a `/metrics` endpoint with latency percentiles, as in the Part I API
+  (Chapter 14).

@@ -164,10 +164,10 @@ It takes about an hour and shows which chapters deserve the most attention.
 | | Capstone | Guided solution |
 |---|---|---|
 | 1 | [Capstone 2 · Predictive maintenance on NASA C-MAPSS](part4-capstones/cap1-predictive-maintenance/README.md) | [walkthrough](part4-capstones/cap1-predictive-maintenance/walkthrough.ipynb) |
-| 2 | [Capstone 1 · Day-ahead hourly load forecasting for the Texas grid (ERCOT)](part4-capstones/cap2-electricity-load-forecasting/README.md) | in preparation |
-| 3 | [Capstone 3 · Weekly product demand forecasting on UCI Online Retail II](part4-capstones/cap3-retail-demand-forecasting/README.md) | [walkthrough](part4-capstones/cap3-retail-demand-forecasting/walkthrough.ipynb) |
+| 2 | [Capstone 1 · Day-ahead hourly load forecasting for the Texas grid (ERCOT)](part4-capstones/cap2-electricity-load-forecasting/README.md) | [walkthrough](part4-capstones/cap2-electricity-load-forecasting/walkthrough.ipynb) |
+| 3 | [Capstone 3 · Retail demand forecasting (UCI Online Retail)](part4-capstones/cap3-retail-demand-forecasting/README.md) | [walkthrough](part4-capstones/cap3-retail-demand-forecasting/walkthrough.ipynb) |
 | 4 | [Capstone 4 · Movie recommendations (MovieLens)](part4-capstones/cap4-movie-recommendations/README.md) | [walkthrough](part4-capstones/cap4-movie-recommendations/walkthrough.ipynb) |
-| 5 | [Capstone 5 · Toxic-comment triage for human review on Civil Comments](part4-capstones/cap5-content-moderation/README.md) | in preparation |
+| 5 | [Capstone 5 · Content moderation triage (Civil Comments)](part4-capstones/cap5-content-moderation/README.md) | [walkthrough](part4-capstones/cap5-content-moderation/walkthrough.ipynb) |
 <!-- toc:end -->
 
 ## Appendices

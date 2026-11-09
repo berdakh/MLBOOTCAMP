@@ -6,7 +6,7 @@
 # %% [markdown]
 # # Capstone 5 · Content moderation triage (Civil Comments) — guided walkthrough
 #
-# **Capstone · about 8–10 minutes to run on a laptop CPU · CPU core, optional GPU extension**
+# **Capstone · about 8 minutes to run on a laptop CPU (plus a 140 MB download) · CPU core, optional GPU extension**
 #
 # This notebook is a complete worked solution of the capstone's minimum viable product, written as if a
 # tutor were sitting next to you. A classifier scores public comments so that a fixed number of human
@@ -321,13 +321,14 @@ ident.sort_values("test_n", ascending=False).round(3)
 
 # %% [markdown]
 # **Expected (real data, measured):** 269,038 train, 45,180 val and 133,782 test comments, each with a
-# toxic rate of about 0.11; about 4–5% of comments have a contested toxicity fraction between 0.4 and
-# 0.6; median length about 250 characters; two missing texts. About 3,400 texts are exact duplicates
-# after normalisation, and about 1,400 training comments repeat a validation or test text. In the test
-# split, mentions range from a few hundred (*latino*, *transgender*) to several thousand (*male*,
-# *female*, *christian*), and the toxic rate is much higher among comments mentioning *black*, *white*,
-# *homosexual_gay_or_lesbian* or *muslim* than overall: identity mention and toxicity are correlated in
-# the *labels*, which is exactly what a model will learn.
+# toxic rate of 0.11; about 11% of comments have a contested toxicity fraction between 0.4 and 0.6;
+# about 41% mention at least one identity; median length about 257 characters; two missing texts; a
+# median of 4 raters per comment. 3,449 texts are exact duplicates after normalisation; 1,369 training
+# comments repeat a validation or test text, and 188 validation comments repeat a test text. In the
+# test split, mentions range from 693 (*latino*) to 16,449 (*female*), and the toxic rate is much higher
+# among comments mentioning *black* (0.32), *homosexual_gay_or_lesbian* (0.29), *white* (0.28) or
+# *muslim* (0.23) than overall (0.11): identity mention and toxicity are correlated in the *labels*,
+# which is exactly what a model will learn.
 #
 # > **Intuition.** A fractional label of 0.5 means five of ten raters said "toxic" and five did not.
 # > Calling it toxic is a convention, and comments near the boundary are where any model "errs" most.
@@ -440,10 +441,10 @@ assert getattr(tfidf, "feature_names_in_", None) is None  # fitted on a text Ser
 print(f"word vocabulary {vocab_words:,} terms, identical to a vectoriser fitted on training text only")
 
 # %% [markdown]
-# **Expected (real data, validation, measured):** the keyword rule reaches PR-AUC ≈ 0.3 (it flags a few
-# per cent of comments and misses most toxicity, which rarely uses these exact words). TF-IDF + LR
-# reaches PR-AUC ≈ 0.65 and ROC-AUC ≈ 0.91, fitted in about a minute on 100,000 comments with two CPU
-# threads, and scores a comment in well under a millisecond.
+# **Expected (real data, validation, measured):** the keyword rule reaches PR-AUC 0.27 and ROC-AUC 0.63
+# (it flags 4.7% of comments and misses most toxicity, which rarely uses these exact words). TF-IDF + LR
+# reaches PR-AUC 0.65 and ROC-AUC 0.91, fitted in about a minute (54 s) on 100,000 comments with two
+# CPU threads, and scores a comment in about 0.4 ms.
 #
 # **Common mistakes.** Fitting the vectoriser on all text "because it is unsupervised" (it still leaks
 # test vocabulary and IDF statistics); judging the model by accuracy; forgetting that
@@ -504,12 +505,14 @@ SUB_VAL = {"tfidf_full": tfidf.predict_proba(val_sub.comment_text)[:, 1],
 pd.DataFrame({m: pr_roc(val_sub.y, s) for m, s in SUB_VAL.items()}).T.round(3)
 
 # %% [markdown]
-# **Expected (real data, validation subsample, measured):** MiniLM embeddings at roughly 100–150
-# comments per second on two CPU threads (a few minutes for ~23,000 comments). Trained on the same
-# 8,000 comments, the MiniLM probe and the small TF-IDF model are close (PR-AUC around 0.5–0.55); the
-# TF-IDF model trained on 100,000 comments is clearly better (≈ 0.65). On a CPU, more data for a cheap
-# model beats a better representation trained on less data. This comparison is the honest answer to
-# "should we ship the transformer?": not at this budget.
+# **Expected (real data, validation subsample, measured):** MiniLM embeddings at about 80 comments per
+# second on two CPU threads (about 4.5 minutes for 23,000 comments). PR-AUC on the 5,000-comment
+# validation subsample: TF-IDF on 100,000 comments 0.64, TF-IDF on the same 8,000 comments 0.50, the
+# MiniLM probe on those 8,000 comments 0.38, keywords 0.30. A frozen general-purpose sentence encoder
+# was trained to capture *topic and meaning*, and toxicity is often carried by a few words and their
+# tone, which mean pooling dilutes; a fine-tuned encoder would do much better, but not on this budget.
+# This comparison is the honest answer to "should we ship the transformer?": not this one, at this
+# budget.
 #
 # **Alternatives considered.** Fine-tuning DistilBERT (better, but needs a GPU to use enough data; see
 # the extension); a larger sentence encoder (slower still on CPU); TF-IDF with more data (the
@@ -660,14 +663,15 @@ H2H = pd.DataFrame(H2H)
 H2H.round(3)
 
 # %% [markdown]
-# **Expected (real data, test, measured):** TF-IDF PR-AUC ≈ 0.65 and ROC-AUC ≈ 0.91 with narrow
-# intervals (133,782 comments). The calibrated Brier score is far lower than the raw balanced
-# scores' Brier. The realised queue shares on test are close to 1%, 2% and 5% because validation and
-# test come from the same distribution; precision is high for the 1% queue (roughly 0.8) and falls as
-# the budget grows, while recall rises from under 0.1 to about 0.35. Even the 5% queue misses most
-# toxic comments, because only ~11% of comments are toxic and the queue holds 5%: recall at budget $q$
-# can never exceed $q / 0.11$. On the subsample, the MiniLM probe is well below the full TF-IDF model,
-# and the interval of the difference excludes zero.
+# **Expected (real data, test, measured):** PR-AUC 0.644 (95% CI 0.636–0.652) and ROC-AUC 0.911
+# (0.909–0.913) on 133,782 comments. Calibration lowers the Brier score from 0.091 (raw balanced
+# scores) to 0.063, and the reliability table shows mean scores close to observed toxic rates, slightly
+# over-confident at the top. The realised queue shares on test are 1.0%, 1.9% and 5.0% because
+# validation and test come from the same distribution. Precision falls from 0.965 (1% queue) to 0.918
+# (2%) and 0.779 (5%), while recall rises from 0.084 to 0.154 and 0.341. Even the 5% queue misses two
+# thirds of toxic comments, because only ~11% of comments are toxic: recall at budget $q$ can never
+# exceed $q / 0.11$. On the 10,000-comment subsample the MiniLM probe's PR-AUC (0.41) is 0.25 below the
+# full TF-IDF model (0.66), and the interval of the difference excludes zero.
 #
 # > **Intuition.** A capacity threshold is a fixed-size net. Making the model better changes *which*
 # > comments fall into the net (precision goes up), but recall stays capped by the size of the net. To
@@ -717,13 +721,14 @@ print(f"operating point: budget {OPERATING_BUDGET:.0%}, threshold {THR:.3f} | ov
 SUBGROUPS.round(3)
 
 # %% [markdown]
-# **Expected (real data, measured):** overall FPR is about 0.01–0.02 and FNR about 0.65 at the 5%
-# budget. Comments mentioning *black*, *white*, *homosexual_gay_or_lesbian*, *muslim* and *jewish*
-# have the lowest BPSN AUCs (well below the overall ROC-AUC) and FPRs several times the overall FPR,
-# with intervals that exclude the overall value for the largest of these groups. Their BNSP AUCs stay
-# high. That combination is the identity-term over-flagging signature: benign mentions are scored like
-# toxicity elsewhere. These groups also take a larger share of the queue than their share of
-# truly toxic comments. *christian*, *male* and *female* are closer to the overall rates.
+# **Expected (real data, measured):** at the 5% budget (threshold 0.618) the overall FPR is 0.012 and
+# FNR 0.659. Benign comments mentioning *black* have an FPR of 0.102 (95% CI 0.093–0.111) and those
+# mentioning *white* 0.085: seven to eight times the overall rate. *homosexual_gay_or_lesbian* (0.067)
+# and *muslim* (0.047) follow. The same groups have the lowest BPSN AUCs (0.685, 0.693, 0.764, 0.773)
+# and high BNSP AUCs (0.93–0.96): the identity-term over-flagging signature, benign mentions scored like
+# toxicity elsewhere. Comments mentioning *black* are 15.8% of the queue but 10.1% of all toxic
+# comments. *christian* is the reverse case (FPR 0.010, BPSN 0.92, the lowest BNSP 0.88). Every group
+# passes the minimum-count rule on the full test split.
 #
 # **Which errors are they?** We never print the text, but we can describe the most over-flagged
 # non-toxic comments by id, length, score and their raw toxicity fraction. Many have fractions just
@@ -753,8 +758,12 @@ print("queue analysis under the stated assumption of 100,000 comments a day, wit
 QUEUE.round(3)
 
 # %% [markdown]
-# **Expected:** at 5% of 100,000 comments (5,000 reviews a day), roughly 3,000 of the queued comments are
-# toxic and roughly 7,000 toxic comments a day are not queued. These are consequences of the
+# **Expected (measured rates):** at 5% of 100,000 comments (5,000 reviews a day), about 3,900 of the
+# queued comments are toxic and about 7,500 toxic comments a day are not queued; at 1%, 965 of 1,000
+# queued comments are toxic but about 10,400 are missed. The most over-flagged benign comments
+# mentioning *black* all have toxicity fractions between 0.3 and 0.47, and 63% of all false positives
+# have a fraction of at least 0.3: many "errors" are comments the raters themselves disagreed on. On
+# confidently labelled comments PR-AUC rises from 0.644 to 0.762. These are consequences of the
 # assumptions, written down so that a team lead can change them, not predictions about any platform.
 #
 # **Common mistakes.** Hiding subgroup sizes (an FPR of 0.2 on 30 comments means little); choosing

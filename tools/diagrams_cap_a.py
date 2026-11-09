@@ -89,7 +89,7 @@ def cap1_cnn():
     names = [("Window", "30 × C sensors", "default"),
              ("Conv1d + ReLU", "32 ch, kernel 5", "accent"),
              ("Conv1d + ReLU", "32 ch, kernel 5", "accent"),
-             ("Flatten", "32 × 30 → 960 numbers", "accent"),
+             ("Flatten", "32 × 30 → 960", "accent"),
              ("Linear head", "→ RUL in cycles", "good")]
     w, gap, x, y = 148, 28, 30, 110
     for k, (lab, sub, role) in enumerate(names):
