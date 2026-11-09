@@ -211,3 +211,105 @@ network, which blocked the Xet transfer host. Colab does not need this.
 * Multi-GPU and multi-node behaviour: taught with real multi-process gloo code
   plus arithmetic, never measured on more than one machine.
 * Timings: measured on a shared 4-core machine and only indicative.
+
+## The book edition (chapters 1–58 and the capstone walkthroughs)
+
+After the course was restructured as a book, every lab and every capstone
+walkthrough was executed again, top to bottom, each from an empty artifact
+directory, with exercises unattempted: **63/63 pass**. Environment: Python
+3.12, PyTorch 2.8 (CPU), Transformers 5.x, numpy 2.0.2, pandas 2.2.2,
+scikit-learn 1.6.1, OMP_NUM_THREADS=2, on a shared 4-core machine with no
+GPU (Part III therefore ran on its reduced `cpu` budget). The full test
+suite (784 tests, including every exercise check against its reference
+solution) passes in the same environment.
+
+### Part I
+
+| Lab | Result | Seconds |
+|---|---|---:|
+| `part1-foundations/ch01-diagnostic/notebook.ipynb` | PASS | 1 |
+| `part1-foundations/ch02-reproducible-project/notebook.ipynb` | PASS | 6 |
+| `part1-foundations/ch03-data-acquisition-and-validation/notebook.ipynb` | PASS | 2 |
+| `part1-foundations/ch04-sql-for-ml/notebook.ipynb` | PASS | 3 |
+| `part1-foundations/ch05-leakage-safe-splits-and-baseline/notebook.ipynb` | PASS | 4 |
+| `part1-foundations/ch06-pipelines-and-cross-validation/notebook.ipynb` | PASS | 13 |
+| `part1-foundations/ch07-model-selection/notebook.ipynb` | PASS | 26 |
+| `part1-foundations/ch08-thresholds-and-calibration/notebook.ipynb` | PASS | 5 |
+| `part1-foundations/ch09-error-analysis-and-artifacts/notebook.ipynb` | PASS | 4 |
+| `part1-foundations/ch10-fastapi-and-contracts/notebook.ipynb` | PASS | 4 |
+| `part1-foundations/ch11-consistent-serving/notebook.ipynb` | PASS | 4 |
+| `part1-foundations/ch12-api-clients-and-tests/notebook.ipynb` | PASS | 17 |
+| `part1-foundations/ch13-packaging-and-configuration/notebook.ipynb` | PASS | 6 |
+| `part1-foundations/ch14-health-logs-and-latency/notebook.ipynb` | PASS | 23 |
+| `part1-foundations/ch15-monitoring-and-rollback/notebook.ipynb` | PASS | 7 |
+| `part1-foundations/ch16-final-evaluation-and-docs/notebook.ipynb` | PASS | 11 |
+| `part1-foundations/ch17-python-and-sql-drills/notebook.ipynb` | PASS | 2 |
+| `part1-foundations/ch18-system-design-and-mock-interview/notebook.ipynb` | PASS | 3 |
+
+### Part II
+
+| Lab | Result | Seconds |
+|---|---|---:|
+| `part2-ml-at-scale/ch19-event-logs-and-columnar-data/notebook.ipynb` | PASS | 29 |
+| `part2-ml-at-scale/ch20-aggregation-and-joins-at-scale/notebook.ipynb` | PASS | 13 |
+| `part2-ml-at-scale/ch21-feature-pipelines-and-feature-stores/notebook.ipynb` | PASS | 22 |
+| `part2-ml-at-scale/ch22-streaming-features/notebook.ipynb` | PASS | 9 |
+| `part2-ml-at-scale/ch23-implicit-feedback-and-position-bias/notebook.ipynb` | PASS | 12 |
+| `part2-ml-at-scale/ch24-learning-to-rank/notebook.ipynb` | PASS | 48 |
+| `part2-ml-at-scale/ch25-candidate-generation/notebook.ipynb` | PASS | 18 |
+| `part2-ml-at-scale/ch26-two-tower-retrieval-and-ann/notebook.ipynb` | PASS | 43 |
+| `part2-ml-at-scale/ch27-pytorch-training-done-right/notebook.ipynb` | PASS | 36 |
+| `part2-ml-at-scale/ch28-sequence-models-for-user-behavior/notebook.ipynb` | PASS | 65 |
+| `part2-ml-at-scale/ch29-ab-testing-fundamentals/notebook.ipynb` | PASS | 17 |
+| `part2-ml-at-scale/ch30-advanced-experimentation/notebook.ipynb` | PASS | 25 |
+| `part2-ml-at-scale/ch31-ml-from-scratch-1/notebook.ipynb` | PASS | 3 |
+| `part2-ml-at-scale/ch32-ml-from-scratch-2/notebook.ipynb` | PASS | 3 |
+| `part2-ml-at-scale/ch33-coding-patterns-1/notebook.ipynb` | PASS | 2 |
+| `part2-ml-at-scale/ch34-coding-patterns-2/notebook.ipynb` | PASS | 1 |
+| `part2-ml-at-scale/ch35-serving-a-ranking-cascade/notebook.ipynb` | PASS | 26 |
+| `part2-ml-at-scale/ch36-model-optimization-for-inference/notebook.ipynb` | PASS | 27 |
+| `part2-ml-at-scale/ch37-recsys-and-search-system-design/notebook.ipynb` | PASS | 4 |
+| `part2-ml-at-scale/ch38-final-evaluation-and-mock-loop/notebook.ipynb` | PASS | 24 |
+
+### Part III (CPU budget)
+
+| Lab | Result | Seconds |
+|---|---|---:|
+| `part3-deep-learning-systems/ch39-gpu-fundamentals-and-profiling/notebook.ipynb` | PASS | 9 |
+| `part3-deep-learning-systems/ch40-training-efficiency-and-memory/notebook.ipynb` | PASS | 29 |
+| `part3-deep-learning-systems/ch41-transformer-from-scratch/notebook.ipynb` | PASS | 35 |
+| `part3-deep-learning-systems/ch42-pretrained-transformers-and-tokenization/notebook.ipynb` | PASS | 56 |
+| `part3-deep-learning-systems/ch43-fine-tuning-a-classifier/notebook.ipynb` | PASS | 165 |
+| `part3-deep-learning-systems/ch44-parameter-efficient-fine-tuning/notebook.ipynb` | PASS | 192 |
+| `part3-deep-learning-systems/ch45-embeddings-and-semantic-search/notebook.ipynb` | PASS | 92 |
+| `part3-deep-learning-systems/ch46-contrastive-training-and-reranking/notebook.ipynb` | PASS | 161 |
+| `part3-deep-learning-systems/ch47-distributed-data-parallel/notebook.ipynb` | PASS | 34 |
+| `part3-deep-learning-systems/ch48-scaling-to-large-models/notebook.ipynb` | PASS | 8 |
+| `part3-deep-learning-systems/ch49-quantization-and-distillation/notebook.ipynb` | PASS | 187 |
+| `part3-deep-learning-systems/ch50-high-throughput-serving/notebook.ipynb` | PASS | 62 |
+| `part3-deep-learning-systems/ch51-ctr-prediction-at-scale/notebook.ipynb` | PASS | 48 |
+| `part3-deep-learning-systems/ch52-multitask-ranking-and-exploration/notebook.ipynb` | PASS | 35 |
+| `part3-deep-learning-systems/ch53-fairness-robustness-and-privacy/notebook.ipynb` | PASS | 44 |
+| `part3-deep-learning-systems/ch54-evaluating-llm-systems-and-guardrails/notebook.ipynb` | PASS | 190 |
+| `part3-deep-learning-systems/ch55-ml-platform-design/notebook.ipynb` | PASS | 2 |
+| `part3-deep-learning-systems/ch56-large-scale-design-cases/notebook.ipynb` | PASS | 2 |
+| `part3-deep-learning-systems/ch57-ml-depth-and-research-discussion/notebook.ipynb` | PASS | 71 |
+| `part3-deep-learning-systems/ch58-full-interview-loop-and-portfolio/notebook.ipynb` | PASS | 2 |
+
+### Part IV · Capstone walkthroughs
+
+| Walkthrough | Data | Result | Seconds |
+|---|---|---|---:|
+| `part4-capstones/cap1-predictive-maintenance/walkthrough.ipynb` | synthetic sample in the official format (official host unreachable here) | PASS | 63 |
+| `part4-capstones/cap2-electricity-load-forecasting/walkthrough.ipynb` | synthetic sample in the official format (official host unreachable here) | PASS | 83 |
+| `part4-capstones/cap3-retail-demand-forecasting/walkthrough.ipynb` | real public data | PASS | 60 |
+| `part4-capstones/cap4-movie-recommendations/walkthrough.ipynb` | synthetic sample in the official format (official host unreachable here) | PASS | 8 |
+| `part4-capstones/cap5-content-moderation/walkthrough.ipynb` | real public data | PASS | 361 |
+
+Capstones 3 (UCI Online Retail II) and 5 (Civil Comments, WILDS release)
+ran on the real public data; their README results tables were generated by
+those runs. Capstones 1 (NASA C-MAPSS), 2 (ERCOT) and 4 (MovieLens) could not
+download their data from this machine: the walkthroughs download from the
+official sources in Colab, and here they were verified on synthetic samples
+with the same files and formats (set `MLBOOTCAMP_CAPSTONE_SAMPLE=1` to
+reproduce). Their results tables remain *TBD* until a run on the real data.
