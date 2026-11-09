@@ -25,11 +25,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt ruff
       - name: Lint
-        run: ruff check src tests tools solutions
+        run: ruff check src tests tools part1-foundations part2-ml-at-scale part3-deep-learning-systems part4-capstones
       - name: Unit tests, graders vs reference solutions
         run: python -m pytest
-      - name: Notebooks in sync with notebook_src/
+      - name: Notebooks in sync with their notebook.py sources
         run: python tools/nbbuild.py --check
+      - name: Tables of contents in sync with the chapter folders
+        run: python tools/make_toc.py --check
       - name: Diagrams in sync with their generator
         run: python tools/make_diagrams.py --check
       - name: Notebook structure, syntax, links, Colab badges
@@ -38,12 +40,12 @@ jobs:
         run: python tools/check_links.py
       - name: Capstone template tests
         if: matrix.python-version == '3.12'
-        run: cd capstones/template && python -m pytest -q
+        run: cd part4-capstones/template && python -m pytest -q
 
-  levels:
-    # Levels 2-3 graders and reference solutions need PyTorch, LightGBM, FAISS.
+  graders-parts-2-3:
+    # Part II-III graders and reference solutions need PyTorch, LightGBM, FAISS.
     # CPU wheels keep the job small; no Hugging Face downloads are needed here.
-    name: Level 2-3 graders vs reference solutions
+    name: Part II-III graders vs reference solutions
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,45 +56,45 @@ jobs:
       - name: Install
         run: |
           python -m pip install --upgrade pip
-          pip install -r level3/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
+          pip install -r requirements-part3.txt --extra-index-url https://download.pytorch.org/whl/cpu
       - name: Graders accept their reference solutions
-        run: python -m pytest tests/test_solutions.py -k "level2 or level3"
+        run: python -m pytest tests/test_solutions.py
 
   execute:
     # Runs every notebook top to bottom, each in a fresh artifact directory -
     # the closest CI gets to "a new Colab runtime". Slower, so on main and on demand.
-    # One job per level: Level 1 uses the pinned teaching environment; Levels 2-3
+    # One job per part: Part I uses the pinned teaching environment; Parts II-III
     # add CPU PyTorch, LightGBM, FAISS and Transformers. Level 3 runs with its
     # reduced "cpu" budget (runners have no GPU) and downloads small public
     # models and datasets from the Hugging Face Hub.
-    name: Execute notebooks (${{ matrix.level }})
+    name: Execute notebooks (${{ matrix.part }})
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
-        level: [level1, level2, level3]
+        part: [part1-foundations, part2-ml-at-scale, part3-deep-learning-systems]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install (Level 1)
-        if: matrix.level == 'level1'
+      - name: Install (Part I)
+        if: matrix.part == 'part1-foundations'
         run: pip install -r requirements-lock.txt -r requirements-dev.txt
-      - name: Install (Levels 2-3)
-        if: matrix.level != 'level1'
+      - name: Install (Parts II-III)
+        if: matrix.part != 'part1-foundations'
         run: |
           python -m pip install --upgrade pip
-          pip install -r level3/requirements.txt -r requirements-dev.txt --extra-index-url https://download.pytorch.org/whl/cpu
+          pip install -r requirements-part3.txt -r requirements-dev.txt --extra-index-url https://download.pytorch.org/whl/cpu
       - name: Execute notebooks
         env:
           OMP_NUM_THREADS: "2"
-        run: python tools/run_notebooks.py --level ${{ matrix.level }} --timeout 1800 --report verification-log-${{ matrix.level }}.md
+        run: python tools/run_notebooks.py --part ${{ matrix.part }} --timeout 1800 --report verification-log-${{ matrix.part }}.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: notebook-verification-${{ matrix.level }}
-          path: verification-log-${{ matrix.level }}.md
+          name: notebook-verification-${{ matrix.part }}
+          path: verification-log-${{ matrix.part }}.md

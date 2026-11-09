@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Check that every relative link in the markdown files points at a real file.
 
-Covers README.md and the markdown under docs/, solutions/, capstones/,
-notebooks/, deploy/, data/, level2/ and level3/. The docs are read directly on
+Covers README.md, CONTRIBUTING.md and the markdown in every part, the
+appendices, data/ and deploy/. The docs are read directly on
 GitHub (there is no generated site), so a link must name the real file:
 ``guides/setup.md``, not ``guides/setup.html``.
 
@@ -26,7 +26,7 @@ def strip_code(text: str) -> str:
     """Blank out fenced code blocks before looking for links.
 
     Python is full of ``thing[key](args)``, which is exactly the shape of a
-    markdown link. Since docs/notebooks/ is generated from real notebooks, the
+    markdown link. Since code is full of such shapes, the
     checker reported `allowed[type(node.op)](evaluate(node.left)` as a broken
     link to a file called `evaluate(node.left`. Lines are replaced rather than
     removed so reported line numbers would still line up.
@@ -52,8 +52,9 @@ def resolve(source: Path, target: str) -> bool:
 
 
 def main() -> int:
-    files = [REPO_ROOT / "README.md", *sorted((REPO_ROOT / "docs").rglob("*.md"))]
-    for folder in ("data", "solutions", "capstones", "notebooks", "deploy", "level2", "level3"):
+    files = [REPO_ROOT / "README.md", REPO_ROOT / "CONTRIBUTING.md"]
+    for folder in ("data", "deploy", "appendices", "part1-foundations", "part2-ml-at-scale",
+                   "part3-deep-learning-systems", "part4-capstones"):
         files += sorted((REPO_ROOT / folder).rglob("*.md"))
 
     problems: list[str] = []

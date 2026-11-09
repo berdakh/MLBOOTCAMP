@@ -1,28 +1,13 @@
 #!/usr/bin/env python3
-"""Build .ipynb notebooks from jupytext-style "percent" .py sources.
+"""Build each chapter's notebook.ipynb from its notebook.py (percent format).
 
-Why this exists
----------------
-Notebook JSON is painful to review in a pull request: one changed word shows up
-as a rewritten blob. So the *source of truth* for every workshop notebook is a
-plain Python file in ``notebook_src/`` using the percent format, and this script
-renders the ``notebooks/*.ipynb`` that students actually open.
+Why: notebook JSON is unreadable in a diff, so the source of truth for every lab
+is a plain Python file next to it, and this script renders the .ipynb that
+learners open. Also builds the capstone walkthroughs.
 
-Percent format recap::
-
-    # %% [markdown]
-    # # A heading
-    # Some prose.
-
-    # %%
-    print("a code cell")
-
-Usage::
-
-    python tools/nbbuild.py            # build every source
-    python tools/nbbuild.py --check    # fail if notebooks are stale (CI)
-    python tools/nbbuild.py 03_sql_for_ml      # substring of the path
-    python tools/nbbuild.py level2/            # one level
+    python tools/nbbuild.py              # build everything
+    python tools/nbbuild.py --check      # fail if any notebook is stale (CI)
+    python tools/nbbuild.py ch06 cap1    # only paths containing these substrings
 """
 
 from __future__ import annotations
@@ -34,10 +19,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from levels import LEVELS  # noqa: E402
-from levels import sources as level_sources
-
-# Sources whose name starts with "_" are fragments/templates, not notebooks.
+from book import all_sources  # noqa: E402
 
 KERNELSPEC = {
     "display_name": "Python 3",
@@ -130,7 +112,7 @@ def build_notebook(src: Path) -> dict:
     # Stable cell ids (nbformat 4.5 requires them): position-based, so a
     # rebuild of unchanged source is byte-identical.
     for number, cell in enumerate(cells):
-        cell["id"] = f"{src.stem[:2]}-{number:03d}"
+        cell["id"] = f"{src.parent.name[:4]}-{number:03d}"
     if not cells:
         raise ValueError(f"{src.name} produced no cells - is it percent-formatted?")
     return {
@@ -156,7 +138,7 @@ def main() -> int:
     parser.add_argument("--check", action="store_true", help="verify notebooks are up to date")
     args = parser.parse_args()
 
-    pairs = [(src, level.nb_dir / (src.stem + ".ipynb")) for level in LEVELS for src in level_sources(level)]
+    pairs = [(src, src.with_suffix(".ipynb")) for src in all_sources()]
     if args.only:
         pairs = [(s, o) for s, o in pairs
                  if any(token in s.relative_to(REPO_ROOT).as_posix() for token in args.only)]

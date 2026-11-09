@@ -17,8 +17,8 @@ A small, readable, end-to-end ML system for a fictional subscription business:
     client.py      a retrying, timeout-aware API client
     monitoring.py  drift (PSI), alert rules, latency summaries
     colab.py       artifact persistence across Colab sessions
-    bootstrap.py   rebuild any earlier day's outputs in seconds
-    checks.py      exercise self-checks; graders live in churnlab.grading
+    bootstrap.py   rebuild any earlier chapter's outputs in seconds
+    checks.py      exercise self-checks; graders live in src/grading/chNN.py
 
 Read the modules: they are short and commented for a first reading.
 """

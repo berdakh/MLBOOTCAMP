@@ -6,7 +6,8 @@ seed, samples *stratified by label* where it matters, and returns plain
 pandas DataFrames so the data can be inspected before any model sees it.
 
 Licences: each dataset has its own terms on its Hub page. The ones used in
-Level 3 are listed in ``level3/README.md`` with links; read them before reuse.
+Part III are listed in ``part3-deep-learning-systems/README.md`` and in each
+chapter that uses them, with links; read them before reuse.
 """
 
 from __future__ import annotations
