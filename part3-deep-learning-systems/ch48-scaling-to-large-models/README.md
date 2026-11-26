@@ -52,7 +52,7 @@ partitioning the replicated state across the $N$ data-parallel GPUs, one categor
 
 $$
 M_{\text{DDP}} = 16\Psi, \qquad M_{\text{Z1}} = 4\Psi + \frac{12\Psi}{N}, \qquad M_{\text{Z2}} = 2\Psi + \frac{14\Psi}{N}, \qquad M_{\text{Z3}} = \frac{16\Psi}{N} .
-\tag{48.1}
+\qquad (48.1)
 $$
 
 Stage 1 shards the optimiser state, stage 2 also the gradients, stage 3 also the parameters. PyTorch's `FullyShardedDataParallel` (FSDP, and
@@ -84,7 +84,7 @@ Shoeybi et al., 2019) splits the *computation* of each layer across devices. For
 $$
 \text{column-parallel: } y = \big[\, x W_1^\top,\; x W_2^\top \,\big] \;(\text{all-gather}), \qquad
 \text{row-parallel: } y = x_1 W_1^\top + x_2 W_2^\top \;(\text{all-reduce}) .
-\tag{48.2}
+\qquad (48.2)
 $$
 
 In the column-parallel form each device holds some of $W$'s output rows and computes a slice of $y$'s features from the full input. In the row-parallel
@@ -116,7 +116,7 @@ time is the **bubble**. With $p$ stages, the schedule of one pass takes $m + p -
 
 $$
 \text{bubble fraction} = \frac{p - 1}{m + p - 1} .
-\tag{48.3}
+\qquad (48.3)
 $$
 
 The same fraction holds for GPipe (Huang et al., 2019), which runs all forward passes and then all backward passes, and for the 1F1B schedule, which
@@ -155,7 +155,7 @@ Training a dense transformer with $N$ parameters on $D$ tokens costs approximate
 
 $$
 C \approx 6\,N D \ \text{FLOPs}, \qquad t \approx \frac{C}{n_{\text{GPU}} \cdot P_{\text{peak}} \cdot \text{MFU}}
-\tag{48.4}
+\qquad (48.4)
 $$
 
 (Kaplan et al., 2020). The factor 6 has a simple origin. Every training token visits every weight three times: in the forward pass (activation × weight), and
@@ -199,7 +199,7 @@ Combining $C = 6ND$ with $D = 20N$ gives the compute-optimal size
 
 $$
 D^{\star} \approx 20\, N^{\star} \;\;\Rightarrow\;\; C = 6 N^{\star} (20 N^{\star}) \;\;\Rightarrow\;\; N^{\star} = \sqrt{C / 120} .
-\tag{48.5}
+\qquad (48.5)
 $$
 
 <img src="../../figures/l3-scaling-frontier.svg" alt="Three U-shaped loss curves against model size for budgets C, 10C and 100C, with the minima joined by a dashed compute-optimal frontier; beside them C = 6ND, D = 20N and N = sqrt(C/120)" width="100%">
@@ -224,7 +224,7 @@ checkpoint interval $\tau$, the expected fraction of time wasted is approximatel
 
 $$
 \text{waste}(\tau) \approx \frac{C}{\tau} + \frac{\tau/2 + R}{M}, \qquad \tau^{\star} = \sqrt{2\,C\,M} \quad (\text{Daly: } \tau^\star \approx \sqrt{2CM} - C).
-\tag{48.6}
+\qquad (48.6)
 $$
 
 The first term is the writing overhead; the second is, per failure, on average half an interval of lost work plus the restart. Setting the derivative $-C/\tau^2 + 1/(2M)$
@@ -258,7 +258,7 @@ updates are applied to an **fp32 master copy**; and $256 + 1 = 256$ in bf16.
 
 $$
 \nabla_\theta (S \cdot \mathcal L) = S \cdot \nabla_\theta \mathcal L ,
-\tag{48.7}
+\qquad (48.7)
 $$
 
 so multiplying the loss by a scale $S$ (for example $2^{16}$) multiplies every gradient by $S$ and lifts it into fp16's range; the optimiser divides by $S$ in fp32 before the update

@@ -48,7 +48,7 @@ $$
 m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t, \qquad
 v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t^2, \qquad
 \theta_t = \theta_{t-1} - \eta_t \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}
-\tag{57.1}
+\qquad (57.1)
 $$
 
 where $\hat{m}_t = m_t/(1 - \beta_1^t)$ and $\hat{v}_t = v_t/(1 - \beta_2^t)$ are bias-corrected estimates, $\beta_1 \approx 0.9$,
@@ -75,7 +75,7 @@ $$
 \eta_{\min} + \tfrac12 (\eta_{\max} - \eta_{\min}) \big(1 + \cos(\pi\, \pi_t)\big) & t \ge t_w
 \end{cases},
 \qquad \pi_t = \min\!\left(1, \frac{t - t_w}{t_{\text{total}} - t_w}\right)
-\tag{57.2}
+\qquad (57.2)
 $$
 
 where $t$ is the step, $t_w$ the number of warmup steps and $\pi_t \in [0, 1]$ the progress through the decay. For
@@ -109,7 +109,7 @@ the distance travelled per epoch roughly constant; a more conservative alternati
 
 $$
 \eta(kB) = k\, \eta(B) \ \ \text{(linear)}, \qquad \eta(kB) = \sqrt{k}\, \eta(B) \ \ \text{(square root)}
-\tag{57.3}
+\qquad (57.3)
 $$
 
 Goyal et al. (2017) showed that linear scaling with warmup trains ImageNet with very large batches for SGD. The rule holds only up to a
@@ -160,7 +160,7 @@ $\lambda \lVert w \rVert^2$:
 $$
 \hat{w}_{\text{min-norm}} = X^{+} y = \arg\min_w \lVert w \rVert_2 \ \text{ subject to } Xw = y, \qquad
 \hat{w}_{\text{ridge}} = (X^\top X + \lambda I)^{-1} X^\top y
-\tag{57.4}
+\qquad (57.4)
 $$
 
 In terms of the singular values $\sigma_i$ of $X$, the min-norm solution divides by $\sigma_i$ while ridge divides by $(\sigma_i^2 + \lambda)/\sigma_i$.
@@ -192,7 +192,7 @@ The lab contains a question bank with, for each question, the points a strong an
 
 $$
 \text{bytes} = L \cdot H \cdot T^2 \cdot b
-\tag{57.5}
+\qquad (57.5)
 $$
 
   for $L$ layers, $H$ heads and $b$ bytes per value: for a 12-layer, 12-head model in fp16, 1.2 GB per sequence at $T = 2{,}048$ and 19.3 GB at $8{,}192$, beyond

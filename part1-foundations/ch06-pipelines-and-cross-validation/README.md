@@ -92,7 +92,7 @@ is "this customer's historical churn rate", a form of **target encoding**:
 replacing a category (here, the customer) with the mean label of its rows,
 
 $$
-\text{TE}(c) = \frac{1}{n_c} \sum_{i \in c} y_i , \tag{6.1}
+\text{TE}(c) = \frac{1}{n_c} \sum_{i \in c} y_i , \qquad (6.1)
 $$
 
 where $c$ is a category level, $n_c$ the number of rows in that level and
@@ -165,7 +165,7 @@ EU, LATAM, NA and unknown). Output names carry the branch prefix (`log__`,
 mean and standard deviation:
 
 $$
-z = \frac{x - \mu_{\text{train}}}{\sigma_{\text{train}}} , \tag{6.2}
+z = \frac{x - \mu_{\text{train}}}{\sigma_{\text{train}}} , \qquad (6.2)
 $$
 
 where $\mu_{\text{train}}$ and $\sigma_{\text{train}}$ are the mean and
@@ -179,7 +179,7 @@ strongly right-skewed (raw skewness about 1.7 to 2.7 here). In a linear model
 a few very large accounts would then dominate the coefficient. The transform
 
 $$
-\tilde{x} = \ln(1 + x) \tag{6.3}
+\tilde{x} = \ln(1 + x) \qquad (6.3)
 $$
 
 maps 0 to 0 and turns an effect "per unit" into an effect roughly "per
@@ -207,7 +207,7 @@ linear function of the standardised features:
 $$
 \log\frac{p}{1-p} = \beta_0 + \sum_j \beta_j z_j ,
 \qquad
-p = \sigma(\eta) = \frac{1}{1 + e^{-\eta}} , \tag{6.4}
+p = \sigma(\eta) = \frac{1}{1 + e^{-\eta}} , \qquad (6.4)
 $$
 
 where $p$ is the churn probability, $\eta = \beta_0 + \sum_j \beta_j z_j$ the

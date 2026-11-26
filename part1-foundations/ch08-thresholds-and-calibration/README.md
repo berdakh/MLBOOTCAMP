@@ -60,7 +60,7 @@ positive (FP, flagged non-churner), false negative (FN, missed churner) or
 true negative (TN). The basic decision metrics are
 
 $$
-P = \frac{TP}{TP + FP}, \qquad R = \frac{TP}{TP + FN}, \qquad F_1 = \frac{2PR}{P + R} , \tag{8.1}
+P = \frac{TP}{TP + FP}, \qquad R = \frac{TP}{TP + FN}, \qquad F_1 = \frac{2PR}{P + R} , \qquad (8.1)
 $$
 
 where precision $P$ is how pure the flagged set is (the share of calls that
@@ -134,14 +134,14 @@ cost of a call. Calling is worthwhile exactly when this is positive:
 $$
 pV > (1 - p)\,C
 \iff
-p > p^{*} = \frac{C}{V + C} = \frac{30}{150 + 30} = \frac{1}{6} \approx 0.167 . \tag{8.2}
+p > p^{*} = \frac{C}{V + C} = \frac{30}{150 + 30} = \frac{1}{6} \approx 0.167 . \qquad (8.2)
 $$
 
 $p^{*}$ is the **break-even probability**. Summed over the flagged accounts,
 the expected value of a threshold $t$ is
 
 $$
-\text{EV}(t) = TP(t)\cdot V - FP(t)\cdot C . \tag{8.3}
+\text{EV}(t) = TP(t)\cdot V - FP(t)\cdot C . \qquad (8.3)
 $$
 
 Three consequences follow.
@@ -220,7 +220,7 @@ The quality of a top-k rule is measured by precision at $k$ and lift:
 $$
 \operatorname{precision@}k = \frac{1}{k} \sum_{i \in \text{top-}k} y_i ,
 \qquad
-\operatorname{lift@}k = \frac{\operatorname{precision@}k}{\pi} , \tag{8.4}
+\operatorname{lift@}k = \frac{\operatorname{precision@}k}{\pi} , \qquad (8.4)
 $$
 
 where $y_i$ is the label of account $i$ and $\pi$ the positive rate. Lift is
@@ -259,11 +259,11 @@ mean predicted score with the observed churn rate. Two summary measures of
 probability quality are used:
 
 $$
-\text{Brier} = \frac{1}{N}\sum_{i=1}^{N} (p_i - y_i)^2 , \tag{8.5}
+\text{Brier} = \frac{1}{N}\sum_{i=1}^{N} (p_i - y_i)^2 , \qquad (8.5)
 $$
 
 $$
-\text{LogLoss} = -\frac{1}{N}\sum_{i=1}^{N}\Big[y_i \ln p_i + (1 - y_i)\ln(1 - p_i)\Big] , \tag{8.6}
+\text{LogLoss} = -\frac{1}{N}\sum_{i=1}^{N}\Big[y_i \ln p_i + (1 - y_i)\ln(1 - p_i)\Big] , \qquad (8.6)
 $$
 
 where $p_i$ is the predicted probability and $y_i \in \{0, 1\}$ the outcome

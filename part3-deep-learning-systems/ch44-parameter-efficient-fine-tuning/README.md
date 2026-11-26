@@ -48,7 +48,7 @@ $b_w$ bytes each and $\Psi_{\text{trained}}$ trained parameters,
 
 $$
 M \approx b_w\, \Psi_{\text{total}} + 16\, \Psi_{\text{trained}} + M_{\text{act}} ,
-\tag{44.1}
+\qquad (44.1)
 $$
 
 where 16 bytes per trained parameter is the fp32 AdamW figure of Chapter 40. (Counting the trained weights
@@ -74,7 +74,7 @@ matrix $W_0 \in \mathbb R^{d \times k}$ to be a product of two thin matrices:
 $$
 h = W_0 x + \Delta W x = W_0 x + \frac{\alpha}{r}\, B A x, \qquad
 A \in \mathbb{R}^{r \times k},\; B \in \mathbb{R}^{d \times r},\; r \ll \min(d, k).
-\tag{44.2}
+\qquad (44.2)
 $$
 
 $W_0$ is frozen; only $A$ and $B$ are trained. Each design choice has a reason.
@@ -92,7 +92,7 @@ $W_0$ is frozen; only $A$ and $B$ are trained. Each design choice has a reason.
 
 $$
 r\,(d + k) \quad\text{trainable parameters, instead of}\quad d\,k .
-\tag{44.3}
+\qquad (44.3)
 $$
 
 For a $768 \times 768$ projection and $r = 8$ this is $8 \cdot 1536 = 12{,}288$ instead of $589{,}824$, about 2%.
@@ -190,7 +190,7 @@ After training, the update can be folded into the frozen weight:
 
 $$
 W' = W_0 + \frac{\alpha}{r}\, B A .
-\tag{44.4}
+\qquad (44.4)
 $$
 
 $W'$ has the original shape, so the merged model is an ordinary model and serves exactly as fast as the base model:

@@ -55,7 +55,7 @@ width of a bootstrap interval scales roughly with the inverse square root of
 the number of positives $N_{+}$:
 
 $$
-\text{CI width} \;\propto\; \frac{1}{\sqrt{N_{+}}} . \tag{9.1}
+\text{CI width} \;\propto\; \frac{1}{\sqrt{N_{+}}} . \qquad (9.1)
 $$
 
 Going from the 360 positives of the whole validation set (interval width
@@ -73,7 +73,7 @@ to the slice's positive rate $\pi_s$, so a slice with fewer churners has a
 lower floor. Slices are compared through the ratio
 
 $$
-\frac{\text{PR-AUC}_s}{\pi_s} \tag{9.2}
+\frac{\text{PR-AUC}_s}{\pi_s} \qquad (9.2)
 $$
 
 or through ROC-AUC, which does not depend on the positive rate. For
@@ -292,7 +292,7 @@ The lift at the top fraction $q$ of scores is the same ratio as in
 Equation (8.4), expressed for a share rather than a count:
 
 $$
-\text{lift@}q = \frac{\text{churn rate among the top } q \text{ of scores}}{\pi} . \tag{9.3}
+\text{lift@}q = \frac{\text{churn rate among the top } q \text{ of scores}}{\pi} . \qquad (9.3)
 $$
 
 For $q = 10\%$ of 6,956 validation rows, 696 accounts of which about 116

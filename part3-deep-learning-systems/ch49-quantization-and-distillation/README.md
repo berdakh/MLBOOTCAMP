@@ -62,7 +62,7 @@ help in both regimes:
 
 $$
 \text{bytes} = \text{number of parameters} \times \frac{\text{bits per parameter}}{8}
-\tag{49.1}
+\qquad (49.1)
 $$
 
   plus a small overhead for the scale factors (one floating-point number per row or per group). For
@@ -87,7 +87,7 @@ $$
 q = \operatorname{clamp}\!\big(\operatorname{round}(x / s),\,-Q,\,Q\big), \qquad
 s = \frac{\max_i \lvert x_i \rvert}{Q}, \qquad
 \hat{x} = q\,s
-\tag{49.2}
+\qquad (49.2)
 $$
 
 Here $x_i$ are the real values covered by one scale, $s$ is the **scale** (the real-valued size of one
@@ -101,7 +101,7 @@ a step:
 
 $$
 \lvert x - \hat{x} \rvert \le \frac{s}{2}
-\tag{49.3}
+\qquad (49.3)
 $$
 
 *Worked example.* Take $x = 0.21$ in a group whose largest magnitude is 0.35. Then
@@ -145,7 +145,7 @@ $$
 q = \operatorname{clamp}\!\big(\operatorname{round}(x/s) + z,\,0,\,255\big), \qquad
 s = \frac{x_{\max} - x_{\min}}{255}, \qquad
 \hat{x} = (q - z)\,s
-\tag{49.4}
+\qquad (49.4)
 $$
 
 Weights are usually quantised symmetrically and activations asymmetrically.
@@ -224,7 +224,7 @@ With logits $z$ (the inputs to the softmax), the softened distribution at temper
 
 $$
 p_i^{(T)} = \frac{\exp(z_i / T)}{\sum_j \exp(z_j / T)}
-\tag{49.5}
+\qquad (49.5)
 $$
 
 $T = 1$ gives the ordinary softmax; $T > 1$ flattens the distribution and makes the small probabilities
@@ -239,7 +239,7 @@ the teacher's, and the ordinary *hard* cross-entropy with the true label $y$:
 
 $$
 \mathcal{L} = \alpha\, T^2\, \mathrm{KL}\!\left(p_t^{(T)} \,\Vert\, p_s^{(T)}\right) + (1 - \alpha)\, \mathrm{CE}(z_s, y)
-\tag{49.6}
+\qquad (49.6)
 $$
 
 Here $z_t$ and $z_s$ are the teacher's and student's logits, $p_t^{(T)}$ and $p_s^{(T)}$ the corresponding

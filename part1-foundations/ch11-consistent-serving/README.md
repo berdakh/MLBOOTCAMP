@@ -79,7 +79,7 @@ The model computes the **log-odds** (also called the *logit* or *linear
 predictor*)
 
 $$
-\eta = \beta_0 + \sum_{j=1}^{d} \beta_j z_j, \qquad p = \sigma(\eta) = \frac{1}{1 + e^{-\eta}}, \tag{11.1}
+\eta = \beta_0 + \sum_{j=1}^{d} \beta_j z_j, \qquad p = \sigma(\eta) = \frac{1}{1 + e^{-\eta}}, \qquad (11.1)
 $$
 
 where $z_j$ is the $j$-th feature after preprocessing (imputation, log
@@ -89,7 +89,7 @@ Suppose the service computes feature $j$ as $z_j + \delta_j$ instead of $z_j$,
 where $\delta_j$ is the error after preprocessing. Then
 
 $$
-\Delta \eta = \beta_j\, \delta_j, \qquad p_{\text{served}} = \sigma\!\left(\eta + \beta_j \delta_j\right). \tag{11.2}
+\Delta \eta = \beta_j\, \delta_j, \qquad p_{\text{served}} = \sigma\!\left(\eta + \beta_j \delta_j\right). \qquad (11.2)
 $$
 
 In words, the error in the feature, multiplied by its coefficient, is added
@@ -186,7 +186,7 @@ service for the same row. The parity criterion is
 $$
 \max_{i} \left\lvert p_i^{\text{offline}} - p_i^{\text{API}} \right\rvert \le \varepsilon
 \quad \text{and} \quad
-\sum_i \mathbb{1}\!\left[\, \mathbb{1}[p_i^{\text{offline}} \ge t] \ne f_i^{\text{API}} \right] = 0, \tag{11.3}
+\sum_i \mathbb{1}\!\left[\, \mathbb{1}[p_i^{\text{offline}} \ge t] \ne f_i^{\text{API}} \right] = 0, \qquad (11.3)
 $$
 
 where $\varepsilon$ is the tolerance, $t$ is the threshold reported by the

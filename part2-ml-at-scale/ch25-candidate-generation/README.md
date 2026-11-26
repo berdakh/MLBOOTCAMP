@@ -86,7 +86,7 @@ $\text{top}_K(u)$,
 
 $$
 \operatorname{Recall@}K(u) = \frac{\lvert \text{top}_K(u) \cap T_u \rvert}{\lvert T_u \rvert}
-\tag{25.1}
+\qquad (25.1)
 $$
 
 averaged over users with a non-empty $T_u$. With five next-week clicks, two of
@@ -103,7 +103,7 @@ at least one user's list:
 
 $$
 \operatorname{Coverage} = \frac{\left\lvert \bigcup_{u} \text{top}_K(u) \right\rvert}{\lvert \mathcal{I} \rvert}
-\tag{25.2}
+\qquad (25.2)
 $$
 
 Global popularity gives every user the same 100 items, so its coverage is
@@ -144,7 +144,7 @@ counts the number of **sessions** in which both were clicked:
 
 $$
 C(a, b) = \sum_{s} \mathbb{1}[a \in s]\, \mathbb{1}[b \in s], \qquad a \neq b
-\tag{25.3}
+\qquad (25.3)
 $$
 
 where $s$ ranges over sessions, each treated as a set of items (so repeats within
@@ -192,7 +192,7 @@ a scaling constant, and minimise
 
 $$
 \min_{X, Y} \sum_{u,i} c_{ui}\,(p_{ui} - x_u^\top y_i)^2 + \lambda\Big(\sum_u \lVert x_u \rVert^2 + \sum_i \lVert y_i \rVert^2\Big)
-\tag{25.4}
+\qquad (25.4)
 $$
 
 where $\lambda$ is a regularisation constant. With $\alpha = 20$, a cell with two
@@ -212,7 +212,7 @@ with respect to $x_u$ to zero gives
 
 $$
 x_u = \left(Y^\top C_u Y + \lambda I\right)^{-1} Y^\top C_u\, p_u
-\tag{25.5}
+\qquad (25.5)
 $$
 
 where $Y$ is the $n_\text{items} \times f$ matrix of item vectors, $C_u$ the
@@ -224,7 +224,7 @@ observation is
 
 $$
 Y^\top C_u Y = Y^\top Y + Y^\top (C_u - I) Y
-\tag{25.6}
+\qquad (25.6)
 $$
 
 $Y^\top Y$ is shared by all users and computed once per iteration, and $C_u - I$ is
@@ -259,7 +259,7 @@ $j$:
 
 $$
 L_\text{BPR} = -\sum_{(u, i, j)} \log \sigma\!\left(x_u^\top y_i - x_u^\top y_j\right) + \lambda \lVert \Theta \rVert^2
-\tag{25.7}
+\qquad (25.7)
 $$
 
 where $\sigma$ is the logistic function and $\Theta$ denotes all parameters. With

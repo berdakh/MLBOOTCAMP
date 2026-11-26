@@ -55,7 +55,7 @@ position and is independent of relevance:
 
 $$
 P(c = 1 \mid u, i, p) = \underbrace{\theta_p}_{P(\text{examined} \mid p)} \cdot \underbrace{r_{u,i}}_{P(\text{relevant} \mid u, i)}
-\tag{23.1}
+\qquad (23.1)
 $$
 
 where $c$ is the click indicator, $p$ the position (0 at the top), $\theta_p$
@@ -145,7 +145,7 @@ position. Under the PBM,
 
 $$
 \frac{\text{CTR}_\text{rand}(p)}{\text{CTR}_\text{rand}(0)} = \frac{\theta_p \, \bar r}{\theta_0 \, \bar r} = \frac{\theta_p}{\theta_0}
-\tag{23.2}
+\qquad (23.2)
 $$
 
 Only *relative* propensities are identifiable: multiplying every $\theta_p$ by a
@@ -179,7 +179,7 @@ a power law, $\theta_p \propto (1 + p)^{-\eta}$, so the lab fits
 
 $$
 \log \text{CTR}_\text{rand}(p) = a - \eta \log(1 + p)
-\tag{23.3}
+\qquad (23.3)
 $$
 
 by weighted least squares, with weights proportional to the square root of the
@@ -214,7 +214,7 @@ $$
 \hat r_\text{IPS} = \frac{1}{n} \sum_{j=1}^{n} \frac{c_j}{\theta_{p_j}},
 \qquad
 \hat r_\text{clip} = \frac{1}{n} \sum_{j=1}^{n} c_j \min\!\left(\frac{1}{\theta_{p_j}}, M\right)
-\tag{23.4}
+\qquad (23.4)
 $$
 
 where $c_j$ and $p_j$ are the click and position of impression $j$, and $M$ is
@@ -251,7 +251,7 @@ $\theta_q / \theta_p$ clicks. Summed over a request,
 
 $$
 \hat V(\text{new}) = \sum_{i \in \text{request}} \frac{\theta_{q_i}}{\theta_{p_i}}\, c_i
-\tag{23.5}
+\qquad (23.5)
 $$
 
 where $p_i$ and $q_i$ are the logged and new positions of item $i$ and $c_i$ its

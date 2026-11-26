@@ -84,7 +84,7 @@ padding (0). Inside every attention layer the mask is applied to the keys:
 
 $$
 \text{score}_{ij} \;\leftarrow\; \text{score}_{ij} + (1 - m_j)\cdot(-\infty) ,
-\tag{42.1}
+\qquad (42.1)
 $$
 
 so after the softmax a padded key receives weight exactly zero from every query. For scores
@@ -126,7 +126,7 @@ Many applications need **one vector per text**, obtained by **pooling** the toke
 
 $$
 \mathbf{s} = \frac{\sum_{t=1}^{T} m_t\, \mathbf{h}_t}{\sum_{t=1}^{T} m_t} ,
-\tag{42.2}
+\qquad (42.2)
 $$
 
 where $\mathbf h_t$ is the hidden state at position $t$ and $m_t$ the mask. Sentence-embedding models
@@ -146,7 +146,7 @@ similarity**,
 
 $$
 \cos(\mathbf a, \mathbf b) = \frac{\mathbf a \cdot \mathbf b}{\lVert \mathbf a \rVert \, \lVert \mathbf b \rVert} ,
-\tag{42.3}
+\qquad (42.3)
 $$
 
 the cosine of the angle between the vectors, which ignores their lengths. On a small hand-made set of
@@ -181,7 +181,7 @@ Every pad position costs as much computation as a real token. The fraction of wa
 
 $$
 \text{waste} = 1 - \frac{\sum_i \ell_i}{\sum_{\text{batches } b} \lvert b \rvert \cdot \max_{i \in b} \ell_i} ,
-\tag{42.4}
+\qquad (42.4)
 $$
 
 where $\ell_i$ is the length of text $i$ and $\lvert b\rvert$ the number of rows in batch $b$. For six texts

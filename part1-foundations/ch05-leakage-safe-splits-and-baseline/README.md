@@ -113,7 +113,7 @@ validation is supposed to test. A row with snapshot $T$ may therefore train a
 model that is validated from $t_v$ onwards only if
 
 $$
-T + h \le t_v , \tag{5.1}
+T + h \le t_v , \qquad (5.1)
 $$
 
 that is, only if its label is settled before the evaluation period begins.
@@ -167,7 +167,7 @@ chosen threshold.
 above a randomly chosen negative, with ties counted as one half:
 
 $$
-\text{ROC-AUC} = P\left(s^{+} > s^{-}\right) + \tfrac{1}{2}\, P\left(s^{+} = s^{-}\right) , \tag{5.2}
+\text{ROC-AUC} = P\left(s^{+} > s^{-}\right) + \tfrac{1}{2}\, P\left(s^{+} = s^{-}\right) , \qquad (5.2)
 $$
 
 where $s^{+}$ and $s^{-}$ are the scores of a random positive and a random
@@ -178,7 +178,7 @@ under the precision-recall curve (**PR-AUC**), averages the precision at the
 rank of each positive:
 
 $$
-\text{AP} = \sum_{n} (R_n - R_{n-1})\, P_n = \frac{1}{N_{+}} \sum_{k:\ y_{(k)} = 1} \text{precision@}k , \tag{5.3}
+\text{AP} = \sum_{n} (R_n - R_{n-1})\, P_n = \frac{1}{N_{+}} \sum_{k:\ y_{(k)} = 1} \text{precision@}k , \qquad (5.3)
 $$
 
 where $P_n$ and $R_n$ are the precision and recall at the $n$-th threshold,

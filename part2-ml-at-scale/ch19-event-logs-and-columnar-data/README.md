@@ -102,7 +102,7 @@ the user examines it* is a logistic function of a relevance score:
 
 $$
 P(C = 1 \mid E = 1, u, i) = \sigma\!\left(1.6\,\mathbf{u}_u^{\top}\mathbf{v}_i + 0.5\,q_i - 0.25\,\log \text{price}_i - 1.2\right)
-\tag{19.1}
+\qquad (19.1)
 $$
 
 where $C$ is the click indicator, $E$ the examination indicator,
@@ -122,7 +122,7 @@ policy's score is
 $$
 s_{ui} = \log \text{pop}_i + 0.8\,\tilde{\mathbf{u}}_u^{\top}\mathbf{v}_i + g_{ui},
 \qquad g_{ui} \sim \operatorname{Gumbel}(0, 0.7)
-\tag{19.2}
+\qquad (19.2)
 $$
 
 where $\text{pop}_i$ is a noisy popularity built from item quality,
@@ -147,7 +147,7 @@ $p$ (counted from 0 at the top) with probability
 
 $$
 P(E = 1 \mid p) = (1 + p)^{-\eta}, \qquad \eta = 0.9
-\tag{19.3}
+\qquad (19.3)
 $$
 
 so the top item is always examined and the item at position 9 is examined
@@ -158,7 +158,7 @@ is the product
 
 $$
 P(C = 1 \mid u, i, p) = P(E = 1 \mid p)\; P(C = 1 \mid E = 1, u, i)
-\tag{19.4}
+\qquad (19.4)
 $$
 
 This is the *examination hypothesis*, the simplest click model, studied in
@@ -409,7 +409,7 @@ population CTR $p$, with standard error
 
 $$
 \operatorname{SE}(\hat p) = \sqrt{\frac{p\,(1-p)}{n}}
-\tag{19.5}
+\qquad (19.5)
 $$
 
 (strictly, this formula assumes independent rows; rows of the same request or
@@ -428,7 +428,7 @@ at least one of its ten rows) with probability $1-(1-f)^{10}$. Hence
 
 $$
 P(\text{click kept} \mid \text{request kept}) = \frac{\mathbb{E}\left[1-(1-f)^{c}\right]}{1-(1-f)^{10}}
-\tag{19.6}
+\qquad (19.6)
 $$
 
 where the expectation is over the distribution of $c$ across requests. For a
@@ -457,7 +457,7 @@ standard remedy is to decide membership by a *hash of the key*:
 
 $$
 \text{keep}(u) = \Big[\, h(\text{salt} \,\|\, \texttt{:} \,\|\, u) \bmod 100 < \text{pct} \,\Big]
-\tag{19.7}
+\qquad (19.7)
 $$
 
 where $h$ is a fixed hash function that maps a string to a large integer,
@@ -487,7 +487,7 @@ the others, the sample size is binomial:
 
 $$
 \mathbb{E}[\text{kept}] = N q, \qquad \operatorname{SD}[\text{kept}] = \sqrt{N q (1-q)}
-\tag{19.8}
+\qquad (19.8)
 $$
 
 where $N$ is the number of keys. For $N = 10{,}000$ and $q = 0.1$ this is

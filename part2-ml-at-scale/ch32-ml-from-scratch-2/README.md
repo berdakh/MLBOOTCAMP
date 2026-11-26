@@ -28,7 +28,7 @@ The order of the chapter follows the dependence between ideas. Section 32.2 intr
 A regression tree partitions the data by thresholds on features and predicts the mean target in each leaf. At a node, the split on feature $x$ with threshold $t$ sends points with $x \le t$ to the left child and the rest to the right. For squared loss the best split minimises the **sum of squared errors** (SSE) of the two children, or equivalently maximises the **gain**
 
 $$
-\text{gain} = \text{SSE}_{\text{parent}} - \text{SSE}_{\text{left}} - \text{SSE}_{\text{right}}, \tag{32.1}
+\text{gain} = \text{SSE}_{\text{parent}} - \text{SSE}_{\text{left}} - \text{SSE}_{\text{right}}, \qquad (32.1)
 $$
 
 which is the reduction in within-node variance (times the node size).
@@ -38,7 +38,7 @@ which is the reduction in within-node variance (times the node size).
 For a set of $m$ values with sum $S_1 = \sum y$ and sum of squares $S_2 = \sum y^2$, expanding the square gives
 
 $$
-\text{SSE} = \sum (y - \bar y)^2 = \sum y^2 - 2\bar y \sum y + m \bar y^2 = S_2 - \frac{S_1^2}{m}. \tag{32.2}
+\text{SSE} = \sum (y - \bar y)^2 = \sum y^2 - 2\bar y \sum y + m \bar y^2 = S_2 - \frac{S_1^2}{m}. \qquad (32.2)
 $$
 
 A set's spread therefore depends only on its count, sum and sum of squares.
@@ -68,13 +68,13 @@ After sorting the points by $x$, every candidate left child is a **prefix** of t
 Gradient boosting (Friedman, 2001) builds an additive model $F_M(x) = F_0 + \nu \sum_{m=1}^M h_m(x)$ from small trees $h_m$. Consider the training loss $\sum_i L(y_i, F(x_i))$ as a function of the $n$ prediction values $F(x_i)$. Gradient descent on these values would move each one in the direction of the negative gradient
 
 $$
-r_i^{(m)} = -\frac{\partial L(y_i, F)}{\partial F}\Big|_{F = F_{m-1}(x_i)}, \tag{32.3}
+r_i^{(m)} = -\frac{\partial L(y_i, F)}{\partial F}\Big|_{F = F_{m-1}(x_i)}, \qquad (32.3)
 $$
 
 called the **pseudo-residuals**. A model must generalise to new $x$, so instead of moving the values directly, boosting fits a tree $h_m$ to the pseudo-residuals by least squares and takes a step along it:
 
 $$
-F_m(x) = F_{m-1}(x) + \nu\, h_m(x), \qquad F_0 = \arg\min_c \sum_i L(y_i, c). \tag{32.4}
+F_m(x) = F_{m-1}(x) + \nu\, h_m(x), \qquad F_0 = \arg\min_c \sum_i L(y_i, c). \qquad (32.4)
 $$
 
 The **learning rate** or **shrinkage** $\nu \in (0, 1]$ limits how much any one tree corrects. Smaller $\nu$ requires more trees but generalises better; the number of trees is chosen by early stopping on a validation set.
@@ -121,7 +121,7 @@ $$
 \begin{aligned}
 dZ_2 &= (P - Y)/n, & dW_2 &= H^\top dZ_2, & db_2 &= \textstyle\sum_i (dZ_2)_i, \\
 dH &= dZ_2 W_2^\top, & dZ_1 &= dH \odot \mathbb{1}[Z_1 > 0], & dW_1 &= X^\top dZ_1, \quad db_1 = \textstyle\sum_i (dZ_1)_i.
-\end{aligned} \tag{32.5}
+\end{aligned} \qquad (32.5)
 $$
 
 *Shape check:* with $X$ of shape (5, 4), $W_1$ (4, 6) and $W_2$ (6, 3): $dZ_2$ is (5, 3); $dW_2 = H^\top dZ_2$ is (6, 5)(5, 3) = (6, 3); $dH$ is (5, 3)(3, 6) = (5, 6); $dW_1$ is (4, 5)(5, 6) = (4, 6). Every gradient has its variable's shape.
@@ -141,7 +141,7 @@ $$
 Given queries $Q \in \mathbb{R}^{L_q \times d}$, keys $K \in \mathbb{R}^{L_k \times d}$ and values $V \in \mathbb{R}^{L_k \times d_v}$,
 
 $$
-\operatorname{Attention}(Q, K, V) = \operatorname{softmax}\!\left(\frac{QK^\top}{\sqrt{d}}\right) V, \tag{32.6}
+\operatorname{Attention}(Q, K, V) = \operatorname{softmax}\!\left(\frac{QK^\top}{\sqrt{d}}\right) V, \qquad (32.6)
 $$
 
 with the softmax taken over the key axis (Vaswani et al., 2017). Each output row is a weighted average of the value rows, with weights determined by how well the query matches each key.
@@ -173,13 +173,13 @@ Both layers behave differently during training and inference, and this makes the
 During training, batch normalisation (Ioffe and Szegedy, 2015) standardises each feature using the statistics of the current mini-batch $B$ of size $n$, then applies a learned scale $\gamma$ and shift $\beta$:
 
 $$
-\hat x = \frac{x - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}, \qquad y = \gamma \hat x + \beta, \tag{32.7}
+\hat x = \frac{x - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}, \qquad y = \gamma \hat x + \beta, \qquad (32.7)
 $$
 
 where $\mu_B$ and $\sigma_B^2$ are the batch mean and the **biased** batch variance (divided by $n$), and $\epsilon$ prevents division by zero. It also maintains **running statistics** for inference,
 
 $$
-\text{running} \leftarrow (1 - m)\cdot \text{running} + m \cdot \text{batch statistic}, \tag{32.8}
+\text{running} \leftarrow (1 - m)\cdot \text{running} + m \cdot \text{batch statistic}, \qquad (32.8)
 $$
 
 where, in PyTorch's convention, the momentum $m = 0.1$ weights the new batch and the running variance uses the **unbiased** batch variance (divided by $n - 1$). Keras uses the opposite parameterisation (momentum 0.99 weights the old value), so the convention should be stated. At inference the running statistics replace the batch statistics, and the output for a row no longer depends on the rest of the batch.
@@ -193,7 +193,7 @@ The biased and unbiased variances serve different purposes: the forward pass nor
 Dropout (Srivastava et al., 2014) sets each unit to zero with probability $p$ during training. In the **inverted** form the survivors are scaled by $1/(1-p)$:
 
 $$
-y = \frac{x \odot m}{1 - p}, \qquad m_j \sim \operatorname{Bernoulli}(1 - p), \qquad \mathbb{E}[y] = x. \tag{32.9}
+y = \frac{x \odot m}{1 - p}, \qquad m_j \sim \operatorname{Bernoulli}(1 - p), \qquad \mathbb{E}[y] = x. \qquad (32.9)
 $$
 
 Because the expectation is preserved during training, inference is the identity and needs no rescaling. (The original paper scaled the weights at test time instead.) The edge cases $p = 0$ (identity) and $p = 1$ (all zeros, avoiding division by zero) must be handled. *Example:* with $p = 0.5$ and $x = 2$, the output is 0 or 4 with equal probability, mean 2.
@@ -216,7 +216,7 @@ Exercise 7 asks for this derivation as it would be given at a whiteboard. For lo
 2. **Loss:** $L = -\log p_y = -z_y + \log\sum_j e^{z_j}$. Differentiating directly (simpler than using the Jacobian),
 
 $$
-\frac{\partial L}{\partial z_k} = p_k - \delta_{ky}, \qquad \nabla_z L = p - \operatorname{onehot}(y). \tag{32.10}
+\frac{\partial L}{\partial z_k} = p_k - \delta_{ky}, \qquad \nabla_z L = p - \operatorname{onehot}(y). \qquad (32.10)
 $$
 
    Each component lies in $(-1, 1)$ and the components sum to 0.

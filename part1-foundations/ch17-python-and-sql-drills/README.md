@@ -49,7 +49,7 @@ $n = 200{,}000$ values and a window of $k = 5{,}000$. Computing the maximum of
 each window from scratch costs about
 
 $$
-(n - k + 1)\, k \approx 10^{9} \tag{17.1}
+(n - k + 1)\, k \approx 10^{9} \qquad (17.1)
 $$
 
 comparisons, which takes minutes in Python, whereas a linear method needs a
@@ -90,7 +90,7 @@ Two of these drills are evaluation code an ML engineer writes routinely. The
 highest-scored items:
 
 $$
-\text{precision@}k = \frac{1}{k} \sum_{i \in \text{top-}k} y_i, \tag{17.2}
+\text{precision@}k = \frac{1}{k} \sum_{i \in \text{top-}k} y_i, \qquad (17.2)
 $$
 
 where $y_i \in \{0, 1\}$ is the label of item $i$. If the labels of the four
@@ -168,7 +168,7 @@ month of sign-up. **Retention at month $+k$** is the share of a cohort still
 active $k$ months after its start:
 
 $$
-\text{ret}_k(c) = \frac{\bigl\lvert \{\text{customers of cohort } c \text{ active in month } c + k\} \bigr\rvert}{\lvert \text{cohort } c \rvert}. \tag{17.3}
+\text{ret}_k(c) = \frac{\bigl\lvert \{\text{customers of cohort } c \text{ active in month } c + k\} \bigr\rvert}{\lvert \text{cohort } c \rvert}. \qquad (17.3)
 $$
 
 For example, if 120 customers signed up in March and 96 of them have any usage
@@ -190,7 +190,7 @@ inactivity, consecutive days above a threshold. Two approaches are standard.
    weeks are 7 days apart, so the number of inactive weeks between active weeks
    at dates $d_j$ and $d_{j+1}$ is
    $$
-   g_j = \frac{d_{j+1} - d_j}{7\ \text{days}} - 1. \tag{17.4}
+   g_j = \frac{d_{j+1} - d_j}{7\ \text{days}} - 1. \qquad (17.4)
    $$
    Forgetting the "$-1$" is the usual off-by-one error.
 2. **The difference of two row numbers.** Number all of a customer's weeks in

@@ -67,7 +67,7 @@ In one common form, the weight of term $w$ in document $d$ is
 
 $$
 \text{tfidf}(w, d) = \text{tf}(w, d) \cdot \log \frac{N}{\text{df}(w)} ,
-\tag{43.1}
+\qquad (43.1)
 $$
 
 where $\text{tf}(w,d)$ is the count of $w$ in $d$, $N$ the number of documents and $\text{df}(w)$ the number
@@ -136,7 +136,7 @@ $\hat p$ measured on $n$ independent examples,
 
 $$
 \operatorname{SE}(\hat p) = \sqrt{\frac{\hat p\,(1 - \hat p)}{n}} .
-\tag{43.2}
+\qquad (43.2)
 $$
 
 For $\hat p = 0.872$ and $n = 500$, $\operatorname{SE} \approx 0.015$. The gap between TF-IDF and the two
@@ -151,7 +151,7 @@ Because the classes are balanced, accuracy and macro-F1 agree here. In general *
 
 $$
 F_1 = \frac{2PR}{P + R}, \qquad \text{macro-}F_1 = \frac{1}{C} \sum_{c=1}^{C} F_{1,c} ,
-\tag{43.3}
+\qquad (43.3)
 $$
 
 averages the per-class harmonic mean of precision $P$ and recall $R$ with equal weight per class, so that
@@ -171,7 +171,7 @@ the mean confidence $\operatorname{conf}(S_b)$:
 
 $$
 \operatorname{ECE} = \sum_{b=1}^{B} \frac{\lvert S_b \rvert}{n} \, \big\lvert \operatorname{acc}(S_b) - \operatorname{conf}(S_b) \big\rvert .
-\tag{43.4}
+\qquad (43.4)
 $$
 
 For example, 100 predictions at confidence 0.9 with accuracy 0.8 and 100 at confidence 0.6 with accuracy 0.65
@@ -193,7 +193,7 @@ validation data:
 $$
 \mathbf p = \operatorname{softmax}(\mathbf z / T), \qquad
 T^{\star} = \arg\min_{T > 0} \; -\frac{1}{n_{\text{val}}} \sum_{i \in \text{val}} \log \operatorname{softmax}(\mathbf z_i / T)_{y_i} .
-\tag{43.5}
+\qquad (43.5)
 $$
 
 $T > 1$ softens over-confident predictions and $T < 1$ sharpens under-confident ones. Because every logit is divided

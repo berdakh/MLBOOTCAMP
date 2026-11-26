@@ -71,14 +71,14 @@ active users (DAU):
 
 $$
 \text{QPS}_{\text{peak}} = \frac{\text{DAU} \times \text{requests per user per day}}{86{,}400} \times \frac{\text{peak}}{\text{average}}
-\tag{56.1}
+\qquad (56.1)
 $$
 
 and the number of replicas, with a headroom fraction $h$ kept free for spikes, a lost replica or a deployment, is
 
 $$
 \text{replicas} = \max\!\left(2,\ \left\lceil \frac{\text{QPS}_{\text{peak}}}{\text{QPS}_{\text{replica}} \cdot (1 - h)} \right\rceil \right)
-\tag{56.2}
+\qquad (56.2)
 $$
 
 The minimum of two removes the single point of failure. $\text{QPS}_{\text{replica}}$ must be *measured* by load-testing the
@@ -91,7 +91,7 @@ headroom:
 
 $$
 \text{headroom} = T_{\text{total}} - \sum_{\text{stages}} t_s
-\tag{56.3}
+\qquad (56.3)
 $$
 
 Budgets are set on high percentiles, and percentiles do not add: the sum of stage p99s is an upper bound on the end-to-end p99 of
@@ -196,7 +196,7 @@ tokens per turn, the prompt at turn $t$ and the cost of an $n$-turn conversation
 $$
 P_t = S + R + U + (t - 1)(U + A), \qquad
 \text{cost} = \sum_{t=1}^{n} \big( P_t\, p_{\text{in}} + A\, p_{\text{out}} \big)
-\tag{56.4}
+\qquad (56.4)
 $$
 
 where $p_{\text{in}}$ and $p_{\text{out}}$ are prices per input and output token. With the lab's assumptions ($S = 800$, $R = 1{,}500$,
@@ -206,7 +206,7 @@ input and output tokens a six-turn conversation costs about \$0.0114. A human-ha
 
 $$
 c = c_{\text{LLM}} + (1 - d)\, c_{\text{human}}
-\tag{56.5}
+\qquad (56.5)
 $$
 
 so at $d = 0.5$ it is about \$2.01, dominated by the human term. The **quality of hand-off decisions** (resolving correctly, or handing off
@@ -243,7 +243,7 @@ waits on at least one slow call is
 
 $$
 P(\text{some call slow}) = 1 - (1 - p)^{k}
-\tag{56.6}
+\qquad (56.6)
 $$
 
 For $p = 0.01$ this is 5.9% with $k = 6$ and 18.2% with $k = 20$: a request is as slow as its slowest dependency (Dean & Barroso, 2013). In

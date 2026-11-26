@@ -85,7 +85,7 @@ examples. Rank $r$ computes the gradient of its own mean loss, $g_r = \nabla_\th
 
 $$
 g = \nabla_\theta \frac{1}{B} \sum_{j=1}^{B} \ell_j = \frac{1}{N} \sum_{r=1}^{N} g_r .
-\tag{47.1}
+\qquad (47.1)
 $$
 
 If the gradients are **summed by an all-reduce and divided by $N$**, every rank holds exactly the full-batch gradient, applies the same
@@ -198,7 +198,7 @@ the completed chunks travel around the ring until every rank has all of them. Ea
 
 $$
 \text{bytes sent per rank} = 2\,\frac{N - 1}{N}\, M .
-\tag{47.2}
+\qquad (47.2)
 $$
 
 <img src="../../figures/l3-ring-allreduce.svg" alt="Four ranks in a ring each sending to their neighbour; a reduce-scatter of N minus 1 steps then an all-gather of N minus 1 steps, so each rank sends 2(N-1)/N times the message size" width="100%">
@@ -211,7 +211,7 @@ latency $\alpha$ is approximately
 
 $$
 T_{\text{comm}} \approx 2\,\frac{N-1}{N}\,\frac{M}{\text{BW}} + 2(N-1)\,\alpha ,
-\tag{47.3}
+\qquad (47.3)
 $$
 
 a bandwidth term that barely depends on $N$ and a latency term that grows with it. A ring also proceeds at the pace of its slowest link: one slow
@@ -225,7 +225,7 @@ all-reduces the gradients. If a fraction $o$ of the communication is hidden behi
 
 $$
 E = \frac{T_{\text{compute}}}{T_{\text{step}}}, \qquad T_{\text{step}} \approx T_{\text{compute}} + (1 - o)\, T_{\text{comm}} .
-\tag{47.4}
+\qquad (47.4)
 $$
 
 **Worked example (assumptions, not measurements).** fp16 gradients (2 bytes per parameter), 8 GPUs, an assumed compute time of 250 ms per step,
@@ -249,7 +249,7 @@ and their training state does not fit on one GPU anyway (Chapter 48).
 
 $$
 B_{\text{global}} = N \cdot b \cdot k .
-\tag{47.5}
+\qquad (47.5)
 $$
 
 Eight GPUs with 64 examples each and 8 accumulation steps give 4,096. Moving from 1 to 8 GPUs at fixed per-GPU batch multiplies the global batch by

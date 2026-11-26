@@ -105,7 +105,7 @@ the reference in bin $b$ (the *expected* share) and $a_b$ the share of the
 current sample in the same bin (the *actual* share). Then
 
 $$
-\operatorname{PSI} = \sum_{b=1}^{B} (a_b - e_b)\, \ln\frac{a_b}{e_b}. \tag{15.1}
+\operatorname{PSI} = \sum_{b=1}^{B} (a_b - e_b)\, \ln\frac{a_b}{e_b}. \qquad (15.1)
 $$
 
 Each term is non-negative, because $a_b - e_b$ and $\ln(a_b/e_b)$ always have
@@ -182,7 +182,7 @@ period, here the validation period on which the threshold was chosen:
 
 $$
 r = \frac{\bar{s}_{\text{current}}}{\bar{s}_{\text{reference}}}, \qquad
-\text{share flagged} = \frac{1}{n} \sum_{i=1}^{n} \mathbb{1}[s_i \ge t], \tag{15.2}
+\text{share flagged} = \frac{1}{n} \sum_{i=1}^{n} \mathbb{1}[s_i \ge t], \qquad (15.2)
 $$
 
 where $\bar{s}$ is a mean score, $s_i$ the score of request $i$, $t$ the
@@ -215,7 +215,7 @@ exponentially distributed with mean $\tau$, the fraction of eventual labels
 visible $t$ days after a prediction is
 
 $$
-F(t) = 1 - e^{-t/\tau}. \tag{15.3}
+F(t) = 1 - e^{-t/\tau}. \qquad (15.3)
 $$
 
 Performance computed on an immature cohort counts positives that have not
@@ -236,12 +236,12 @@ across periods:
 - **PR-AUC divided by the positive rate**, the improvement over random
   ranking:
   $$
-  \text{lift}_{\text{PR}} = \frac{\text{PR-AUC}}{\pi}; \tag{15.4}
+  \text{lift}_{\text{PR}} = \frac{\text{PR-AUC}}{\pi}; \qquad (15.4)
   $$
 - **calibration on the matured cohort**, the ratio of mean predicted
   probability to observed rate:
   $$
-  c = \frac{\bar{s}_{\text{matured}}}{\bar{y}_{\text{matured}}}, \tag{15.5}
+  c = \frac{\bar{s}_{\text{matured}}}{\bar{y}_{\text{matured}}}, \qquad (15.5)
   $$
   where $\bar{y}$ is the observed churn rate; $c = 1$ is perfect, and a band
   such as $[0.8, 1.25]$ is a reasonable alert range.
@@ -335,7 +335,7 @@ if
 $$
 \text{PR-AUC}_{\text{cand}} < (1 - \delta)\, \text{PR-AUC}_{\text{base}}
 \;\;\text{or}\;\; \text{error rate}_{\text{cand}} > E_{\max}
-\;\;\text{or}\;\; p95_{\text{cand}} > L_{\max}. \tag{15.6}
+\;\;\text{or}\;\; p95_{\text{cand}} > L_{\max}. \qquad (15.6)
 $$
 
 With $\delta = 0.1$ and a baseline PR-AUC of 0.163, a candidate below 0.147 is

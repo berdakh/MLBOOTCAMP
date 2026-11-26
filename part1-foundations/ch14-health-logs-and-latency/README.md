@@ -143,7 +143,7 @@ unreliability the service may spend in the window. Over a window with $N$
 requests and a success target $s$,
 
 $$
-B = (1 - s)\, N \tag{14.1}
+B = (1 - s)\, N \qquad (14.1)
 $$
 
 failures are allowed. A 99.5% target over 10 million requests allows
@@ -155,7 +155,7 @@ Alerts are often defined on the **burn rate**, the speed at which the budget
 is being consumed:
 
 $$
-\text{burn rate} = \frac{\text{observed error rate}}{1 - s}. \tag{14.2}
+\text{burn rate} = \frac{\text{observed error rate}}{1 - s}. \qquad (14.2)
 $$
 
 A burn rate of 1 spends exactly the budget over the window; a burn rate of
@@ -182,7 +182,7 @@ For $N$ latencies sorted in increasing order, $x_{(1)} \le x_{(2)} \le \dots \le
 x_{(N)}$, the $q$-th percentile by the **nearest-rank** rule is
 
 $$
-p_q = x_{(k)}, \qquad k = \left\lceil \frac{q\, N}{100} \right\rceil, \quad 0 < q \le 100. \tag{14.3}
+p_q = x_{(k)}, \qquad k = \left\lceil \frac{q\, N}{100} \right\rceil, \quad 0 < q \le 100. \qquad (14.3)
 $$
 
 The nearest-rank percentile is always a latency that actually occurred. For
@@ -203,7 +203,7 @@ slow whenever *any* of them is slow. If each call exceeds its $p_q$ with
 probability $1 - q/100$, then
 
 $$
-P(\text{at least one of } k \text{ calls is slower than } p_q) = 1 - \left(\frac{q}{100}\right)^{k}. \tag{14.4}
+P(\text{at least one of } k \text{ calls is slower than } p_q) = 1 - \left(\frac{q}{100}\right)^{k}. \qquad (14.4)
 $$
 
 For $q = 95$ and $k = 20$, this is $1 - 0.95^{20} \approx 0.64$. The
@@ -245,7 +245,7 @@ constructing a `DataFrame`, one call into scikit-learn) and a cost per row. A
 simple model of the time for a request with $n$ rows is
 
 $$
-t(n) \approx t_{\text{fixed}} + n\, t_{\text{row}}, \qquad \frac{t(n)}{n} \approx \frac{t_{\text{fixed}}}{n} + t_{\text{row}}, \tag{14.5}
+t(n) \approx t_{\text{fixed}} + n\, t_{\text{row}}, \qquad \frac{t(n)}{n} \approx \frac{t_{\text{fixed}}}{n} + t_{\text{row}}, \qquad (14.5)
 $$
 
 where $t_{\text{fixed}}$ is the per-request overhead and $t_{\text{row}}$ the
@@ -270,7 +270,7 @@ requests in the system $L$, the throughput $\lambda$ (requests completed per
 second) and the average time a request spends in the system $W$:
 
 $$
-L = \lambda\, W. \tag{14.6}
+L = \lambda\, W. \qquad (14.6)
 $$
 
 If a single server process completes at most $\lambda_{\max}$ requests per
@@ -289,7 +289,7 @@ interpreter lock (GIL)**. One process therefore has a throughput ceiling of
 roughly
 
 $$
-\lambda_{\max} \approx \frac{1}{t_{\text{CPU}}}, \tag{14.7}
+\lambda_{\max} \approx \frac{1}{t_{\text{CPU}}}, \qquad (14.7)
 $$
 
 where $t_{\text{CPU}}$ is the CPU time per request, whatever the number of

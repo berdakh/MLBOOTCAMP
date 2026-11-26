@@ -96,7 +96,7 @@ $$
 \operatorname{HR@}10 = \frac{1}{\lvert U \rvert} \sum_{u \in U} \mathbb{1}[r_u < 10],
 \qquad
 \operatorname{NDCG@}10 = \frac{1}{\lvert U \rvert} \sum_{u \in U} \frac{\mathbb{1}[r_u < 10]}{\log_2(r_u + 2)}
-\tag{28.1}
+\qquad (28.1)
 $$
 
 where $U$ is the set of test users. Three users with target ranks 0, 3 and 12
@@ -130,7 +130,7 @@ $$
 \operatorname{Attention}(Q, K, V) = \operatorname{softmax}\!\left(\frac{Q K^\top}{\sqrt{d}} + M\right) V,
 \qquad
 M_{ij} = \begin{cases} 0 & \text{allowed} \\ -\infty & \text{blocked } (j > i \text{ or key } j \text{ is padding}) \end{cases}
-\tag{28.2}
+\qquad (28.2)
 $$
 
 where $Q$, $K$ and $V$ are the $n \times d$ query, key and value matrices of one
@@ -201,7 +201,7 @@ $0, \dots, L-1$ are the inputs and positions $1, \dots, L$ the targets. The loss
 
 $$
 L = -\frac{1}{\lvert \mathcal{T} \rvert} \sum_{t \in \mathcal{T}} \log \frac{\exp(\mathbf{h}_t^\top \mathbf{e}_{y_{t+1}})}{\sum_{j=1}^{N} \exp(\mathbf{h}_t^\top \mathbf{e}_j)}
-\tag{28.3}
+\qquad (28.3)
 $$
 
 where $\mathcal{T}$ is the set of non-padding positions and $y_{t+1}$ the next

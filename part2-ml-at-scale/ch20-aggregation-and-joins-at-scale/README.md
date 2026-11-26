@@ -49,7 +49,7 @@ BY item_id` runs in three stages.
 
    $$
    \text{reducer}(k) = h(k) \bmod R
-   \tag{20.1}
+\qquad (20.1)
    $$
 
    where $k$ is the key, $h$ a stable hash function and $R$ the number of
@@ -69,7 +69,7 @@ from the number of input rows $N$ to
 
 $$
 N_{\text{shuffled}} = \sum_{m=1}^{M} d_m \;\le\; \min\!\left(N,\; M \cdot d\right)
-\tag{20.2}
+\qquad (20.2)
 $$
 
 where $d$ is the total number of distinct keys. In the lab, with four mappers
@@ -110,7 +110,7 @@ fraction $s$ of the rows, the reducer that owns it receives at least
 
 $$
 \frac{\text{load of the hot reducer}}{\text{mean load}} \;\ge\; s \cdot R
-\tag{20.3}
+\qquad (20.3)
 $$
 
 times the average load, whatever hash function is used. A job finishes only
@@ -163,7 +163,7 @@ and $b_k$ rows in table $B$, the equi-join produces
 
 $$
 \lvert A \bowtie B \rvert = \sum_{k} a_k \, b_k
-\tag{20.4}
+\qquad (20.4)
 $$
 
 rows. The sum is dominated by keys that are large on *both* sides. In the lab,
@@ -201,7 +201,7 @@ latest timestamp not after $t$:
 $$
 \operatorname{asof}(k, t) = \text{value of the row } r \text{ with } r.\text{key} = k
 \text{ that maximises } r.\text{valid\_from} \text{ subject to } r.\text{valid\_from} \le t
-\tag{20.5}
+\qquad (20.5)
 $$
 
 <img src="../../figures/l2-asof-join.svg" alt="As-of join on a timeline: each event takes the latest price at or before its timestamp" width="100%">
@@ -278,7 +278,7 @@ standard error is
 
 $$
 \frac{\operatorname{SE}(\hat n)}{n} \approx \frac{1.04}{\sqrt{m}}, \qquad m = 2^{p}
-\tag{20.6}
+\qquad (20.6)
 $$
 
 where $\hat n$ is the estimate, $n$ the true distinct count and $p$ the number
@@ -312,7 +312,7 @@ same probability:
 
 $$
 P(\text{item } i \text{ in the sample after } n \text{ items}) = \frac{k}{n}
-\tag{20.7}
+\qquad (20.7)
 $$
 
 The proof is by induction. Item $i$ (counting from 1, with $i > k$) enters
