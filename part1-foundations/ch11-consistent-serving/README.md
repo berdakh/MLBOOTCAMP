@@ -78,9 +78,9 @@ For a logistic-regression model, the effect of skew can be computed exactly.
 The model computes the **log-odds** (also called the *logit* or *linear
 predictor*)
 
-$$
+```math
 \eta = \beta_0 + \sum_{j=1}^{d} \beta_j z_j, \qquad p = \sigma(\eta) = \frac{1}{1 + e^{-\eta}}, \qquad (11.1)
-$$
+```
 
 where $z_j$ is the $j$-th feature after preprocessing (imputation, log
 transform, standardisation), $\beta_j$ its coefficient, $\beta_0$ the
@@ -88,9 +88,9 @@ intercept, $d$ the number of features and $p$ the predicted probability.
 Suppose the service computes feature $j$ as $z_j + \delta_j$ instead of $z_j$,
 where $\delta_j$ is the error after preprocessing. Then
 
-$$
+```math
 \Delta \eta = \beta_j\, \delta_j, \qquad p_{\text{served}} = \sigma\!\left(\eta + \beta_j \delta_j\right). \qquad (11.2)
-$$
+```
 
 In words, the error in the feature, multiplied by its coefficient, is added
 directly to the log-odds. A worked example: if a forgotten `log1p` on
@@ -183,11 +183,11 @@ Let $p_i^{\text{offline}}$ be the probability computed by calling the model
 directly on row $i$, and $p_i^{\text{API}}$ the probability returned by the
 service for the same row. The parity criterion is
 
-$$
+```math
 \max_{i} \left\lvert p_i^{\text{offline}} - p_i^{\text{API}} \right\rvert \le \varepsilon
 \quad \text{and} \quad
 \sum_i \mathbb{1}\!\left[\, \mathbb{1}[p_i^{\text{offline}} \ge t] \ne f_i^{\text{API}} \right] = 0, \qquad (11.3)
-$$
+```
 
 where $\varepsilon$ is the tolerance, $t$ is the threshold reported by the
 service, $f_i^{\text{API}}$ is the service's `flagged` value for row $i$, and

@@ -104,3 +104,27 @@ def test_markdown_equations_do_not_use_tag():
     offenders = [str(p.relative_to(ROOT)) for p in ROOT.rglob("*.md")
                  if ".git" not in p.parts and "\\tag{" in p.read_text(encoding="utf-8")]
     assert not offenders, f"replace \\tag{{...}} with \\qquad (...) in: {offenders}"
+
+
+def test_markdown_maths_is_github_safe():
+    """GitHub applies Markdown backslash escapes inside $$ blocks (so \\! becomes
+    "!", \\{ becomes "{", \\\\ becomes "\\") and rejects \\operatorname. Display
+    maths in Markdown therefore uses ```math blocks, and inline maths containing a
+    backslash followed by punctuation uses the $`...`$ form."""
+    risky = re.compile(r"\\[!#%&,;:{}|_\\]")
+    problems = []
+    for p in ROOT.rglob("*.md"):
+        if ".git" in p.parts:
+            continue
+        text = p.read_text(encoding="utf-8")
+        rel = str(p.relative_to(ROOT))
+        if re.search(r"^\s*\$\$\s*$", text, re.M):
+            problems.append(f"{rel}: use ```math instead of $$ blocks")
+        if "\\operatorname" in text:
+            problems.append(f"{rel}: GitHub rejects \\operatorname; use \\mathrm")
+        prose = re.sub(r"```.*?```", "", text, flags=re.S)
+        prose = re.sub(r"\$`[^`\n]*`\$", "", prose)   # GitHub-safe inline maths
+        prose = re.sub(r"`[^`\n]*`", "", prose)         # code spans
+        if any(risky.search(m) for m in re.findall(r"\$([^$\n]+)\$", prose)):
+            problems.append(f"{rel}: inline maths with \\-punctuation needs $`...`$")
+    assert not problems, "\n".join(problems)

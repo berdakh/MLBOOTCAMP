@@ -39,9 +39,9 @@ This chapter treats each of these in turn. Because the lab uses a simulator, the
 
 Let $\mu_A$ and $\mu_B$ be the population means of the chosen metric under control and treatment, and let $\Delta = \mu_B - \mu_A$ be the **treatment effect**. A two-sided test of
 
-$$
+```math
 H_0 : \Delta = 0 \qquad \text{against} \qquad H_1 : \Delta \neq 0
-$$
+```
 
 can make two kinds of error. A **type I error** (false positive) rejects $H_0$ when it is true; its probability is the **significance level** $\alpha$, conventionally 0.05. A **type II error** (false negative) fails to reject $H_0$ when the true effect is some $\delta \neq 0$; its probability is $\beta$, and $1-\beta$ is the **power** of the test against $\delta$. The **minimum detectable effect** (MDE) is the smallest effect $\delta$ for which the test is designed to have the target power, usually 80%.
 
@@ -57,10 +57,10 @@ About 5% of assigned users make no request during the two weeks. They never reac
 
 Two click-through rates can be computed for an arm with users $u = 1, \dots, n$, where user $u$ has $c_u$ clicks and $m_u$ impressions:
 
-$$
+```math
 \text{CTR}_{\text{pooled}} = \frac{\sum_u c_u}{\sum_u m_u}, \qquad
 \text{CTR}_{\text{per-user}} = \frac{1}{n} \sum_u \frac{c_u}{m_u}. \qquad (29.1)
-$$
+```
 
 The pooled CTR weights each user by their number of impressions; it answers "what fraction of impressions is clicked?". The per-user CTR weights every user equally; it answers "how does a typical user respond?". They estimate different population quantities (different **estimands**), and when heavy users click differently from light users they can move in different directions. In the lab's simulator activity and CTR are independent, so both are about 0.145 per arm. Either can be the right metric, but the choice is made before the experiment and written down.
 
@@ -74,9 +74,9 @@ A single experiment of 40,000 users gives a noisy estimate of the lift. In the l
 
 Suppose users are randomised, but the pooled CTR is tested with the two-proportion z-test that treats each impression as an independent Bernoulli trial. Clicks from the same user are positively correlated: a user with a high CTR clicks often on every request. The variance of a sum of correlated trials is larger than the binomial variance. If user $u$ contributes $m$ impressions with intra-user correlation $\rho$, the variance of their click total is inflated by the **design effect**
 
-$$
+```math
 \text{DEFF} = 1 + (m - 1)\,\rho. \qquad (29.2)
-$$
+```
 
 Even a small $\rho$ multiplied by tens of impressions per user gives a large factor. A test that ignores it uses a standard error that is too small, so its confidence intervals are too narrow and it rejects $H_0$ too often.
 
@@ -114,25 +114,25 @@ The rule is: randomise the unit whose behaviour the treatment changes (usually t
 
 Consider a per-unit metric with variance $\sigma^2$ in each arm and $n$ units per arm. The difference of sample means $\hat\Delta = \bar y_B - \bar y_A$ has standard error
 
-$$
-\operatorname{SE}(\hat\Delta) = \sqrt{\frac{\sigma_A^2}{n_A} + \frac{\sigma_B^2}{n_B}} = \sigma \sqrt{\frac{2}{n}} \quad \text{(equal variances and arm sizes)}. \qquad (29.3)
-$$
+```math
+\mathrm{SE}(\hat\Delta) = \sqrt{\frac{\sigma_A^2}{n_A} + \frac{\sigma_B^2}{n_B}} = \sigma \sqrt{\frac{2}{n}} \quad \text{(equal variances and arm sizes)}. \qquad (29.3)
+```
 
-The two-sided test rejects when $\lvert\hat\Delta\rvert / \operatorname{SE} > z_{1-\alpha/2}$. If the true effect is $\delta > 0$, the statistic is approximately normal with mean $\delta / \operatorname{SE}$ and unit variance. Power $1-\beta$ requires the mean to lie $z_{1-\beta}$ standard deviations above the critical value:
+The two-sided test rejects when $\lvert\hat\Delta\rvert / \mathrm{SE} > z_{1-\alpha/2}$. If the true effect is $\delta > 0$, the statistic is approximately normal with mean $\delta / \mathrm{SE}$ and unit variance. Power $1-\beta$ requires the mean to lie $z_{1-\beta}$ standard deviations above the critical value:
 
-$$
-\frac{\delta}{\operatorname{SE}} = z_{1-\alpha/2} + z_{1-\beta}
+```math
+\frac{\delta}{\mathrm{SE}} = z_{1-\alpha/2} + z_{1-\beta}
 \quad\Longrightarrow\quad
 n = \frac{2\,\sigma^2\,(z_{1-\alpha/2} + z_{1-\beta})^2}{\delta^2}. \qquad (29.4)
-$$
+```
 
 Here $z_q$ is the $q$-quantile of the standard normal distribution: $z_{0.975} = 1.96$ and $z_{0.80} = 0.84$, so $(z_{1-\alpha/2} + z_{1-\beta})^2 \approx 7.85$ for the conventional $\alpha = 0.05$ and 80% power. (The small contribution of the opposite rejection region is ignored.)
 
 For a **proportion** (did the user convert?) the per-unit variance is $p(1-p)$, and it differs slightly between arms. Using each arm's own variance gives the form used in the lab's Exercise 1:
 
-$$
+```math
 n = \frac{(z_{1-\alpha/2} + z_{1-\beta})^2 \,\big(p_0(1-p_0) + p_1(1-p_1)\big)}{\delta^2}, \qquad p_1 = p_0 + \delta. \qquad (29.5)
-$$
+```
 
 Three consequences of Equation (29.4) are worth stating explicitly:
 
@@ -144,9 +144,9 @@ Three consequences of Equation (29.4) are worth stating explicitly:
 
 Baseline conversion $p_0 = 0.10$, MDE $\delta = 0.01$ (10% → 11%), $\alpha = 0.05$, power 80%. Equation (29.5) gives
 
-$$
+```math
 n = \frac{7.85 \times (0.09 + 0.0979)}{0.0001} \approx 14{,}749 \text{ users per arm.}
-$$
+```
 
 The simplified version with a common $p(1-p) = 0.09$ gives 14,128. The lab simulates 2,000 experiments of this size and measures a power of about 0.80; half the effect needs about four times the users.
 
@@ -178,9 +178,9 @@ An experiment designed with a 50/50 split should produce arms whose sizes differ
 
 The test is a chi-square goodness-of-fit test of observed arm counts $O_j$ against expected counts $E_j = N \pi_j$, where $N$ is the total and $\pi_j$ the planned share of arm $j$:
 
-$$
+```math
 \chi^2 = \sum_{j} \frac{(O_j - E_j)^2}{E_j}, \qquad (29.6)
-$$
+```
 
 which for two arms has one degree of freedom under $H_0$. *Worked example:* 50,600 versus 49,400 users on a 50/50 split gives $\chi^2 = 2 \times 600^2 / 50{,}000 = 14.4$ and $p \approx 1.5 \times 10^{-4}$.
 
@@ -221,18 +221,18 @@ Without such a design, the safe practice is to fix the duration from the power c
 
 A launch review that shows $m$ metrics gives $m$ opportunities for a false positive. For $m$ independent null metrics the probability of at least one false positive, the **family-wise error rate** (FWER), is
 
-$$
+```math
 \text{FWER} = 1 - (1 - \alpha)^m, \qquad (29.7)
-$$
+```
 
 which is 0.58 for $m = 17$. Two standard corrections are:
 
 - **Bonferroni**: reject $H_i$ if $p_i \le \alpha / m$. By the union bound, $P(\text{any false rejection}) \le \sum_i \alpha/m = \alpha$, for any dependence between the tests. It controls the FWER but loses power as $m$ grows.
 - **Benjamini–Hochberg** (BH): sort the p-values $p_{(1)} \le \dots \le p_{(m)}$, find the largest $k$ with $p_{(k)} \le k q / m$, and reject the $k$ smallest. This controls the **false discovery rate** (FDR), the expected proportion of false rejections among all rejections, at level $q$ (exactly for independent tests and under positive dependence).
 
-$$
+```math
 k = \max\Big\{ i : p_{(i)} \le \frac{i}{m}\, q \Big\}. \qquad (29.8)
-$$
+```
 
 *Worked example:* p-values (0.001, 0.008, 0.012, 0.041, 0.30) with $\alpha = q = 0.05$. Bonferroni's threshold is 0.01 and rejects two. BH's thresholds are (0.01, 0.02, 0.03, 0.04, 0.05); the largest $i$ with $p_{(i)}$ below its threshold is $i = 3$, so BH rejects three.
 

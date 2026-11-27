@@ -66,7 +66,7 @@ not change the inputs.
 ## 15.3 Kinds of drift
 
 Let $X$ denote the model's inputs and $Y$ the outcome. The joint distribution
-can be factorised as $P(X, Y) = P(X)\, P(Y \mid X)$. Different kinds of change
+can be factorised as $`P(X, Y) = P(X)\, P(Y \mid X)`$. Different kinds of change
 affect different factors:
 
 - **Data drift**, also called **covariate shift**, is a change in $P(X)$: the
@@ -104,18 +104,18 @@ that each bin holds about a tenth of the reference. Let $e_b$ be the share of
 the reference in bin $b$ (the *expected* share) and $a_b$ the share of the
 current sample in the same bin (the *actual* share). Then
 
-$$
-\operatorname{PSI} = \sum_{b=1}^{B} (a_b - e_b)\, \ln\frac{a_b}{e_b}. \qquad (15.1)
-$$
+```math
+\mathrm{PSI} = \sum_{b=1}^{B} (a_b - e_b)\, \ln\frac{a_b}{e_b}. \qquad (15.1)
+```
 
 Each term is non-negative, because $a_b - e_b$ and $\ln(a_b/e_b)$ always have
 the same sign. Empty bins would make the logarithm infinite, so both shares
 are clipped at a small minimum (the course uses $10^{-4}$). Expanding the
 product shows that
 
-$$
-\operatorname{PSI} = \sum_b a_b \ln\frac{a_b}{e_b} + \sum_b e_b \ln\frac{e_b}{a_b} = D_{\mathrm{KL}}(a \,\Vert\, e) + D_{\mathrm{KL}}(e \,\Vert\, a),
-$$
+```math
+\mathrm{PSI} = \sum_b a_b \ln\frac{a_b}{e_b} + \sum_b e_b \ln\frac{e_b}{a_b} = D_{\mathrm{KL}}(a \,\Vert\, e) + D_{\mathrm{KL}}(e \,\Vert\, a),
+```
 
 so PSI is the symmetrised Kullback–Leibler divergence (the Jeffreys
 divergence) between the binned distributions.
@@ -180,10 +180,10 @@ The model's scores are available for every request, without labels. Two
 simple summaries compare the current scores with those on a reference
 period, here the validation period on which the threshold was chosen:
 
-$$
+```math
 r = \frac{\bar{s}_{\text{current}}}{\bar{s}_{\text{reference}}}, \qquad
 \text{share flagged} = \frac{1}{n} \sum_{i=1}^{n} \mathbb{1}[s_i \ge t], \qquad (15.2)
-$$
+```
 
 where $\bar{s}$ is a mean score, $s_i$ the score of request $i$, $t$ the
 decision threshold and $n$ the number of requests. A PSI on the scores
@@ -214,9 +214,9 @@ the outcome is reported (a chargeback, a complaint). If delays are
 exponentially distributed with mean $\tau$, the fraction of eventual labels
 visible $t$ days after a prediction is
 
-$$
+```math
 F(t) = 1 - e^{-t/\tau}. \qquad (15.3)
-$$
+```
 
 Performance computed on an immature cohort counts positives that have not
 yet been observed as negatives, and therefore looks worse (or, for some
@@ -235,14 +235,14 @@ across periods:
 - **ROC-AUC**, which does not depend on the positive rate;
 - **PR-AUC divided by the positive rate**, the improvement over random
   ranking:
-  $$
+  ```math
   \text{lift}_{\text{PR}} = \frac{\text{PR-AUC}}{\pi}; \qquad (15.4)
-  $$
+  ```
 - **calibration on the matured cohort**, the ratio of mean predicted
   probability to observed rate:
-  $$
+  ```math
   c = \frac{\bar{s}_{\text{matured}}}{\bar{y}_{\text{matured}}}, \qquad (15.5)
-  $$
+  ```
   where $\bar{y}$ is the observed churn rate; $c = 1$ is perfect, and a band
   such as $[0.8, 1.25]$ is a reasonable alert range.
 
@@ -332,11 +332,11 @@ A rollback decision can be written as a rule. With a relative tolerance
 $\delta$ on PR-AUC and absolute limits on error rate and p95 latency, roll back
 if
 
-$$
+```math
 \text{PR-AUC}_{\text{cand}} < (1 - \delta)\, \text{PR-AUC}_{\text{base}}
 \;\;\text{or}\;\; \text{error rate}_{\text{cand}} > E_{\max}
 \;\;\text{or}\;\; p95_{\text{cand}} > L_{\max}. \qquad (15.6)
-$$
+```
 
 With $\delta = 0.1$ and a baseline PR-AUC of 0.163, a candidate below 0.147 is
 rolled back. The PR-AUC condition is skipped when the candidate's labels have

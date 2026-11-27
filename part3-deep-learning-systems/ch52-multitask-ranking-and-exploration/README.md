@@ -59,11 +59,11 @@ transfer**: when tasks conflict, training for one can hurt the other.
   $f_1, \dots, f_E$. Each task $k$ has its own **gate**, a softmax over the experts computed from the input,
   so that the input to task $k$'s tower is
 
-$$
+```math
 \mathbf{h}^{k}(\mathbf{x}) = \sum_{i=1}^{E} g^{k}_{i}(\mathbf{x})\, f_i(\mathbf{x}), \qquad
-\mathbf{g}^{k}(\mathbf{x}) = \operatorname{softmax}\!\left(W_{g}^{k}\, \mathbf{x}\right)
+\mathbf{g}^{k}(\mathbf{x}) = \mathrm{softmax}\!\left(W_{g}^{k}\, \mathbf{x}\right)
 \qquad (52.1)
-$$
+```
 
   where $W_{g}^{k}$ is the gate's weight matrix. Tasks can share experts where they agree and use different
   experts where they disagree, and the mixture can differ from one example to the next.
@@ -98,11 +98,11 @@ on non-clicked impressions**, the population it never saw in training.
 **ESMM** (Ma et al., 2018, SIGIR; the *entire space multi-task model*) changes the loss rather than the
 network. It defines the probability that an impression is clicked *and* converts,
 
-$$
+```math
 \mathrm{pCTCVR}(\mathbf{x}) = \mathrm{pCTR}(\mathbf{x}) \times \mathrm{pCVR}(\mathbf{x}), \qquad
 \mathcal{L} = \mathrm{BCE}(\mathrm{pCTR}, \text{click}) + \mathrm{BCE}(\mathrm{pCTCVR}, \text{click} \wedge \text{conversion})
 \qquad (52.2)
-$$
+```
 
 Both terms are defined on **all** impressions, so pCVR is never fitted to clicked rows alone, and it shares
 embeddings with the data-rich click task. For example, $0.08 \times 0.15 = 0.012$ expected conversions per
@@ -126,10 +126,10 @@ corrections, such as inverse-propensity weighting and doubly robust estimators (
 
 A ranker needs one score per candidate. A common form is a weighted product,
 
-$$
+```math
 \text{score} = \mathrm{pCTR}^{a} \cdot \mathrm{pCVR}^{b} \cdot \text{value}
 \qquad (52.3)
-$$
+```
 
 where *value* is the worth of a conversion (basket size, or the advertiser's bid per conversion), and $a$ and
 $b$ are tuning parameters. With $b = 0$ the score ranks for clicks × value; with calibrated predictions and
@@ -153,10 +153,10 @@ than 2%".
 Advertisers typically bid per click, while the platform sells impressions. To compare ads, the auction ranks
 by expected revenue per thousand impressions:
 
-$$
+```math
 \mathrm{eCPM}_i = \mathrm{pCTR}_i \cdot \text{bid}_i \cdot 1000
 \qquad (52.4)
-$$
+```
 
 ### Second-price auctions
 
@@ -165,10 +165,10 @@ Vickrey–Clarke–Groves (VCG) auctions), the winner pays the *smallest* bid wi
 winner keeps winning as long as $\text{bid}_1 \mathrm{pCTR}_1 \ge \text{bid}_2 \mathrm{pCTR}_2$, so the price per
 click is
 
-$$
+```math
 \text{price per click} = \max\!\left(\text{reserve},\ \frac{\text{bid}_2 \cdot \mathrm{pCTR}_2}{\mathrm{pCTR}_1}\right) \le \text{bid}_1
 \qquad (52.5)
-$$
+```
 
 where index 1 denotes the winner and 2 the runner-up. A **reserve price** is a floor: bids below it are not
 eligible, and the winner pays at least the reserve. Charging Equation (52.5) only when a click occurs makes the
@@ -193,10 +193,10 @@ repeated auctions, the truthfulness guarantee no longer holds exactly and real a
 With $n$ bidders whose values are independent and uniform on $[0, 1]$, a second-price auction with truthful bids
 and a first-price auction with the equilibrium bids $\tfrac{n-1}{n} v$ earn the same expected revenue,
 
-$$
+```math
 \mathbb{E}[\text{revenue}] = \frac{n - 1}{n + 1}
 \qquad (52.6)
-$$
+```
 
 (*revenue equivalence*). A reserve price raises revenue up to a point; for uniform values the optimal reserve is
 0.5 regardless of $n$ (Myerson, 1981). *Simulated (seeded):* both formats earned ≈ 0.600 with $n = 4$ (theory
@@ -226,13 +226,13 @@ overall.
 A ranker that always shows its current best guess never learns about the alternatives, and a new ad without
 history never gets the chance to show its quality. The **multi-armed bandit** formalises this
 *exploration–exploitation* trade-off. At each round $t$ the policy chooses one of $K$ arms (ads) with unknown click
-probabilities $p_k$, observes a reward $r_t \in \{0, 1\}$, and aims to minimise the **regret**, the expected clicks
+probabilities $p_k$, observes a reward $`r_t \in \{0, 1\}`$, and aims to minimise the **regret**, the expected clicks
 lost relative to always playing the best arm:
 
-$$
+```math
 \mathrm{Regret}(T) = \sum_{t=1}^{T} \left( p^{*} - p_{a_t} \right)
 \qquad (52.7)
-$$
+```
 
 where $p^{*} = \max_k p_k$ and $a_t$ is the arm played at round $t$. Three standard policies are:
 
@@ -240,27 +240,27 @@ where $p^{*} = \max_k p_k$ and $a_t$ is the arm played at round $t$. Three stand
   fixed rate forever, so its regret grows linearly.
 * **UCB1** (Auer et al., 2002): play the arm with the highest upper confidence bound,
 
-$$
+```math
 a_t = \arg\max_k \left( \hat{p}_k + \sqrt{\frac{2 \ln t}{n_k}} \right)
 \qquad (52.8)
-$$
+```
 
   where $\hat{p}_k$ and $n_k$ are arm $k$'s empirical CTR and number of plays. This is "optimism under
   uncertainty": rarely played arms receive a large bonus.
 * **Thompson sampling**: keep a Beta posterior per arm, draw one sample from each, and play the largest:
 
-$$
+```math
 \theta_k \sim \mathrm{Beta}(\alpha_k, \beta_k), \quad a_t = \arg\max_k \theta_k, \qquad
 \alpha_{a_t} \mathrel{+}= r_t, \quad \beta_{a_t} \mathrel{+}= 1 - r_t
 \qquad (52.9)
-$$
+```
 
   It explores each arm in proportion to the probability that the arm is best, incorporates prior knowledge
   naturally, and tolerates delayed and batched feedback. It is usually the strongest in practice (Chapelle &
   Li, 2011).
 
 *Worked example.* An ad with 3 clicks in 100 impressions and a Beta(1, 1) prior has posterior
-$\mathrm{Beta}(4, 98)$ with mean $4/102 = 3.9\%$. Its UCB1 bonus at $t = 10{,}000$ is
+$\mathrm{Beta}(4, 98)$ with mean $`4/102 = 3.9\%`$. Its UCB1 bonus at $t = 10{,}000$ is
 $\sqrt{2 \ln 10^4 / 100} = 0.43$, very large next to a 3% CTR.
 
 <img src="../../figures/l3-x-bandits.svg" alt="The bandit loop of choosing, showing, observing and updating, with the rules of epsilon-greedy, UCB1 and Thompson sampling, and conceptual cumulative regret curves" width="100%">

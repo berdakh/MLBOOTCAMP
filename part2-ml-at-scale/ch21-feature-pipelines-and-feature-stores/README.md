@@ -78,10 +78,10 @@ The lab computes features in two steps, both in SQL.
 
 For a user $u$, the click feature of the snapshot stamped at day $d$ is
 
-$$
+```math
 x_u(d) = \sum_{t=d-7}^{d-1} \text{clicks}_u(t)
 \qquad (21.1)
-$$
+```
 
 where $\text{clicks}_u(t)$ is the number of clicks by user $u$ on day $t$. For
 example, clicks of 0, 2, 1, 0, 0, 3 and 1 on days $d-7, \dots, d-1$ give
@@ -100,10 +100,10 @@ few impressions is extremely noisy (one click in two impressions gives 0.5), so
 the lab uses a *smoothed* rate, which adds $\alpha$ pseudo-impressions at a
 prior rate $p_0$:
 
-$$
+```math
 \widetilde{\text{CTR}} = \frac{\text{clicks} + \alpha\, p_0}{\text{impressions} + \alpha}
 \qquad (21.2)
-$$
+```
 
 With one click in two impressions, $p_0 = 0.137$ and $\alpha = 20$, the smoothed
 rate is $(1 + 2.74)/22 = 0.17$. This is the posterior mean of a Beta–binomial
@@ -118,11 +118,11 @@ applied per entity with a strict inequality. Formally, for an event $e$ with
 key $k_e$ and time $t_e$, and snapshots $s$ with key $k_s$ and timestamp
 $\tau_s$,
 
-$$
+```math
 s^{*}(e) = \underset{s:\; k_s = k_e,\; \tau_s < t_e}{\arg\max}\; \tau_s,
 \qquad \text{use } s^{*} \text{ only if } t_e - \tau_{s^{*}} \le \text{TTL}
 \qquad (21.3)
-$$
+```
 
 The second half of Equation (21.3) addresses a trap. Snapshots contain only
 entities that were *active* in their window. If a user was inactive last week,
@@ -204,10 +204,10 @@ it has a history. A backfill is safe if it has two properties.
 
 *Freshness* is the age of the newest data behind a served value:
 
-$$
+```math
 \text{age} = t_\text{request} - t_\text{newest event in the value}
 \qquad (21.4)
-$$
+```
 
 A daily batch job that runs at 02:00 over data up to midnight serves values
 between 2 and 26 hours old; if it fails for three days, the values are 74 to 98

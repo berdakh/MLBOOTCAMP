@@ -69,17 +69,17 @@ signature difficulty, where the deep dives belong.*
 Two calculations recur in every case. The first is **capacity**. Peak load in queries per second (QPS) follows from daily
 active users (DAU):
 
-$$
+```math
 \text{QPS}_{\text{peak}} = \frac{\text{DAU} \times \text{requests per user per day}}{86{,}400} \times \frac{\text{peak}}{\text{average}}
 \qquad (56.1)
-$$
+```
 
 and the number of replicas, with a headroom fraction $h$ kept free for spikes, a lost replica or a deployment, is
 
-$$
+```math
 \text{replicas} = \max\!\left(2,\ \left\lceil \frac{\text{QPS}_{\text{peak}}}{\text{QPS}_{\text{replica}} \cdot (1 - h)} \right\rceil \right)
 \qquad (56.2)
-$$
+```
 
 The minimum of two removes the single point of failure. $\text{QPS}_{\text{replica}}$ must be *measured* by load-testing the
 real serving image at the target latency (Chapter 50): a replica that handles 50 requests per second at a p99 of 300 ms may
@@ -89,10 +89,10 @@ $1/(z - 1)$ of the load.
 The second is the **latency budget**. The end-to-end limit $T_{\text{total}}$ is divided among the stages, and what remains is
 headroom:
 
-$$
+```math
 \text{headroom} = T_{\text{total}} - \sum_{\text{stages}} t_s
 \qquad (56.3)
-$$
+```
 
 Budgets are set on high percentiles, and percentiles do not add: the sum of stage p99s is an upper bound on the end-to-end p99 of
 a sequential chain. Parallel stages count once, at their slowest member. The largest stage is where optimisation effort goes first;
@@ -193,21 +193,21 @@ handing off to humans when needed."*
 retrieved passages *and the conversation so far*. With $S$ system-prompt tokens, $R$ retrieved tokens, $U$ user tokens and $A$ answer
 tokens per turn, the prompt at turn $t$ and the cost of an $n$-turn conversation are
 
-$$
+```math
 P_t = S + R + U + (t - 1)(U + A), \qquad
 \text{cost} = \sum_{t=1}^{n} \big( P_t\, p_{\text{in}} + A\, p_{\text{out}} \big)
 \qquad (56.4)
-$$
+```
 
 where $p_{\text{in}}$ and $p_{\text{out}}$ are prices per input and output token. With the lab's assumptions ($S = 800$, $R = 1{,}500$,
 $U = 60$, $A = 200$), prompts grow from 2,360 tokens at turn 1 to 3,660 at turn 6; at placeholder prices of \$0.50 and \$2 per million
 input and output tokens a six-turn conversation costs about \$0.0114. A human-handled conversation, at a placeholder \$4.00, costs about
 350 times as much. With deflection rate $d$ (the share of conversations resolved without a human), the blended cost is
 
-$$
+```math
 c = c_{\text{LLM}} + (1 - d)\, c_{\text{human}}
 \qquad (56.5)
-$$
+```
 
 so at $d = 0.5$ it is about \$2.01, dominated by the human term. The **quality of hand-off decisions** (resolving correctly, or handing off
 early with a good summary) therefore matters far more than shaving tokens; a wrong answer that causes a re-contact costs more than any token
@@ -241,10 +241,10 @@ fetch 30, model inference 8, decision and reason codes 4, asynchronous logging 3
 $k$ services in parallel and waits for all of them. If each is independently slow with probability $p$, the probability that the request
 waits on at least one slow call is
 
-$$
+```math
 P(\text{some call slow}) = 1 - (1 - p)^{k}
 \qquad (56.6)
-$$
+```
 
 For $p = 0.01$ this is 5.9% with $k = 6$ and 18.2% with $k = 20$: a request is as slow as its slowest dependency (Dean & Barroso, 2013). In
 practice slowness is often correlated (one overloaded cache slows several calls), which can make the tail better or much worse. Fraud

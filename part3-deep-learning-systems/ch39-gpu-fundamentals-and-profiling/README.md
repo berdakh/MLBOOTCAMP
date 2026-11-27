@@ -141,17 +141,17 @@ The product of an $m \times k$ matrix $A$ and a $k \times n$ matrix $B$ has $mn$
 entries. Each entry is a dot product of length $k$: $k$ multiplications and $k$
 additions. The total floating-point operation count is therefore
 
-$$
+```math
 \text{FLOPs}(A_{m\times k} B_{k\times n}) = 2\,m\,n\,k ,
 \qquad (39.1)
-$$
+```
 
 which for square $n \times n$ matrices is $2n^3$. (A fused multiply-add counts as
 two FLOPs.) Dividing by the measured time gives the **achieved FLOP/s**; dividing
 achieved by peak FLOP/s gives the **utilisation** of the arithmetic units.
 
 Equation (39.1) generalises to neural networks. A linear layer applied to a batch
-of $B$ token vectors costs $2 B\, d_{\text{in}} d_{\text{out}}$ FLOPs forward. The
+of $B$ token vectors costs $`2 B\, d_{\text{in}} d_{\text{out}}`$ FLOPs forward. The
 backward pass computes two matrix products of the same size (the gradient with
 respect to the input and with respect to the weights), so about twice that. A full
 training step therefore costs roughly $6 \times \text{parameters} \times \text{tokens}$
@@ -175,10 +175,10 @@ re-running surprising results are part of the method.
 Every operation reads some bytes from memory, performs some arithmetic, and writes
 some bytes back. Its **arithmetic intensity** is the ratio
 
-$$
+```math
 I = \frac{\text{FLOPs performed}}{\text{bytes moved to and from memory}} \quad [\text{FLOP/byte}].
 \qquad (39.2)
-$$
+```
 
 Two examples fix the idea:
 
@@ -195,11 +195,11 @@ bytes, so their effective intensity at device memory is lower.
 The **roofline model** (Williams, Waterman & Patterson, 2009) combines intensity
 with the two hardware limits:
 
-$$
+```math
 P_{\text{attainable}} = \min\!\big(P_{\text{peak}},\; I \cdot B_{\text{mem}}\big),
 \qquad I^{\star} = \frac{P_{\text{peak}}}{B_{\text{mem}}} .
 \qquad (39.3)
-$$
+```
 
 Here $P_{\text{peak}}$ is the peak arithmetic rate (FLOP/s), $B_{\text{mem}}$ the
 memory bandwidth (bytes/s), and $I^{\star}$ the **ridge point**. An operation with
@@ -321,12 +321,12 @@ each batch *between* training steps, so loading and computation never overlap. W
 A simple model of one epoch with $n_b$ batches, load time $t_{\text{load}}$ per batch and
 compute time $t_{\text{step}}$ per batch is
 
-$$
+```math
 T_{\text{epoch}} \approx n_b\,(t_{\text{load}} + t_{\text{step}}) \;\; (\text{no workers}),
 \qquad
 T_{\text{epoch}} \approx n_b \max\!\Big(\frac{t_{\text{load}}}{k},\; t_{\text{step}}\Big) \;\; (k \text{ workers}).
 \qquad (39.4)
-$$
+```
 
 Without workers the two times add; with $k$ workers they overlap and the slower of the
 two sets the pace. Adding workers helps until $t_{\text{load}}/k \le t_{\text{step}}$

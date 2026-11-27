@@ -65,10 +65,10 @@ TF-IDF represents a text by the counts of its words and word pairs, each multipl
 document frequency**, so that terms frequent in a text but rare in the corpus receive large weights.
 In one common form, the weight of term $w$ in document $d$ is
 
-$$
+```math
 \text{tfidf}(w, d) = \text{tf}(w, d) \cdot \log \frac{N}{\text{df}(w)} ,
 \qquad (43.1)
-$$
+```
 
 where $\text{tf}(w,d)$ is the count of $w$ in $d$, $N$ the number of documents and $\text{df}(w)$ the number
 of documents containing $w$ (libraries add smoothing and normalise each vector to unit length). A logistic
@@ -134,12 +134,12 @@ equal to accuracy to three decimals, because the classes are balanced).
 Whether these differences are meaningful depends on the sampling error of the test set. For an accuracy
 $\hat p$ measured on $n$ independent examples,
 
-$$
-\operatorname{SE}(\hat p) = \sqrt{\frac{\hat p\,(1 - \hat p)}{n}} .
+```math
+\mathrm{SE}(\hat p) = \sqrt{\frac{\hat p\,(1 - \hat p)}{n}} .
 \qquad (43.2)
-$$
+```
 
-For $\hat p = 0.872$ and $n = 500$, $\operatorname{SE} \approx 0.015$. The gap between TF-IDF and the two
+For $\hat p = 0.872$ and $n = 500$, $\mathrm{SE} \approx 0.015$. The gap between TF-IDF and the two
 DistilBERT models (0.04–0.05) is several standard errors. The gap between the probe and the fine-tuned model
 (0.014) is about one standard error, so this CPU run does not show that fine-tuning beats the probe. When two
 models are evaluated on the *same* examples, a **paired** test is more sensitive than comparing two separate
@@ -149,10 +149,10 @@ bootstrap of the accuracy difference. With the GPU budget, fine-tuning is expect
 
 Because the classes are balanced, accuracy and macro-F1 agree here. In general **macro-F1**,
 
-$$
+```math
 F_1 = \frac{2PR}{P + R}, \qquad \text{macro-}F_1 = \frac{1}{C} \sum_{c=1}^{C} F_{1,c} ,
 \qquad (43.3)
-$$
+```
 
 averages the per-class harmonic mean of precision $P$ and recall $R$ with equal weight per class, so that
 rare classes count as much as frequent ones.
@@ -166,13 +166,13 @@ abstaining. Calibration complements accuracy and does not replace it: a model th
 rate (0.25 for each of four balanced classes) is perfectly calibrated and useless.
 
 **Expected calibration error.** Partition the $n$ predictions into $B$ equal-width bins $S_1, \dots, S_B$ by
-confidence (the largest predicted probability). In each bin compare the accuracy $\operatorname{acc}(S_b)$ with
-the mean confidence $\operatorname{conf}(S_b)$:
+confidence (the largest predicted probability). In each bin compare the accuracy $\mathrm{acc}(S_b)$ with
+the mean confidence $\mathrm{conf}(S_b)$:
 
-$$
-\operatorname{ECE} = \sum_{b=1}^{B} \frac{\lvert S_b \rvert}{n} \, \big\lvert \operatorname{acc}(S_b) - \operatorname{conf}(S_b) \big\rvert .
+```math
+\mathrm{ECE} = \sum_{b=1}^{B} \frac{\lvert S_b \rvert}{n} \, \big\lvert \mathrm{acc}(S_b) - \mathrm{conf}(S_b) \big\rvert .
 \qquad (43.4)
-$$
+```
 
 For example, 100 predictions at confidence 0.9 with accuracy 0.8 and 100 at confidence 0.6 with accuracy 0.65
 give $\tfrac12(0.1) + \tfrac12(0.05) = 0.075$. ECE has known weaknesses: it depends on the number of bins, it is
@@ -190,11 +190,11 @@ confidence, for example confidence 0.83 with accuracy 0.98.
 divided by a scalar $T > 0$ before the softmax, and $T$ is chosen to minimise the negative log-likelihood on
 validation data:
 
-$$
-\mathbf p = \operatorname{softmax}(\mathbf z / T), \qquad
-T^{\star} = \arg\min_{T > 0} \; -\frac{1}{n_{\text{val}}} \sum_{i \in \text{val}} \log \operatorname{softmax}(\mathbf z_i / T)_{y_i} .
+```math
+\mathbf p = \mathrm{softmax}(\mathbf z / T), \qquad
+T^{\star} = \arg\min_{T > 0} \; -\frac{1}{n_{\text{val}}} \sum_{i \in \text{val}} \log \mathrm{softmax}(\mathbf z_i / T)_{y_i} .
 \qquad (43.5)
-$$
+```
 
 $T > 1$ softens over-confident predictions and $T < 1$ sharpens under-confident ones. Because every logit is divided
 by the same positive number, the order of the classes, and hence the argmax and the accuracy, cannot change. For

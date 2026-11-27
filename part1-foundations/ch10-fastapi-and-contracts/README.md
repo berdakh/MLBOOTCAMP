@@ -119,9 +119,9 @@ Chapter 12 starts a real server for the cases where the network matters.
 A minimal service, of the kind built at the start of the lab, has a hand-written
 "model" so that attention stays on the structure of the app:
 
-$$
+```math
 z = -1.0 - 0.05\, s + 0.8\, f, \qquad p = \sigma(z) = \frac{1}{1 + e^{-z}} \qquad (10.1)
-$$
+```
 
 where $s$ is the number of sessions in the last four weeks, $f$ is the number
 of failed payments in the last 90 days, $z$ is a score on the log-odds scale
@@ -363,9 +363,9 @@ accepted by the old and new schemas, and let $R_{\text{old}}$ and
 $R_{\text{new}}$ be the sets of response fields, with their meanings, that
 the two versions guarantee. A change is backwards compatible if
 
-$$
+```math
 V_{\text{old}} \subseteq V_{\text{new}} \quad \text{and} \quad R_{\text{old}} \subseteq R_{\text{new}}, \qquad (10.2)
-$$
+```
 
 that is, every request that used to be accepted is still accepted, and every
 response field a client may read is still present with the same meaning.

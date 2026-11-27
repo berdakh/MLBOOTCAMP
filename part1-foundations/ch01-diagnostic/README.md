@@ -218,7 +218,7 @@ the rule is:
 For the self-rated areas, the profile averages the ratings $r_1, \dots, r_m$
 of the statements in that area:
 
-$$
+```math
 \bar r = \frac{1}{m} \sum_{j=1}^{m} r_j , \qquad
 \text{status} =
 \begin{cases}
@@ -227,9 +227,9 @@ $$
 \text{priority} & \bar r < 2
 \end{cases}
 \qquad (1.1)
-$$
+```
 
-where $m = 3$ statements per area and each $r_j \in \{1, 2, 3, 4\}$. For
+where $m = 3$ statements per area and each $`r_j \in \{1, 2, 3, 4\}`$. For
 example, ratings 3, 2 and 2 for Deployment give $\bar r = 2.33$, so
 Deployment is marked **review**. A rating outside 1 to 4 is ignored with a
 message.
@@ -242,9 +242,9 @@ took longer than the timebox as half a pass. If $p$ items in an area passed
 within time and $q$ passed over time, out of $n$ items, the share used below
 is
 
-$$
+```math
 s = \frac{p + 0.5\,q}{n} . \qquad (1.2)
-$$
+```
 
 With one item per graded area, $s$ is 1, 0.5 or 0; across the six graded
 areas together it gives a single overall figure. For example, four items

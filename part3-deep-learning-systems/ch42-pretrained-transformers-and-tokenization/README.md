@@ -79,13 +79,13 @@ text; it does not hold for every domain.
 ## 42.3 Batches: padding, attention masks and truncation
 
 Tensors are rectangular, so all sequences in a batch must have the same length. Shorter sequences
-are **padded** with a pad token, and an **attention mask** $m_t \in \{0, 1\}$ marks real tokens (1) and
+are **padded** with a pad token, and an **attention mask** $`m_t \in \{0, 1\}`$ marks real tokens (1) and
 padding (0). Inside every attention layer the mask is applied to the keys:
 
-$$
+```math
 \text{score}_{ij} \;\leftarrow\; \text{score}_{ij} + (1 - m_j)\cdot(-\infty) ,
 \qquad (42.1)
-$$
+```
 
 so after the softmax a padded key receives weight exactly zero from every query. For scores
 $(1.0, 0.5, 2.0)$ and mask $(1, 1, 0)$ the softmax is taken over the first two entries only, giving
@@ -124,10 +124,10 @@ Many applications need **one vector per text**, obtained by **pooling** the toke
   (Devlin et al., 2019). DistilBERT was distilled without the next-sentence objective.
 * **Mean pooling** averages the token vectors, **using the attention mask**:
 
-$$
+```math
 \mathbf{s} = \frac{\sum_{t=1}^{T} m_t\, \mathbf{h}_t}{\sum_{t=1}^{T} m_t} ,
 \qquad (42.2)
-$$
+```
 
 where $\mathbf h_t$ is the hidden state at position $t$ and $m_t$ the mask. Sentence-embedding models
 (Reimers & Gurevych, 2019) are trained with this pooling. In code, the denominator must be guarded
@@ -144,10 +144,10 @@ problem studied in Chapter 11.
 **Comparing CLS and mean pooling.** Similarity between embeddings is usually measured by **cosine
 similarity**,
 
-$$
+```math
 \cos(\mathbf a, \mathbf b) = \frac{\mathbf a \cdot \mathbf b}{\lVert \mathbf a \rVert \, \lVert \mathbf b \rVert} ,
 \qquad (42.3)
-$$
+```
 
 the cosine of the angle between the vectors, which ignores their lengths. On a small hand-made set of
 related and unrelated sentence pairs (a sanity check, not a benchmark), CLS pooling gave mean cosine
@@ -179,14 +179,14 @@ of 128 tokens fill it. Attention's quadratic cost should become visible at 512 t
 
 Every pad position costs as much computation as a real token. The fraction of wasted positions is
 
-$$
+```math
 \text{waste} = 1 - \frac{\sum_i \ell_i}{\sum_{\text{batches } b} \lvert b \rvert \cdot \max_{i \in b} \ell_i} ,
 \qquad (42.4)
-$$
+```
 
 where $\ell_i$ is the length of text $i$ and $\lvert b\rvert$ the number of rows in batch $b$. For six texts
 with 370 real tokens padded to 128, $6 \times 128 = 768$ positions are computed and the waste is
-$1 - 370/768 = 52\%$; after sorting by length into two batches of three, $3 \cdot 45 + 3 \cdot 120 = 495$
+$`1 - 370/768 = 52\%`$; after sorting by length into two batches of three, $3 \cdot 45 + 3 \cdot 120 = 495$
 positions are computed and the waste is 25%.
 
 <img src="../../figures/l3-padding-bucketing.svg" alt="The same six texts batched three ways: padding to 128 wastes 52 percent of positions, dynamic padding in data order 41 percent, sorting by length first 25 percent" width="100%">

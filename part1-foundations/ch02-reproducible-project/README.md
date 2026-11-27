@@ -31,9 +31,9 @@ month (or year) for as long as they stay. **Churn** is a customer leaving,
 either by cancelling or by not renewing. The **churn rate** is the share of
 customers who leave in a period:
 
-$$
+```math
 \text{monthly churn rate} = \frac{\text{customers who left during the month}}{\text{customers at the start of the month}} . \qquad (2.1)
-$$
+```
 
 Two kinds of churn are distinguished, because they need different responses:
 
@@ -50,9 +50,9 @@ signals) and failed payments (an involuntary one).
 If a constant share $c$ of the remaining customers leaves every month, the
 share still present after $n$ months is
 
-$$
+```math
 \text{retained}(n) = (1 - c)^n , \qquad (2.2)
-$$
+```
 
 where $c$ is the monthly churn rate and $n$ the number of months. Each month
 keeps a fraction $1 - c$ of whoever is left, so the fractions multiply.
@@ -300,10 +300,10 @@ the "improvements" people report.
 To quantify that spread, run the same experiment with $k$ seeds and report
 the mean and the sample standard deviation:
 
-$$
+```math
 \bar{x} = \frac{1}{k}\sum_{i=1}^{k} x_i, \qquad
 s = \sqrt{\frac{1}{k-1}\sum_{i=1}^{k} (x_i - \bar{x})^2} , \qquad (2.3)
-$$
+```
 
 where $x_i$ is the metric obtained with seed $i$ and $k$ the number of seeds.
 $s$ is the typical distance of one seed's score from the average. For
@@ -349,12 +349,12 @@ research code cannot be reused. The remedy has three parts.
 A configuration that is plain data can be saved, compared and hashed, and the
 hash becomes the run's name. The identity used in this book is
 
-$$
-\text{run\_id} = \operatorname{hex}_{12}\Big(\operatorname{SHA256}\big(\operatorname{json}_{\text{sorted}}(\text{config})\big)\Big) , \qquad (2.4)
-$$
+```math
+\text{run\_id} = \mathrm{hex}_{12}\Big(\mathrm{SHA256}\big(\mathrm{json}_{\text{sorted}}(\text{config})\big)\Big) , \qquad (2.4)
+```
 
-where $\operatorname{json}_{\text{sorted}}$ serialises the configuration with
-keys sorted at every level and $\operatorname{hex}_{12}$ keeps the first 12
+where $\mathrm{json}_{\text{sorted}}$ serialises the configuration with
+keys sorted at every level and $\mathrm{hex}_{12}$ keeps the first 12
 hexadecimal characters (48 bits). Sorting the keys matters: `{"a": 1, "b": 2}`
 and `{"b": 2, "a": 1}` are the same configuration and must receive the same
 identity. Python's built-in `hash()` is not suitable, because string hashing
@@ -367,9 +367,9 @@ is salted per process.
 How likely is a collision between two different configurations? For $N$
 runs and a $b$-bit identity, the birthday approximation gives
 
-$$
+```math
 P(\text{collision}) \approx \frac{N^2}{2^{\,b+1}} , \qquad (2.5)
-$$
+```
 
 so for $N = 10{,}000$ runs and $b = 48$, $P \approx 10^8 / 5.6 \times 10^{14} \approx 2 \times 10^{-7}$.
 The risk is negligible, but it can be detected cheaply by storing the full

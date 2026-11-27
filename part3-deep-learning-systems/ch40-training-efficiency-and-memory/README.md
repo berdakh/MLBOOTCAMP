@@ -62,10 +62,10 @@ caching allocator.
 The first three terms depend only on the number of parameters $\Psi$ and form the
 **model state**:
 
-$$
+```math
 M_{\text{state}} = \Psi\,\big(b_w + b_g + b_{\text{opt}}\big),
 \qquad (40.1)
-$$
+```
 
 where $b_w$, $b_g$ and $b_{\text{opt}}$ are the bytes per parameter for weights,
 gradients and optimiser state.
@@ -119,15 +119,15 @@ tensors that backward needs: the inputs and outputs of the two LayerNorms, the q
 key and value projections, the attention output, and the input and output of the GELU
 in the four-times-wider MLP. In the course's model this amounts to about $16h$ values
 per token per layer. In addition, the attention probabilities form a $T \times T$ matrix
-per head, i.e. $a\,T$ values per token per layer.
+per head, i.e. $`a\,T`$ values per token per layer.
 
 A widely used version of this count, from the Megatron-LM work of Korthikanti et al.
 (2022), assumes fp16 activations and stored dropout masks and gives
 
-$$
+```math
 M_{\text{act}} \approx L \cdot B \cdot T \cdot \big(34\,h + 5\,a\,T\big)\ \text{bytes},
 \qquad (40.2)
-$$
+```
 
 where $L$ is the number of layers. The expression is linear in depth, batch size and
 hidden size, and **quadratic in sequence length** through the attention term.
@@ -175,12 +175,12 @@ FLOPs.
 For the accumulated gradient to equal the large-batch gradient, each micro-batch must
 be weighted correctly. Let micro-batch $i$ contain $n_i$ examples, let $\bar\ell_i$ be
 its mean loss, and let $N = \sum_i n_i$. The mean loss over all $N$ examples is
-$\sum_i (n_i/N)\,\bar\ell_i$. Because the gradient is linear,
+$`\sum_i (n_i/N)\,\bar\ell_i`$. Because the gradient is linear,
 
-$$
+```math
 g = \nabla_\theta \frac{1}{N}\sum_{j=1}^{N}\ell_j = \sum_{i=1}^{k} \frac{n_i}{N}\, \nabla_\theta \bar{\ell}_i .
 \qquad (40.3)
-$$
+```
 
 When all micro-batches have the same size, $n_i/N = 1/k$ and the familiar rule
 "divide the loss by $k$" is correct. With unequal sizes it is not: micro-batches of 8
@@ -227,10 +227,10 @@ $2F$, because each linear layer needs two matrix products (gradient with respect
 input and with respect to the weights). Checkpointing every block adds one more
 forward pass:
 
-$$
+```math
 F + 2F \;\longrightarrow\; F + 2F + F = \tfrac{4}{3}\,(F + 2F).
 \qquad (40.4)
-$$
+```
 
 The theoretical time overhead is therefore about 33%. Memory falls from "all internal
 activations of every layer" to "one input per layer plus one layer's internals at a time".
@@ -325,14 +325,14 @@ update precisely. With gradient $g_t$ at step $t$, learning rate $\eta$, decay r
 $\beta_1$ (typically 0.9) and $\beta_2$ (typically 0.999), a small constant $\epsilon$
 (about $10^{-8}$) and weight decay $\lambda$, AdamW (Loshchilov & Hutter, 2019) computes
 
-$$
+```math
 \begin{aligned}
 m_t &= \beta_1 m_{t-1} + (1-\beta_1)\, g_t, \qquad v_t = \beta_2 v_{t-1} + (1-\beta_2)\, g_t^2, \\
 \hat m_t &= \frac{m_t}{1-\beta_1^{\,t}}, \qquad \hat v_t = \frac{v_t}{1-\beta_2^{\,t}}, \\
 \theta_t &= \theta_{t-1} - \eta \Big( \frac{\hat m_t}{\sqrt{\hat v_t} + \epsilon} + \lambda\, \theta_{t-1} \Big).
 \end{aligned}
 \qquad (40.5)
-$$
+```
 
 The first moment $m_t$ is a running average of the gradient (momentum); the second moment
 $v_t$ is a running average of its square (a per-parameter scale). These are the two
@@ -342,7 +342,7 @@ parameters ("decoupled"), rather than adding $\lambda\theta$ to the gradient as 
 L2 regularisation does.
 
 **A consequence for the first step.** At $t = 1$, $\hat m_1 = g_1$ and $\hat v_1 = g_1^2$, so
-the update is $\eta\,g_1/\lvert g_1\rvert = \eta \operatorname{sign}(g_1)$ (ignoring $\epsilon$
+the update is $`\eta\,g_1/\lvert g_1\rvert = \eta \mathrm{sign}(g_1)`$ (ignoring $\epsilon$
 and decay): every weight moves by the full learning rate, whatever the size of its
 gradient. This is one reason for learning-rate warm-up. The lab verifies this: the first
 update was 0.1003–0.1022 for every weight with learning rate 0.1 (the excess is the decay

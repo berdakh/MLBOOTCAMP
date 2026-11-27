@@ -91,9 +91,9 @@ A feature that *uses the label* is a different matter. A plausible candidate
 is "this customer's historical churn rate", a form of **target encoding**:
 replacing a category (here, the customer) with the mean label of its rows,
 
-$$
+```math
 \text{TE}(c) = \frac{1}{n_c} \sum_{i \in c} y_i , \qquad (6.1)
-$$
+```
 
 where $c$ is a category level, $n_c$ the number of rows in that level and
 $y_i$ their labels. The lab builds three versions:
@@ -164,9 +164,9 @@ EU, LATAM, NA and unknown). Output names carry the branch prefix (`log__`,
 **Standardisation.** Each numeric column is transformed with the training
 mean and standard deviation:
 
-$$
+```math
 z = \frac{x - \mu_{\text{train}}}{\sigma_{\text{train}}} , \qquad (6.2)
-$$
+```
 
 where $\mu_{\text{train}}$ and $\sigma_{\text{train}}$ are the mean and
 (population) standard deviation of the column on training rows. $z$ is the
@@ -178,9 +178,9 @@ value 7 becomes $z = 3/1.265 = 2.37$.
 strongly right-skewed (raw skewness about 1.7 to 2.7 here). In a linear model
 a few very large accounts would then dominate the coefficient. The transform
 
-$$
+```math
 \tilde{x} = \ln(1 + x) \qquad (6.3)
-$$
+```
 
 maps 0 to 0 and turns an effect "per unit" into an effect roughly "per
 doubling": 0, 1, 9 and 99 sessions become 0, 0.69, 2.30 and 4.61. After the
@@ -204,11 +204,11 @@ silently ignoring.
 **The classifier.** Logistic regression models the log-odds of churn as a
 linear function of the standardised features:
 
-$$
+```math
 \log\frac{p}{1-p} = \beta_0 + \sum_j \beta_j z_j ,
 \qquad
 p = \sigma(\eta) = \frac{1}{1 + e^{-\eta}} , \qquad (6.4)
-$$
+```
 
 where $p$ is the churn probability, $\eta = \beta_0 + \sum_j \beta_j z_j$ the
 linear score (scikit-learn's `decision_function`) and $\beta_j$ the

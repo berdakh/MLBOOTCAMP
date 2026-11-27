@@ -101,10 +101,10 @@ day; about 20% of users sign up during the window.
 **True relevance.** The probability that user $u$ clicks item $i$ *given that
 the user examines it* is a logistic function of a relevance score:
 
-$$
+```math
 P(C = 1 \mid E = 1, u, i) = \sigma\!\left(1.6\,\mathbf{u}_u^{\top}\mathbf{v}_i + 0.5\,q_i - 0.25\,\log \text{price}_i - 1.2\right)
 \qquad (19.1)
-$$
+```
 
 where $C$ is the click indicator, $E$ the examination indicator,
 $\sigma(x) = 1/(1+e^{-x})$ the logistic function, $\mathbf{u}_u$ and
@@ -120,11 +120,11 @@ called the *logging policy*, draws 200 random candidate items that already
 exist on that day, scores them, and shows the top $K = 10$ in order. The
 policy's score is
 
-$$
+```math
 s_{ui} = \log \text{pop}_i + 0.8\,\tilde{\mathbf{u}}_u^{\top}\mathbf{v}_i + g_{ui},
-\qquad g_{ui} \sim \operatorname{Gumbel}(0, 0.7)
+\qquad g_{ui} \sim \mathrm{Gumbel}(0, 0.7)
 \qquad (19.2)
-$$
+```
 
 where $\text{pop}_i$ is a noisy popularity built from item quality,
 $\tilde{\mathbf{u}}_u$ is the policy's *noisy* estimate of the user's taste
@@ -146,10 +146,10 @@ estimate position bias.
 **Examination, clicks and purchases.** The user examines the item at position
 $p$ (counted from 0 at the top) with probability
 
-$$
+```math
 P(E = 1 \mid p) = (1 + p)^{-\eta}, \qquad \eta = 0.9
 \qquad (19.3)
-$$
+```
 
 so the top item is always examined and the item at position 9 is examined
 with probability $10^{-0.9} \approx 0.13$. An examined item is clicked with the
@@ -157,10 +157,10 @@ probability of Equation (19.1). A clicked item is purchased with a probability
 that falls with price and rises with quality. The overall click probability
 is the product
 
-$$
+```math
 P(C = 1 \mid u, i, p) = P(E = 1 \mid p)\; P(C = 1 \mid E = 1, u, i)
 \qquad (19.4)
-$$
+```
 
 This is the *examination hypothesis*, the simplest click model, studied in
 Chapter 23. Equation (19.4) is the reason why clicks are a biased measure of
@@ -408,15 +408,15 @@ number of distinct items a user saw (per user).
 The CTR $\hat p$ in a random sample of $n$ rows is an unbiased estimate of the
 population CTR $p$, with standard error
 
-$$
-\operatorname{SE}(\hat p) = \sqrt{\frac{p\,(1-p)}{n}}
+```math
+\mathrm{SE}(\hat p) = \sqrt{\frac{p\,(1-p)}{n}}
 \qquad (19.5)
-$$
+```
 
 (strictly, this formula assumes independent rows; rows of the same request or
 user are correlated, which makes the true standard error somewhat larger). With
 $p = 0.137$ and $n \approx 245{,}000$, Equation (19.5) gives
-$\operatorname{SE} \approx 0.0007$. In the lab, the CTR is about 0.137 in every
+$\mathrm{SE} \approx 0.0007$. In the lab, the CTR is about 0.137 in every
 sample.
 
 ### 19.8.2 Per-request metrics
@@ -427,10 +427,10 @@ sampling with rate $f$, a request that contains $c$ clicks keeps at least one
 of them with probability $1-(1-f)^{c}$, and the request survives at all (keeps
 at least one of its ten rows) with probability $1-(1-f)^{10}$. Hence
 
-$$
+```math
 P(\text{click kept} \mid \text{request kept}) = \frac{\mathbb{E}\left[1-(1-f)^{c}\right]}{1-(1-f)^{10}}
 \qquad (19.6)
-$$
+```
 
 where the expectation is over the distribution of $c$ across requests. For a
 request with one click and $f = 0.1$, the ratio is $0.1/0.651 \approx 0.15$,
@@ -456,13 +456,13 @@ when the population or its order changes, and it cannot be recomputed in a
 different system (an SQL warehouse, a Spark job) with the same result. The
 standard remedy is to decide membership by a *hash of the key*:
 
-$$
+```math
 \text{keep}(u) = \Big[\, h(\text{salt} \,\|\, \texttt{:} \,\|\, u) \bmod 100 < \text{pct} \,\Big]
 \qquad (19.7)
-$$
+```
 
 where $h$ is a fixed hash function that maps a string to a large integer,
-$\|$ denotes string concatenation, $u$ is the key (a user id), and pct is the
+$`\|`$ denotes string concatenation, $u$ is the key (a user id), and pct is the
 sample percentage. The decision is a pure function of the key: the same user
 receives the same decision every day, in every job and on every machine, and
 samples are nested (a 5% sample is contained in the 10% sample).
@@ -486,10 +486,10 @@ Three details matter.
 Because each key is kept with probability $q = \text{pct}/100$ independently of
 the others, the sample size is binomial:
 
-$$
-\mathbb{E}[\text{kept}] = N q, \qquad \operatorname{SD}[\text{kept}] = \sqrt{N q (1-q)}
+```math
+\mathbb{E}[\text{kept}] = N q, \qquad \mathrm{SD}[\text{kept}] = \sqrt{N q (1-q)}
 \qquad (19.8)
-$$
+```
 
 where $N$ is the number of keys. For $N = 10{,}000$ and $q = 0.1$ this is
 $1{,}000 \pm 30$. In the lab the hash sample contains about 1,030 users, one

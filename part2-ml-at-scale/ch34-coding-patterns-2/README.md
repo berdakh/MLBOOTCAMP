@@ -36,9 +36,9 @@ BFS explores the graph in layers using a first-in, first-out queue: first the so
 
 **Implementation.** Use `collections.deque` (Chapter 33 showed that `list.pop(0)` makes BFS quadratic), and mark a node as seen **when it is enqueued**, not when it is dequeued; otherwise a node can be enqueued once per incoming edge. Each node is enqueued once and each edge examined once (twice for undirected graphs), so
 
-$$
+```math
 T_{\text{BFS}} = T_{\text{DFS}} = O(V + E). \qquad (34.1)
-$$
+```
 
 A grid of $R \times C$ cells has $V = RC$ and $E \le 4RC$; a $500 \times 500$ grid has 250,000 cells and about a million edge checks, which takes a fraction of a second in Python.
 
@@ -70,17 +70,17 @@ A **topological order** of a directed graph lists every node after all its prede
 
 BFS minimises the number of edges; with weights, a path with fewer edges can cost more. **Dijkstra's algorithm** generalises BFS by replacing the queue with a priority queue keyed by tentative distance $d$, and always expanding the unfinished node with the smallest $d$. Expanding $u$ **relaxes** each edge $u \to v$:
 
-$$
+```math
 d(v) \leftarrow \min\big(d(v),\ d(u) + w(u, v)\big). \qquad (34.2)
-$$
+```
 
 **Correctness (sketch).** Suppose node $u$ is popped with distance $d(u)$ but a shorter path $P$ to $u$ exists. $P$ leaves the set of finished nodes at some edge $x \to y$ with $y$ unfinished. Because $x$ was finished, $d(y) \le d(x) + w(x, y)$, which is at most the length of $P$ up to $y$. Because all weights are non-negative, the rest of $P$ cannot decrease its length, so $d(y) \le \text{len}(P) < d(u)$, and $y$ would have been popped before $u$. This contradiction shows that every node is final when popped. The argument fails if any weight is negative; then the Bellman–Ford algorithm, $O(VE)$, is required (and it also detects negative cycles).
 
 **Implementation.** Python's `heapq` has no decrease-key operation. Instead, when a shorter distance to $v$ is found, push a new entry `(d, v)` and leave the old one in the heap; when an entry is popped whose distance exceeds the recorded $d(v)$, skip it. This is **lazy deletion**. The heap holds at most $O(E)$ entries, so the running time is
 
-$$
+```math
 T = O\big((V + E) \log V\big) \qquad (34.3)
-$$
+```
 
 with a binary heap ($\log E \le 2 \log V$). An array scan for the minimum gives $O(V^2)$, which is preferable only for dense graphs with $E \approx V^2$. Parallel edges must be kept as separate entries in adjacency *lists*; a dictionary `{v: w}` silently overwrites them.
 
@@ -104,9 +104,9 @@ Binary search does not require a sorted array; it requires a **monotone predicat
 
 The number of iterations is
 
-$$
+```math
 \lceil \log_2(\text{hi} - \text{lo} + 1) \rceil. \qquad (34.4)
-$$
+```
 
 Mixing conventions, such as `hi = mid - 1` with a `lo < hi` loop or `lo = mid`, causes skipped answers or infinite loops.
 
@@ -135,17 +135,17 @@ The cost is (number of states) × (cost per transition). Without overlapping sub
 
 *Worked example (fewest coins).* With unlimited coins of denominations $C$, let $\text{coins}(a)$ be the fewest coins summing to $a$:
 
-$$
+```math
 \text{coins}(0) = 0, \qquad \text{coins}(a) = 1 + \min_{c \in C,\ c \le a} \text{coins}(a - c), \qquad (34.5)
-$$
+```
 
-evaluated for $a = 1, 2, \dots$; unreachable amounts have value $\infty$. For coins $\{1, 3, 4\}$ and amount 6, $\text{coins}(6) = 1 + \min(\text{coins}(5), \text{coins}(3), \text{coins}(2)) = 1 + \min(2, 1, 2) = 2$ (3 + 3), whereas the greedy choice of the largest coin gives 3 (4 + 1 + 1). Time $O(A \lvert C \rvert)$ for amount $A$.
+evaluated for $a = 1, 2, \dots$; unreachable amounts have value $\infty$. For coins $`\{1, 3, 4\}`$ and amount 6, $\text{coins}(6) = 1 + \min(\text{coins}(5), \text{coins}(3), \text{coins}(2)) = 1 + \min(2, 1, 2) = 2$ (3 + 3), whereas the greedy choice of the largest coin gives 3 (4 + 1 + 1). Time $O(A \lvert C \rvert)$ for amount $A$.
 
 > **Intuition.** DP is solving a problem with sticky notes: each time a subproblem is solved its answer is written down, and no subproblem is solved twice. The state definition is what is written on the note. *Where the analogy breaks down:* the notes help only if subproblems repeat.
 
 ### 34.6.2 Longest increasing subsequence
 
-The longest strictly increasing subsequence (not necessarily contiguous) has a direct $O(n^2)$ DP: let $\text{dp}[i]$ be the length of the longest increasing subsequence *ending at* $i$; then $\text{dp}[i] = 1 + \max\{\text{dp}[j] : j < i,\ x_j < x_i\}$ (or 1 if no such $j$), and the answer is $\max_i \text{dp}[i]$.
+The longest strictly increasing subsequence (not necessarily contiguous) has a direct $O(n^2)$ DP: let $\text{dp}[i]$ be the length of the longest increasing subsequence *ending at* $i$; then $`\text{dp}[i] = 1 + \max\{\text{dp}[j] : j < i,\ x_j < x_i\}`$ (or 1 if no such $j$), and the answer is $\max_i \text{dp}[i]$.
 
 The $O(n \log n)$ algorithm (Exercise 5) maintains an array `tails`, where `tails[L]` is the **smallest possible last element** of an increasing subsequence of length $L + 1$ among the elements processed so far.
 
@@ -161,9 +161,9 @@ Each update is a binary search, so the total time is $O(n \log n)$ and space $O(
 
 The Levenshtein distance between strings $a$ and $b$ is the minimum number of single-character insertions, deletions and substitutions turning $a$ into $b$ (Exercise 6). With $D(i, j)$ the distance between the prefixes $a_{1..i}$ and $b_{1..j}$:
 
-$$
+```math
 D(i, j) = \min\big(D(i-1, j) + 1,\ D(i, j-1) + 1,\ D(i-1, j-1) + \mathbb{1}[a_i \ne b_j]\big), \qquad D(i, 0) = i,\ D(0, j) = j. \qquad (34.6)
-$$
+```
 
 The three terms correspond to deleting $a_i$, inserting $b_j$, and substituting (or matching) the last characters. The table is filled row by row in $O(mn)$ time; since each row depends only on the previous one, keeping two rows reduces memory to $O(\min(m, n))$. Plain recursion without memoisation recomputes subproblems and takes exponential time. *Example:* "kitten" → "sitting" has distance 3. The same recurrence over words instead of characters gives the word error rate used in speech recognition, and weighted variants underlie sequence alignment.
 
@@ -177,16 +177,16 @@ The alternatives are a hash set, which answers exact lookups in $O(L)$ on averag
 
 ### 34.7.2 Union-find
 
-A **union-find** (disjoint-set) structure maintains a partition of $\{0, \dots, n-1\}$ under two operations: `union(a, b)` merges the sets containing $a$ and $b$, and `find(x)` returns a representative (root) of the set containing $x$. Each set is a tree of parent pointers whose root is the representative. Two optimisations make it fast:
+A **union-find** (disjoint-set) structure maintains a partition of $`\{0, \dots, n-1\}`$ under two operations: `union(a, b)` merges the sets containing $a$ and $b$, and `find(x)` returns a representative (root) of the set containing $x$. Each set is a tree of parent pointers whose root is the representative. Two optimisations make it fast:
 
 - **Union by size (or rank):** attach the root of the smaller tree under the root of the larger. A node's depth increases only when its tree at least doubles in size, so depths are at most $\log_2 n$.
 - **Path compression:** during `find`, point every node on the path directly at the root, flattening the tree for future queries.
 
 With both, a sequence of $m$ operations on $n$ elements costs
 
-$$
+```math
 O\big(m\, \alpha(n)\big), \qquad (34.7)
-$$
+```
 
 where $\alpha$ is the inverse Ackermann function, which is at most 4 for any practical $n$ (Tarjan, 1975). With either optimisation alone the bound is $O(\log n)$ per operation. Without both, a chain of $n$ nodes makes each `find` $O(n)$: in the lab, 4,000 nodes took about 410 ms without compression (fitted exponent about 2), while 100,000 nodes took about 34 ms with it (exponent about 1). Path compression should be written iteratively, since a recursive `find` on a long chain exceeds the recursion limit.
 

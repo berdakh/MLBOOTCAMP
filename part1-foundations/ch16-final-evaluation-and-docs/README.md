@@ -51,9 +51,9 @@ $\hat{\theta}_j = \theta_j + \sigma Z_j$ with $Z_j$ approximately standard
 normal. If the variants are in truth equally good ($\theta_j = \theta$) and the
 best-looking one is reported, the reported value is on average
 
-$$
+```math
 \mathbb{E}\Bigl[\max_{j} \hat{\theta}_j\Bigr] = \theta + \sigma\, \mathbb{E}\Bigl[\max_{j \le K} Z_j\Bigr], \qquad (16.1)
-$$
+```
 
 which exceeds the true value. For independent $Z_j$ and $K = 20$, the expected
 maximum of 20 standard normal variables is about 1.87. With a standard error
@@ -132,9 +132,9 @@ therefore resamples **customers**, taking all of each sampled customer's rows
 A 95% percentile interval is formed from the 2.5th and 97.5th percentiles of
 the $B$ bootstrap values $\hat{\theta}^{*}_1, \dots, \hat{\theta}^{*}_B$:
 
-$$
+```math
 \text{CI}_{95\%} = \left[\, Q_{0.025}\bigl(\hat{\theta}^{*}_{1..B}\bigr),\; Q_{0.975}\bigl(\hat{\theta}^{*}_{1..B}\bigr) \right]. \qquad (16.2)
-$$
+```
 
 To compare two models, the **paired bootstrap** resamples the same customers
 for both models in each replicate and records the difference
@@ -144,9 +144,9 @@ variation in difficulty cancels in the difference, and a small but consistent
 gain becomes detectable. Two separate intervals that overlap do *not* show
 that there is no difference. The pre-registered decision rule is
 
-$$
+```math
 \text{report "better"} \iff Q_{0.025}\bigl(\Delta^{*}_{1..B}\bigr) > 0, \qquad (16.3)
-$$
+```
 
 that is, the whole 95% interval of the difference lies above zero.
 
@@ -179,10 +179,10 @@ and recall about 0.13. Precision varies from month to month (0.2 one month and
 When the team's capacity is fixed at $k$ calls per month, the relevant metric
 is **precision at $k$**:
 
-$$
+```math
 \text{precision@}k_m = \frac{\#\{\text{churners among the } k \text{ highest scores in month } m\}}{k}, \qquad
 \text{lift}_m = \frac{\text{precision@}k_m}{\pi_m}, \qquad (16.4)
-$$
+```
 
 where $\pi_m$ is the churn rate in month $m$. For example, 11 churners among 40
 calls give a precision of 0.275.
@@ -191,9 +191,9 @@ Expected value converts the operating point into the language of costs. Under
 the course's assumptions, a true positive reached is worth \$150 and a call
 that was not needed costs \$30, so
 
-$$
+```math
 \text{EV} = 150 \cdot \text{TP} - 30 \cdot \text{FP}. \qquad (16.5)
-$$
+```
 
 On the test period this is positive (a few thousand dollars over five months,
 from about 90 true positives and about 220 unneeded calls); calling everyone

@@ -96,12 +96,12 @@ position and passes them through a small multilayer perceptron with dropout. It
 outputs a **logit** $z$, and the loss is `BCEWithLogitsLoss`, which applies the
 sigmoid internally in a numerically stable form:
 
-$$
+```math
 \ell(z, y) = -\big[y \log \sigma(z) + (1-y) \log(1-\sigma(z))\big]
 \qquad (27.1)
-$$
+```
 
-where $y \in \{0, 1\}$ is the label and $\sigma(z) = 1/(1+e^{-z})$. Computing
+where $`y \in \{0, 1\}`$ is the label and $\sigma(z) = 1/(1+e^{-z})$. Computing
 $\log \sigma(z)$ directly from $z$ (as $-\log(1+e^{-z})$, evaluated stably)
 avoids the loss of precision that occurs when $\sigma(z)$ rounds to 0 or 1.
 
@@ -159,20 +159,20 @@ Before the first step, a sensibly initialised model should predict roughly the
 base rate for every example. For binary cross-entropy with positive rate $p$, the
 best *constant* prediction is $p$ itself, and its loss is the binary entropy:
 
-$$
+```math
 \ell^{*}_\text{const} = -\big[p \log p + (1-p) \log(1-p)\big]
 \qquad (27.2)
-$$
+```
 
 For $p = 0.137$ this is 0.40 nats. For $C$ balanced classes under softmax
 cross-entropy,
 
-$$
-\operatorname{softmax}(\mathbf{z})_c = \frac{e^{z_c}}{\sum_{k=1}^{C} e^{z_k}},
+```math
+\mathrm{softmax}(\mathbf{z})_c = \frac{e^{z_c}}{\sum_{k=1}^{C} e^{z_k}},
 \qquad
-\ell = -\log \operatorname{softmax}(\mathbf{z})_y
+\ell = -\log \mathrm{softmax}(\mathbf{z})_y
 \qquad (27.3)
-$$
+```
 
 the corresponding value is $\log C$ (and in general the entropy of the class
 prior). For example, logits $(2, 0.5, -1)$ with true class 0 give probabilities
@@ -185,10 +185,10 @@ every prediction is near 50% and the initial loss is near $\log 2 = 0.69$. In th
 lab the measured loss is about 0.6–0.7 without correction. Initialising the bias
 of the output layer to the log-odds of the base rate,
 
-$$
+```math
 b_0 = \log\frac{p}{1-p}
 \qquad (27.4)
-$$
+```
 
 which is $-1.84$ for $p = 0.137$, starts the model at the base rate; the lab then
 measures about 0.40. Without this initialisation, the first hundreds of steps are
@@ -237,14 +237,14 @@ Adam keeps exponential moving averages of the gradient and of its elementwise
 square, corrects their initial bias, and steps by their ratio. AdamW applies
 weight decay separately from the gradient-based step ("decoupled" weight decay):
 
-$$
+```math
 \begin{aligned}
 m_t &= \beta_1 m_{t-1} + (1-\beta_1)\, g_t, \qquad v_t = \beta_2 v_{t-1} + (1-\beta_2)\, g_t^2 \\
 \hat m_t &= \frac{m_t}{1-\beta_1^t}, \qquad \hat v_t = \frac{v_t}{1-\beta_2^t} \\
 \theta_t &= \theta_{t-1} - \eta \lambda\, \theta_{t-1} - \eta \frac{\hat m_t}{\sqrt{\hat v_t} + \epsilon}
 \end{aligned}
 \qquad (27.5)
-$$
+```
 
 where $g_t$ is the gradient at step $t$, $\theta$ the parameters, $\eta$ the
 learning rate, $\lambda$ the weight decay, $\beta_1 = 0.9$ and $\beta_2 = 0.999$
@@ -260,15 +260,15 @@ settle; a **cosine decay** afterwards reduces the step size so that the final
 epochs refine the solution rather than oscillate. The schedule used in the lab is,
 per optimiser step $t$,
 
-$$
+```math
 \eta_t = \eta_{\max} \cdot \begin{cases} \dfrac{t+1}{T_w} & t < T_w \\[6pt] r + (1-r)\,\dfrac{1}{2}\Big(1 + \cos\big(\pi\, \tfrac{t - T_w}{T - T_w}\big)\Big) & t \ge T_w \end{cases}
 \qquad (27.6)
-$$
+```
 
 where $T_w$ is the number of warmup steps, $T$ the total number of steps, and $r$
 the final learning rate as a fraction of $\eta_{\max}$ (0.05 in the lab). With
-$T_w = 10$ and $T = 100$, step 4 has $0.5\,\eta_{\max}$ and step 55 has
-$0.525\,\eta_{\max}$. The number of warmup steps depends on batch size and
+$T_w = 10$ and $T = 100$, step 4 has $`0.5\,\eta_{\max}`$ and step 55 has
+$`0.525\,\eta_{\max}`$. The number of warmup steps depends on batch size and
 optimiser and should be treated as a hyperparameter.
 
 ### 27.6.3 Gradient clipping
@@ -276,10 +276,10 @@ optimiser and should be treated as a hyperparameter.
 Gradient-norm clipping rescales the whole gradient vector when its Euclidean norm
 exceeds a threshold $c$, without changing its direction:
 
-$$
+```math
 \mathbf{g} \leftarrow \mathbf{g} \cdot \min\!\left(1, \frac{c}{\lVert \mathbf{g} \rVert_2}\right)
 \qquad (27.7)
-$$
+```
 
 For $\mathbf{g} = (3, 4)$ and $c = 1$ the norm is 5, and the clipped gradient is
 $(0.6, 0.8)$. Clipping protects against rare very large gradients (an unusual

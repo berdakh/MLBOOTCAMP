@@ -99,10 +99,10 @@ recomputation for a sample of requests.
 The online store is usually the expensive one, because it lives in memory or on fast SSD and is replicated. With $E$
 entities, key size $k$ bytes, $F$ features of $b$ bytes each, a storage overhead factor $o$ and $r$ replicas,
 
-$$
+```math
 \text{online GB} = \frac{E \cdot (k + F \cdot b) \cdot o \cdot r}{10^9}
 \qquad (55.1)
-$$
+```
 
 For $E = 2 \times 10^8$ users, $k = 16$, $F = 400$, $b = 4$, $o = 1.5$ and $r = 3$, this gives about 1,454 GB. The lab's
 offline history for the same features is about 29.2 TB compressed. With the placeholder prices the online store costs
@@ -134,11 +134,11 @@ GPU-hours are best estimated from a measured step time (Chapters 39–40, 47–4
 dense transformer's training compute can be estimated as about six floating-point operations per parameter per token
 (two for the forward pass, four for the backward pass; Kaplan et al., 2020):
 
-$$
+```math
 \text{FLOPs} \approx 6\, N\, D, \qquad
 \text{GPU-hours} = \frac{6\, N\, D}{\text{peak FLOP/s} \cdot \mathrm{MFU} \cdot 3600}
 \qquad (55.2)
-$$
+```
 
 where $N$ is the number of parameters, $D$ the number of training tokens and MFU the model FLOPs utilisation, the
 fraction of peak throughput actually achieved (Chapter 48). For $N = 10^9$, $D = 2 \times 10^9$, a peak of
@@ -151,10 +151,10 @@ For a platform, the surprising number is usually **idle capacity**: reserved GPU
 open, or for a job queued behind a gang-scheduled one. If a GPU with hourly price $p$ is usefully busy a fraction $u$ of
 the time,
 
-$$
+```math
 \text{cost per useful GPU-hour} = \frac{p}{u}
 \qquad (55.3)
-$$
+```
 
 A \$2 card used 20% of the time costs \$10 per useful hour. In the lab's illustrative four-team table, 48% of the monthly
 GPU spend was idle. "Utilisation" must itself be defined: allocated versus idle (the scheduler's view) is not the same as
@@ -193,11 +193,11 @@ Each rollout stage proves some things and not others:
 A canary comparison of error rates is a two-proportion test like any A/B test (Chapter 29). With baseline rate $p_1$,
 degraded rate $p_2$, two-sided significance $\alpha$ and power $1 - \beta$, the sample size per arm is
 
-$$
+```math
 n = \frac{\left( z_{1-\alpha/2} \sqrt{2 \bar{p} (1 - \bar{p})} + z_{1-\beta} \sqrt{p_1 (1 - p_1) + p_2 (1 - p_2)} \right)^2}{(p_2 - p_1)^2},
 \qquad \bar{p} = \frac{p_1 + p_2}{2}
 \qquad (55.4)
-$$
+```
 
 where $z_q$ is the standard normal quantile. For an error rate rising from 0.5% to 0.6% (+20%), with $z = 1.96$ and $0.84$,
 $n \approx 85{,}900$ requests per arm: about 72 minutes of a 1% canary at a peak of 2,000 requests per second. A doubling
@@ -221,10 +221,10 @@ receives by registering:
 **Delayed labels** are the main difficulty. A fraud chargeback or a subscription cancellation may arrive weeks after the
 prediction. If the delay is roughly exponential with mean $\tau$, the fraction of eventual labels visible after time $t$ is
 
-$$
+```math
 F(t) = 1 - e^{-t/\tau}
 \qquad (55.5)
-$$
+```
 
 With $\tau = 20$ days, 5%, 30%, 50%, 78%, 95% and 99% of labels are visible after 1, 7, 14, 30, 60 and 90 days. Two
 consequences must be built into the platform. First, model versions must be compared **at equal label maturity**: last week's

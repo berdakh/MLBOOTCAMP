@@ -54,10 +54,10 @@ The lab's model has the following structure.
 The score is the cosine similarity of the two normalised vectors divided by a
 *temperature* $\tau$:
 
-$$
+```math
 s(u, i) = \frac{\mathbf{u}^\top \mathbf{v}_i}{\tau}, \qquad \lVert \mathbf{u} \rVert = \lVert \mathbf{v}_i \rVert = 1
 \qquad (26.1)
-$$
+```
 
 where $\mathbf{u}$ is the user-tower output and $\mathbf{v}_i$ the item-tower
 output for item $i$. A cosine of 0.6 with $\tau = 0.05$ gives a logit of 12, and a
@@ -104,10 +104,10 @@ serve as negatives at no extra cost, since their item vectors have already been
 computed. The loss is a softmax cross-entropy per row, asking each user to pick
 their own item out of the batch:
 
-$$
+```math
 L = -\frac{1}{B} \sum_{b=1}^{B} \log \frac{\exp\!\big(s(u_b, i_b) - \log q_{i_b}\big)}{\sum_{j=1}^{B} \exp\!\big(s(u_b, i_j) - \log q_{i_j}\big)}
 \qquad (26.2)
-$$
+```
 
 where $q_i$ is item $i$'s sampling probability, introduced below; without the
 correction the $\log q$ terms are omitted. This is the InfoNCE form of
@@ -130,10 +130,10 @@ The bias can be stated precisely. A softmax over a set of negatives sampled from
 a distribution $q$ is a *sampled softmax*. Its loss is minimised, in expectation,
 by logits that satisfy
 
-$$
+```math
 s(u, i) = \log p(i \mid u) - \log q_i + \text{const}(u)
 \qquad (26.3)
-$$
+```
 
 rather than $s(u, i) = \log p(i \mid u) + \text{const}(u)$. The uncorrected model
 thus learns how much more than its base rate the user likes the item, a quantity
@@ -218,10 +218,10 @@ content features (text, image embeddings) would help the item tower.
 Serving requires the $k$ item vectors with the largest dot product with
 $\mathbf{u}$. Exact search costs
 
-$$
+```math
 \text{cost} = N \cdot d \ \text{multiply-adds per query}
 \qquad (26.4)
-$$
+```
 
 for $N$ items of dimension $d$. With 4,000 items this is negligible. With
 $N = 10^8$ and $d = 32$ it is $3.2 \times 10^9$ operations per request, far beyond
@@ -229,10 +229,10 @@ a budget of a few milliseconds. Approximate nearest-neighbour (ANN) indexes trad
 a small loss of recall for a large gain in speed. Their quality is measured by
 recall against exact search:
 
-$$
-\operatorname{Recall@}k = \frac{1}{\lvert Q \rvert} \sum_{q \in Q} \frac{\lvert \text{ANN}_k(q) \cap \text{Exact}_k(q) \rvert}{k}
+```math
+\mathrm{Recall@}k = \frac{1}{\lvert Q \rvert} \sum_{q \in Q} \frac{\lvert \text{ANN}_k(q) \cap \text{Exact}_k(q) \rvert}{k}
 \qquad (26.5)
-$$
+```
 
 where $Q$ is a set of queries and $\text{ANN}_k(q)$, $\text{Exact}_k(q)$ are the
 item sets returned by the approximate and exact searches. If an index returns 92

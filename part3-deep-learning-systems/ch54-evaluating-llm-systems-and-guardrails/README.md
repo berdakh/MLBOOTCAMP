@@ -61,12 +61,12 @@ Two scores are computed per reply. **Exact match** asks whether all four fields 
 "was the ticket routed correctly?". **Field-level F1** gives partial credit. With TP the number of predicted fields
 whose normalised value equals the gold value,
 
-$$
+```math
 P = \frac{\mathrm{TP}}{\#\text{non-empty predicted fields}}, \qquad
 R = \frac{\mathrm{TP}}{\#\text{gold fields}}, \qquad
 F_1 = \frac{2PR}{P + R}
 \qquad (54.1)
-$$
+```
 
 A missing field costs recall; a wrong or extra field costs precision. For example, if the gold record has four
 fields and the reply fills three, two of them correctly, then $P = 2/3$, $R = 1/2$ and $F_1 = 0.571$, while exact
@@ -87,11 +87,11 @@ difference $d_i = s_i^{B} - s_i^{A}$ first, so that the variation in ticket diff
 bootstrap** (Efron & Tibshirani, 1993) then resamples items with replacement $B$ times (for example $B = 2000$)
 and takes percentiles of the resampled mean differences:
 
-$$
+```math
 \bar{d}^{\,*}_b = \frac{1}{n} \sum_{i \in \text{resample}_b} d_i, \qquad
 \mathrm{CI}_{95\%} = \big[\, q_{2.5\%}(\bar{d}^{\,*}),\ q_{97.5\%}(\bar{d}^{\,*}) \,\big]
 \qquad (54.2)
-$$
+```
 
 where $n$ is the number of items and $q$ denotes an empirical quantile over the $B$ resamples. The bootstrap only
 knows the items available: if all of them come from one template family, no interval can warn about real users.
@@ -123,10 +123,10 @@ The standard test of position bias asks for every pair **in both orders**. A jud
 the same *content* both times, so its letter flips (A, then B). If it returns the same letter in both orders, the
 slot decided. The **position-bias rate** is the fraction of pairs with the same letter in both orders:
 
-$$
+```math
 \text{bias rate} = \frac{1}{n} \sum_{i=1}^{n} \mathbb{1}\big[\, v_i^{(X,Y)} = v_i^{(Y,X)} \,\big]
 \qquad (54.3)
-$$
+```
 
 where $v_i^{(X,Y)}$ is the verdict on pair $i$ shown in order $(X, Y)$. A perfectly consistent judge scores 0.
 
@@ -165,10 +165,10 @@ documents, web pages or emails rather than directly from the user it is called *
 The lab appends one of six injection styles to each ticket and records which field and value the attacker wants. The
 **attack success rate** is
 
-$$
+```math
 \mathrm{ASR} = \frac{\#\text{injected inputs where the target field took the attacker's value}}{\#\text{injected inputs}}
 \qquad (54.4)
-$$
+```
 
 *Measured:* attacks succeeded on 8 of 12 tickets with the terse prompt (0.67) and 6 of 12 with the schema prompt
 (0.50), whose system message explicitly says not to follow instructions in the ticket. The warning helped a little,
@@ -220,11 +220,11 @@ Generation cost scales with tokens: the prompt tokens are processed in one paral
 tokens are generated one at a time in the decode phase, which usually dominates latency (Chapter 50). The cost of a
 request can be computed in two ways:
 
-$$
+```math
 \text{API-style: } c = n_{\text{in}}\, p_{\text{in}} + n_{\text{out}}\, p_{\text{out}}, \qquad
 \text{self-hosted: } c = \frac{p_{\text{hour}}}{3600} \cdot t_{\text{request}}
 \qquad (54.5)
-$$
+```
 
 where $n_{\text{in}}, n_{\text{out}}$ are the input and output token counts, $p_{\text{in}}, p_{\text{out}}$ the
 prices per token, $p_{\text{hour}}$ the hourly price of an accelerator and $t_{\text{request}}$ the accelerator time per

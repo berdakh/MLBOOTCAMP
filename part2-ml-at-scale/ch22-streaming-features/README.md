@@ -94,10 +94,10 @@ one event at a time. Three window types cover almost every streaming feature.
 
 **Tumbling windows.** An event at time $t$ belongs to the window that starts at
 
-$$
+```math
 \text{start}(t) = \left\lfloor \frac{t}{w} \right\rfloor w
 \qquad (22.1)
-$$
+```
 
 where $t$ is the event time in seconds since an agreed epoch and $w$ the window
 size. With $w = 900$ s and $t = 2{,}000$ s, the window is $[1800, 2700)$. All
@@ -107,10 +107,10 @@ systems that compute the same feature must align windows on the same epoch
 **Sliding windows.** With size $S$ and hop $h$ (with $S$ a multiple of $h$), an
 event at time $t$ belongs to the $S/h$ windows whose starts are
 
-$$
+```math
 \left\{\, \left\lfloor t/h \right\rfloor h - j h \;:\; j = 0, \dots, S/h - 1 \,\right\}
 \qquad (22.2)
-$$
+```
 
 With $S = 3600$ s, $h = 900$ s and $t = 2{,}000$ s, the starts are 1,800, 900, 0
 and −900. Each event is therefore added to four windows, so a sliding
@@ -124,10 +124,10 @@ far. Per key, the processor keeps a list of sessions $[a, b]$. A new event at
 time $t$ starts the session $[t, t]$, which is merged with every existing
 session within the gap:
 
-$$
+```math
 t \text{ joins } [a, b] \iff a - g \le t \le b + g
 \qquad (22.3)
-$$
+```
 
 For example, with $g = 30$ minutes and sessions $[10{:}00, 10{:}20]$ and
 $[10{:}55, 11{:}05]$, a late event at 10:40 is within 30 minutes of both, so all
@@ -143,12 +143,12 @@ event for that window may still be on its way. A **watermark** is the
 processor's assertion that events with event time up to $W$ have (almost) all
 arrived. The most common kind is the *bounded out-of-orderness* watermark:
 
-$$
+```math
 W = \max_{\text{events seen}} t \; - \; L,
 \qquad \text{close } [s, s+w) \text{ when } W \ge s + w,
 \qquad \text{an event is late if } s + w \le W_\text{before}
 \qquad (22.4)
-$$
+```
 
 where $L$ is the *allowed lateness*, $[s, s+w)$ a tumbling window, and
 $W_\text{before}$ the watermark before the event is processed. With $L = 60$ s

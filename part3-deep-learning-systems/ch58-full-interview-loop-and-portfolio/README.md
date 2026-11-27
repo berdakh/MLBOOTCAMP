@@ -87,15 +87,15 @@ ambiguity, a decision with incomplete data).
 
 A loop is not judged by an average of everything. Interviewers write feedback per round, and the hiring discussion examines each round *and*
 signals that recur across rounds: weak communication in four rounds is a pattern, not noise. A useful summary therefore reports both. Let
-$x_{r,s} \in \{1, 2, 3, 4\}$ be the score of signal $s$ in round $r$, $S_r$ the set of signals scored in round $r$, $R_s$ the set of rounds that
+$`x_{r,s} \in \{1, 2, 3, 4\}`$ be the score of signal $s$ in round $r$, $S_r$ the set of signals scored in round $r$, $R_s$ the set of rounds that
 score signal $s$, and $w_r \ge 0$ a weight for round $r$. Then
 
-$$
+```math
 m_r = \frac{1}{\lvert S_r \rvert} \sum_{s \in S_r} x_{r,s}, \qquad
 \text{overall} = \frac{\sum_r w_r\, m_r}{\sum_r w_r}, \qquad
 \bar{x}_s = \frac{1}{\lvert R_s \rvert} \sum_{r \in R_s} x_{r,s}
 \qquad (58.1)
-$$
+```
 
 $m_r$ is the mean of round $r$, the overall score is a weighted mean of round means (so that a round with five signals does not outweigh one
 with three), and $\bar{x}_s$ is the mean of signal $s$ across the rounds that score it. The **weakest signal**, the one with the smallest
@@ -144,10 +144,10 @@ The lab's readiness checklist lists twenty skills that a loop will test, one lin
 done **unaided, from a blank file, within interview time**, which is level 3 of the course's
 [readiness rubric](../../appendices/readiness-rubric.md). Readiness is then simply the fraction of skills marked ready,
 
-$$
+```math
 \text{readiness} = \frac{\#\{\text{skills done unaided}\}}{\#\{\text{skills}\}}
 \qquad (58.2)
-$$
+```
 
 and it should be tracked weekly, not measured once. Recognising a method when reading about it is level 1, not level 3; strict self-assessment is
 the only kind that predicts interview performance.
@@ -168,11 +168,11 @@ A frequent closing question is "what would your model cost to serve at 1,000 que
 Chapter 56 with the cost arithmetic of Chapter 50. With measured per-replica throughput $\text{QPS}_{\text{replica}}$ at the target latency,
 headroom $h$, a price $p$ per replica-hour, 730 hours per month and an average load $\overline{\text{QPS}}$,
 
-$$
+```math
 n = \max\!\left(2, \left\lceil \frac{\text{QPS}_{\text{peak}}}{\text{QPS}_{\text{replica}}\,(1 - h)} \right\rceil\right), \qquad
 \text{cost}_{1k} = \frac{n \cdot p \cdot 730}{\overline{\text{QPS}} \cdot 3600 \cdot 730 / 1000}
 \qquad (58.3)
-$$
+```
 
 *Worked example (assumptions stated):* a peak of 1,000 QPS, 100 QPS per replica (measured), $h = 0.3$: $n = \lceil 14.3 \rceil = 15$ replicas. At
 \$0.50 per hour this is \$5,475 per month; at an average of 500 QPS (1.31 billion requests per month) it is about \$0.0042 per 1,000 requests. The

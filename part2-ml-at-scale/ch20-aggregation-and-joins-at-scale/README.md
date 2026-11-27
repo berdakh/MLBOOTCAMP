@@ -47,10 +47,10 @@ BY item_id` runs in three stages.
 2. **Shuffle.** Each pair is sent to the reduce task that owns its key,
    determined by a hash of the key:
 
-   $$
+   ```math
    \text{reducer}(k) = h(k) \bmod R
 \qquad (20.1)
-   $$
+   ```
 
    where $k$ is the key, $h$ a stable hash function and $R$ the number of
    reducers. All rows with the same key therefore meet at one reducer. The
@@ -67,10 +67,10 @@ a combiner, each mapper sends at most one row per distinct key in its split.
 If $M$ mappers each see $d_m$ distinct keys, the number of rows shuffled falls
 from the number of input rows $N$ to
 
-$$
+```math
 N_{\text{shuffled}} = \sum_{m=1}^{M} d_m \;\le\; \min\!\left(N,\; M \cdot d\right)
 \qquad (20.2)
-$$
+```
 
 where $d$ is the total number of distinct keys. In the lab, with four mappers
 over the 2,446,900 impressions of ShopStream `small` and `item_id` as key, the
@@ -108,10 +108,10 @@ dominated by a few large sellers, search logs by a few frequent queries, and
 pipelines by a few junk keys (`NULL`, `-1`, `"unknown"`). If one key holds a
 fraction $s$ of the rows, the reducer that owns it receives at least
 
-$$
+```math
 \frac{\text{load of the hot reducer}}{\text{mean load}} \;\ge\; s \cdot R
 \qquad (20.3)
-$$
+```
 
 times the average load, whatever hash function is used. A job finishes only
 when its slowest task finishes, so one overloaded reducer (a *straggler*)
@@ -161,10 +161,10 @@ standard interview question.
 aggregation, because nothing combines. If key $k$ has $a_k$ rows in table $A$
 and $b_k$ rows in table $B$, the equi-join produces
 
-$$
+```math
 \lvert A \bowtie B \rvert = \sum_{k} a_k \, b_k
 \qquad (20.4)
-$$
+```
 
 rows. The sum is dominated by keys that are large on *both* sides. In the lab,
 ShopStream impressions are joined to a promotions table in which large sellers
@@ -198,11 +198,11 @@ was built. The operation that provides it is the *as-of join*: for each left
 row with key $k$ and time $t$, take the right row with the same key and the
 latest timestamp not after $t$:
 
-$$
-\operatorname{asof}(k, t) = \text{value of the row } r \text{ with } r.\text{key} = k
+```math
+\mathrm{asof}(k, t) = \text{value of the row } r \text{ with } r.\text{key} = k
 \text{ that maximises } r.\text{valid\_from} \text{ subject to } r.\text{valid\_from} \le t
 \qquad (20.5)
-$$
+```
 
 <img src="../../figures/l2-asof-join.svg" alt="As-of join on a timeline: each event takes the latest price at or before its timestamp" width="100%">
 
@@ -276,10 +276,10 @@ $2^{-\rho}$, so the maximum observed run is about $\log_2(n/m)$. The estimate
 combines the registers through a bias-corrected harmonic mean. Its relative
 standard error is
 
-$$
-\frac{\operatorname{SE}(\hat n)}{n} \approx \frac{1.04}{\sqrt{m}}, \qquad m = 2^{p}
+```math
+\frac{\mathrm{SE}(\hat n)}{n} \approx \frac{1.04}{\sqrt{m}}, \qquad m = 2^{p}
 \qquad (20.6)
-$$
+```
 
 where $\hat n$ is the estimate, $n$ the true distinct count and $p$ the number
 of precision bits. With $m = 1{,}024$ the error is about 3.3%; with
@@ -306,14 +306,14 @@ Quantile sketches (t-digest, KLL; DuckDB's `approx_quantile`) store a
 compressed summary of a distribution that is accurate in the tails. Reservoir
 sampling draws a uniform sample of fixed size $k$ from a stream of unknown
 length in one pass (Algorithm R): keep the first $k$ items; for the item with
-0-based index $i \ge k$, draw $j$ uniformly from $\{0, \dots, i\}$ and replace
+0-based index $i \ge k$, draw $j$ uniformly from $`\{0, \dots, i\}`$ and replace
 slot $j$ if $j < k$. After $n$ items, every item is in the reservoir with the
 same probability:
 
-$$
+```math
 P(\text{item } i \text{ in the sample after } n \text{ items}) = \frac{k}{n}
 \qquad (20.7)
-$$
+```
 
 The proof is by induction. Item $i$ (counting from 1, with $i > k$) enters
 with probability $k/i$, and each later item $j$ evicts it with probability

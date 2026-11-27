@@ -84,10 +84,10 @@ generators similarly but not identically.
 **Recall@$K$.** For a user $u$ with relevant set $T_u$ and candidate list
 $\text{top}_K(u)$,
 
-$$
-\operatorname{Recall@}K(u) = \frac{\lvert \text{top}_K(u) \cap T_u \rvert}{\lvert T_u \rvert}
+```math
+\mathrm{Recall@}K(u) = \frac{\lvert \text{top}_K(u) \cap T_u \rvert}{\lvert T_u \rvert}
 \qquad (25.1)
-$$
+```
 
 averaged over users with a non-empty $T_u$. With five next-week clicks, two of
 which are among the 100 candidates, recall is 0.4. This is a *macro* average,
@@ -101,10 +101,10 @@ convention is used.
 **Catalogue coverage.** The share of the catalogue $\mathcal{I}$ that appears in
 at least one user's list:
 
-$$
-\operatorname{Coverage} = \frac{\left\lvert \bigcup_{u} \text{top}_K(u) \right\rvert}{\lvert \mathcal{I} \rvert}
+```math
+\mathrm{Coverage} = \frac{\left\lvert \bigcup_{u} \text{top}_K(u) \right\rvert}{\lvert \mathcal{I} \rvert}
 \qquad (25.2)
-$$
+```
 
 Global popularity gives every user the same 100 items, so its coverage is
 $100/4{,}000 = 0.025$. Low coverage means that most of the catalogue can never be
@@ -142,13 +142,13 @@ the role of category.
 "Users who clicked X also clicked Y." For each pair of items, co-visitation
 counts the number of **sessions** in which both were clicked:
 
-$$
+```math
 C(a, b) = \sum_{s} \mathbb{1}[a \in s]\, \mathbb{1}[b \in s], \qquad a \neq b
 \qquad (25.3)
-$$
+```
 
 where $s$ ranges over sessions, each treated as a set of items (so repeats within
-a session count once). For sessions $\{1, 2, 3\}$, $\{2, 3\}$ and $\{3, 4\}$,
+a session count once). For sessions $`\{1, 2, 3\}`$, $`\{2, 3\}`$ and $`\{3, 4\}`$,
 $C(2, 3) = 2$ and $C(1, 3) = C(3, 4) = 1$. In the lab a session is one user's
 clicks on one day; real systems use time windows (for example 30 minutes or 24
 hours) and often weight pairs by the time gap and the type of event. At serving
@@ -190,10 +190,10 @@ the user clicked the item, 0 otherwise) with a *confidence*
 $c_{ui} = 1 + \alpha r_{ui}$, where $r_{ui}$ is the number of clicks and $\alpha$
 a scaling constant, and minimise
 
-$$
+```math
 \min_{X, Y} \sum_{u,i} c_{ui}\,(p_{ui} - x_u^\top y_i)^2 + \lambda\Big(\sum_u \lVert x_u \rVert^2 + \sum_i \lVert y_i \rVert^2\Big)
 \qquad (25.4)
-$$
+```
 
 where $\lambda$ is a regularisation constant. With $\alpha = 20$, a cell with two
 clicks has confidence 41 and an unclicked cell confidence 1. Unclicked cells are
@@ -210,10 +210,10 @@ fixed $Y$ and in $Y$ for fixed $X$. Alternating least squares (ALS) therefore
 alternates between two closed-form steps. With $Y$ fixed, setting the gradient
 with respect to $x_u$ to zero gives
 
-$$
+```math
 x_u = \left(Y^\top C_u Y + \lambda I\right)^{-1} Y^\top C_u\, p_u
 \qquad (25.5)
-$$
+```
 
 where $Y$ is the $n_\text{items} \times f$ matrix of item vectors, $C_u$ the
 diagonal matrix of user $u$'s confidences, and $p_u$ the user's preference
@@ -222,10 +222,10 @@ vector. The item step is symmetric.
 Computed naively, $Y^\top C_u Y$ costs $O(n_\text{items} f^2)$ per user. The key
 observation is
 
-$$
+```math
 Y^\top C_u Y = Y^\top Y + Y^\top (C_u - I) Y
 \qquad (25.6)
-$$
+```
 
 $Y^\top Y$ is shared by all users and computed once per iteration, and $C_u - I$ is
 non-zero only on the $n_u$ items the user clicked. One user's step therefore
@@ -257,10 +257,10 @@ Bayesian personalised ranking (BPR; Rendle et al., 2009) samples, for each
 clicked item $i$, an unclicked item $j$, and asks the model to score $i$ above
 $j$:
 
-$$
+```math
 L_\text{BPR} = -\sum_{(u, i, j)} \log \sigma\!\left(x_u^\top y_i - x_u^\top y_j\right) + \lambda \lVert \Theta \rVert^2
 \qquad (25.7)
-$$
+```
 
 where $\sigma$ is the logistic function and $\Theta$ denotes all parameters. With
 scores 2.0 for the clicked and 0.5 for the sampled item, the loss is

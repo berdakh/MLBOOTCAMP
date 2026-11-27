@@ -65,12 +65,12 @@ requests with a click".
 **Discounted cumulative gain.** For a ranked list with relevance labels
 $\text{rel}_1, \text{rel}_2, \dots$ at ranks $1, 2, \dots$,
 
-$$
-\operatorname{DCG@}k = \sum_{i=1}^{k} \frac{2^{\,\text{rel}_i} - 1}{\log_2(i + 1)},
+```math
+\mathrm{DCG@}k = \sum_{i=1}^{k} \frac{2^{\,\text{rel}_i} - 1}{\log_2(i + 1)},
 \qquad
-\operatorname{NDCG@}k = \frac{\operatorname{DCG@}k}{\operatorname{IDCG@}k}
+\mathrm{NDCG@}k = \frac{\mathrm{DCG@}k}{\mathrm{IDCG@}k}
 \qquad (24.1)
-$$
+```
 
 where IDCG@$k$ is the DCG of the ideal ordering of the same items, so that
 NDCG lies between 0 and 1. The numerator $2^{\text{rel}} - 1$ is the *gain*; for
@@ -81,10 +81,10 @@ ideal order (ranks 1 and 2) gives $1 + 0.631 = 1.631$; hence NDCG $= 0.624$.
 
 **Mean reciprocal rank.** Over a set of groups $Q$,
 
-$$
-\operatorname{MRR} = \frac{1}{\lvert Q \rvert} \sum_{q \in Q} \frac{1}{\text{rank}_q}
+```math
+\mathrm{MRR} = \frac{1}{\lvert Q \rvert} \sum_{q \in Q} \frac{1}{\text{rank}_q}
 \qquad (24.2)
-$$
+```
 
 where $\text{rank}_q$ is the rank of the first relevant item in group $q$. First
 clicks at ranks 1, 2 and 4 give $(1 + 0.5 + 0.25)/3 = 0.583$. MRR suits tasks in
@@ -94,10 +94,10 @@ which one good result suffices.
 different labels, the share in which the more relevant item receives the higher
 score (ties counting one half):
 
-$$
-\operatorname{PA} = \frac{\sum_{g}\sum_{i,j \in g:\, y_i > y_j} \left( \mathbb{1}[s_i > s_j] + \tfrac{1}{2}\mathbb{1}[s_i = s_j] \right)}{\sum_{g} \lvert \{(i, j) \in g : y_i > y_j\} \rvert}
+```math
+\mathrm{PA} = \frac{\sum_{g}\sum_{i,j \in g:\, y_i > y_j} \left( \mathbb{1}[s_i > s_j] + \tfrac{1}{2}\mathbb{1}[s_i = s_j] \right)}{\sum_{g} \lvert \{(i, j) \in g : y_i > y_j\} \rvert}
 \qquad (24.3)
-$$
+```
 
 This is the quantity a pairwise objective optimises, and the within-group
 analogue of the AUC. A constant scorer obtains 0.5.
@@ -157,12 +157,12 @@ predicted click rate multiplies a bid) or when labels are absolute.
 RankNet (Burges et al., 2005) considers every pair $(i, j)$ in a group with
 $y_i > y_j$ and minimises a logistic loss on the score difference:
 
-$$
+```math
 L_{ij} = \log\!\left(1 + e^{-\sigma (s_i - s_j)}\right),
 \qquad
 \lambda_{ij} = \frac{\partial L_{ij}}{\partial s_i} = \frac{-\sigma}{1 + e^{\sigma (s_i - s_j)}}
 \qquad (24.4)
-$$
+```
 
 where $s_i$ and $s_j$ are the model scores and $\sigma$ a scale parameter (1 in
 the lab). The loss is the negative log-likelihood of a model in which item $i$
@@ -180,10 +180,10 @@ change the ordering, so its gradient is zero almost everywhere. LambdaRank
 directly. It takes RankNet's pair gradient and multiplies it by the change in
 NDCG that would result from swapping $i$ and $j$ in the current ranking:
 
-$$
-\lambda^{\text{LR}}_{ij} = \lambda_{ij} \cdot \left\lvert \Delta \operatorname{NDCG}_{ij} \right\rvert
+```math
+\lambda^{\text{LR}}_{ij} = \lambda_{ij} \cdot \left\lvert \Delta \mathrm{NDCG}_{ij} \right\rvert
 \qquad (24.5)
-$$
+```
 
 The gradient of item $i$ is the sum of its $\lambda^{\text{LR}}_{ij}$ over all its
 pairs. For one relevant item, a swap between ranks 1 and 2 changes NDCG by
