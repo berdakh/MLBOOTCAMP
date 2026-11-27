@@ -237,9 +237,6 @@ Labs are written as plain Python files (`notebook.py`, percent format) and
 the `.ipynb` files are generated from them, so changes are readable in a
 diff. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-The organisation follows the author's
-[ROBT407LLM workshop](https://github.com/berdakh/ROBT407LLM); the content is new.
-
 ## Licence
 
 Code is released under the [MIT licence](LICENSE); text and figures under

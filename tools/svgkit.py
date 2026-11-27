@@ -1,8 +1,7 @@
 """A tiny SVG drawing kit for the course diagrams.
 
-Taken from the author's ROBT407LLM workshop (same author, MIT licence) so the
-two courses share one visual language. One addition here: :meth:`Canvas.box`
-refuses text that would overflow its box (see ``OverflowError`` below), so a
+Adapted from an earlier MIT-licensed course diagram kit. One addition here:
+:meth:`Canvas.box` refuses text that would overflow its box (see ``OverflowError`` below), so a
 label that spills out of its rectangle fails the build instead of shipping.
 
 Why hand-rolled instead of Mermaid or Graphviz?
