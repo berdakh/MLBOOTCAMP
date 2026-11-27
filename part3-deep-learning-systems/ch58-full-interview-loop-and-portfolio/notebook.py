@@ -665,7 +665,7 @@ _ = (PORTFOLIO / "readiness.json").write_text(json.dumps(
 # four beats:
 #
 # 1. **Who you are in one line**, as the role sees it ("an ML engineer with a
-#    research background in EEG decoding and signal processing").
+#    background in time-series modelling and signal processing").
 # 2. **Two proof points** with your role and a measured number, each with
 #    its split: one research, one engineering (a Part I–III project or a capstone).
 # 3. **What you are good at**, tied to the job description's needs (e.g.

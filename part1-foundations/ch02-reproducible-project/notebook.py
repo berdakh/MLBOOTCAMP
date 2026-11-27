@@ -282,9 +282,10 @@ print("seeds 0-4:", [round(float(experiment(s)), 4) for s in range(5)])
 # have not shown that one is better. Chapter 7 does this properly with confidence
 # intervals.
 #
-# > **Research bridge.** This is the same discipline as reporting
-# > cross-subject EEG results as mean ± spread over subjects rather than one
-# > lucky split. The habit transfers directly; the vocabulary changes.
+# > **Connection to other fields.** This is the same discipline as
+# > reporting an experimental result as mean ± spread over subjects or
+# > repetitions rather than one lucky split. The habit transfers directly;
+# > the vocabulary changes.
 
 # %% [markdown]
 # > **Intuition.** A seed is like filming one roll of the dice so you can
@@ -459,8 +460,9 @@ with tempfile.TemporaryDirectory() as tmp:
 # target folder (a "zip slip"). Treat archives like any other untrusted input.
 
 # %% [markdown]
-# > **Exercise 3 (written).** Think of your own cross-subject EEG/BCI work (or
-# > any research project). Name three ways a colleague re-running it a year
+# > **Exercise 3 (written).** Think of a project you have worked on (a
+# > course, thesis, research or work project), or a published study you know
+# > well. Name three ways a colleague re-running it a year
 # > later could get a different number, and for each, the specific pin from
 # > section 2.1 that would have prevented it. Write your answer in the cell
 # > below.

@@ -112,9 +112,9 @@ print(split.summary().drop(columns=["positive_rate"]))
 # says. Anything you decide to look at afterwards is allowed, but it is labelled
 # *exploratory*.
 #
-# > **Research bridge.** You know this from cross-subject BCI papers: once a
-# > held-out subject's accuracy has influenced a design choice, that subject is
-# > no longer held out. Here the "held-out subject" is a future time period.
+# > **Connection to other fields.** The same rule holds in any study with
+# > held-out subjects: once a held-out subject's accuracy has influenced a
+# > design choice, that subject is no longer held out. Here the "held-out subject" is a future time period.
 #
 # What has already been fixed on train/validation (Chapters 2–9), and must not move:
 #

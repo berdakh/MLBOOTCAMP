@@ -647,7 +647,7 @@ plt.show()
 #   on p95.
 # * For *throughput*, batching (14.4) beats concurrency by a wide margin.
 #
-# > **Research bridge.** The same trade-off appears in PyTorch:
+# > **Connection to model code.** The same trade-off appears in PyTorch:
 # > `DataLoader(num_workers=...)` uses processes, not threads, for the same
 # > GIL reason, and inference throughput comes from batching. A web service is
 # > the same problem with HTTP in front.

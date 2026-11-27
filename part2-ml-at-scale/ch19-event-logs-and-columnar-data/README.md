@@ -27,10 +27,11 @@ to show. Whether a ranking model can later be trained, debugged and evaluated
 without bias is therefore decided to a large extent *before* any modelling:
 by which fields the log records, how the log is stored, and how it is sampled.
 
-A researcher who has worked with EEG recordings will recognise the situation.
-The quality of a decoding study is bounded by the acquisition protocol: if the
-event markers were not written with the signal, or were written with the wrong
-clock, no later analysis can recover them. Event logs play the role of the
+The situation is familiar from any experimental study that records data.
+The quality of the study is bounded by the acquisition protocol: if the
+event markers (stimulus onsets, say, or the times of clinical events) were not
+written with the measurements, or were written with the wrong clock, no later
+analysis can recover them. Event logs play the role of the
 recording, and the logging specification plays the role of the protocol.
 
 This chapter proceeds as follows. Section 19.2 introduces ShopStream, the

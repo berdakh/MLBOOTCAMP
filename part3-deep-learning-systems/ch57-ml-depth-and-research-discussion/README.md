@@ -145,7 +145,8 @@ labels flipped at random and clean test labels.
 
 Noisy validation labels still rank checkpoints usefully, although they understate true accuracy. For heavy noise, further remedies are measuring the
 noise by relabelling a sample, noise-robust losses, and label cleaning (for example removing examples whose loss stays high). The point is directly
-relevant to EEG and BCI research, where trial labels come from cues the subject may not have followed.
+relevant wherever labels are uncertain, for example in experiments where trial labels come from cues the subject may not have followed, or in medical data labelled by
+annotators who disagree.
 
 ## 57.6 Experiment: double descent
 
@@ -231,23 +232,24 @@ stopping at the first flaw:
 | 10 | Decisive experiment | The single experiment that would most change one's belief |
 
 The lab applies the template to a **fictional** abstract, written for the exercise, that claims calibration-free motor-imagery decoding for new BCI users. The abstract
-contains planted flaws of exactly the kinds in rows 2–6: a split that does not match the claim, selection on the test set, unequally tuned baselines, an unreliable
+uses EEG as its setting, but no knowledge of EEG is needed. It contains planted flaws of exactly the kinds in rows 2–6: a split that does not match the claim, selection on the test set, unequally tuned baselines, an unreliable
 summary of seeds, and preprocessing fitted before splitting. It also offers plausible-sounding "flaws" that are matters of opinion rather than errors in the study.
 Distinguishing the two is part of the exercise; the answers are in the solutions.
 
-Two general lessons apply well beyond this example. First, in EEG and other data with repeated measurements per subject, the **independent unit is the subject**, not the
+Two general lessons apply well beyond this example. First, in any data with repeated measurements per subject (clinical, sensor or EEG recordings), the **independent unit is the subject**, not the
 trial: a random trial split places every subject in both training and test, and cross-subject performance is usually far lower than within-subject performance (Chapter 5
 discussed group leakage). Second, selecting the best of many configurations or seeds by test performance reports a *maximum* of noisy estimates, which is biased upward;
 selection must happen inside the training data, for example with nested cross-validation (Chapter 6).
 
 ## 57.9 Research to production
 
-Interviewers frequently ask researchers how their work would function in a product. The question probes whether the candidate knows what changes. A two-minute structure:
+Interviewers frequently ask candidates with research or project experience how their work would function in a product. The question probes whether the candidate knows what changes. A two-minute structure:
 
 1. **The research result** (about 20 s): task, data, metric and the number, *with the split named* ("leave-subjects-out across N subjects").
-2. **What would break in production** (about 40 s): for a BCI, new users (cross-subject shift), new sessions for the same user (electrode placement, impedance, fatigue),
-   different hardware and sampling rates, artefacts (blinks, muscle activity, line noise), latency limits for closed-loop use, and the absence of labels online.
-3. **What would be built** (about 40 s): a light calibration path (a short calibration block, per-session re-centring of covariance or feature statistics, or a small
+2. **What would break in production** (about 40 s): for a model trained on recordings from people, such as a wearable-sensor or physiological-signal classifier,
+   new users (cross-subject shift), new sessions for the same user (sensor placement, fatigue), different hardware and sampling rates, artefacts and noise,
+   latency limits for real-time use, and the absence of labels online. Other projects have their own list; the point is to name specific failure modes.
+3. **What would be built** (about 40 s): a light calibration path (a short calibration block, per-session re-centring of feature statistics, or a small
    adapted head, Chapter 44), a signal-quality gate that refuses to predict on bad signal, a streaming inference loop with a latency budget (Chapter 56), input-drift
    monitoring per session, and a fallback.
 4. **How success would be known** (about 20 s): an online evaluation with *new users*, pre-registered, with intervals over users, and the post-launch monitoring plan.
@@ -295,7 +297,7 @@ The exercises are in the lab, [notebook.ipynb](notebook.ipynb); worked answers a
 * **Exercise 2 · `critique_flags`.** Identify which of the listed statements are real flaws in the fictional abstract.
 * **Exercise 3 · The full critique.** Apply all ten rows of the template, estimate the direction and size of each flaw's effect, design the decisive experiment, and choose the
   first question for the authors.
-* **Exercise 4 · Research-to-production story.** Write and rehearse a two-minute account of one of your own research projects in the four-part structure of Section 57.9.
+* **Exercise 4 · Research-to-production story.** Write and rehearse a two-minute account of a project you have worked on (a thesis, course, research or work project) in the four-part structure of Section 57.9.
 * **Checkpoint questions** at the end of the lab: warmup; scaling to batch 2,048; memorisation of noisy labels; double descent; attention complexity; and a 90-second critique.
 
 ## Further reading

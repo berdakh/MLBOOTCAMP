@@ -547,9 +547,9 @@ plt.show()
 # model sits far to the right of it (it predicts ≈ 5-10× the true rate).
 # Log axes keep the many low-score bins readable.
 #
-# > **Research bridge.** A BCI decoder with good balanced accuracy can still
-# > produce confidences that mean nothing, and an adaptive system that acts on
-# > "p > 0.9" then misbehaves. Same lesson: ranking quality and probability
+# > **Connection to other fields.** A diagnostic or sensor classifier with
+# > good balanced accuracy can still produce confidences that mean nothing,
+# > and a system that acts automatically on "p > 0.9" then misbehaves. Same lesson: ranking quality and probability
 # > quality are separate properties, measured separately.
 
 # %% [markdown]

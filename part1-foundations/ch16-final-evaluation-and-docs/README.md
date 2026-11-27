@@ -62,7 +62,7 @@ although no variant is better than another. (In practice the $Z_j$ are
 correlated, which reduces the effect, but does not remove it.) Looking once
 removes the maximum: with $K = 1$, the estimate is unbiased.
 
-For a researcher this is familiar. In cross-subject BCI work, once a held-out
+The same rule holds in any study with held-out subjects. Once a held-out
 subject's accuracy has influenced a design choice, that subject is no longer
 held out. Here the held-out "subject" is a later period of time.
 

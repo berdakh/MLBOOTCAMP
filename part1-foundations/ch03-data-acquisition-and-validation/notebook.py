@@ -219,8 +219,8 @@ print(fixed["region"].value_counts(dropna=False))
 # `churnlab.data.load_raw` reads every table this way and parses the date
 # columns. From here on we use it.
 #
-# > **Research bridge.** This is the tabular cousin of a mis-specified
-# > channel montage or a wrong sampling-rate header in an EEG file: the loader
+# > **Connection to other fields.** This is the tabular cousin of a wrong
+# > sampling-rate or unit header in a sensor recording file: the loader
 # > does not fail, it silently gives you different data. The defence is the
 # > same - check summary statistics against what you know must be true before
 # > you analyse anything.

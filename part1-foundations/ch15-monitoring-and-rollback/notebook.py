@@ -272,9 +272,10 @@ plt.tight_layout()
 plt.show()
 
 # %% [markdown]
-# > **Research bridge.** This is covariate shift between recording sessions
-# > or subjects in EEG: amplitude statistics move, and you check whether
-# > the decoder still works on the new session. The same caution applies:
+# > **Connection to other fields.** This is covariate shift between
+# > recording sessions or subjects in sensor and physiological-signal data:
+# > amplitude statistics move, and you check whether the model still works
+# > on the new session. The same caution applies:
 # > a shift in the inputs is a reason to *check* performance, not proof that
 # > it dropped.
 

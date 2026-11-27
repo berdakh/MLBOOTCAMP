@@ -14,16 +14,15 @@ Google Colab runtime.
 
 ## Preface
 
-**Who the book is for.** Readers who can already train models, for example
-researchers in signal processing, neuroscience or applied statistics, and who
-want to work as machine learning engineers, applied scientists or algorithm
-engineers. We assume working knowledge of Python, NumPy, pandas, scikit-learn
+**Who the book is for.** Students and researchers who can already train
+models and who want to work as machine learning engineers, applied scientists
+or algorithm engineers. We assume working knowledge of Python, NumPy, pandas, scikit-learn
 and the basics of deep learning. We do not assume prior experience with SQL,
 software testing, web services, deployment or production monitoring; these
 are taught from the beginning.
 
-**What the book covers.** Research training develops modelling skill. It
-rarely develops the surrounding practice that industry depends on: pinning the
+**What the book covers.** Coursework and research develop modelling skill. They
+rarely develop the surrounding practice that industry depends on: pinning the
 code, data and environment so a result can be reproduced; computing features
 only from information available at prediction time; choosing a data split
 that answers the question being asked; turning a score into a decision under
@@ -236,9 +235,6 @@ make check           # everything CI checks
 Labs are written as plain Python files (`notebook.py`, percent format) and
 the `.ipynb` files are generated from them, so changes are readable in a
 diff. See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-The organisation follows the author's
-[ROBT407LLM workshop](https://github.com/berdakh/ROBT407LLM); the content is new.
 
 ## Licence
 

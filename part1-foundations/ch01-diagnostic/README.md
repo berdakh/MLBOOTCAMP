@@ -160,7 +160,8 @@ it). These skills are learned by doing real work and cannot be tested fairly
 in ten minutes.
 
 **Exercise 7 (written).** Three sentences, two minutes: the most rigorous
-evaluation you have done, and its main threat to validity. It is not graded;
+evaluation you have done (in a course, thesis, research or work project), and
+its main threat to validity. It is not graded;
 the solutions describe what a strong answer contains.
 
 ## 1.5 The rules, and why they matter
@@ -337,14 +338,15 @@ questions), which cannot be memorised. For a broader measure, use the
 [readiness rubric](../../appendices/readiness-rubric.md); the diagnostic is
 the quick one.
 
-> **Research bridge.** Exercise 7 asks for the most rigorous evaluation you
-> have done and its main threat to validity. For cross-subject EEG or BCI
-> work, a strong answer names the split (for example leave-one-subject-out
-> over 20 subjects), how the spread was reported (an interval over subjects,
-> not over trials), and one specific threat with its consequence for the
-> claim (for example, a single amplifier and laboratory, which limits what
-> can be said about a new site). The same structure is expected for every
-> result in this book.
+> **What a strong answer contains.** Exercise 7 asks for the most rigorous
+> evaluation you have done and its main threat to validity. For a study with
+> many measurements per person, such as a clinical or wearable-sensor study,
+> a strong answer names the split (for example leave-one-subject-out over 20
+> participants), how the spread was reported (an interval over participants,
+> not over individual measurements), and one specific threat with its
+> consequence for the claim (for example, a single device and site, which
+> limits what can be said about a new site). The same structure is expected
+> for every result in this book.
 
 ## Key terms
 

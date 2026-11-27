@@ -23,7 +23,7 @@
 # 2. show with one's own runs why warmup widens the stable learning-rate range, how the learning rate should scale with batch size and where that rule breaks;
 # 3. show how deep networks memorise noisy labels, and why test error can *rise then fall* as models grow (double descent);
 # 4. critique a paper with a structured template and find planted flaws (leakage, test-set tuning, weak baselines, no uncertainty);
-# 5. tell a two-minute research-to-production story from an EEG/BCI background.
+# 5. tell a two-minute research-to-production story about a project you have worked on.
 #
 # **You will produce:** `artifacts/level3/nb19/depth_demos.json` (every number
 # the demos printed) and two written answers (Exercises 3–4).
@@ -411,8 +411,9 @@ RESULTS["label_noise"] = noise_rows
 # The interview points: memorisation is not a bug in the code; clean patterns
 # are fitted before noise, so early stopping and regularisation are
 # noise-robustness tools; and noisy validation labels still rank checkpoints
-# usefully, though they understate true accuracy. For EEG, where labels
-# come from cues the subject may not have followed, this is directly relevant.
+# usefully, though they understate true accuracy. This is directly relevant
+# wherever labels are uncertain, for example trial labels that come from cues
+# a subject may not have followed, or medical labels on which annotators disagree.
 #
 # > **Intuition.** A student cramming an answer key with 20% typos first learns the subject
 # > (patterns shared by many questions), then memorises the typos one by one. Stopping early
@@ -521,6 +522,9 @@ print("wrote", (OUT / "depth_demos.json").relative_to(ART), "sections:", list(RE
 #
 # > **Fictional.** This abstract was written for this exercise. No such
 # > paper, model or dataset exists; any resemblance to real work is accidental.
+# > Its setting is EEG decoding (CSP+LDA and EEGNet are standard baselines
+# > there), but no knowledge of EEG is needed: the flaws are in the
+# > evaluation design.
 #
 # > *SpectraFormer: calibration-free motor-imagery decoding for new BCI users.*
 # > We propose SpectraFormer, a transformer over time–frequency patches of
@@ -574,27 +578,29 @@ grade.ex2(critique_flags)
 # *Your answer here.*
 
 # %% [markdown]
-# ## 57.7 · Research to production: an EEG story
+# ## 57.7 · Research to production: telling the story
 #
-# Interviewers ask researchers some version of *"how would your research
-# work in production?"* or *"tell me about taking a model from a paper to a
+# Interviewers ask candidates with research or project experience some
+# version of *"how would your work go into production?"* or *"tell me about taking a model from a paper to a
 # product"*. The question probes whether the candidate knows what changes. A structure
 # that works in two minutes:
 #
 # 1. **The research result** (20 s): task, data, metric, your number, *with
 #    its split named* ("leave-subjects-out across N subjects").
-# 2. **What would break in production** (40 s): new users (cross-subject
-#    shift), new sessions on the same user (electrode placement, impedance,
-#    fatigue), different hardware and sampling rates, artefacts (blinks, EMG,
-#    line noise), latency limits for closed-loop use, labels that do not exist
-#    online.
+# 2. **What would break in production** (40 s). For a model trained on
+#    recordings from people, such as a wearable-sensor or physiological-signal
+#    classifier: new users (cross-subject shift), new sessions on the same
+#    user (sensor placement, fatigue), different hardware and sampling rates,
+#    artefacts and noise, latency limits for real-time use, labels that do
+#    not exist online. Other projects have their own list; name specific
+#    failure modes, not generic "drift".
 # 3. **What you would build** (40 s): a calibration-light adaptation path
-#    (a short calibration block, re-centring of covariance or feature
-#    statistics per session, or fine-tuning a small head; PEFT from Chapter 44),
-#    a data-quality gate (impedance, artefact rate) that refuses to predict on
-#    bad signal, a streaming inference loop with a latency budget (Section 56.1),
-#    monitoring of input drift per session, and a fallback (ask the user to
-#    repeat; default to a non-BCI control).
+#    (a short calibration block, re-centring of feature statistics per
+#    session, or fine-tuning a small head; PEFT from Chapter 44), a
+#    data-quality gate (signal quality, artefact rate) that refuses to predict
+#    on bad input, a streaming inference loop with a latency budget (Section
+#    56.1), monitoring of input drift per session, and a fallback (ask the
+#    user to repeat; default to a simpler control).
 # 4. **How you would know it works** (20 s): online evaluation with new users
 #    (not new trials), pre-registered, intervals over users; what you would
 #    monitor after launch.
@@ -604,8 +610,8 @@ grade.ex2(critique_flags)
 # products you did not build.
 #
 # > **Exercise 4 (written).** Write your two-minute research-to-production
-# > story for one of your EEG/BCI projects (or another research project) in
-# > the four-part structure above. Use only numbers you actually measured,
+# > story for a project you have worked on (a thesis, course, research or
+# > work project) in the four-part structure above. Use only numbers you actually measured,
 # > name the split each number comes from, and say what you would do
 # > differently now that you have completed Parts I–III. Record yourself; cut to
 # > 2:15 at most.

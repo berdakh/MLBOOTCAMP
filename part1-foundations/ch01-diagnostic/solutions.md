@@ -179,13 +179,14 @@ what data, **how** the evaluation matched the claim (e.g. leave-one-subject-out
 for a cross-subject claim, with the number of subjects and a spread), and
 **one specific threat** with what was done about it. Example:
 
-> I evaluated a cross-subject motor-imagery decoder with leave-one-subject-out
-> CV over 20 subjects, reporting mean balanced accuracy with a bootstrap 95%
-> interval over subjects. The decision of model and hyper-parameters was made
-> on nested inner folds, so no held-out subject influenced it. The main threat
-> is that all subjects were recorded on one amplifier in one lab, so the
-> estimate says little about a new site - I would test that on an external
-> dataset before claiming generality.
+> I evaluated an activity-recognition model for wrist-worn sensors with
+> leave-one-subject-out CV over 20 participants, reporting mean balanced
+> accuracy with a bootstrap 95% interval over participants. The decision of
+> model and hyper-parameters was made on nested inner folds, so no held-out
+> participant influenced it. The main threat is that all participants were
+> recorded with one device model at one site, so the estimate says little
+> about a new site - I would test that on an external dataset before claiming
+> generality.
 
 Weak answers name a metric without the split, or name "small sample size" as
 the threat without saying what it does to the claim.

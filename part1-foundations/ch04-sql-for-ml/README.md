@@ -257,9 +257,9 @@ $[T - 90\ \text{days}, T)$ in the join and then uses `FILTER` to count the
 30-day subset. The full feature table has 44,361 rows over 21 monthly
 snapshots, with a positive rate of about 0.055.
 
-> **Research bridge.** The completed-week rule is the same idea as a causal
-> filter in real-time EEG decoding: the features of an epoch may use only
-> samples up to the decision time. A zero-phase (forward-backward) filter
+> **Connection to other fields.** The completed-week rule is the same idea
+> as a causal filter in real-time signal processing: the features computed
+> at a decision time may use only samples up to that time. A zero-phase (forward-backward) filter
 > applied offline uses future samples, exactly as counting an unfinished week
 > does.
 

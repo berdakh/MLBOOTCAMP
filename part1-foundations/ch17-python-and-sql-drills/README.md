@@ -102,8 +102,8 @@ A **stratified split** keeps each class's share the same in both parts. Its
 usual follow-up question in an interview is what to do when rows are grouped,
 for example several rows per customer. The answer is to stratify and split
 *groups*, not rows (scikit-learn's `StratifiedGroupKFold`), for the same
-reason that one subject's trials are never divided between training and test
-in a BCI study (Chapter 5).
+reason that one patient's or participant's measurements are never divided
+between training and test in a clinical or sensor study (Chapter 5).
 
 Several drills require a **stable tie-break**: a rule that resolves equal keys
 in the same way every time, such as "the later record wins". Unstated tie

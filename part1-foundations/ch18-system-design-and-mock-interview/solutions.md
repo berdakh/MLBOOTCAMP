@@ -98,14 +98,15 @@ and bias addressed, a fallback named.
 ## Exercise 4 · Two STAR stories (written)
 
 [open-ended] Personal: only real stories. A strong *shape* for prompt 1, from a
-cross-subject EEG project (adapt the facts to yours, never borrow them):
+project with several recordings per participant (adapt the facts to yours,
+never borrow them):
 
-* **S (10%).** "In my BCI project, we reported cross-subject decoding accuracy
-  for a motor-imagery classifier."
-* **T (10%).** "I owned the evaluation pipeline and the numbers in the paper."
+* **S (10%).** "In my thesis project, we reported cross-subject accuracy for
+  an activity-recognition classifier trained on wearable-sensor data."
+* **T (10%).** "I owned the evaluation pipeline and the numbers in the report."
 * **A (60%).** "When a colleague's re-implementation scored lower, I traced the
   difference to my preprocessing: I had fitted the normalisation (and the
-  channel selection) on all subjects before the leave-one-subject-out loop, so
+  feature selection) on all participants before the leave-one-subject-out loop, so
   the held-out subject influenced its own features. I moved every fitted step
   inside the loop as a pipeline, re-ran, and added a test that fails if any
   fitted object sees the held-out subject. I also re-checked our previous

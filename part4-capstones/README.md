@@ -44,12 +44,13 @@ templates) is in [template/](template/README.md).
 
 The projects are numbered in the recommended order.
 
-1. **Predictive maintenance** comes first because it is closest to a
-   signal-processing background: multichannel sensor time series, windowing,
+1. **Predictive maintenance** comes first because it builds directly on the
+   evaluation ideas of Part I: multichannel sensor time series, windowing,
    per-channel normalisation, and an evaluation that resembles cross-subject
    evaluation. Engines play the role of subjects: if windows from the same
    engine appear in both training and validation data, the score is inflated
-   in the same way a within-subject brain-computer-interface score is. The
+   in the same way as when one patient's measurements appear on both sides of
+   a split in a clinical study. The
    data is small and trains on a CPU, so the project also serves to set up
    the template repository used for the others.
 2. **Electricity load forecasting** remains a numerical time series, but the

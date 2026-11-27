@@ -85,20 +85,20 @@ check single features first, it tells you where the signal is.
 
 ---
 
-## Exercise 4 · The cross-subject EEG analogy (written)
+## Exercise 4 · The cross-subject analogy (written)
 
-[open-ended] A strong answer:
+[open-ended] A strong answer, for a sensor study with several sessions per participant:
 
-| This project | EEG/BCI equivalent | Right when |
+| This project | Equivalent in the sensor study | Right when |
 |---|---|---|
-| **Time split** (train earlier months, validate later months, same customers) | train on earlier sessions/runs, test on a later session of the **same subjects** | the system will be calibrated on a user and then used by that user on later days (session-to-session transfer, non-stationarity) |
-| **Group split** (whole customers held out) | **leave-subject(s)-out** cross-subject evaluation | the system must work on new users with no calibration data (plug-and-play BCI) |
-| **Random row split** | shuffling epochs from all sessions and subjects into folds | almost never for a claim about deployment: neighbouring epochs share drift, artefacts and filter state, so it measures memorisation of the recording |
+| **Time split** (train earlier months, validate later months, same customers) | train on earlier sessions, test on a later session of the **same participants** | the system will be calibrated on a user and then used by that user on later days (session-to-session transfer, non-stationarity) |
+| **Group split** (whole customers held out) | **leave-subject(s)-out** cross-subject evaluation | the system must work on new users with no calibration data (plug-and-play use) |
+| **Random row split** | shuffling windows from all sessions and participants into folds | almost never for a claim about deployment: neighbouring windows share drift, artefacts and filter state, so it measures memorisation of the recording |
 
-**Embargo equivalent.** Epochs that overlap in time (sliding windows) or share
-a filter's transient, or a label defined over a window (e.g. "error within the
+**Embargo equivalent.** Windows that overlap in time (sliding windows) or share
+a filter's transient, or a label defined over a window (e.g. "fall within the
 next 2 s") that crosses the train/test boundary within one session: drop
-epochs within one window length of the boundary.
+windows within one window length of the boundary.
 
 Credit answers that state the deployment question first and derive the split
 from it.

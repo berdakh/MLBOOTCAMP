@@ -21,7 +21,7 @@ def _takeaway(c: Canvas, y: float, text: str, h: float = 40) -> None:
 def cap1_engine_split():
     c = Canvas(880, 380)
     c.title("Split by engine, not by window",
-            "Engines play the role of subjects: the same rule as cross-subject EEG evaluation")
+            "Engines play the role of subjects: the same rule as cross-subject evaluation")
     # Column headers
     c.text(230, 92, "Random window split", "lbl t-bad")
     c.text(230, 110, "leaks: one engine on both sides", "small")

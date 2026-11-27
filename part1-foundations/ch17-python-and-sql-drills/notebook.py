@@ -274,11 +274,11 @@ def stratified_split(labels, test_frac: float, seed: int):
 stop("ex5", grade.ex5(stratified_split))
 
 # %% [markdown]
-# > **Research bridge.** Exercise 5 is the same idea as keeping class balance
-# > per subject in a BCI dataset. The interview follow-up is usually *"and if
+# > **Connection to other fields.** Exercise 5 is the same idea as keeping
+# > class balance per subject in a dataset with repeated measurements. The interview follow-up is usually *"and if
 # > rows are grouped?"*: then you stratify **groups**, not rows (scikit-learn's
-# > `StratifiedGroupKFold`), exactly as you would never split one subject's
-# > trials across train and test.
+# > `StratifiedGroupKFold`), exactly as one subject's measurements are never
+# > split across train and test.
 
 # %% [markdown]
 # ## 17.3 · SQL drills on TaskFlow

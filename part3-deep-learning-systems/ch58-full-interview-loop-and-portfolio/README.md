@@ -154,7 +154,7 @@ the only kind that predicts interview performance.
 
 Most loops begin with "tell me about yourself", and the answer frames everything that follows. A two-minute answer has four parts:
 
-1. **Identity in one line**, as the role sees it (for example, "an ML engineer with a research background in EEG decoding and signal processing").
+1. **Identity in one line**, as the role sees it (for example, "an ML engineer with a background in time-series modelling and signal processing").
 2. **Two proof points**, one from research and one from engineering, each with one's own role and a measured number with its split.
 3. **Strengths** tied to the needs in the job description (for example rigorous evaluation, deep models under compute limits, ranking systems).
 4. **Why this role, now**, in one or two sentences, without criticism of current or past environments.

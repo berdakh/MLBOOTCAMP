@@ -174,9 +174,9 @@ therefore **reports the customer-level interval by default**: it is never the
 wrong unit here, and it removes the need to argue each time about whether the
 correlation happens to be small.
 
-> **Research bridge.** Rows are trials and customers are subjects. A
-> cross-subject EEG result is not reported with an interval that resamples
-> trials, for exactly this reason: across-subject variability is the relevant
+> **Connection to other fields.** In a study with repeated measurements,
+> rows are trials and customers are subjects. A cross-subject result is not
+> reported with an interval that resamples trials, for exactly this reason: across-subject variability is the relevant
 > spread, not across-trial variability.
 
 ## 7.6 Paired comparisons

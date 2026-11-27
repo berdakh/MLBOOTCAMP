@@ -39,7 +39,7 @@ fine-tuning.
 * **A (real).** A random *trial* split puts every subject (and every session)
   in both training and test, so the model can learn subject-specific
   signatures. The claim is about *new users*; only a leave-subjects-out split
-  tests it. In cross-subject EEG this is usually the largest inflation.
+  tests it. In cross-subject evaluations this is usually the largest inflation.
 * **B (real).** Choosing 1 of 60 configurations by test accuracy makes the
   test set a validation set: the maximum of 60 noisy estimates is biased
   upward.
@@ -103,13 +103,14 @@ leave-subjects-out split, with tuning inside the training subjects?"*
 [open-ended] Personal. A shape to aim for (fill with your own measured numbers; do
 not use these placeholders as results):
 
-> "In my PhD I built a cross-subject motor-imagery decoder: [N] subjects,
-> leave-one-subject-out, [metric] of [your number ± spread] against
-> [baseline number] for [baseline]. In a product, three things would break:
-> new users differ from training users, the same user drifts across sessions,
-> and headsets differ. I would deploy a short calibration block with per-session
-> re-centring of the covariance features and a small adapted head, a signal-
-> quality gate that refuses to decode on high impedance or heavy artefacts,
+> "In my thesis I built a cross-subject activity-recognition model from
+> wearable sensors: [N] participants, leave-one-subject-out, [metric] of
+> [your number ± spread] against [baseline number] for [baseline]. In a
+> product, three things would break: new users differ from training users,
+> the same user drifts across sessions, and devices differ. I would deploy a
+> short calibration block with per-session re-centring of the features and a
+> small adapted head, a signal-quality gate that refuses to predict on
+> missing samples or heavy artefacts,
 > and a streaming loop with a [X] ms budget. I'd know it works from an online
 > study with *new users*, pre-registered, with intervals over users, and I'd
 > monitor input drift per session. Looking back, I would have [what you would

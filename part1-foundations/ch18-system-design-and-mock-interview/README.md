@@ -79,8 +79,8 @@ supported by examples:
 | Cross-subject or leave-one-subject-out evaluation | Group-aware splitting; preventing entity leakage (Chapter 5) |
 | Not touching the held-out session until the end | A locked test set; a single final evaluation (Chapter 16) |
 | Reporting means with confidence intervals, or across seeds | Uncertainty in offline metrics (Chapters 7 and 16) |
-| Fitting filters, ICA or normalisation on training data only | Preventing preprocessing leakage; `Pipeline` discipline (Chapter 6) |
-| Artifact rejection and channel quality checks | Data validation and data contracts (Chapter 3) |
+| Fitting filters, feature selection or normalisation on training data only | Preventing preprocessing leakage; `Pipeline` discipline (Chapter 6) |
+| Quality checks on raw recordings or measurements | Data validation and data contracts (Chapter 3) |
 | Building a baseline before a deep model | Honest baselines |
 | Answering reviewers who want to reject the paper | Justifying decisions under questioning |
 
@@ -88,8 +88,9 @@ supported by examples:
 
 *Figure 18.2 — Research habits and their engineering names. Little on the right is new to a careful researcher; the interview skill is to name the engineering version and then tell the research story as evidence.*
 
-For EEG and BCI researchers in particular, a cross-subject evaluation story is
-one of the strongest leakage stories available. It is concrete, it has a
+For anyone who has worked with data that has many measurements per subject
+(patients, participants, sensors or devices), a cross-subject evaluation story
+is one of the strongest leakage stories available. It is concrete, it has a
 measurable before and after, and it maps exactly onto entity leakage in
 customer, patient or device data.
 
@@ -460,8 +461,9 @@ most of the time spent on the action.
 | Action | What *you* did: the decisions, the reasons, the alternatives rejected | 60% |
 | Result | The outcome, with a number if one honestly exists, and what you learned | 20% |
 
-Three prompts map well onto research experience: a time you found a flaw in
-your own evaluation (for example, cross-subject leakage in an EEG study);
+Three prompts map well onto project or research experience: a time you
+found a flaw in your own evaluation (for example, leakage between subjects
+in a study with repeated measurements);
 a time a result did not replicate; and a time you simplified a model for a
 user. The rules are simple: real stories only, your own role explicit ("I",
 not "we"), a number where one honestly exists, and no inflation of outcomes,

@@ -376,10 +376,11 @@ comparison
 #
 # *What to notice:* the leaks that live in the **features** (target, temporal) are enormous and invisible to any split check; the ones that live in the **procedure** (random split, preprocessing fitted on everything) are small on this data. Chapter 6 measures the target and preprocessing leaks.
 #
-# > **Research bridge.** You already know this from EEG/BCI: within-subject
-# > vs cross-subject evaluation answer different questions, and a
-# > leave-one-subject-out score is not comparable to a within-session one. The
-# > translation is in Exercise 4.
+# > **Connection to other fields.** Studies with repeated measurements per
+# > subject (clinical, wearable-sensor or physiological-signal studies) face
+# > the same choice: within-subject and cross-subject evaluation answer
+# > different questions, and a leave-one-subject-out score is not comparable
+# > to a within-session one. The translation is in Exercise 4.
 
 # %% [markdown]
 # ## 5.3 · Baselines
@@ -468,12 +469,14 @@ grade.ex3(rule_scores)
 # model.
 
 # %% [markdown]
-# > **Exercise 4 (written).** The EEG analogy. For a cross-subject BCI study,
-# > say which evaluation corresponds to (a) this project's **time split**,
-# > (b) the **group split**, and (c) the **random row split**, and give one
-# > situation where each of (a) and (b) is the right choice. Then say which
-# > EEG equivalent of "label window crossing the boundary" you would need an
-# > embargo for. Write your answer in the cell below.
+# > **Exercise 4 (written).** The cross-subject analogy. Take a study with
+# > many recordings per participant, for example a wearable-sensor study that
+# > classifies activities from overlapping signal windows recorded in several
+# > sessions per participant. Say which evaluation corresponds to (a) this
+# > project's **time split**, (b) the **group split**, and (c) the **random
+# > row split**, and give one situation where each of (a) and (b) is the right
+# > choice. Then say which equivalent of "label window crossing the boundary"
+# > you would need an embargo for. Write your answer in the cell below.
 
 # %% [markdown]
 # *Your answer here.*

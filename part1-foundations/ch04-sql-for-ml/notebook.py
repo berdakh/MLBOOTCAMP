@@ -492,9 +492,9 @@ for col in ["tenure_days", "sessions_4w", "failed_payments_90d", "churned_30d"]:
 # implementation for one case is one of the most useful tests you can write.
 # The repository's `tests/` do the same.
 #
-# > **Research bridge.** "Week complete" is the same idea as a causal filter
-# > in real-time EEG decoding: an epoch's features may only use samples up to
-# > the decision time. A zero-phase (forward-backward) filter applied offline
+# > **Connection to other fields.** "Week complete" is the same idea as a
+# > causal filter in real-time signal processing: features computed at a
+# > decision time may only use samples up to that time. A zero-phase (forward-backward) filter applied offline
 # > quietly uses future samples - exactly like counting an unfinished week.
 
 # %% [markdown]
