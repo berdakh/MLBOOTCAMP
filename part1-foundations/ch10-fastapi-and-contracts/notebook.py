@@ -391,9 +391,9 @@ for t in (0.3, 0.5):
 # its own configuration. That is exactly what tests need: one app per test,
 # with a temporary registry.
 #
-# > **Research bridge.** You already do this with models: `make_model(cfg)`
-# > returns a fresh network instead of a global `model` that every experiment
-# > mutates. An app factory is the same idea applied to the service.
+# > **Connection to model code.** Experiment code often does the same with
+# > models: `make_model(cfg)` returns a fresh network instead of a global
+# > `model` that every experiment mutates. An app factory is the same idea applied to the service.
 
 # %% [markdown]
 # > **Exercise 1.** Write `make_app()` that returns a **new** FastAPI app with

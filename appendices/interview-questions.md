@@ -436,13 +436,15 @@ stories you can adapt.
 
 ### Tell me about a time you found a flaw in an evaluation.
 
-**Mapping from research: cross-subject EEG evaluation as a leakage story.**
+**Mapping from a project: cross-subject evaluation as a leakage story.** This
+outline fits any project with repeated measurements per subject, such as
+patients, study participants, sensors or devices.
 
 | | Example outline (fill in your own details and numbers) |
 |---|---|
-| **S** | A BCI decoder reported high accuracy using a random split of trials pooled across sessions or subjects |
+| **S** | A classifier reported high accuracy using a random split of measurements pooled across sessions or subjects |
 | **T** | You were responsible for the evaluation, or for reproducing the result before a submission |
-| **A** | You noticed that trials from the same subject and session were in both train and test, so the model could exploit subject- and session-specific signal. You re-ran with leave-one-subject-out (or train-on-session-1, test-on-session-2) and moved preprocessing fitting inside each fold |
+| **A** | You noticed that measurements from the same subject and session were in both train and test, so the model could exploit subject- and session-specific signal. You re-ran with leave-one-subject-out (or train-on-session-1, test-on-session-2) and moved preprocessing fitting inside each fold |
 | **R** | Accuracy fell from your within-subject figure to your cross-subject figure (state both, from your records). The reported number now matched how the system would be used on new users. You adopted the protocol for later work |
 
 A complete answer covers: the specific mechanism of the leak, the measured size
@@ -452,8 +454,8 @@ time").
 
 ### Tell me about a time you made a technical decision with incomplete information.
 
-Research mapping: choosing a preprocessing pipeline, artifact-rejection
-threshold, or model family before all data was collected. A strong answer
+Project mapping: choosing a preprocessing pipeline, a data-cleaning
+threshold, or a model family before all data was collected. A strong answer
 covers: what you knew and did not, how you limited the risk (a baseline, a
 pilot, a reversible choice), and what you would decide differently now.
 

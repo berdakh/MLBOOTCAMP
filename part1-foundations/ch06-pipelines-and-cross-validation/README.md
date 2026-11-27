@@ -135,11 +135,11 @@ the inclusion of the current or future labels, not the technique.
 > current row's contribution is diluted and the leak is small; it is
 > catastrophic for high-cardinality keys such as a customer identifier.
 
-> **Research bridge.** Normalising EEG epochs with statistics computed over
-> all subjects is a small leak; selecting channels or frequency bands by
-> their correlation with the label on the full dataset before
-> cross-validation is a large one. The second kind can turn a 60% decoder
-> into an apparent 90% one.
+> **Connection to other fields.** In signal or imaging studies, normalising
+> recordings with statistics computed over all subjects is a small leak;
+> selecting channels, frequency bands or features by their correlation with
+> the label on the full dataset before cross-validation is a large one. The
+> second kind can turn a 60% classifier into an apparent 90% one.
 
 ## 6.5 Anatomy of the preprocessor
 

@@ -678,8 +678,9 @@ print(mutation_table.to_string(index=False))
 # Mutation testing turns "we have tests" into "we know which bugs our tests
 # catch".
 #
-# > **Research bridge.** This is a positive control. In an EEG pipeline you
-# > inject a known synthetic source and check that the localisation finds it;
+# > **Connection to other fields.** This is a positive control. In a
+# > signal-analysis pipeline you inject a known synthetic signal and check
+# > that the detection method finds it;
 # > here you inject a known bug and check that the suite finds it. A test
 # > suite that has never failed is like a method that was never shown a
 # > positive.

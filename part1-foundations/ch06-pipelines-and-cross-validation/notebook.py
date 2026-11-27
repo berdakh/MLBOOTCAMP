@@ -271,11 +271,12 @@ pd.DataFrame(rows).round(3)
 # > encoding is legitimate when computed out-of-fold from **past, closed**
 # > labels only; the leak is the inclusion, not the technique.
 #
-# > **Research bridge.** This is the tabular cousin of normalising EEG
-# > epochs with statistics computed over all subjects (small leak), versus
-# > selecting channels or frequency bands by their correlation with the label
-# > on the full dataset before cross-validating (large leak). The second kind
-# > is the one that turns a 60% decoder into a "90%" one.
+# > **Connection to other fields.** In signal or imaging studies the same
+# > split appears: normalising recordings with statistics computed over all
+# > subjects is a small leak, while selecting channels, frequency bands or
+# > features by their correlation with the label on the full dataset before
+# > cross-validating is a large one. The second kind is the one that turns a
+# > 60% classifier into a "90%" one.
 
 # %%
 print("rows with past_churn_labels > 0:", int((work["past_churn_labels"] > 0).sum()), "of", len(work))

@@ -188,8 +188,9 @@ soon, given their history up to now?"* recurs in many fields:
 | Industry | machine | fails (capstone 1: predictive maintenance) |
 | Education | student | drops a course |
 
-> **Research bridge.** In cross-subject EEG work the hardest part is
-> already familiar: the *unit* (a subject there, a customer here) appears many
+> **Connection to other fields.** Studies with repeated measurements per
+> person, such as clinical or sensor studies, face the same difficulty: the
+> *unit* (a patient or participant there, a customer here) appears many
 > times, so a random split of rows lets the model memorise the unit instead of
 > learning the pattern. Churn adds time: the model must also never be trained
 > on the future.
@@ -326,9 +327,9 @@ Practical rules:
 > data order, the initialisation and the split, so each must be pinned
 > separately.
 
-> **Research bridge.** This is the discipline of reporting cross-subject EEG
-> results as a mean and spread over subjects rather than as one favourable
-> split.
+> **Connection to other fields.** This is the discipline, common in
+> experimental science, of reporting a result as a mean and spread over
+> subjects or repetitions rather than as one favourable split.
 
 ## 2.7 Configuration as data, and a run identity
 
@@ -509,7 +510,7 @@ The exercises are in the [lab](notebook.ipynb); worked answers are in [solutions
 
 1. **`config_hash(config)`** — return the first 12 hexadecimal characters of the SHA-256 of a configuration, identical for dictionaries that differ only in key order (including nested dictionaries) and different when any value changes.
 2. **`record_run(directory, config, metrics)`** — write a run record named by the configuration hash, with the run identity, configuration, metrics, a UTC timestamp and the environment; re-running the same configuration overwrites the same file.
-3. **Written.** For one of your own research projects, name three ways a colleague re-running it a year later could obtain a different number, and the pin that would have prevented each.
+3. **Written.** For a project you have worked on (or a published study you know well), name three ways a colleague re-running it a year later could obtain a different number, and the pin that would have prevented each.
 
 The checkpoint questions cover the four pins, diagnosing a small difference between two runs, why seeds do not make a comparison trustworthy, the src layout, and why models are kept out of git.
 

@@ -30,7 +30,8 @@ is asymmetric.
 ## Why this project
 
 * **Entity-level evaluation**, the industrial twin of cross-subject
-  evaluation in EEG/BCI: engines are subjects, cycles are trials. You can
+  evaluation in clinical or sensor studies: engines are subjects, cycles are
+  trials. You can
   explain why a window-level random split is leakage in one sentence — and
   then prove it with a number.
 * **A label you have to construct.** Remaining useful life (RUL) is not in the
@@ -289,7 +290,7 @@ dominated by a handful of late predictions in the 25–75-cycle range (Step 8).
 
 1. **Why can't you split windows randomly?** Strong answer: overlapping
    windows share most of their samples; the model memorises engine-specific
-   offsets; analogy to within- vs cross-subject EEG; you measured the gap.
+   offsets; analogy to within- vs cross-subject evaluation; you measured the gap.
 2. **How did you choose the RUL cap, and what does it do to the metrics?**
    Covers: early-life degradation unobservable; cap as a modelling assumption;
    sensitivity table; evaluated against uncapped truth.
@@ -312,8 +313,9 @@ dominated by a handful of late predictions in the 25–75-cycle range (Step 8).
 9. **How would you monitor this model after deployment?** Covers: input drift
    per sensor, prediction drift, labels only arrive at failure/removal,
    periodic backtests.
-10. **What in this project is closest to your research, and what is new?**
-    Covers: cross-subject ↔ cross-engine; new: API, contracts, reproducibility,
+10. **What in this project was familiar from earlier work, and what was new?**
+    Covers: a concrete link to something done before (e.g. grouped splits:
+    cross-subject ↔ cross-engine); new: API, contracts, reproducibility,
     asymmetric decision metrics.
 
 ## GitHub deliverables checklist

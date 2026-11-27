@@ -89,10 +89,10 @@ visible input shift, when $P(Y \mid X)$ changes. Only performance on real
 outcomes can tell these cases apart. A drift alert should therefore open an
 investigation, not trigger an automatic retrain.
 
-Readers from EEG and BCI research know this situation as session-to-session
-or subject-to-subject covariate shift: amplitude statistics move between
-recordings, and one checks whether the decoder still works on the new
-session. The same caution applies: a shift in the inputs is a reason to
+Studies that record signals from people or machines meet the same situation
+as session-to-session or subject-to-subject covariate shift: amplitude
+statistics move between recordings, and one checks whether the model still
+works on the new session. The same caution applies: a shift in the inputs is a reason to
 *check* performance, not proof that it dropped.
 
 ## 15.4 The Population Stability Index

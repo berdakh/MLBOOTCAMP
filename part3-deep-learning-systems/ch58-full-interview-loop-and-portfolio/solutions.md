@@ -102,9 +102,10 @@ description before publishing.
 [open-ended] Personal. Structure and a calibrated example (bracketed parts are yours
 to fill with measured facts; do not invent them):
 
-> "I'm an ML engineer with a research background in EEG decoding and signal
-> processing. [In my PhD / last role] I built [model] for [task]; on a
-> leave-subjects-out evaluation across [N] subjects it reached [metric ±
+> "I'm an ML engineer with a background in [your field, e.g. time-series
+> modelling and signal processing]. [In my thesis / last role] I built
+> [model] for [task]; on a [named split, e.g. leave-subjects-out across N
+> subjects] evaluation it reached [metric ±
 > spread], against [baseline]. Since then I've focused on production ML: I
 > built [a ranking cascade on simulated marketplace logs] with a
 > pre-registered held-out evaluation that corrected for position bias, and

@@ -227,9 +227,10 @@ print(f"rows tripled - cluster bootstrap width: {hi_c - lo_c:.4f}   (same as the
 # default**: it is never the wrong unit here, and you do not have to argue
 # about whether the correlation is small this time.
 #
-# > **Research bridge.** Rows are trials, customers are subjects. You
-# > would not report a cross-subject EEG result with a confidence interval that
-# > resamples trials, for exactly this reason.
+# > **Connection to other fields.** In a study with repeated measurements,
+# > rows are trials and customers are subjects. A cross-subject result is not
+# > reported with a confidence interval that resamples trials, for exactly
+# > this reason.
 
 # %%
 import matplotlib.pyplot as plt

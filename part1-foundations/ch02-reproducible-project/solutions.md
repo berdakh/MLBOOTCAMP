@@ -60,13 +60,13 @@ The key decisions:
 ## Exercise 3 · Three ways a re-run could differ (written)
 
 [open-ended] Personal. A strong answer names **specific** mechanisms and the pin that
-prevents each:
+prevents each. For example, for a study with several recordings per participant:
 
 | What changed | Pin that prevents it |
 |---|---|
-| A preprocessing default changed in a new MNE / scikit-learn release (e.g. a filter design or a solver default) | environment: exact versions in a lock file, recorded with the result |
-| The dataset was re-downloaded and a subject was added or re-referenced | data: checksum of the raw files, fingerprint of the epoch table |
-| The subject-wise split was drawn without a seed, so a different held-out subject set | randomness: seeded split, and the list of held-out subjects saved |
+| A preprocessing default changed in a new SciPy / scikit-learn release (e.g. a filter design or a solver default) | environment: exact versions in a lock file, recorded with the result |
+| The dataset was re-downloaded and a participant was added or a file was corrected | data: checksum of the raw files, fingerprint of the derived feature table |
+| The participant-wise split was drawn without a seed, so a different held-out set | randomness: seeded split, and the list of held-out participants saved |
 | An uncommitted notebook edit produced the published number | code: commit hash, and refusing to report from a `-dirty` tree |
 
 Credit any three with a correct pin. Extra credit for noticing that **a seed

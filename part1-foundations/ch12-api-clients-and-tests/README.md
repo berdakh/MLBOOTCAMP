@@ -281,9 +281,9 @@ The surviving mutant points directly at a missing test. Mutation testing
 thus turns the statement "we have tests" into the more useful statement
 "these are the bugs our tests would detect".
 
-For a researcher, the idea is familiar: it is a **positive control**. In an
-EEG analysis, one injects a known synthetic source and checks that the
-source-localisation method finds it. Here, one injects a known bug and
+The idea is familiar from experimental science: it is a **positive
+control**. In a signal-analysis pipeline, for example, one injects a known
+synthetic signal and checks that the detection method finds it. Here, one injects a known bug and
 checks that the test suite finds it. A suite that has never been seen to
 fail is like a method that has never been shown a positive case.
 

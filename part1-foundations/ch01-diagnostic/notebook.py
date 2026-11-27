@@ -367,8 +367,8 @@ self_ratings = {
 
 # %% [markdown]
 # > **Exercise 7 (written).** [open-ended] In three sentences: describe the most rigorous
-# > evaluation you have done in your research, and name its main threat to
-# > validity. Write it as you would say it to an interviewer. Time yourself: two
+# > evaluation you have done (in a course, thesis, research or work project),
+# > and name its main threat to validity. Write it as you would say it to an interviewer. Time yourself: two
 # > minutes. Write your answer in the cell below.
 
 # %% [markdown]
@@ -405,8 +405,8 @@ profile = grade.summary(results, self_ratings)
 #   `diagnostic.json` files. The exercises will feel easier; the useful
 #   question is whether you now finish each within the timebox.
 #
-# > **Research bridge.** This is a pre-test / post-test design with you as
-# > the only subject. The obvious threat to validity is practice: you will have
+# > **Connection to other fields.** This is a pre-test / post-test design
+# > with you as the only subject. The obvious threat to validity is practice: you will have
 # > seen these exact items. Mitigate it the way you would in a study - judge the
 # > retake on speed and on the *written* answer, which you cannot memorise.
 

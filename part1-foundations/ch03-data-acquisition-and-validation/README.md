@@ -129,8 +129,9 @@ The defence is to compare summary statistics with facts that are known to be
 true (the company sells in North America; the field is required) before any
 analysis.
 
-> **Research bridge.** This is the tabular counterpart of a wrong channel
-> montage or a wrong sampling rate in an EEG file header. The loader does not
+> **Connection to other fields.** This is the tabular counterpart of a
+> wrong sampling rate or wrong unit in the header of a sensor or instrument
+> recording file. The loader does not
 > fail; it returns different data. The defence is the same: check summary
 > statistics against what must be true before analysing anything.
 

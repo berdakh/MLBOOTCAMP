@@ -251,7 +251,7 @@ for label, env in [("threshold", {"CHURN_THRESHOLD_OVERRIDE": "1.5"}),
 # already excludes `.env` files and `*.key`; the `.dockerignore` below does the
 # same for the image.
 #
-# > **Research bridge.** This is the experiment-config habit from chapter 2
+# > **Connection to chapter 2.** This is the experiment-config habit from chapter 2
 # > applied to a running service: one object, built once, recorded. The
 # > difference is the source: a config file you edit becomes environment
 # > variables someone else sets.

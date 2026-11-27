@@ -57,7 +57,7 @@ predictions will be consumed. Four patterns cover most cases.
 | **Batch scoring** | Predictions are needed on a schedule; nobody waits for an individual answer | Score every active customer on the first of the month and write the scores to a table the CRM reads |
 | **Online (request/response)** | A caller needs an answer now, for one or a few items | Score a customer when an account manager opens the customer's page |
 | **Streaming** | Events arrive continuously and each must be scored as it arrives | Fraud scoring of each card transaction |
-| **Embedded** | The model runs inside another application or device | On-device keyword spotting; a BCI decoder running on the acquisition computer |
+| **Embedded** | The model runs inside another application or device | On-device keyword spotting; a fall detector running on a wearable device |
 
 The TaskFlow churn problem is naturally a batch problem: the features are
 monthly snapshots and the retention team acts on a monthly list. The course

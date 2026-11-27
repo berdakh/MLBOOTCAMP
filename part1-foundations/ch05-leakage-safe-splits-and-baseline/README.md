@@ -29,7 +29,7 @@ Sections 5.3 and 5.4 build and check the time split. Section 5.5 introduces
 the two ranking metrics used throughout Part I. Section 5.6 reports the
 measured effect of leakage, including a result that differs from the usual
 textbook account, and Section 5.7 relates the splits to cross-subject
-evaluation in EEG research. Section 5.8 sets the baselines and Section 5.9
+evaluation in studies with repeated measurements per subject. Section 5.8 sets the baselines and Section 5.9
 states the rule for the test period.
 
 One rule holds for the whole of Part I: the **test** period (July to
@@ -267,14 +267,17 @@ deployment and named next to every number.
 
 ## 5.7 The cross-subject analogy
 
-Readers with EEG or BCI experience already know this chapter in another
-vocabulary.
+The same problem appears in any study that takes many measurements from each
+subject: repeated clinic visits per patient, many recordings per participant in
+a wearable-sensor or physiological-signal study, many images per patient in
+medical imaging. Such studies use a different vocabulary for the ideas of this
+chapter.
 
-| EEG / BCI | TaskFlow churn |
+| Study with repeated measurements per subject | TaskFlow churn |
 |---|---|
-| subject | customer |
-| trials or windows from one session | monthly snapshots of one customer |
-| within-subject random split: high accuracy from shared noise, electrode placement and session effects | random split: high scores from memorised customers and future periods |
+| subject (patient, participant) | customer |
+| measurements or windows from one session or visit | monthly snapshots of one customer |
+| within-subject random split: high accuracy from shared noise, device placement and session effects | random split: high scores from memorised customers and future periods |
 | leave-one-subject-out evaluation | group split by customer |
 | session-to-session transfer (train on day 1, test on day 2) | time split: train on past months, test on later months |
 | filters or normalisation fitted on all data before splitting | scaler or imputer fitted before cross-validation (Chapter 6) |
@@ -366,7 +369,7 @@ The exercises are in the [lab](notebook.ipynb); worked answers are in [solutions
 1. **`time_split_with_embargo(df, train_end, valid_end, gap_days)`** — return train, validation and test frames with the embargo applied to the earlier periods; compared with `time_split` for four boundary and gap settings.
 2. **`leakage_problems(train, test, label_horizon_days, group_col=None)`** — a list of readable time and (optionally) group problems, empty when the split is clean.
 3. **`rule_scores(df)`** — a hand-written continuous score, without fitting, that exceeds 1.5 times the positive rate in validation PR-AUC.
-4. **Written.** Map the time, group and random splits to EEG/BCI evaluation designs, give a situation where each of the first two is right, and name the EEG equivalent of the embargo.
+4. **Written.** Map the time, group and random splits to evaluation designs for a study with repeated measurements per subject, give a situation where each of the first two is right, and name that study's equivalent of the embargo.
 
 The checkpoint questions cover the choice of split, the embargo, a suspicious PR-AUC of 0.97, why the random split inflated the score so little here, and the role of the prior and the hand rule.
 

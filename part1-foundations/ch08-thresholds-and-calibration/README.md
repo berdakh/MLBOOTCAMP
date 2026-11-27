@@ -355,9 +355,10 @@ therefore the optimal *probability* threshold and the expected value of any
 rule written as a fixed probability such as $1/6$. The set of accounts
 flagged at a *re-optimised* threshold can remain the same.
 
-> **Research bridge.** A BCI decoder with good balanced accuracy can still
-> produce confidence values without meaning, and an adaptive system that
-> acts on "p > 0.9" then misbehaves. Ranking quality and probability quality
+> **Connection to other fields.** A diagnostic or sensor classifier with
+> good balanced accuracy can still produce confidence values without
+> meaning, and a system that acts automatically on "p > 0.9" then
+> misbehaves. Ranking quality and probability quality
 > are separate properties and must be measured separately.
 
 ## 8.10 Writing the policy down

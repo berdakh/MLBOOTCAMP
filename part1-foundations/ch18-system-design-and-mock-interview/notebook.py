@@ -340,9 +340,10 @@ print(f"10M accounts: ~{hours_10m_one_core * 60:.1f} min of model time on one pr
 # | Threshold | fixed probability | top-k by capacity | capacity is fixed daily → top-k is simpler and robust to drift |
 # | Retraining | scheduled monthly | triggered by drift | label delay makes triggers slow anyway; schedule + alerts |
 #
-# > **Research bridge.** "Inference is cheap, the pipeline is the system"
-# > mirrors a BCI pipeline: the classifier is milliseconds; artefact rejection,
-# > filtering and epoching are where real-time systems fail. The same sentence
+# > **Connection to other fields.** "Inference is cheap, the pipeline is the
+# > system" holds for real-time signal processing too: the classifier takes
+# > milliseconds; artefact rejection, filtering and windowing are where
+# > real-time systems fail. The same sentence
 # > applies to feature pipelines.
 
 # %% [markdown]

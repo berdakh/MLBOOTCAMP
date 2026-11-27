@@ -99,7 +99,7 @@ applying for. The remaining two can be done later. To choose the third:
 | Target field | Capstone to prioritise |
 |---|---|
 | Energy, utilities, forecasting | [ERCOT load forecasting](../part4-capstones/cap2-electricity-load-forecasting/README.md) |
-| Industrial, IoT, sensor and signal-processing roles (closest to EEG work) | [C-MAPSS predictive maintenance](../part4-capstones/cap1-predictive-maintenance/README.md) |
+| Industrial, IoT, sensor and signal-processing roles | [C-MAPSS predictive maintenance](../part4-capstones/cap1-predictive-maintenance/README.md) |
 | Retail, marketplaces, supply chain | [Online Retail demand forecasting](../part4-capstones/cap3-retail-demand-forecasting/README.md) |
 | Recommendation, ranking, personalisation | [MovieLens recommendations](../part4-capstones/cap4-movie-recommendations/README.md) |
 | Trust and safety, content, natural language processing | [Civil Comments moderation](../part4-capstones/cap5-content-moderation/README.md) |

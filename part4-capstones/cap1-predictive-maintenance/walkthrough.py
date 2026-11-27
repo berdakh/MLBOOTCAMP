@@ -148,14 +148,15 @@ print("mode:", "SYNTHETIC SAMPLE (numbers are not results)" if SAMPLE else "offi
 # useful life. Those costs are not equal, so we report a metric that is not
 # symmetric, and we always show *which side* the errors fall on.
 #
-# > **Intuition.** You have seen this structure before. In cross-subject EEG
-# > decoding, each subject contributes many trials, trials of one subject are
-# > strongly correlated, and the honest question is "how well does the decoder
-# > do on a *new* subject?". Here each engine contributes many windows, windows
+# > **Intuition.** This is the structure of Chapter 5's group split, and of
+# > any study with repeated measurements per subject. In a clinical or sensor
+# > study, each subject contributes many measurements, measurements of one
+# > subject are strongly correlated, and the honest question is "how well
+# > does the model do on a *new* subject?". Here each engine contributes many windows, windows
 # > of one engine overlap, and the honest question is "how well does the model
 # > do on a *new* engine?". Engines are subjects; cycles are trials. *Where the
-# > analogy breaks down:* an EEG subject's state does not drift towards a
-# > terminal event, whereas every engine here degrades monotonically to
+# > analogy breaks down:* a typical study subject's state does not drift
+# > towards a terminal event, whereas every engine here degrades monotonically to
 # > failure, so the label itself is a function of time within the trajectory.
 
 # %% [markdown]
@@ -520,8 +521,8 @@ plt.show()
 #
 # * **Split by engine.** Five folds of 20 engines each; all windows of an
 #   engine fall in one fold. This is `GroupKFold` with the engine ID as the
-#   group — exactly the leave-subjects-out scheme you would use for a
-#   cross-subject EEG result. Scaling and the constant-sensor rule are fitted
+#   group — exactly the leave-subjects-out scheme used for a cross-subject
+#   result in a clinical or sensor study. Scaling and the constant-sensor rule are fitted
 #   on each fold's training engines only.
 # * **Validation mimics the test set.** The official test engines are cut
 #   off some time before failure and scored once, at their last cycle. So for
@@ -798,7 +799,8 @@ print(f"the random split understates the error by {100 * (1 - RMSE_RANDOM / RMSE
 # training (same engine, 29 shared cycles, same initial-wear offset), so the
 # model partly recognises the engine instead of reading its degradation. This
 # gap is the number to quote when an interviewer asks "why not split randomly?"
-# — the same story as within-subject versus cross-subject accuracy in BCI.
+# — the same story as within-subject versus cross-subject accuracy in a
+# study with repeated measurements per subject.
 #
 # ### 6c · A compact 1D-CNN in PyTorch
 #

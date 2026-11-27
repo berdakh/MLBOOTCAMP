@@ -29,9 +29,8 @@ Event streams have three properties that batch tables hide. Events arrive
 order*, because different paths have different delays. And they sometimes
 arrive *more than once*, because delivery systems retry after failures. A
 streaming feature is therefore not only a formula but a set of explicit
-decisions about time, completeness and duplicates. Readers with a
-signal-processing background will find some of this familiar: a stream
-processor is a causal online filter that must emit outputs before all the
+decisions about time, completeness and duplicates. In signal-processing
+terms, a stream processor is a causal online filter that must emit outputs before all the
 inputs for a given time interval are guaranteed to have arrived.
 
 The lab simulates such a stream from one day of ShopStream impressions and
