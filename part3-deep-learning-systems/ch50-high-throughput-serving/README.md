@@ -49,10 +49,10 @@ for exactly one multiply–add (two floating-point operations). The ratio of ari
 the **arithmetic intensity**, is therefore about one operation per two bytes in fp16. For a batch of $B$
 inputs, each weight is read once and used $B$ times:
 
-$$
+```math
 I(B) \approx \frac{2\,B\,d_{\text{in}}\,d_{\text{out}}}{b\,d_{\text{in}}\,d_{\text{out}}} = \frac{2B}{b}\ \ \text{FLOPs per byte}
 \qquad (50.1)
-$$
+```
 
 where $b$ is the number of bytes per weight. The roofline model (Chapter 39) states that a computation is
 memory-bound while $I$ is below the ratio of the processor's peak arithmetic rate to its memory
@@ -63,10 +63,10 @@ which does not depend on $B$, so a larger batch costs almost no extra time.
 
 The throughput of batched calls and the latency of a request are
 
-$$
+```math
 \text{throughput}(B) = \frac{B}{t(B)}, \qquad \text{latency} \approx t_{\text{wait}} + t(B)
 \qquad (50.2)
-$$
+```
 
 where $t(B)$ is the time of one model call on a batch of $B$ and $t_{\text{wait}}$ the time a request spends
 waiting for its batch to be formed. Throughput increases as long as $t(B)$ grows more slowly than $B$.
@@ -138,10 +138,10 @@ latency **service-level objective (SLO)** such as "p95 ≤ 60 ms" is stated in p
 
 **Little's law** relates the three averages of any stable queueing system:
 
-$$
+```math
 L = \lambda\, W
 \qquad (50.3)
-$$
+```
 
 where $L$ is the average number of requests in the system, $\lambda$ the arrival rate (requests per second)
 and $W$ the average time a request spends in the system. In a closed-loop test the number of clients *is*
@@ -222,10 +222,10 @@ second at batch 1 in fp16 and thousands at batch 8 or more.
 
 The cache costs memory, linear in the number of tokens:
 
-$$
+```math
 \text{KV bytes per token} = 2 \cdot n_{\text{layers}} \cdot n_{\text{kv heads}} \cdot d_{\text{head}} \cdot b
 \qquad (50.4)
-$$
+```
 
 The factor 2 counts keys and values; $n_{\text{layers}}$ is the number of transformer layers,
 $n_{\text{kv heads}}$ the number of key/value heads, $d_{\text{head}}$ the dimension of each head, and
@@ -293,10 +293,10 @@ each sequence to 16-token blocks through a block table (right), removing the res
 A server that completes $r$ requests per second when busy, rented at $p$ dollars per hour, and busy on
 average for a fraction $u$ of the time costs
 
-$$
+```math
 \text{cost}_{1k} = \frac{1000 \cdot p}{3600 \cdot r \cdot u}
 \qquad (50.5)
-$$
+```
 
 dollars per 1,000 requests. Utilisation $u$ is below 1 because capacity is provisioned for the peak of the
 traffic and paid for during the troughs.

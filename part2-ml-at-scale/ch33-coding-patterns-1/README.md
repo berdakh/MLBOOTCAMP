@@ -72,17 +72,17 @@ Two of these bounds are not worst-case bounds, and the distinction is often aske
 
 A complexity claim can be checked by timing at doubling sizes. If $t(n) \propto n^k$, the local exponent is
 
-$$
+```math
 k \approx \frac{\log(t_2/t_1)}{\log(n_2/n_1)}, \qquad (33.1)
-$$
+```
 
 so a time ratio of 4 for doubled input indicates $O(n^2)$ and a ratio of 2 indicates $O(n)$. The lab applies this to a queue built on a list: `list.pop(0)` shifts every remaining element, so draining $n$ items costs about $n^2/2$ moves. In the lab's run it took about 0.8 s at $n = 100{,}000$ with a fitted exponent of 2.0–2.2, while `deque.popleft` took about 4 ms. A breadth-first search over a graph of $10^5$ nodes with a list as its queue is therefore about 200 times slower than necessary.
 
 A rough rule connects input size and the required complexity, assuming pure Python executes about $10^7$ simple steps per second:
 
-$$
+```math
 n \le 20 \Rightarrow O(2^n), \qquad n \le 10^3\text{–}10^4 \Rightarrow O(n^2), \qquad n \approx 10^5\text{–}10^6 \Rightarrow O(n \log n) \text{ or } O(n). \qquad (33.2)
-$$
+```
 
 For example, $n = 200{,}000$ makes $n^2 = 4 \times 10^{10}$ steps (over an hour), while $n \log_2 n \approx 3.5 \times 10^6$ steps take a fraction of a second. The lab's graders enforce this with a 2-second budget per run.
 
@@ -110,9 +110,9 @@ The $p$ term matters. For `[0] * n` with target 0, there are $p = n(n-1)/2$ pair
 
 **Complexity argument.** The right end advances $n$ times. The left end also only advances and cannot pass the right end, so it advances at most $n$ times in total over the whole run. Counting pointer moves rather than loop nesting,
 
-$$
+```math
 \text{total steps} \le n + n = 2n, \qquad (33.3)
-$$
+```
 
 so a `while` loop inside a `for` loop is $O(n)$ here. This is another amortised argument: a single iteration of the outer loop may move the left end many times, but the total is bounded.
 
@@ -162,17 +162,17 @@ A **monotonic stack** keeps its elements in sorted order by popping elements tha
 
 With $P_0 = 0$ and $P_{j+1} = P_j + x_j$,
 
-$$
+```math
 \sum_{t=i}^{j} x_t = P_{j+1} - P_i. \qquad (33.4)
-$$
+```
 
 After $O(n)$ preprocessing, every range-sum query costs $O(1)$. *Example:* for `nums = [3, -1, 4, 1, -5, 9]`, $P = (0, 3, 2, 6, 7, 2, 11)$ and `sum(nums[1:4])` $= P_4 - P_1 = 7 - 3 = 4$. Chapter 32's tree-split search used the same idea.
 
 *Subarray sum equals $k$ (Exercise 7).* A subarray $i..j$ has sum $k$ exactly when $P_i = P_{j+1} - k$. Walk once through the array, maintaining a dictionary `count[v]` of how many earlier prefixes equal $v$, and at each step add `count[P - k]` to the answer before recording the current prefix:
 
-$$
+```math
 \#\{\text{subarrays with sum } k\} = \sum_{j} \#\{\, i \le j : P_i = P_{j+1} - k \,\}. \qquad (33.5)
-$$
+```
 
 The dictionary must start as `{0: 1}`, representing the empty prefix $P_0$; without it, subarrays starting at index 0 are missed. *Example:* `nums = [1, 1, 1]`, $k = 2$: $P = (0, 1, 2, 3)$, and the prefix pairs differing by 2 are $(P_0, P_2)$ and $(P_1, P_3)$, so the answer is 2. Time and space $O(n)$. For "the longest subarray with sum $k$", store the *first* index of each prefix value instead of a count.
 

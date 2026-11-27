@@ -54,9 +54,9 @@ positives has a PR-AUC that can move by ±0.05 or more on resampling. The
 width of a bootstrap interval scales roughly with the inverse square root of
 the number of positives $N_{+}$:
 
-$$
+```math
 \text{CI width} \;\propto\; \frac{1}{\sqrt{N_{+}}} . \qquad (9.1)
-$$
+```
 
 Going from the 360 positives of the whole validation set (interval width
 about 0.06) to a slice with 40 positives multiplies the width by
@@ -72,9 +72,9 @@ overall interval (about $[0.136, 0.197]$).
 to the slice's positive rate $\pi_s$, so a slice with fewer churners has a
 lower floor. Slices are compared through the ratio
 
-$$
+```math
 \frac{\text{PR-AUC}_s}{\pi_s} \qquad (9.2)
-$$
+```
 
 or through ROC-AUC, which does not depend on the positive rate. For
 illustration: a slice with PR-AUC 0.113 at $\pi_s = 0.04$ is
@@ -291,11 +291,11 @@ and the Brier score (Equation 8.5).
 The lift at the top fraction $q$ of scores is the same ratio as in
 Equation (8.4), expressed for a share rather than a count:
 
-$$
+```math
 \text{lift@}q = \frac{\text{churn rate among the top } q \text{ of scores}}{\pi} . \qquad (9.3)
-$$
+```
 
-For $q = 10\%$ of 6,956 validation rows, 696 accounts of which about 116
+For $`q = 10\%`$ of 6,956 validation rows, 696 accounts of which about 116
 churn: $116/696 = 0.167$ and $0.167/0.052 \approx 3.2$. The flagged group
 churns about three times as often as the average account.
 

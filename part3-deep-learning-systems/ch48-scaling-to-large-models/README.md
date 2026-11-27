@@ -50,10 +50,10 @@ defined on the 16-byte accounting, which is used here. Activations come on top.
 Plain data parallelism (DDP) replicates all $16\Psi$ bytes on every GPU. The **Zero Redundancy Optimizer** (ZeRO) removes the redundancy by
 partitioning the replicated state across the $N$ data-parallel GPUs, one category at a time:
 
-$$
+```math
 M_{\text{DDP}} = 16\Psi, \qquad M_{\text{Z1}} = 4\Psi + \frac{12\Psi}{N}, \qquad M_{\text{Z2}} = 2\Psi + \frac{14\Psi}{N}, \qquad M_{\text{Z3}} = \frac{16\Psi}{N} .
 \qquad (48.1)
-$$
+```
 
 Stage 1 shards the optimiser state, stage 2 also the gradients, stage 3 also the parameters. PyTorch's `FullyShardedDataParallel` (FSDP, and
 FSDP2's `fully_shard`; Zhao et al., 2023) implements stage 3, and with `SHARD_GRAD_OP` stage 2; DeepSpeed implements all three.
@@ -81,11 +81,11 @@ division by $\sqrt{v}$ magnifies rounding differences in tiny gradients). Shardi
 ZeRO shards *storage*, but each layer is still computed on one GPU with its full, temporarily gathered weights. **Tensor parallelism** (Megatron-LM;
 Shoeybi et al., 2019) splits the *computation* of each layer across devices. For a linear layer $y = xW^\top$ with $W$ of shape (out, in):
 
-$$
+```math
 \text{column-parallel: } y = \big[\, x W_1^\top,\; x W_2^\top \,\big] \;(\text{all-gather}), \qquad
 \text{row-parallel: } y = x_1 W_1^\top + x_2 W_2^\top \;(\text{all-reduce}) .
 \qquad (48.2)
-$$
+```
 
 In the column-parallel form each device holds some of $W$'s output rows and computes a slice of $y$'s features from the full input. In the row-parallel
 form each device holds some input columns, receives the matching slice of $x$, and computes a *partial sum* of the whole output; the partial sums are
@@ -114,10 +114,10 @@ spirit.
 works on micro-batch $i$ while stage $s+1$ works on micro-batch $i-1$. At the beginning and end of each batch some stages have nothing to do: this idle
 time is the **bubble**. With $p$ stages, the schedule of one pass takes $m + p - 1$ time slots while each stage is busy in $m$ of them, so
 
-$$
+```math
 \text{bubble fraction} = \frac{p - 1}{m + p - 1} .
 \qquad (48.3)
-$$
+```
 
 The same fraction holds for GPipe (Huang et al., 2019), which runs all forward passes and then all backward passes, and for the 1F1B schedule, which
 interleaves them and stores fewer activations.
@@ -153,10 +153,10 @@ sufficient; pipeline parallelism becomes necessary for considerably larger model
 
 Training a dense transformer with $N$ parameters on $D$ tokens costs approximately
 
-$$
+```math
 C \approx 6\,N D \ \text{FLOPs}, \qquad t \approx \frac{C}{n_{\text{GPU}} \cdot P_{\text{peak}} \cdot \text{MFU}}
 \qquad (48.4)
-$$
+```
 
 (Kaplan et al., 2020). The factor 6 has a simple origin. Every training token visits every weight three times: in the forward pass (activation × weight), and
 in the backward pass once for the activation gradient and once for the weight gradient. Each visit is a multiply and an add, so $3 \times 2 = 6$ FLOPs per
@@ -197,10 +197,10 @@ studied, and should be cited as such rather than extrapolated without care.
 
 Combining $C = 6ND$ with $D = 20N$ gives the compute-optimal size
 
-$$
+```math
 D^{\star} \approx 20\, N^{\star} \;\;\Rightarrow\;\; C = 6 N^{\star} (20 N^{\star}) \;\;\Rightarrow\;\; N^{\star} = \sqrt{C / 120} .
 \qquad (48.5)
-$$
+```
 
 <img src="../../figures/l3-scaling-frontier.svg" alt="Three U-shaped loss curves against model size for budgets C, 10C and 100C, with the minima joined by a dashed compute-optimal frontier; beside them C = 6ND, D = 20N and N = sqrt(C/120)" width="100%">
 
@@ -222,10 +222,10 @@ failures (MTBF). Failures at scale are routine: the Llama 3 report (Dubey et al.
 Every failure loses the work done since the last checkpoint plus the restart time $R$; every checkpoint costs its writing time $C$ (unless written asynchronously). With
 checkpoint interval $\tau$, the expected fraction of time wasted is approximately
 
-$$
+```math
 \text{waste}(\tau) \approx \frac{C}{\tau} + \frac{\tau/2 + R}{M}, \qquad \tau^{\star} = \sqrt{2\,C\,M} \quad (\text{Daly: } \tau^\star \approx \sqrt{2CM} - C).
 \qquad (48.6)
-$$
+```
 
 The first term is the writing overhead; the second is, per failure, on average half an interval of lost work plus the restart. Setting the derivative $-C/\tau^2 + 1/(2M)$
 to zero gives **Young's interval** $\tau^\star = \sqrt{2CM}$ (Young, 1974); Daly (2006) refined it for checkpoint costs that are not small compared with $M$.
@@ -256,10 +256,10 @@ updates are applied to an **fp32 master copy**; and $256 + 1 = 256$ in bf16.
 
 **Loss scaling.** Gradients are often tiny. In fp16 many underflow to zero, and the corresponding weights stop learning. By the chain rule,
 
-$$
+```math
 \nabla_\theta (S \cdot \mathcal L) = S \cdot \nabla_\theta \mathcal L ,
 \qquad (48.7)
-$$
+```
 
 so multiplying the loss by a scale $S$ (for example $2^{16}$) multiplies every gradient by $S$ and lifts it into fp16's range; the optimiser divides by $S$ in fp32 before the update
 (Micikevicius et al., 2018). A gradient of $10^{-8}$ becomes 0 in fp16, but $10^{-8} \cdot 2^{16} \approx 6.6\times10^{-4}$ is a normal fp16 number. Too large a scale overflows, so

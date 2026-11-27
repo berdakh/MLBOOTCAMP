@@ -90,11 +90,11 @@ logged weeks, and 7 tickets: $1{,}484 = 212 \times 7$ and $287 = 41 \times 7$.
 The join produced every (week, ticket) pair. In general, if customer $c$ has
 $n_U(c)$ rows in table $U$ and $n_K(c)$ rows in table $K$,
 
-$$
+```math
 \text{rows after join} = \sum_{c} n_U(c)\, n_K(c) ,
 \qquad
 \text{SUM}_{\text{joined}}(x) = \sum_{c} n_K(c) \sum_{u \in U_c} x_u , \qquad (4.1)
-$$
+```
 
 where $U_c$ is the set of $U$-rows of customer $c$ and $x_u$ a value in $U$.
 Every value from $U$ is counted once per matching row of $K$. Over the whole
@@ -183,7 +183,7 @@ produces no error, only a model that appears better than it is.
 **Half-open intervals.** Every time window in this book is written as a
 half-open interval $[a, b)$, which includes $a$ and excludes $b$. Consecutive
 windows $[a, b)$ and $[b, c)$ then neither overlap nor leave a gap, and the
-rule "strictly before $T$" becomes "in $[\,\cdot\,, T)$". An event dated
+rule "strictly before $T$" becomes "in $`[\,\cdot\,, T)`$". An event dated
 exactly at $T$ belongs to the future of snapshot $T$: it may have been
 recorded after the prediction was made.
 
@@ -192,9 +192,9 @@ recorded after the prediction was made.
 ended. A usage week starting on day $w$ is therefore usable at snapshot $T$
 only if
 
-$$
+```math
 w + 7\ \text{days} \le T . \qquad (4.2)
-$$
+```
 
 The obvious condition $w < T$ is wrong. For $T$ = Friday 2024-03-01, the week
 starting Monday 2024-02-26 ends on 2024-03-04: Equation (4.2) excludes it,
@@ -204,9 +204,9 @@ conditions agree, which is why the error survives casual testing.
 
 **The label.** For an account $i$ active at $T$,
 
-$$
+```math
 y_i(T) = \mathbb{1}\left[\, T \le \text{churn\_date}_i < T + 30\ \text{days} \,\right] , \qquad (4.3)
-$$
+```
 
 where $\mathbb{1}[\cdot]$ equals 1 if the condition holds and 0 otherwise.
 For $T$ = 2024-03-01, a cancellation on 2024-03-20 gives $y = 1$; one on

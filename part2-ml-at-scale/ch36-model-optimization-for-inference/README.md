@@ -40,9 +40,9 @@ The LightGBM ranker of Chapter 35 scores 0.875 and 0.966. The lab's model to be 
 
 PyTorch's default **eager mode** executes a model one operation at a time, dispatching each operation from Python through several layers of framework code. For a large model on a large batch, that per-operation overhead is negligible compared with the arithmetic. For a small model on a small batch, the overhead *is* the latency. A useful decomposition is
 
-$$
+```math
 t_{\text{call}} \approx t_{\text{fixed}} + n \cdot t_{\text{row}}, \qquad (36.1)
-$$
+```
 
 where $t_{\text{fixed}}$ is the per-call overhead (Python dispatch, memory allocation, thread start-up), $n$ the batch size and $t_{\text{row}}$ the marginal cost per row. Optimisations act on different terms: a compiled runtime reduces $t_{\text{fixed}}$; quantisation and smaller models reduce $t_{\text{row}}$.
 
@@ -58,11 +58,11 @@ Export works by **tracing**: the model is run once on an example input and the o
 
 An export should not change the function computed, but it changes the order of floating-point operations, so outputs differ by rounding. A **parity check** compares outputs element by element:
 
-$$
+```math
 \max_i \lvert a_i - b_i \rvert \le \text{atol}, \qquad (36.2)
-$$
+```
 
-or, in NumPy's `allclose`, $\lvert a_i - b_i \rvert \le \text{atol} + \text{rtol}\,\lvert b_i \rvert$. In the lab the exported model differs from PyTorch by at most about $1.2 \times 10^{-6}$, float32 rounding rather than a bug, so a tolerance of about $10^{-5}$ is appropriate. The check belongs in the deployment pipeline as a test that blocks a release. A robust implementation (Exercise 1) refuses to compare arrays of different shapes rather than broadcasting them — an output of shape $(n,)$ compared with $(n, 1)$ silently broadcasts to $(n, n)$, a classic export bug — and counts any NaN as a failure. It is also worth checking probabilities as well as logits, since a sigmoid can hide or amplify differences.
+or, in NumPy's `allclose`, $`\lvert a_i - b_i \rvert \le \text{atol} + \text{rtol}\,\lvert b_i \rvert`$. In the lab the exported model differs from PyTorch by at most about $1.2 \times 10^{-6}$, float32 rounding rather than a bug, so a tolerance of about $10^{-5}$ is appropriate. The check belongs in the deployment pipeline as a test that blocks a release. A robust implementation (Exercise 1) refuses to compare arrays of different shapes rather than broadcasting them — an output of shape $(n,)$ compared with $(n, 1)$ silently broadcasts to $(n, n)$, a classic export bug — and counts any NaN as a failure. It is also worth checking probabilities as well as logits, since a sigmoid can hide or amplify differences.
 
 ## 36.4 Quantisation
 
@@ -70,13 +70,13 @@ or, in NumPy's `allclose`, $\lvert a_i - b_i \rvert \le \text{atol} + \text{rtol
 
 **Quantisation** represents real values with low-precision integers. The common **affine** (asymmetric) scheme maps a float range $[x_{\min}, x_{\max}]$ onto the 256 values of int8 with a **scale** $s$ and an integer **zero-point** $z$:
 
-$$
-s = \frac{x_{\max} - x_{\min}}{255}, \qquad z = \operatorname{round}\!\left(-128 - \frac{x_{\min}}{s}\right), \qquad (36.3)
-$$
+```math
+s = \frac{x_{\max} - x_{\min}}{255}, \qquad z = \mathrm{round}\!\left(-128 - \frac{x_{\min}}{s}\right), \qquad (36.3)
+```
 
-$$
-q = \operatorname{clip}\big(\operatorname{round}(x/s) + z,\ -128,\ 127\big), \qquad \hat x = s\,(q - z). \qquad (36.4)
-$$
+```math
+q = \mathrm{clip}\big(\mathrm{round}(x/s) + z,\ -128,\ 127\big), \qquad \hat x = s\,(q - z). \qquad (36.4)
+```
 
 The scale converts float units into integer steps; the zero-point shifts the grid so that 0.0 is represented exactly by an integer (important because zeros are common, from padding and ReLU). Within the range, the reconstruction error is at most $s/2$. *Worked example:* for the range $[-1.2, 2.3]$, $s = 3.5/255 = 0.0137$ and $z = -41$; the value 1.0 maps to $q = 73 - 41 = 32$ and is reconstructed as $0.0137 \times 73 = 1.002$. A **symmetric** scheme fixes $z = 0$, which simplifies integer arithmetic at the cost of wasting part of the range when the distribution is skewed.
 
@@ -95,9 +95,9 @@ The scale converts float units into integer steps; the zero-point shifts the gri
 
 Int8 weights are four times smaller than float32, but only the weights shrink: biases, buffers and graph metadata do not. In the lab the fp32 model file is about 40 KB and the int8 file about 15 KB. Model size follows from
 
-$$
+```math
 \text{bytes} \approx \text{parameters} \times \text{bytes per parameter}, \qquad (36.5)
-$$
+```
 
 so 9,729 parameters in float32 occupy 38.9 KB.
 
@@ -105,9 +105,9 @@ Quantisation did **not** reduce latency for this model; PyTorch int8 was slower 
 
 The outputs changed noticeably: maximum logit differences against fp32 of about 0.47 (ORT) and 0.94 (PyTorch), so the parity check of Equation (36.2) fails at any sensible tolerance. Yet the Spearman rank correlations with the fp32 scores were 0.997 and 0.992, top-1000 overlaps about 0.94 and 0.88, re-rank NDCG unchanged at 0.961, and cascade NDCG lower by only 0.003–0.007. For a **lossy** optimisation, exact parity is the wrong test. The model is accepted or rejected on what it is used for — ranking agreement and the offline metric — against thresholds agreed in advance. The **Spearman rank correlation** between two score vectors without ties is
 
-$$
+```math
 \rho_s = 1 - \frac{6 \sum_i d_i^2}{n(n^2 - 1)}, \qquad (36.6)
-$$
+```
 
 where $d_i$ is the difference between item $i$'s ranks under the two models. For ranks $(1, 2, 3, 4)$ and $(1, 3, 2, 4)$, $\sum d_i^2 = 2$ and $\rho_s = 1 - 12/60 = 0.8$. Exact parity remains the right test for the lossless steps, such as the export itself; ranking checks are too weak to detect a broken export.
 
@@ -121,19 +121,19 @@ The LightGBM ranker is accurate but costs milliseconds per thousand rows. A tiny
 
 ### 36.5.2 The loss and the temperature
 
-For a binary task with student logits $z_s$, teacher logits $z_t = \operatorname{logit}(p_t)$, labels $y$, mixing weight $\alpha \in [0, 1]$ and temperature $T > 0$, the lab uses the sigmoid form of Hinton's loss:
+For a binary task with student logits $z_s$, teacher logits $z_t = \mathrm{logit}(p_t)$, labels $y$, mixing weight $\alpha \in [0, 1]$ and temperature $T > 0$, the lab uses the sigmoid form of Hinton's loss:
 
-$$
-\mathcal{L} = \alpha\, T^2\, \operatorname{BCE}\big(\sigma(z_s/T),\ \sigma(z_t/T)\big) + (1 - \alpha)\, \operatorname{BCE}\big(\sigma(z_s),\ y\big), \qquad (36.7)
-$$
+```math
+\mathcal{L} = \alpha\, T^2\, \mathrm{BCE}\big(\sigma(z_s/T),\ \sigma(z_t/T)\big) + (1 - \alpha)\, \mathrm{BCE}\big(\sigma(z_s),\ y\big), \qquad (36.7)
+```
 
-where $\operatorname{BCE}(p, q) = -q\log p - (1-q)\log(1-p)$ with the target $q$ as the second argument. The **temperature** divides both logits before the sigmoid. For $T > 1$ the probabilities move towards 0.5, so differences between low-probability items become larger in probability space and contribute more gradient; the student learns the teacher's ordering among items it would otherwise treat alike.
+where $\mathrm{BCE}(p, q) = -q\log p - (1-q)\log(1-p)$ with the target $q$ as the second argument. The **temperature** divides both logits before the sigmoid. For $T > 1$ the probabilities move towards 0.5, so differences between low-probability items become larger in probability space and contribute more gradient; the student learns the teacher's ordering among items it would otherwise treat alike.
 
 **Why $T^2$.** The gradient of the soft term with respect to $z_s$ is
 
-$$
-\frac{\partial}{\partial z_s} \operatorname{BCE}\big(\sigma(z_s/T), \sigma(z_t/T)\big) = \frac{1}{T}\big(\sigma(z_s/T) - \sigma(z_t/T)\big).
-$$
+```math
+\frac{\partial}{\partial z_s} \mathrm{BCE}\big(\sigma(z_s/T), \sigma(z_t/T)\big) = \frac{1}{T}\big(\sigma(z_s/T) - \sigma(z_t/T)\big).
+```
 
 For large $T$, $\sigma(u/T) \approx \frac12 + \frac{u}{4T}$, so the difference in brackets is about $(z_s - z_t)/(4T)$ and the whole gradient is about $(z_s - z_t)/(4T^2)$. Multiplying the soft term by $T^2$ makes its gradient approximately independent of the temperature, so that $\alpha$ keeps the same meaning when $T$ is tuned. *Worked example:* with $z_s = 1$ and $z_t = 2$, the soft-term gradient is −0.150, −0.054 and −0.015 at $T = 1, 2, 4$; multiplied by $T^2$ it is −0.150, −0.217 and −0.241, approaching $\sigma'(0)(z_s - z_t) = -0.25$.
 
@@ -167,9 +167,9 @@ Two findings stand out. First, int8 did not speed up this model, for the reason 
 
 An optimisation of one stage improves the whole request only in proportion to that stage's share of the time. If a fraction $f$ of the latency is spent in a stage that becomes $k$ times faster, the overall speed-up is
 
-$$
+```math
 \text{speed-up} = \frac{1}{(1 - f) + f/k}. \qquad (36.8)
-$$
+```
 
 If the ranker is 30% of a 60 ms p99 and becomes twice as fast, the overall speed-up is $1/(0.7 + 0.15) = 1.18$, saving 9 ms; even an infinitely fast ranker gives at most $1/0.7 = 1.43$. If the ranker is 2% of the latency, a tenfold speed-up is invisible to users. Optimisation therefore starts with profiling (Chapter 35's stage timings) and targets the dominant stage. Saved time can buy quality (scoring twice the candidates in the same budget) or cost (fewer machines).
 

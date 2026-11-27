@@ -71,10 +71,10 @@ linear maps produce, for each token, a **query** (what the token is looking for)
 (what it offers for matching) and a **value** (what it passes on if selected):
 $Q = XW^Q$, $K = XW^K$, $V = XW^V$. Scaled dot-product attention is
 
-$$
-\operatorname{Attention}(Q, K, V) = \operatorname{softmax}\!\Big(\frac{Q K^\top}{\sqrt{d_k}} + M\Big)\, V ,
+```math
+\mathrm{Attention}(Q, K, V) = \mathrm{softmax}\!\Big(\frac{Q K^\top}{\sqrt{d_k}} + M\Big)\, V ,
 \qquad (41.1)
-$$
+```
 
 where $d_k$ is the dimension of each query and key, the softmax is applied to each row, and
 $M$ is the **causal mask**: $M_{ij} = 0$ if $j \le i$ and $M_{ij} = -\infty$ otherwise. Row $i$ of
@@ -107,11 +107,11 @@ A single attention computes one weighted average per token. **Multi-head attenti
 $C$ channels into $H$ heads of $d_k = C/H$ channels each, runs Equation (41.1) independently in
 each head, concatenates the results and mixes them with an output projection $W^O$:
 
-$$
-\operatorname{MHA}(X) = \operatorname{Concat}(\text{head}_1, \dots, \text{head}_H)\, W^O, \qquad
-\text{head}_i = \operatorname{Attention}(X W_i^Q, X W_i^K, X W_i^V).
+```math
+\mathrm{MHA}(X) = \mathrm{Concat}(\text{head}_1, \dots, \text{head}_H)\, W^O, \qquad
+\text{head}_i = \mathrm{Attention}(X W_i^Q, X W_i^K, X W_i^V).
 \qquad (41.2)
-$$
+```
 
 Different heads can learn different relations (the previous token, the start of the current
 word, a matching quotation mark) at the same total cost as one wide head. With $C = 64$ and
@@ -145,17 +145,17 @@ The design choices each have a reason:
   information from earlier tokens; the MLP transforms the token's own information. Nothing is
   overwritten, and gradients reach early layers directly through the additions.
 * **LayerNorm.** For each token separately,
-  $$
-  \operatorname{LN}(x) = \gamma \odot \frac{x - \mu}{\sqrt{\sigma^2 + \epsilon}} + \beta, \qquad
+  ```math
+  \mathrm{LN}(x) = \gamma \odot \frac{x - \mu}{\sqrt{\sigma^2 + \epsilon}} + \beta, \qquad
   \mu = \frac{1}{C}\sum_c x_c, \quad \sigma^2 = \frac{1}{C}\sum_c (x_c - \mu)^2 ,
 \qquad (41.3)
-  $$
+  ```
   with learned scale $\gamma$ and shift $\beta$ (Ba, Kiros & Hinton, 2016). For $x = (1, 2, 3)$,
   $\mu = 2$, $\sigma^2 = 2/3$, and the normalised output is about $(-1.22, 0, 1.22)$.
 * **Pre-LN rather than post-LN.** The original transformer normalised *after* the residual
-  addition, $x = \operatorname{LN}(x + f(x))$, so the residual path passes through every
+  addition, $x = \mathrm{LN}(x + f(x))$, so the residual path passes through every
   LayerNorm. Deep post-LN stacks have badly scaled gradients near the input and need careful
-  learning-rate warm-up. Pre-LN, $x = x + f(\operatorname{LN}(x))$, keeps a clean identity path
+  learning-rate warm-up. Pre-LN, $x = x + f(\mathrm{LN}(x))$, keeps a clean identity path
   from output to input, and deep stacks train stably (Xiong et al., 2020). Pre-LN requires one
   final LayerNorm before the output layer.
 * **Weight tying.** The output layer, which maps $C$-dimensional vectors to vocabulary logits,
@@ -180,11 +180,11 @@ The model outputs **logits** $z \in \mathbb{R}^V$ for every position; the softma
 distribution over the next token. The training loss is the average **cross-entropy** of the true
 next tokens, and **perplexity** is its exponential:
 
-$$
+```math
 \mathcal{L} = -\frac{1}{N} \sum_{t=1}^{N} \log p_\theta\big(x_{t+1} \mid x_{\le t}\big), \qquad
-\operatorname{PPL} = e^{\mathcal{L}} .
+\mathrm{PPL} = e^{\mathcal{L}} .
 \qquad (41.4)
-$$
+```
 
 Perplexity has a direct reading: a model with perplexity $P$ is as uncertain, on average, as a
 uniform choice among $P$ options.
@@ -228,10 +228,10 @@ repeat. The choice of token is a design decision.
   tends to fall into loops: once a phrase is the most likely continuation of itself, the loop
   reinforces itself.
 * **Temperature** $\tau$ rescales the logits before the softmax:
-  $$
+  ```math
   p_i = \frac{e^{z_i/\tau}}{\sum_j e^{z_j/\tau}} .
 \qquad (41.5)
-  $$
+  ```
   $\tau < 1$ sharpens the distribution, $\tau > 1$ flattens it, and $\tau \to 0$ approaches
   greedy decoding. For logits $(2, 1, 0)$ the probabilities are $(0.665, 0.245, 0.090)$ at $\tau = 1$
   and $(0.867, 0.117, 0.016)$ at $\tau = 0.5$.
@@ -278,10 +278,10 @@ cache still grows with context, and this simple implementation concatenates the 
 
 **Memory.** The cache holds a key and a value per layer, head, channel, position and sequence:
 
-$$
+```math
 \text{bytes} = 2 \cdot L \cdot H \cdot d_{\text{head}} \cdot T \cdot B \cdot b ,
 \qquad (41.6)
-$$
+```
 
 with $L$ layers, $H$ heads of $d_{\text{head}}$ channels, $T$ positions, $B$ sequences and $b$ bytes per
 number. For the toy model this is 512 KB. For a 7B model ($L = 32$, $H = 32$, $d_{\text{head}} = 128$)

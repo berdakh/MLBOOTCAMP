@@ -47,10 +47,10 @@ documents are relevant to which query, here with grade 1; other collections use 
 **nDCG@k** (normalised discounted cumulative gain; Järvelin & Kekäläinen, 2002) rewards relevant documents near the
 top. With $rel_i$ the relevance of the document at rank $i$,
 
-$$
-\operatorname{DCG@}k = \sum_{i=1}^{k} \frac{rel_i}{\log_2(i + 1)}, \qquad \operatorname{nDCG@}k = \frac{\operatorname{DCG@}k}{\operatorname{IDCG@}k},
+```math
+\mathrm{DCG@}k = \sum_{i=1}^{k} \frac{rel_i}{\log_2(i + 1)}, \qquad \mathrm{nDCG@}k = \frac{\mathrm{DCG@}k}{\mathrm{IDCG@}k},
 \qquad (45.1)
-$$
+```
 
 where IDCG@$k$ is the DCG of the best possible ordering for that query, so that nDCG lies between 0 and 1. A single
 relevant document found at rank 3 gives $1/\log_2 4 = 0.5$; at rank 1 it gives 1.0. nDCG@10 is BEIR's headline metric:
@@ -58,10 +58,10 @@ it rewards placing the answer *first*, which is what a user, or a language model
 
 **Recall@k** is the fraction of relevant documents that appear anywhere in the top $k$:
 
-$$
-\operatorname{Recall@}k = \frac{\lvert \text{relevant} \cap \text{top-}k \rvert}{\lvert \text{relevant} \rvert} .
+```math
+\mathrm{Recall@}k = \frac{\lvert \text{relevant} \cap \text{top-}k \rvert}{\lvert \text{relevant} \rvert} .
 \qquad (45.2)
-$$
+```
 
 For a **first-stage** retriever whose output is re-ranked (Chapter 46), Recall@k at the re-ranking depth is what matters:
 a document not retrieved cannot be re-ranked upwards, while the order within the top $k$ is the re-ranker's job.
@@ -80,20 +80,20 @@ BM25 (Robertson & Zaragoza, 2009) scores a document by the query terms it contai
 **Term-frequency saturation**: the tenth occurrence of a term adds less evidence than the first. **Length
 normalisation**: long documents contain more words and match more query terms by chance. The score is
 
-$$
-\operatorname{BM25}(q, d) = \sum_{t \in q} \operatorname{idf}(t)\, \frac{f(t,d)\,(k_1 + 1)}{f(t,d) + k_1 \big(1 - b + b\, \lvert d \rvert / \text{avgdl}\big)}, \qquad
-\operatorname{idf}(t) = \ln\!\Big(1 + \frac{N - n_t + 0.5}{n_t + 0.5}\Big),
+```math
+\mathrm{BM25}(q, d) = \sum_{t \in q} \mathrm{idf}(t)\, \frac{f(t,d)\,(k_1 + 1)}{f(t,d) + k_1 \big(1 - b + b\, \lvert d \rvert / \text{avgdl}\big)}, \qquad
+\mathrm{idf}(t) = \ln\!\Big(1 + \frac{N - n_t + 0.5}{n_t + 0.5}\Big),
 \qquad (45.3)
-$$
+```
 
 where $f(t,d)$ is the count of term $t$ in document $d$, $\lvert d \rvert$ the document length in tokens, avgdl the average
 length, $N$ the number of documents and $n_t$ the number of documents containing $t$. The sum runs over the distinct query
 terms. The parameter $k_1$ (typically 1.2) sets how quickly counts saturate, and $b$ (typically 0.75) how strongly length
 is normalised: $b = 0$ ignores length, $b = 1$ normalises fully. The idf shown is Lucene's variant, which is never negative.
 
-**Worked example.** With $N = 1000$, $n_t = 10$, a document of average length and $k_1 = 1.2$: $\operatorname{idf} = \ln(1 +
+**Worked example.** With $N = 1000$, $n_t = 10$, a document of average length and $k_1 = 1.2$: $\mathrm{idf} = \ln(1 +
 990.5/10.5) = 4.56$. With $f = 3$ occurrences the term contributes $4.56 \times 3 \cdot 2.2 / (3 + 1.2) = 7.16$. With ten times as
-many occurrences, $f = 30$, it contributes $9.64$: only 35% more. The ceiling is $\operatorname{idf}\cdot(k_1 + 1) = 10.0$.
+many occurrences, $f = 30$, it contributes $9.64$: only 35% more. The ceiling is $\mathrm{idf}\cdot(k_1 + 1) = 10.0$.
 
 **Implementation.** Scoring every document in a Python loop (Exercise 1) is adequate for a test, not for a corpus. The
 course's `BM25Index` precomputes the weight of every (term, document) pair once into a sparse matrix, so a query costs one
@@ -112,10 +112,10 @@ a billion sentence pairs to place related texts close together in cosine similar
 Its pipeline is the one built in Chapter 42: a transformer, mask-aware mean pooling, and **L2 normalisation**. With unit
 vectors, the inner product equals the cosine similarity:
 
-$$
-\operatorname{sim}(\mathbf q, \mathbf d) = \frac{\mathbf q \cdot \mathbf d}{\lVert \mathbf q \rVert\, \lVert \mathbf d \rVert} = \mathbf q \cdot \mathbf d \quad \text{if } \lVert \mathbf q \rVert = \lVert \mathbf d \rVert = 1 .
+```math
+\mathrm{sim}(\mathbf q, \mathbf d) = \frac{\mathbf q \cdot \mathbf d}{\lVert \mathbf q \rVert\, \lVert \mathbf d \rVert} = \mathbf q \cdot \mathbf d \quad \text{if } \lVert \mathbf q \rVert = \lVert \mathbf d \rVert = 1 .
 \qquad (45.4)
-$$
+```
 
 Normalisation matters in practice: an index built for inner product on unnormalised vectors favours documents with large
 norms, regardless of direction.
@@ -174,10 +174,10 @@ Adding BM25 scores to cosine similarities is not straightforward: BM25 scores ar
 query, whereas cosines lie in $[-1, 1]$. Any per-query score normalisation is fragile. **Reciprocal rank fusion** (Cormack,
 Clarke & Büttcher, 2009) uses only ranks, which are comparable across systems:
 
-$$
-\operatorname{RRF}(d) = \sum_{s} \frac{1}{k + \operatorname{rank}_s(d)}, \qquad k = 60 \text{ by convention},
+```math
+\mathrm{RRF}(d) = \sum_{s} \frac{1}{k + \mathrm{rank}_s(d)}, \qquad k = 60 \text{ by convention},
 \qquad (45.5)
-$$
+```
 
 where the sum runs over the systems $s$ that retrieved $d$, and ranks start at 1. A document ranked high by either system
 receives a large contribution, agreement between systems is rewarded, and $k$ limits the dominance of the very top ranks. For

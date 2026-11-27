@@ -71,19 +71,19 @@ For a metric that is a proportion (precision, a churn rate), classical
 sampling theory gives the uncertainty directly. If $\hat p$ is an observed
 proportion over $n$ independent trials,
 
-$$
-\operatorname{SE}(\hat p) = \sqrt{\frac{\hat p\,(1 - \hat p)}{n}} , \qquad (7.1)
-$$
+```math
+\mathrm{SE}(\hat p) = \sqrt{\frac{\hat p\,(1 - \hat p)}{n}} , \qquad (7.1)
+```
 
-and an approximate 95% interval is $\hat p \pm 1.96\,\operatorname{SE}$.
+and an approximate 95% interval is $`\hat p \pm 1.96\,\mathrm{SE}`$.
 Inverting the formula gives the sample size needed for a margin $\pm m$:
 
-$$
+```math
 n \approx \frac{1.96^2\, p\,(1-p)}{m^2} . \qquad (7.2)
-$$
+```
 
 For example, a precision of 0.27 over $n = 192$ calls has
-$\operatorname{SE} = \sqrt{0.27 \times 0.73 / 192} = 0.032$, so the precision
+$\mathrm{SE} = \sqrt{0.27 \times 0.73 / 192} = 0.032$, so the precision
 is roughly $0.27 \pm 0.063$. To pin a 5% churn rate to $\pm 0.02$ requires
 $n \approx 3.84 \times 0.0475 / 0.0004 \approx 456$ rows. The noise shrinks
 only with $\sqrt{n}$: four times the data halves the interval.
@@ -101,9 +101,9 @@ resamples of the evaluation set, each of the same size and drawn **with
 replacement**; recompute the metric $\hat\theta^{*}_b$ on each; and take the
 middle 95% of the results:
 
-$$
+```math
 \text{CI}_{95\%} = \left[\, Q_{0.025}\big(\hat\theta^{*}_{1}, \dots, \hat\theta^{*}_{B}\big),\; Q_{0.975}\big(\hat\theta^{*}_{1}, \dots, \hat\theta^{*}_{B}\big) \,\right] , \qquad (7.3)
-$$
+```
 
 where $Q_q$ is the $q$-quantile. With $B = 500$, if the sorted resampled
 PR-AUCs have 0.137 at position 13 and 0.197 at position 488, the interval is
@@ -189,9 +189,9 @@ themselves mean "no difference", and two non-overlapping ones are a stricter
 test than needed. The question "is B better than A?" is answered directly by
 a **paired bootstrap**: on each resample $b$ compute
 
-$$
+```math
 \Delta^{*}_b = m_B(\text{resample}_b) - m_A(\text{resample}_b) , \qquad (7.4)
-$$
+```
 
 where $m_A$ and $m_B$ are the metric values of the two models on the same
 resample, and take the percentile interval of $\Delta^{*}$ (Equation 7.3).

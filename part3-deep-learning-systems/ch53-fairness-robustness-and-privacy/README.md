@@ -56,23 +56,23 @@ T4 it would typically raise overall AUC by a few points, but whether it closes t
 Overall AUC hides *where* the errors are. Recall that the AUC between a set of positives $P$ and a set of negatives
 $N$ is the probability that a randomly chosen positive scores higher than a randomly chosen negative:
 
-$$
+```math
 \mathrm{AUC}(P, N) = \Pr\big(s(x^{+}) > s(x^{-})\big), \qquad x^{+} \sim P,\ x^{-} \sim N
 \qquad (53.1)
-$$
+```
 
 with ties counted as one half. For an identity subgroup $g$, split the test set four ways: subgroup positives (SP,
 toxic comments mentioning $g$), subgroup negatives (SN), background positives (BP, toxic comments not mentioning $g$)
 and background negatives (BN). Borkan et al. (2019) define three AUCs:
 
-$$
+```math
 \begin{aligned}
 \text{Subgroup AUC} &= \mathrm{AUC}(\text{SP},\ \text{SN}) \\
 \text{BPSN AUC} &= \mathrm{AUC}(\text{BP},\ \text{SN}) \\
 \text{BNSP AUC} &= \mathrm{AUC}(\text{SP},\ \text{BN})
 \end{aligned}
 \qquad (53.2)
-$$
+```
 
 * **Subgroup AUC** is low when the model separates toxic from non-toxic comments poorly *within* conversations
   about $g$.
@@ -100,10 +100,10 @@ AUC with normal BPSN and BNSP indicates instead that the model simply ranks poor
 pattern (BPSN 0.91, BNSP 0.86). The Jigsaw competition combined such per-group numbers into a summary with a
 generalised (power) mean,
 
-$$
+```math
 M_p(m_1, \dots, m_G) = \Big(\frac{1}{G} \sum_{g=1}^{G} m_g^{\,p}\Big)^{1/p}, \qquad p = -5
 \qquad (53.3)
-$$
+```
 
 A negative exponent pulls the mean towards the *worst* group: $M_{-5}(0.9, 0.7) = 0.765$, whereas the arithmetic
 mean is 0.80. The lab's summary metric was ≈ 0.848.
@@ -116,10 +116,10 @@ positives), so subgroup metrics vary between samples. Gaps should be reported wi
 
 A deployed classifier needs a threshold $t$. The per-group error rates at $t$ are
 
-$$
+```math
 \mathrm{FPR}_g(t) = \Pr(s \ge t \mid y = 0, g), \qquad \mathrm{FNR}_g(t) = \Pr(s < t \mid y = 1, g)
 \qquad (53.4)
-$$
+```
 
 Because the score distributions of benign comments differ by group, one global threshold cuts them at different
 quantiles. *Measured:* at $t = 0.5$ the FPR on benign comments mentioning *black* was 0.083 against 0.010 overall,
@@ -204,10 +204,10 @@ large models increase the risk.
 randomised training algorithm $A$ is $(\varepsilon, \delta)$-differentially private if, for every pair of *neighbouring*
 data sets $D$ and $D'$ (differing by one record) and every set of possible outputs $S$,
 
-$$
+```math
 \Pr[A(D) \in S] \le e^{\varepsilon}\, \Pr[A(D') \in S] + \delta
 \qquad (53.5)
-$$
+```
 
 Adding or removing any one record changes the probability of any outcome by at most a factor $e^{\varepsilon}$, plus a
 small slack $\delta$ (typically much smaller than one over the number of records). Smaller $\varepsilon$ means stronger
@@ -217,12 +217,12 @@ cannot do much better than guessing.
 **DP-SGD** (Abadi et al., 2016) makes stochastic gradient descent differentially private with two changes to each step.
 For a batch of $n$ examples with per-example gradients $g_i$:
 
-$$
+```math
 \bar{g}_i = g_i \cdot \min\!\left(1, \frac{C}{\lVert g_i \rVert_2}\right), \qquad
 \tilde{g} = \frac{1}{n}\left( \sum_{i=1}^{n} \bar{g}_i + \mathcal{N}(0, \sigma^2 C^2 I) \right), \qquad
 \theta \leftarrow \theta - \eta\, \tilde{g}
 \qquad (53.6)
-$$
+```
 
 1. **Clipping** each example's gradient to L2 norm at most $C$ bounds the contribution of any single record to the sum
    (the *sensitivity* of the sum is $C$).
@@ -244,7 +244,7 @@ computed from $\sigma$, the sampling rate and the number of steps by a **privacy
 Privacy). An informal bound is not a privacy claim.
 
 *Measured:* the lab trains logistic regression with DP-SGD on 96-dimensional SVD features of the TF-IDF matrix (for
-logistic regression the per-example gradient is simply $(p - y)\,\mathbf{x}$). Non-private training reached test AUC
+logistic regression the per-example gradient is simply $`(p - y)\,\mathbf{x}`$). Non-private training reached test AUC
 ≈ 0.72 on these features; clipping alone changed little; noise then cost accuracy smoothly: $\sigma = 1$
 ($\varepsilon \le 9.6$ by the lab's loose bound) ≈ 0.72, $\sigma = 2$ ($\varepsilon \le 4.4$) ≈ 0.71, $\sigma = 4$
 ($\varepsilon \le 2.1$) ≈ 0.68, $\sigma = 8$ ($\varepsilon \le 1.0$) ≈ 0.63. Strong guarantees cost real accuracy unless

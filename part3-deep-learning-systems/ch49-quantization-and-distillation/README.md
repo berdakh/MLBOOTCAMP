@@ -60,10 +60,10 @@ help in both regimes:
 
 * **Memory.** The storage required by a tensor is
 
-$$
+```math
 \text{bytes} = \text{number of parameters} \times \frac{\text{bits per parameter}}{8}
 \qquad (49.1)
-$$
+```
 
   plus a small overhead for the scale factors (one floating-point number per row or per group). For
   the $3072 \times 768$ feed-forward matrix of one DistilBERT layer (2.36 million weights) this gives
@@ -83,12 +83,12 @@ this reason quantisation must always be evaluated by measurement, not by countin
 
 The simplest scheme maps each real number $x$ to an integer $q$ on a uniform grid symmetric around zero:
 
-$$
-q = \operatorname{clamp}\!\big(\operatorname{round}(x / s),\,-Q,\,Q\big), \qquad
+```math
+q = \mathrm{clamp}\!\big(\mathrm{round}(x / s),\,-Q,\,Q\big), \qquad
 s = \frac{\max_i \lvert x_i \rvert}{Q}, \qquad
 \hat{x} = q\,s
 \qquad (49.2)
-$$
+```
 
 Here $x_i$ are the real values covered by one scale, $s$ is the **scale** (the real-valued size of one
 integer step), $Q$ is the largest integer used ($Q = 127$ for int8, $Q = 7$ for int4), $q$ is the stored
@@ -99,10 +99,10 @@ exactly and negating a value is safe.
 Because rounding moves a value to the nearest grid point, the error of every element is bounded by half
 a step:
 
-$$
+```math
 \lvert x - \hat{x} \rvert \le \frac{s}{2}
 \qquad (49.3)
-$$
+```
 
 *Worked example.* Take $x = 0.21$ in a group whose largest magnitude is 0.35. Then
 $s = 0.35/127 = 0.00276$, $x/s = 76.2$, $q = 76$ and $\hat{x} = 0.2094$. The error is
@@ -141,12 +141,12 @@ Some tensors are not centred on zero; the outputs of a ReLU, for example, are al
 such tensors a symmetric grid wastes half of its levels. **Asymmetric** (affine) quantisation adds an
 integer **zero point** $z$ so that the grid covers $[x_{\min}, x_{\max}]$:
 
-$$
-q = \operatorname{clamp}\!\big(\operatorname{round}(x/s) + z,\,0,\,255\big), \qquad
+```math
+q = \mathrm{clamp}\!\big(\mathrm{round}(x/s) + z,\,0,\,255\big), \qquad
 s = \frac{x_{\max} - x_{\min}}{255}, \qquad
 \hat{x} = (q - z)\,s
 \qquad (49.4)
-$$
+```
 
 Weights are usually quantised symmetrically and activations asymmetrically.
 
@@ -222,10 +222,10 @@ information "dark knowledge". Distillation trains the student to reproduce the w
 
 With logits $z$ (the inputs to the softmax), the softened distribution at temperature $T$ is
 
-$$
+```math
 p_i^{(T)} = \frac{\exp(z_i / T)}{\sum_j \exp(z_j / T)}
 \qquad (49.5)
-$$
+```
 
 $T = 1$ gives the ordinary softmax; $T > 1$ flattens the distribution and makes the small probabilities
 larger, so they carry more of the training signal. For logits $[4, 1, 0]$ the probabilities are
@@ -237,10 +237,10 @@ becomes nearly uniform and the information is lost again; values between 2 and 8
 The student is trained on a weighted sum of a *soft* term, which compares its softened distribution with
 the teacher's, and the ordinary *hard* cross-entropy with the true label $y$:
 
-$$
+```math
 \mathcal{L} = \alpha\, T^2\, \mathrm{KL}\!\left(p_t^{(T)} \,\Vert\, p_s^{(T)}\right) + (1 - \alpha)\, \mathrm{CE}(z_s, y)
 \qquad (49.6)
-$$
+```
 
 Here $z_t$ and $z_s$ are the teacher's and student's logits, $p_t^{(T)}$ and $p_s^{(T)}$ the corresponding
 softened distributions from Equation (49.5), $\mathrm{KL}(p \Vert q) = \sum_i p_i \log(p_i / q_i)$ the
@@ -250,9 +250,9 @@ reduces to ordinary cross-entropy.
 
 **Why $T^2$?** The gradient of the soft term with respect to a student logit is
 
-$$
+```math
 \frac{\partial}{\partial z_{s,i}} \mathrm{KL}\!\left(p_t^{(T)} \Vert p_s^{(T)}\right) = \frac{1}{T}\left(p_{s,i}^{(T)} - p_{t,i}^{(T)}\right).
-$$
+```
 
 For large $T$ the softmax is approximately linear, $p_i^{(T)} \approx 1/K + z_i/(KT)$ for $K$ classes and
 zero-mean logits, so the gradient is approximately $(z_{s,i} - z_{t,i})/(K T^2)$. It shrinks as $1/T^2$.
@@ -342,7 +342,7 @@ about 2.
 | Term | Definition |
 |---|---|
 | Quantisation | Representing parameters (and possibly activations) with fewer bits, e.g. int8 instead of fp32. |
-| Scale $s$ | The real value of one integer step; a value is approximated as $\hat{x} = q\,s$. |
+| Scale $s$ | The real value of one integer step; a value is approximated as $`\hat{x} = q\,s`$. |
 | Zero point | An integer offset that lets an asymmetric grid cover a range not centred on zero. |
 | Per-tensor / per-channel / group-wise | One scale for a whole matrix / one per output row / one per block of 64–128 weights. |
 | Dynamic quantisation | Weights quantised offline; activation scales computed per batch at run time; no calibration data. |

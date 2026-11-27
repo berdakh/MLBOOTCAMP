@@ -92,12 +92,12 @@ product decision; the lab keeps them and states so.
 For each test user, all 4,000 items are ranked and the rank $r_u$ of the target is
 found (0 = top). With one relevant item per user, the ideal DCG is 1, and
 
-$$
-\operatorname{HR@}10 = \frac{1}{\lvert U \rvert} \sum_{u \in U} \mathbb{1}[r_u < 10],
+```math
+\mathrm{HR@}10 = \frac{1}{\lvert U \rvert} \sum_{u \in U} \mathbb{1}[r_u < 10],
 \qquad
-\operatorname{NDCG@}10 = \frac{1}{\lvert U \rvert} \sum_{u \in U} \frac{\mathbb{1}[r_u < 10]}{\log_2(r_u + 2)}
+\mathrm{NDCG@}10 = \frac{1}{\lvert U \rvert} \sum_{u \in U} \frac{\mathbb{1}[r_u < 10]}{\log_2(r_u + 2)}
 \qquad (28.1)
-$$
+```
 
 where $U$ is the set of test users. Three users with target ranks 0, 3 and 12
 give HR@10 $= 2/3$ and NDCG@10 $= (1 + 0.431 + 0)/3 = 0.477$. Ties in score are
@@ -126,12 +126,12 @@ valid only if position $t$ cannot see positions after $t$, which a **causal mask
 enforces. Padding positions must not be attended to as if they were items, which
 a **padding mask** enforces. With masks, scaled dot-product attention is
 
-$$
-\operatorname{Attention}(Q, K, V) = \operatorname{softmax}\!\left(\frac{Q K^\top}{\sqrt{d}} + M\right) V,
+```math
+\mathrm{Attention}(Q, K, V) = \mathrm{softmax}\!\left(\frac{Q K^\top}{\sqrt{d}} + M\right) V,
 \qquad
 M_{ij} = \begin{cases} 0 & \text{allowed} \\ -\infty & \text{blocked } (j > i \text{ or key } j \text{ is padding}) \end{cases}
 \qquad (28.2)
-$$
+```
 
 where $Q$, $K$ and $V$ are the $n \times d$ query, key and value matrices of one
 attention head, $d$ is the head dimension, and $M$ is the mask. A blocked pair
@@ -199,10 +199,10 @@ The training inputs are the training-week sequences of length $L + 1$: positions
 $0, \dots, L-1$ are the inputs and positions $1, \dots, L$ the targets. The loss is a
 **full softmax** over all $N$ items at every non-padding target position:
 
-$$
+```math
 L = -\frac{1}{\lvert \mathcal{T} \rvert} \sum_{t \in \mathcal{T}} \log \frac{\exp(\mathbf{h}_t^\top \mathbf{e}_{y_{t+1}})}{\sum_{j=1}^{N} \exp(\mathbf{h}_t^\top \mathbf{e}_j)}
 \qquad (28.3)
-$$
+```
 
 where $\mathcal{T}$ is the set of non-padding positions and $y_{t+1}$ the next
 item. A model that guesses uniformly has loss $\log N = \log 4000 = 8.29$, which is

@@ -69,12 +69,12 @@ the training data.
 ## 51.3 Metrics: log loss, normalised entropy and calibration
 
 A CTR model outputs a logit $z$ and a probability $p = \sigma(z) = 1/(1 + e^{-z})$. It is trained by
-minimising the **log loss** over $N$ impressions with labels $y_i \in \{0, 1\}$:
+minimising the **log loss** over $N$ impressions with labels $`y_i \in \{0, 1\}`$:
 
-$$
+```math
 \mathrm{LL} = -\frac{1}{N} \sum_{i=1}^{N} \big[\, y_i \log p_i + (1 - y_i) \log (1 - p_i) \,\big]
 \qquad (51.1)
-$$
+```
 
 Predicting 0.03 costs $-\ln 0.03 = 3.51$ on a click and $-\ln 0.97 = 0.030$ on a non-click. Log loss is a
 *proper scoring rule*: it is minimised in expectation by the true probability, so it rewards both ranking
@@ -84,11 +84,11 @@ Raw log loss is hard to compare across products and days, because predicting a 3
 predicting a 30% one. **Normalised entropy** (He et al., 2014) divides by the log loss of the best constant
 predictor, which always predicts the base rate $\bar{p}$ (the mean of $y$):
 
-$$
+```math
 \mathrm{NE} = \frac{\mathrm{LL}}{H(\bar{p})}, \qquad
 H(\bar{p}) = -\big[\, \bar{p} \log \bar{p} + (1 - \bar{p}) \log (1 - \bar{p}) \,\big]
 \qquad (51.2)
-$$
+```
 
 $\mathrm{NE} = 1$ means "no better than predicting the average"; lower is better. For $\bar{p} = 0.03$,
 $H = 0.1347$, so a model with $\mathrm{LL} = 0.115$ has $\mathrm{NE} = 0.854$. Teams report *relative* NE
@@ -121,10 +121,10 @@ millions of values that change daily, maintaining that vocabulary, and keeping t
 agreement about it, is a system of its own. The **hashing trick** (Weinberger et al., 2009) replaces the
 vocabulary with a hash function:
 
-$$
+```math
 \text{bucket} = h(\text{field}, \text{value}) \bmod n
 \qquad (51.3)
-$$
+```
 
 where $h$ is a hash function and $n$ the number of buckets. Unseen values require no special case, memory
 is fixed in advance, and training and serving agree as long as they use the same hash. The cost is
@@ -147,10 +147,10 @@ predictable.*
 **Collision rate.** With $k$ distinct keys hashed uniformly into $n$ buckets, the probability that a given
 key shares its bucket with at least one other key is
 
-$$
+```math
 P(\text{collision}) = 1 - \left(1 - \tfrac{1}{n}\right)^{k - 1} \approx 1 - e^{-k/n}
 \qquad (51.4)
-$$
+```
 
 For the lab's $k = 425{,}677$ keys and $n = 2^{19}$ buckets this is $1 - e^{-0.81} \approx 0.56$; the
 simulated rate agrees.
@@ -173,10 +173,10 @@ shrinking steps spend most of an epoch moving the bias, and the model ends badly
 Deep CTR models replace each one-hot feature with a learned dense vector, an **embedding**, stored as one
 row of a table of size rows × dimension. The memory during training is
 
-$$
+```math
 \text{bytes} = \text{rows} \times \text{dim} \times \text{bytes per value} \times (1 + \text{optimiser slots})
 \qquad (51.5)
-$$
+```
 
 where Adagrad keeps one accumulator per value (one slot) and Adam two. The lab's CPU table ($2^{18}$ rows
 × 8 dimensions) occupies about 0.01 GB. A production-scale table with $10^9$ rows of dimension 64 occupies
@@ -209,10 +209,10 @@ engineer creates that cross feature by hand. Several model families learn such c
 embeddings, $\langle \mathbf{v}_i, \mathbf{v}_j \rangle$; DeepFM adds an MLP. The **Deep & Cross Network**,
 version 2 (Wang et al., 2021), uses *cross layers*:
 
-$$
+```math
 \mathbf{x}_{l+1} = \mathbf{x}_0 \odot \left( W_l\, \mathbf{x}_l + \mathbf{b}_l \right) + \mathbf{x}_l
 \qquad (51.6)
-$$
+```
 
 Here $\mathbf{x}_0$ is the input vector (the concatenated embeddings and transformed dense features),
 $\mathbf{x}_l$ the output of layer $l$, $W_l$ and $\mathbf{b}_l$ learned parameters, and $\odot$ the
@@ -247,7 +247,7 @@ models were badly under-confident.
 When calibration is off, the standard remedy is a small **calibration layer** fitted after the model on recent
 held-out data (Chapter 8):
 
-* **Platt scaling** fits $q = \sigma(a \cdot \operatorname{logit}(p) + b)$, two parameters;
+* **Platt scaling** fits $q = \sigma(a \cdot \mathrm{logit}(p) + b)$, two parameters;
 * **isotonic regression** fits any monotone map, which is more flexible but needs more data.
 
 Both preserve the ranking (AUC is unchanged) and correct the probabilities. They are cheap, so they are
@@ -265,12 +265,12 @@ Because negatives are kept independently of $\mathbf{x}$ with probability $w$, f
 number of negatives is multiplied by $w$ and the odds learned by the model are $1/w$ times the true odds. If
 $q$ is the downsampled model's prediction and $p$ the calibrated probability,
 
-$$
+```math
 \frac{q}{1 - q} = \frac{1}{w} \cdot \frac{p}{1 - p}
 \quad\Longrightarrow\quad
 p = \frac{q}{q + (1 - q)/w}
 \qquad (51.7)
-$$
+```
 
 (He et al., 2014). For example, $q = 0.236$ and $w = 0.1$ give $p = 0.236 / (0.236 + 7.64) = 0.030$. The
 correction is exact only if negatives were sampled independently of the features with a known $w$; the $w$
@@ -296,14 +296,14 @@ trained at time $T$ sees recent clicks whose conversions have *not happened yet*
 negatives. The learned CVR is then too low, and the bias is largest for the freshest data. If the delay has
 cumulative distribution function $F$, the probability that a click with elapsed time $e$ shows a conversion is
 
-$$
+```math
 P(y_{\text{obs}} = 1 \mid \mathbf{x}, e) = \mathrm{pCVR}(\mathbf{x}) \cdot F(e), \qquad
 F(e) = 1 - e^{-e/\tau}\ \ \text{(exponential delays)}
 \qquad (51.8)
-$$
+```
 
 where $\tau$ is the mean delay. With $\tau = 48$ hours, a click from 12 hours ago has shown only
-$1 - e^{-0.25} = 22\%$ of its eventual conversions.
+$`1 - e^{-0.25} = 22\%`$ of its eventual conversions.
 
 <img src="../../figures/l3-x-delayed-feedback.svg" alt="A timeline of clicks and conversions around a training cutoff; a conversion after the cutoff makes its click look negative" width="100%">
 

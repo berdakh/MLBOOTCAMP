@@ -44,12 +44,12 @@ GPU kernels are not bit-identical to CPU ones (not measured).
 
 Adam (Kingma & Ba, 2015) maintains exponential moving averages of the gradient $g_t$ and of its element-wise square:
 
-$$
+```math
 m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t, \qquad
 v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t^2, \qquad
 \theta_t = \theta_{t-1} - \eta_t \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}
 \qquad (57.1)
-$$
+```
 
 where $\hat{m}_t = m_t/(1 - \beta_1^t)$ and $\hat{v}_t = v_t/(1 - \beta_2^t)$ are bias-corrected estimates, $\beta_1 \approx 0.9$,
 $\beta_2 \approx 0.999$, $\eta_t$ is the learning rate at step $t$ and $\epsilon$ a small constant. Dividing by $\sqrt{\hat{v}_t}$
@@ -68,7 +68,7 @@ and large-batch SGD benefits from it too (Section 57.4).
 
 A standard schedule combines warmup with a cosine decay:
 
-$$
+```math
 \eta(t) =
 \begin{cases}
 \eta_{\max} \dfrac{t + 1}{t_w} & t < t_w \\[2ex]
@@ -76,7 +76,7 @@ $$
 \end{cases},
 \qquad \pi_t = \min\!\left(1, \frac{t - t_w}{t_{\text{total}} - t_w}\right)
 \qquad (57.2)
-$$
+```
 
 where $t$ is the step, $t_w$ the number of warmup steps and $\pi_t \in [0, 1]$ the progress through the decay. For
 $\eta_{\max} = 10^{-3}$, $t_w = 100$, $t_{\text{total}} = 1{,}000$ and $\eta_{\min} = 0$: $\eta(49) = 5 \times 10^{-4}$,
@@ -107,10 +107,10 @@ A larger batch $kB$ gives a gradient estimate with about $k$ times smaller varia
 fixed number of epochs, $k$ times fewer steps are taken. The **linear scaling rule** multiplies the learning rate by $k$, which keeps
 the distance travelled per epoch roughly constant; a more conservative alternative scales by $\sqrt{k}$:
 
-$$
+```math
 \eta(kB) = k\, \eta(B) \ \ \text{(linear)}, \qquad \eta(kB) = \sqrt{k}\, \eta(B) \ \ \text{(square root)}
 \qquad (57.3)
-$$
+```
 
 Goyal et al. (2017) showed that linear scaling with warmup trains ImageNet with very large batches for SGD. The rule holds only up to a
 **critical batch size** (McCandlish et al., 2018): once gradient noise is already small, larger steps overshoot the curvature of the loss
@@ -158,11 +158,11 @@ The mechanism is clearest in least squares. Let $X \in \mathbb{R}^{n \times p}$ 
 weight vectors fit the training data exactly; the pseudo-inverse $X^{+}$ selects the one with the smallest norm. Ridge regression instead adds a penalty
 $\lambda \lVert w \rVert^2$:
 
-$$
+```math
 \hat{w}_{\text{min-norm}} = X^{+} y = \arg\min_w \lVert w \rVert_2 \ \text{ subject to } Xw = y, \qquad
 \hat{w}_{\text{ridge}} = (X^\top X + \lambda I)^{-1} X^\top y
 \qquad (57.4)
-$$
+```
 
 In terms of the singular values $\sigma_i$ of $X$, the min-norm solution divides by $\sigma_i$ while ridge divides by $(\sigma_i^2 + \lambda)/\sigma_i$.
 Near $p = n$ the smallest singular value $\sigma_{\min}$ is tiny, so $\lVert \hat{w} \rVert$ grows like $1/\sigma_{\min}$: the fit passes exactly
@@ -191,10 +191,10 @@ The lab contains a question bank with, for each question, the points a strong an
 * **Self-attention cost.** Compute is $O(T^2 d)$ per layer for sequence length $T$ and width $d$, and the score matrices need $O(T^2)$ memory per head; the MLP
   costs $O(T d^2)$, so attention dominates when $T \gtrsim d$. Materialising all score matrices needs
 
-$$
+```math
 \text{bytes} = L \cdot H \cdot T^2 \cdot b
 \qquad (57.5)
-$$
+```
 
   for $L$ layers, $H$ heads and $b$ bytes per value: for a 12-layer, 12-head model in fp16, 1.2 GB per sequence at $T = 2{,}048$ and 19.3 GB at $8{,}192$, beyond
   a T4's 16 GB. Fused kernels such as FlashAttention (Dao et al., 2022) compute the same result in tiles without storing the $T \times T$ matrix (memory $O(T)$,

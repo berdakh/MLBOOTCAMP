@@ -83,10 +83,10 @@ large ones approach a bandwidth limit. On real GPU systems NCCL over NVLink move
 Let a global batch of $B$ examples be split into $N$ equal shards of $b = B/N$ examples, one per rank, and let the loss be a mean over
 examples. Rank $r$ computes the gradient of its own mean loss, $g_r = \nabla_\theta \frac{1}{b}\sum_{j \in \text{shard } r} \ell_j$. Then
 
-$$
+```math
 g = \nabla_\theta \frac{1}{B} \sum_{j=1}^{B} \ell_j = \frac{1}{N} \sum_{r=1}^{N} g_r .
 \qquad (47.1)
-$$
+```
 
 If the gradients are **summed by an all-reduce and divided by $N$**, every rank holds exactly the full-batch gradient, applies the same
 optimiser step to the same weights, and the replicas remain identical. That is the whole of data parallelism: the same mathematics, on more
@@ -196,10 +196,10 @@ message of $M$ bytes is divided into $N$ chunks. In the **reduce-scatter** phase
 and adds the chunk it receives; afterwards each rank holds the complete sum of one chunk. In the **all-gather** phase, during another $N-1$ steps,
 the completed chunks travel around the ring until every rank has all of them. Each step sends $M/N$ bytes per rank, so
 
-$$
+```math
 \text{bytes sent per rank} = 2\,\frac{N - 1}{N}\, M .
 \qquad (47.2)
-$$
+```
 
 <img src="../../figures/l3-ring-allreduce.svg" alt="Four ranks in a ring each sending to their neighbour; a reduce-scatter of N minus 1 steps then an all-gather of N minus 1 steps, so each rank sends 2(N-1)/N times the message size" width="100%">
 
@@ -209,10 +209,10 @@ $$
 on 1,000 GPUs still under 28 GB. Per-GPU traffic is nearly independent of $N$. The time of an all-reduce with link bandwidth BW and per-hop
 latency $\alpha$ is approximately
 
-$$
+```math
 T_{\text{comm}} \approx 2\,\frac{N-1}{N}\,\frac{M}{\text{BW}} + 2(N-1)\,\alpha ,
 \qquad (47.3)
-$$
+```
 
 a bandwidth term that barely depends on $N$ and a latency term that grows with it. A ring also proceeds at the pace of its slowest link: one slow
 node slows every step for everyone (the **straggler** problem). In the lab's exercise, the bytes each rank sends in a ring (Exercise 1) are computed
@@ -223,10 +223,10 @@ directly from Equation (47.2).
 Per step, each GPU computes forward and backward on its shard in time $T_{\text{compute}}$ (constant if the per-GPU batch is fixed) and then
 all-reduces the gradients. If a fraction $o$ of the communication is hidden behind backward, the **scaling efficiency** is
 
-$$
+```math
 E = \frac{T_{\text{compute}}}{T_{\text{step}}}, \qquad T_{\text{step}} \approx T_{\text{compute}} + (1 - o)\, T_{\text{comm}} .
 \qquad (47.4)
-$$
+```
 
 **Worked example (assumptions, not measurements).** fp16 gradients (2 bytes per parameter), 8 GPUs, an assumed compute time of 250 ms per step,
 and datasheet link bandwidths: A100 NVLink about 300 GB/s per direction, PCIe 4.0 ×16 about 25 GB/s achievable, 100 Gb/s Ethernet 12.5 GB/s. For a
@@ -247,10 +247,10 @@ and their training state does not fit on one GPU anyway (Chapter 48).
 
 **The global batch.** With $N$ GPUs, per-GPU batch $b$ and $k$ accumulation steps,
 
-$$
+```math
 B_{\text{global}} = N \cdot b \cdot k .
 \qquad (47.5)
-$$
+```
 
 Eight GPUs with 64 examples each and 8 accumulation steps give 4,096. Moving from 1 to 8 GPUs at fixed per-GPU batch multiplies the global batch by
 8 and divides the number of optimiser steps per epoch by 8, so a recipe tuned for one GPU usually needs a new learning rate (for SGD, the linear scaling

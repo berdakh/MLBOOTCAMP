@@ -113,9 +113,9 @@ Retries must be spaced out. If a service is struggling and every client
 retries immediately, the extra load prevents it from recovering.
 **Exponential backoff** makes the wait before retry $n$ grow geometrically:
 
-$$
+```math
 d_n = b \cdot 2^{n}, \qquad n = 0, 1, \dots, R - 1, \qquad (12.1)
-$$
+```
 
 where $b$ is the base delay and $R$ the maximum number of retries. With
 $b = 0.2$ s and $R = 3$, the waits are 0.2, 0.4 and 0.8 s, 1.4 s in total.
@@ -134,9 +134,9 @@ Retries make a call more reliable, but they also make it slower in the worst
 case. With a per-attempt timeout $\tau$ and $R$ retries, every attempt may
 wait until the timeout, so the worst-case duration of one logical call is
 
-$$
+```math
 T_{\max} = (R + 1)\,\tau + \sum_{n=0}^{R-1} b\, 2^{n} = (R + 1)\,\tau + b\,(2^{R} - 1). \qquad (12.2)
-$$
+```
 
 With $\tau = 5$ s, $R = 3$ and $b = 0.2$ s, $T_{\max} = 4 \times 5 + 0.2 \times 7
 = 21.4$ s. A caller with a two-second budget cannot use this configuration;
@@ -146,9 +146,9 @@ caller's deadline.
 Why do retries help at all? If each attempt fails independently with
 probability $q$, all $R + 1$ attempts fail with probability
 
-$$
+```math
 P(\text{all attempts fail}) = q^{\,R+1}. \qquad (12.3)
-$$
+```
 
 For $q = 0.05$ and $R = 3$, this is $0.05^4 \approx 6 \times 10^{-6}$. The
 assumption of independence is the weak point. During an outage, failures are
@@ -160,9 +160,9 @@ logical call produces $R + 1$ requests instead of one. In a chain of $k$
 services, each of which retries $R$ times when the one below it fails, a
 single failure at the bottom can produce up to
 
-$$
+```math
 (R + 1)^{k} \qquad (12.4)
-$$
+```
 
 requests at the failing service. With $R = 3$ and $k = 3$, that is 64 requests
 for one user action. This is why retries are bounded, backed off and usually

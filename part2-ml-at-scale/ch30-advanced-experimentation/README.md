@@ -31,28 +31,28 @@ Two further topics concern interpretation. Segment analyses performed after the 
 
 Much of the variance of a per-user metric such as clicks per user is *between-user* variance: heavy users click a lot in any period. That part is predictable from the same user's behaviour before the experiment. Let $y_i$ be user $i$'s metric during the experiment and $x_i$ a **covariate** measured before assignment, typically the same metric in a pre-period of the same length. CUPED (Controlled-experiment Using Pre-Experiment Data; Deng, Xu, Kohavi and Walker, 2013) replaces $y_i$ with
 
-$$
+```math
 y^{cv}_i = y_i - \theta\,(x_i - \bar x). \qquad (30.1)
-$$
+```
 
 **Unbiasedness.** Because $x$ is measured before randomisation, its distribution is the same in both arms, so $E[\bar x_B - \bar x_A] = 0$. The difference in adjusted means is $(\bar y_B - \bar y_A) - \theta(\bar x_B - \bar x_A)$, whose expectation equals that of the raw difference for *any* fixed $\theta$. Subtracting $\bar x$ also keeps the adjusted metric in the original units.
 
 **Optimal $\theta$.** The variance of the adjusted metric is
 
-$$
-\operatorname{Var}(y - \theta x) = \operatorname{Var}(y) - 2\theta \operatorname{cov}(x, y) + \theta^2 \operatorname{Var}(x),
-$$
+```math
+\mathrm{Var}(y - \theta x) = \mathrm{Var}(y) - 2\theta \mathrm{cov}(x, y) + \theta^2 \mathrm{Var}(x),
+```
 
 a quadratic in $\theta$ minimised at
 
-$$
-\theta^* = \frac{\operatorname{cov}(x, y)}{\operatorname{Var}(x)}, \qquad
-\operatorname{Var}(y^{cv}) = \operatorname{Var}(y)\,(1 - \rho^2), \qquad (30.2)
-$$
+```math
+\theta^* = \frac{\mathrm{cov}(x, y)}{\mathrm{Var}(x)}, \qquad
+\mathrm{Var}(y^{cv}) = \mathrm{Var}(y)\,(1 - \rho^2), \qquad (30.2)
+```
 
-where $\rho = \operatorname{corr}(x, y)$. $\theta^*$ is the ordinary least-squares slope of $y$ on $x$; CUPED is regression adjustment with one pre-treatment covariate. Since the required sample size is proportional to the variance (Equation 29.4), the factor $1 - \rho^2$ applies directly to the number of users or the duration of the test. In practice $\theta$ is estimated on both arms pooled; with a large sample the estimation error in $\theta$ is negligible.
+where $\rho = \mathrm{corr}(x, y)$. $\theta^*$ is the ordinary least-squares slope of $y$ on $x$; CUPED is regression adjustment with one pre-treatment covariate. Since the required sample size is proportional to the variance (Equation 29.4), the factor $1 - \rho^2$ applies directly to the number of users or the duration of the test. In practice $\theta$ is estimated on both arms pooled; with a large sample the estimation error in $\theta$ is negligible.
 
-*Worked example:* $x = (1, 2, 3, 4)$, $y = (2, 3, 5, 6)$. Then $\operatorname{cov}(x,y) = 2.33$, $\operatorname{Var}(x) = 1.67$, $\theta = 1.4$, and $y^{cv} = (4.1, 3.7, 4.3, 3.9)$. The variance falls from 3.33 to 0.067, which is $3.33 \times (1 - 0.98)$ with $\rho^2 = 0.98$.
+*Worked example:* $x = (1, 2, 3, 4)$, $y = (2, 3, 5, 6)$. Then $\mathrm{cov}(x,y) = 2.33$, $\mathrm{Var}(x) = 1.67$, $\theta = 1.4$, and $y^{cv} = (4.1, 3.7, 4.3, 3.9)$. The variance falls from 3.33 to 0.067, which is $3.33 \times (1 - 0.98)$ with $\rho^2 = 0.98$.
 
 <img src="../../figures/l2-x-cuped.svg" alt="Scatter of experiment clicks against pre-period clicks with a regression line, and the narrower distribution of the CUPED-adjusted metric" width="100%">
 
@@ -76,9 +76,9 @@ The lab runs 300 simulated experiments of 20,000 users with a true lift of 2%, u
 
 The pooled CTR of an arm with $N$ users is
 
-$$
+```math
 \hat R = \frac{\sum_i c_i}{\sum_i n_i} = \frac{\bar c}{\bar n},
-$$
+```
 
 where $c_i$ and $n_i$ are user $i$'s clicks and impressions. The randomisation unit is the user, but $\hat R$ is not a mean of independent per-user values, so the t-test does not apply directly. Chapter 29 showed that the binomial standard error, which treats impressions as independent, is far too small. Other common ratio metrics are revenue per session, clicks per query and time per page view.
 
@@ -86,26 +86,26 @@ where $c_i$ and $n_i$ are user $i$'s clicks and impressions. The randomisation u
 
 The **delta method** approximates a smooth function of sample means by its first-order Taylor expansion around the population means. Let $f(a, b) = a / b$, $\mu_c = E[c]$, $\mu_n = E[n]$. Then
 
-$$
+```math
 \hat R = f(\bar c, \bar n) \approx f(\mu_c, \mu_n) + \nabla f^\top \begin{pmatrix} \bar c - \mu_c \\ \bar n - \mu_n \end{pmatrix},
 \qquad \nabla f = \begin{pmatrix} 1/\mu_n \\ -\mu_c/\mu_n^2 \end{pmatrix}.
-$$
+```
 
 The covariance matrix of $(\bar c, \bar n)$ is $\Sigma / N$, where $\Sigma$ holds the per-user variances $\sigma_c^2$, $\sigma_n^2$ and covariance $\sigma_{cn}$. The variance of a linear function is $\nabla f^\top (\Sigma/N) \nabla f$, which expands to
 
-$$
-\operatorname{Var}(\hat R) \approx \frac{1}{N}\left( \frac{\sigma_c^2}{\mu_n^2} - \frac{2\,\mu_c\,\sigma_{cn}}{\mu_n^3} + \frac{\mu_c^2\,\sigma_n^2}{\mu_n^4} \right). \qquad (30.3)
-$$
+```math
+\mathrm{Var}(\hat R) \approx \frac{1}{N}\left( \frac{\sigma_c^2}{\mu_n^2} - \frac{2\,\mu_c\,\sigma_{cn}}{\mu_n^3} + \frac{\mu_c^2\,\sigma_n^2}{\mu_n^4} \right). \qquad (30.3)
+```
 
 The middle term matters: users with more impressions also have more clicks ($\sigma_{cn} > 0$), and the numerator and denominator move together, partly cancelling. An equivalent form is often easier to compute and to combine with CUPED: define the **linearised** per-user values
 
-$$
-\ell_i = \frac{c_i - R\, n_i}{\mu_n}, \qquad \operatorname{Var}(\hat R) \approx \frac{\operatorname{Var}(\ell)}{N}. \qquad (30.4)
-$$
+```math
+\ell_i = \frac{c_i - R\, n_i}{\mu_n}, \qquad \mathrm{Var}(\hat R) \approx \frac{\mathrm{Var}(\ell)}{N}. \qquad (30.4)
+```
 
 Because $\ell_i$ is an ordinary per-user value, a t-test on $\ell$ or a CUPED regression of $\ell$ on a pre-period covariate can be applied without further derivation.
 
-*Worked example:* $\mu_c = 1.4$, $\mu_n = 10$, $\sigma_c^2 = 4$, $\sigma_n^2 = 36$, $\sigma_{cn} = 9$, $N = 10{,}000$. The three terms are $0.04 - 0.0252 + 0.0071$, so $\operatorname{Var}(\hat R) \approx 2.19 \times 10^{-6}$ and the standard error is about 0.0015.
+*Worked example:* $\mu_c = 1.4$, $\mu_n = 10$, $\sigma_c^2 = 4$, $\sigma_n^2 = 36$, $\sigma_{cn} = 9$, $N = 10{,}000$. The three terms are $0.04 - 0.0252 + 0.0071$, so $\mathrm{Var}(\hat R) \approx 2.19 \times 10^{-6}$ and the standard error is about 0.0015.
 
 ### 30.3.3 Validation
 
@@ -152,9 +152,9 @@ Each shown item belongs to exactly one team, the teams' sizes differ by at most 
 
 For each user $u$, let $\text{clicks}_{A,u}$ and $\text{clicks}_{B,u}$ be the clicks credited to each ranker. The per-user difference has mean
 
-$$
+```math
 \Delta = \frac{1}{U}\sum_{u=1}^{U} \left(\text{clicks}_{A,u} - \text{clicks}_{B,u}\right), \qquad t = \frac{\Delta}{s_\Delta / \sqrt{U}}, \qquad (30.5)
-$$
+```
 
 a one-sample t-test of whether the mean difference is zero, where $U$ is the number of users and $s_\Delta$ the standard deviation of the per-user differences. A sign test on per-user preferences is an alternative. *Worked example:* 400 users with mean difference 0.05 and SD 0.8 give $t = 0.05 / (0.8/20) = 1.25$, not significant; 1,600 users with the same values give $t = 2.5$.
 

@@ -142,9 +142,9 @@ The complement of the target is the **error budget**: the amount of
 unreliability the service may spend in the window. Over a window with $N$
 requests and a success target $s$,
 
-$$
+```math
 B = (1 - s)\, N \qquad (14.1)
-$$
+```
 
 failures are allowed. A 99.5% target over 10 million requests allows
 $0.005 \times 10^7 = 50{,}000$ failures. The budget is a planning tool: while
@@ -154,9 +154,9 @@ spent, releases slow down and reliability work takes priority.
 Alerts are often defined on the **burn rate**, the speed at which the budget
 is being consumed:
 
-$$
+```math
 \text{burn rate} = \frac{\text{observed error rate}}{1 - s}. \qquad (14.2)
-$$
+```
 
 A burn rate of 1 spends exactly the budget over the window; a burn rate of
 14.4 sustained for one hour spends 2% of a 30-day budget. A common pattern
@@ -181,9 +181,9 @@ reported with **percentiles**.
 For $N$ latencies sorted in increasing order, $x_{(1)} \le x_{(2)} \le \dots \le
 x_{(N)}$, the $q$-th percentile by the **nearest-rank** rule is
 
-$$
+```math
 p_q = x_{(k)}, \qquad k = \left\lceil \frac{q\, N}{100} \right\rceil, \quad 0 < q \le 100. \qquad (14.3)
-$$
+```
 
 The nearest-rank percentile is always a latency that actually occurred. For
 the five latencies 15, 20, 35, 40 and 50 ms, $p_{50} = x_{(3)} = 35$ ms and
@@ -202,9 +202,9 @@ Why does the tail matter so much? A page that makes $k$ independent calls is
 slow whenever *any* of them is slow. If each call exceeds its $p_q$ with
 probability $1 - q/100$, then
 
-$$
+```math
 P(\text{at least one of } k \text{ calls is slower than } p_q) = 1 - \left(\frac{q}{100}\right)^{k}. \qquad (14.4)
-$$
+```
 
 For $q = 95$ and $k = 20$, this is $1 - 0.95^{20} \approx 0.64$. The
 per-call p95 is exceeded on almost two thirds of page loads.
@@ -244,9 +244,9 @@ Each request pays a fixed cost (HTTP handling, JSON parsing, validation,
 constructing a `DataFrame`, one call into scikit-learn) and a cost per row. A
 simple model of the time for a request with $n$ rows is
 
-$$
+```math
 t(n) \approx t_{\text{fixed}} + n\, t_{\text{row}}, \qquad \frac{t(n)}{n} \approx \frac{t_{\text{fixed}}}{n} + t_{\text{row}}, \qquad (14.5)
-$$
+```
 
 where $t_{\text{fixed}}$ is the per-request overhead and $t_{\text{row}}$ the
 marginal cost of one row. When $t_{\text{fixed}} \gg t_{\text{row}}$, as for a
@@ -269,9 +269,9 @@ which holds for any stable queueing system, relates the average number of
 requests in the system $L$, the throughput $\lambda$ (requests completed per
 second) and the average time a request spends in the system $W$:
 
-$$
+```math
 L = \lambda\, W. \qquad (14.6)
-$$
+```
 
 If a single server process completes at most $\lambda_{\max}$ requests per
 second and 16 clients keep a request outstanding at all times ($L = 16$),
@@ -288,9 +288,9 @@ thread at a time executes Python bytecode, because of the **global
 interpreter lock (GIL)**. One process therefore has a throughput ceiling of
 roughly
 
-$$
+```math
 \lambda_{\max} \approx \frac{1}{t_{\text{CPU}}}, \qquad (14.7)
-$$
+```
 
 where $t_{\text{CPU}}$ is the CPU time per request, whatever the number of
 threads. With 5 ms of CPU-bound Python per request, the ceiling is about 200
@@ -345,7 +345,7 @@ than the cold start.
 | Error budget | The number of failures allowed by an SLO in its window (Equation 14.1). |
 | Burn rate | The observed error rate divided by the error rate the SLO allows (Equation 14.2). |
 | Latency | The time from sending a request to receiving its response. |
-| Percentile ($p_q$) | The latency below or at which $q\%$ of requests fall; nearest-rank definition in Equation (14.3). |
+| Percentile ($p_q$) | The latency below or at which $`q\%`$ of requests fall; nearest-rank definition in Equation (14.3). |
 | Tail latency | The slow end of the latency distribution, p95 and above. |
 | Cold start | The time from process start until the service can answer. |
 | Warm-up | Requests sent after start-up to pay one-time costs before real traffic or measurement. |

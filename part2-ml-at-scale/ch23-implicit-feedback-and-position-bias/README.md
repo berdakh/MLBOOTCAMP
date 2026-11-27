@@ -53,10 +53,10 @@ examine it *and* find it relevant. The simplest model built on it, the
 **position-based model (PBM)**, assumes that examination depends only on the
 position and is independent of relevance:
 
-$$
+```math
 P(c = 1 \mid u, i, p) = \underbrace{\theta_p}_{P(\text{examined} \mid p)} \cdot \underbrace{r_{u,i}}_{P(\text{relevant} \mid u, i)}
 \qquad (23.1)
-$$
+```
 
 where $c$ is the click indicator, $p$ the position (0 at the top), $\theta_p$
 the *examination propensity* of position $p$, and $r_{u,i}$ the relevance of
@@ -143,10 +143,10 @@ On exploration traffic, the item at position $p$ is a uniformly random draw
 from the candidates, so its expected relevance $\bar r$ is the same at every
 position. Under the PBM,
 
-$$
+```math
 \frac{\text{CTR}_\text{rand}(p)}{\text{CTR}_\text{rand}(0)} = \frac{\theta_p \, \bar r}{\theta_0 \, \bar r} = \frac{\theta_p}{\theta_0}
 \qquad (23.2)
-$$
+```
 
 Only *relative* propensities are identifiable: multiplying every $\theta_p$ by a
 constant and dividing every $r_{u,i}$ by the same constant changes nothing
@@ -177,10 +177,10 @@ Both the noise and the shared-denominator problem are reduced by fitting a
 smooth curve to all ten positions at once. Examination often decays roughly as
 a power law, $\theta_p \propto (1 + p)^{-\eta}$, so the lab fits
 
-$$
+```math
 \log \text{CTR}_\text{rand}(p) = a - \eta \log(1 + p)
 \qquad (23.3)
-$$
+```
 
 by weighted least squares, with weights proportional to the square root of the
 number of clicks at each position (a rough inverse-variance weighting of the
@@ -210,12 +210,12 @@ happened to be observed" into "clicks that would have been observed had every
 item been examined". The **IPS estimator** of mean relevance over $n$
 impressions, and its clipped version, are
 
-$$
+```math
 \hat r_\text{IPS} = \frac{1}{n} \sum_{j=1}^{n} \frac{c_j}{\theta_{p_j}},
 \qquad
 \hat r_\text{clip} = \frac{1}{n} \sum_{j=1}^{n} c_j \min\!\left(\frac{1}{\theta_{p_j}}, M\right)
 \qquad (23.4)
-$$
+```
 
 where $c_j$ and $p_j$ are the click and position of impression $j$, and $M$ is
 the cap. The unclipped estimator is unbiased under the PBM with correct
@@ -249,10 +249,10 @@ each logged click is moved to its new position. A click observed at logged
 position $p$ that the new ranking places at position $q$ counts
 $\theta_q / \theta_p$ clicks. Summed over a request,
 
-$$
+```math
 \hat V(\text{new}) = \sum_{i \in \text{request}} \frac{\theta_{q_i}}{\theta_{p_i}}\, c_i
 \qquad (23.5)
-$$
+```
 
 where $p_i$ and $q_i$ are the logged and new positions of item $i$ and $c_i$ its
 logged click. For example, a click at logged position 3 ($\theta_3 = 0.287$)

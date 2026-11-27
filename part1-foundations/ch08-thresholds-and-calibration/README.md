@@ -59,9 +59,9 @@ At a threshold $t$, each row is a true positive (TP, flagged churner), false
 positive (FP, flagged non-churner), false negative (FN, missed churner) or
 true negative (TN). The basic decision metrics are
 
-$$
+```math
 P = \frac{TP}{TP + FP}, \qquad R = \frac{TP}{TP + FN}, \qquad F_1 = \frac{2PR}{P + R} , \qquad (8.1)
-$$
+```
 
 where precision $P$ is how pure the flagged set is (the share of calls that
 reach a would-be churner), recall $R$ is how much of the target it covers
@@ -131,18 +131,18 @@ For a customer with probability $p$ of churning, a call has expected value
 $pV - (1 - p)C$, where $V$ is the value of reaching a churner and $C$ the
 cost of a call. Calling is worthwhile exactly when this is positive:
 
-$$
+```math
 pV > (1 - p)\,C
 \iff
 p > p^{*} = \frac{C}{V + C} = \frac{30}{150 + 30} = \frac{1}{6} \approx 0.167 . \qquad (8.2)
-$$
+```
 
 $p^{*}$ is the **break-even probability**. Summed over the flagged accounts,
 the expected value of a threshold $t$ is
 
-$$
+```math
 \text{EV}(t) = TP(t)\cdot V - FP(t)\cdot C . \qquad (8.3)
-$$
+```
 
 Three consequences follow.
 
@@ -217,11 +217,11 @@ that the cost-based threshold requests. Two rules respect the limit:
 
 The quality of a top-k rule is measured by precision at $k$ and lift:
 
-$$
-\operatorname{precision@}k = \frac{1}{k} \sum_{i \in \text{top-}k} y_i ,
+```math
+\mathrm{precision@}k = \frac{1}{k} \sum_{i \in \text{top-}k} y_i ,
 \qquad
-\operatorname{lift@}k = \frac{\operatorname{precision@}k}{\pi} , \qquad (8.4)
-$$
+\mathrm{lift@}k = \frac{\mathrm{precision@}k}{\pi} , \qquad (8.4)
+```
 
 where $y_i$ is the label of account $i$ and $\pi$ the positive rate. Lift is
 how many times better the selection is than calling at random. In the
@@ -258,15 +258,15 @@ validation rows into ten equal-sized score bins and compare, in each bin, the
 mean predicted score with the observed churn rate. Two summary measures of
 probability quality are used:
 
-$$
+```math
 \text{Brier} = \frac{1}{N}\sum_{i=1}^{N} (p_i - y_i)^2 , \qquad (8.5)
-$$
+```
 
-$$
+```math
 \text{LogLoss} = -\frac{1}{N}\sum_{i=1}^{N}\Big[y_i \ln p_i + (1 - y_i)\ln(1 - p_i)\Big] , \qquad (8.6)
-$$
+```
 
-where $p_i$ is the predicted probability and $y_i \in \{0, 1\}$ the outcome
+where $p_i$ is the predicted probability and $`y_i \in \{0, 1\}`$ the outcome
 of row $i$. The Brier score is the mean squared error of the probabilities;
 log loss is the average "surprise" of the true labels, and it penalises a
 confident wrong prediction heavily. Lower is better for both. A constant

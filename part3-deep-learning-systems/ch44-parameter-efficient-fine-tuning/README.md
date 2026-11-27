@@ -46,10 +46,10 @@ observation is that these terms scale with different counts. Every weight must b
 but only *trained* weights need gradients and optimiser state. With $\Psi_{\text{total}}$ stored parameters at
 $b_w$ bytes each and $\Psi_{\text{trained}}$ trained parameters,
 
-$$
+```math
 M \approx b_w\, \Psi_{\text{total}} + 16\, \Psi_{\text{trained}} + M_{\text{act}} ,
 \qquad (44.1)
-$$
+```
 
 where 16 bytes per trained parameter is the fp32 AdamW figure of Chapter 40. (Counting the trained weights
 in both terms overstates $M$ slightly; the error is negligible when $\Psi_{\text{trained}} \ll \Psi_{\text{total}}$.)
@@ -71,11 +71,11 @@ within a surprisingly low-dimensional subspace of parameter space, and Hu et al.
 *change* during fine-tuning has low intrinsic rank. LoRA therefore constrains the change $\Delta W$ of a weight
 matrix $W_0 \in \mathbb R^{d \times k}$ to be a product of two thin matrices:
 
-$$
+```math
 h = W_0 x + \Delta W x = W_0 x + \frac{\alpha}{r}\, B A x, \qquad
 A \in \mathbb{R}^{r \times k},\; B \in \mathbb{R}^{d \times r},\; r \ll \min(d, k).
 \qquad (44.2)
-$$
+```
 
 $W_0$ is frozen; only $A$ and $B$ are trained. Each design choice has a reason.
 
@@ -86,14 +86,14 @@ $W_0$ is frozen; only $A$ and $B$ are trained. Each design choice has a reason.
   respect to $B$, $\partial L/\partial B = (\partial L/\partial h)(Ax)^\top$, would be zero and nothing would
   train.
 * **The factor $\alpha/r$** keeps the size of the update roughly independent of the rank, so the rank can be
-  changed without retuning the learning rate much. With $\alpha = 16$ and $r = 8$ the update is $2\,BAx$.
+  changed without retuning the learning rate much. With $\alpha = 16$ and $r = 8$ the update is $`2\,BAx`$.
 
 **Parameter count.** A LoRA adapter on one layer has
 
-$$
+```math
 r\,(d + k) \quad\text{trainable parameters, instead of}\quad d\,k .
 \qquad (44.3)
-$$
+```
 
 For a $768 \times 768$ projection and $r = 8$ this is $8 \cdot 1536 = 12{,}288$ instead of $589{,}824$, about 2%.
 
@@ -188,10 +188,10 @@ exactly is a useful way to confirm one's understanding of both.
 
 After training, the update can be folded into the frozen weight:
 
-$$
+```math
 W' = W_0 + \frac{\alpha}{r}\, B A .
 \qquad (44.4)
-$$
+```
 
 $W'$ has the original shape, so the merged model is an ordinary model and serves exactly as fast as the base model:
 the two extra matrix products per adapted layer disappear. The price is flexibility: a merged copy serves one task,
@@ -199,7 +199,7 @@ and switching adapters requires un-merging, which is exact only in the precision
 Merging in fp16 or int8 adds rounding error, so merges should be done in fp32.
 
 **Measured (CPU).** After merging, no `LoRALinear` layers remained and the maximum logit difference was about
-$10^{-6}$, since $W_0 x + s\,B(Ax)$ and $(W_0 + sBA)x$ sum in a different order; `peft`'s `merge_and_unload` gave the
+$10^{-6}$, since $`W_0 x + s\,B(Ax)`$ and $(W_0 + sBA)x$ sum in a different order; `peft`'s `merge_and_unload` gave the
 same result. A batch of 32 took 790–890 ms unmerged and 800–810 ms merged, no difference beyond noise, because the
 rank-8 products are small next to the 768-wide ones. The overhead of unmerged adapters shows up mainly as extra kernel
 launches, which matter more for small batches on a GPU and for models with many adapted layers.

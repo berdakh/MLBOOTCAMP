@@ -48,9 +48,9 @@ Complexity is not a formality. In the sliding-window drill, the input has
 $n = 200{,}000$ values and a window of $k = 5{,}000$. Computing the maximum of
 each window from scratch costs about
 
-$$
+```math
 (n - k + 1)\, k \approx 10^{9} \qquad (17.1)
-$$
+```
 
 comparisons, which takes minutes in Python, whereas a linear method needs a
 few times $n$, about $4 \times 10^5$ operations. Big-O notation does hide
@@ -89,11 +89,11 @@ Two of these drills are evaluation code an ML engineer writes routinely. The
 **precision at $k$** of a ranking is the share of positives among the $k$
 highest-scored items:
 
-$$
+```math
 \text{precision@}k = \frac{1}{k} \sum_{i \in \text{top-}k} y_i, \qquad (17.2)
-$$
+```
 
-where $y_i \in \{0, 1\}$ is the label of item $i$. If the labels of the four
+where $`y_i \in \{0, 1\}`$ is the label of item $i$. If the labels of the four
 highest-scored items are 1, 0, 1, 0, then precision@4 is 0.5. A careful answer
 also states what happens for $k \le 0$ and for $k$ larger than the number of
 items, and how ties in the score are broken.
@@ -167,9 +167,9 @@ A **cohort** is the set of customers who share a starting period, such as the
 month of sign-up. **Retention at month $+k$** is the share of a cohort still
 active $k$ months after its start:
 
-$$
+```math
 \text{ret}_k(c) = \frac{\bigl\lvert \{\text{customers of cohort } c \text{ active in month } c + k\} \bigr\rvert}{\lvert \text{cohort } c \rvert}. \qquad (17.3)
-$$
+```
 
 For example, if 120 customers signed up in March and 96 of them have any usage
 in April, then $\text{ret}_1 = 0.80$. The classic error is a retention above 1,
@@ -189,9 +189,9 @@ inactivity, consecutive days above a threshold. Two approaches are standard.
    within the partition. For weekly data on Mondays, two consecutive active
    weeks are 7 days apart, so the number of inactive weeks between active weeks
    at dates $d_j$ and $d_{j+1}$ is
-   $$
+   ```math
    g_j = \frac{d_{j+1} - d_j}{7\ \text{days}} - 1. \qquad (17.4)
-   $$
+   ```
    Forgetting the "$-1$" is the usual off-by-one error.
 2. **The difference of two row numbers.** Number all of a customer's weeks in
    order, $t_j$, and separately number the weeks within each state (active or
