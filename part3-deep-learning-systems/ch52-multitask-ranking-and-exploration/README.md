@@ -62,7 +62,7 @@ transfer**: when tasks conflict, training for one can hurt the other.
 $$
 \mathbf{h}^{k}(\mathbf{x}) = \sum_{i=1}^{E} g^{k}_{i}(\mathbf{x})\, f_i(\mathbf{x}), \qquad
 \mathbf{g}^{k}(\mathbf{x}) = \operatorname{softmax}\!\left(W_{g}^{k}\, \mathbf{x}\right)
-\tag{52.1}
+\qquad (52.1)
 $$
 
   where $W_{g}^{k}$ is the gate's weight matrix. Tasks can share experts where they agree and use different
@@ -101,7 +101,7 @@ network. It defines the probability that an impression is clicked *and* converts
 $$
 \mathrm{pCTCVR}(\mathbf{x}) = \mathrm{pCTR}(\mathbf{x}) \times \mathrm{pCVR}(\mathbf{x}), \qquad
 \mathcal{L} = \mathrm{BCE}(\mathrm{pCTR}, \text{click}) + \mathrm{BCE}(\mathrm{pCTCVR}, \text{click} \wedge \text{conversion})
-\tag{52.2}
+\qquad (52.2)
 $$
 
 Both terms are defined on **all** impressions, so pCVR is never fitted to clicked rows alone, and it shares
@@ -128,7 +128,7 @@ A ranker needs one score per candidate. A common form is a weighted product,
 
 $$
 \text{score} = \mathrm{pCTR}^{a} \cdot \mathrm{pCVR}^{b} \cdot \text{value}
-\tag{52.3}
+\qquad (52.3)
 $$
 
 where *value* is the worth of a conversion (basket size, or the advertiser's bid per conversion), and $a$ and
@@ -155,7 +155,7 @@ by expected revenue per thousand impressions:
 
 $$
 \mathrm{eCPM}_i = \mathrm{pCTR}_i \cdot \text{bid}_i \cdot 1000
-\tag{52.4}
+\qquad (52.4)
 $$
 
 ### Second-price auctions
@@ -167,7 +167,7 @@ click is
 
 $$
 \text{price per click} = \max\!\left(\text{reserve},\ \frac{\text{bid}_2 \cdot \mathrm{pCTR}_2}{\mathrm{pCTR}_1}\right) \le \text{bid}_1
-\tag{52.5}
+\qquad (52.5)
 $$
 
 where index 1 denotes the winner and 2 the runner-up. A **reserve price** is a floor: bids below it are not
@@ -195,7 +195,7 @@ and a first-price auction with the equilibrium bids $\tfrac{n-1}{n} v$ earn the 
 
 $$
 \mathbb{E}[\text{revenue}] = \frac{n - 1}{n + 1}
-\tag{52.6}
+\qquad (52.6)
 $$
 
 (*revenue equivalence*). A reserve price raises revenue up to a point; for uniform values the optimal reserve is
@@ -231,7 +231,7 @@ lost relative to always playing the best arm:
 
 $$
 \mathrm{Regret}(T) = \sum_{t=1}^{T} \left( p^{*} - p_{a_t} \right)
-\tag{52.7}
+\qquad (52.7)
 $$
 
 where $p^{*} = \max_k p_k$ and $a_t$ is the arm played at round $t$. Three standard policies are:
@@ -242,7 +242,7 @@ where $p^{*} = \max_k p_k$ and $a_t$ is the arm played at round $t$. Three stand
 
 $$
 a_t = \arg\max_k \left( \hat{p}_k + \sqrt{\frac{2 \ln t}{n_k}} \right)
-\tag{52.8}
+\qquad (52.8)
 $$
 
   where $\hat{p}_k$ and $n_k$ are arm $k$'s empirical CTR and number of plays. This is "optimism under
@@ -252,7 +252,7 @@ $$
 $$
 \theta_k \sim \mathrm{Beta}(\alpha_k, \beta_k), \quad a_t = \arg\max_k \theta_k, \qquad
 \alpha_{a_t} \mathrel{+}= r_t, \quad \beta_{a_t} \mathrel{+}= 1 - r_t
-\tag{52.9}
+\qquad (52.9)
 $$
 
   It explores each arm in proportion to the probability that the arm is best, incorporates prior knowledge

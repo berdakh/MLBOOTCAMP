@@ -98,7 +98,7 @@ sigmoid internally in a numerically stable form:
 
 $$
 \ell(z, y) = -\big[y \log \sigma(z) + (1-y) \log(1-\sigma(z))\big]
-\tag{27.1}
+\qquad (27.1)
 $$
 
 where $y \in \{0, 1\}$ is the label and $\sigma(z) = 1/(1+e^{-z})$. Computing
@@ -161,7 +161,7 @@ best *constant* prediction is $p$ itself, and its loss is the binary entropy:
 
 $$
 \ell^{*}_\text{const} = -\big[p \log p + (1-p) \log(1-p)\big]
-\tag{27.2}
+\qquad (27.2)
 $$
 
 For $p = 0.137$ this is 0.40 nats. For $C$ balanced classes under softmax
@@ -171,7 +171,7 @@ $$
 \operatorname{softmax}(\mathbf{z})_c = \frac{e^{z_c}}{\sum_{k=1}^{C} e^{z_k}},
 \qquad
 \ell = -\log \operatorname{softmax}(\mathbf{z})_y
-\tag{27.3}
+\qquad (27.3)
 $$
 
 the corresponding value is $\log C$ (and in general the entropy of the class
@@ -187,7 +187,7 @@ of the output layer to the log-odds of the base rate,
 
 $$
 b_0 = \log\frac{p}{1-p}
-\tag{27.4}
+\qquad (27.4)
 $$
 
 which is $-1.84$ for $p = 0.137$, starts the model at the base rate; the lab then
@@ -243,7 +243,7 @@ m_t &= \beta_1 m_{t-1} + (1-\beta_1)\, g_t, \qquad v_t = \beta_2 v_{t-1} + (1-\b
 \hat m_t &= \frac{m_t}{1-\beta_1^t}, \qquad \hat v_t = \frac{v_t}{1-\beta_2^t} \\
 \theta_t &= \theta_{t-1} - \eta \lambda\, \theta_{t-1} - \eta \frac{\hat m_t}{\sqrt{\hat v_t} + \epsilon}
 \end{aligned}
-\tag{27.5}
+\qquad (27.5)
 $$
 
 where $g_t$ is the gradient at step $t$, $\theta$ the parameters, $\eta$ the
@@ -262,7 +262,7 @@ per optimiser step $t$,
 
 $$
 \eta_t = \eta_{\max} \cdot \begin{cases} \dfrac{t+1}{T_w} & t < T_w \\[6pt] r + (1-r)\,\dfrac{1}{2}\Big(1 + \cos\big(\pi\, \tfrac{t - T_w}{T - T_w}\big)\Big) & t \ge T_w \end{cases}
-\tag{27.6}
+\qquad (27.6)
 $$
 
 where $T_w$ is the number of warmup steps, $T$ the total number of steps, and $r$
@@ -278,7 +278,7 @@ exceeds a threshold $c$, without changing its direction:
 
 $$
 \mathbf{g} \leftarrow \mathbf{g} \cdot \min\!\left(1, \frac{c}{\lVert \mathbf{g} \rVert_2}\right)
-\tag{27.7}
+\qquad (27.7)
 $$
 
 For $\mathbf{g} = (3, 4)$ and $c = 1$ the norm is 5, and the clipped gradient is

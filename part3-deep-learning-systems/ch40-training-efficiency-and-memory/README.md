@@ -64,7 +64,7 @@ The first three terms depend only on the number of parameters $\Psi$ and form th
 
 $$
 M_{\text{state}} = \Psi\,\big(b_w + b_g + b_{\text{opt}}\big),
-\tag{40.1}
+\qquad (40.1)
 $$
 
 where $b_w$, $b_g$ and $b_{\text{opt}}$ are the bytes per parameter for weights,
@@ -126,7 +126,7 @@ A widely used version of this count, from the Megatron-LM work of Korthikanti et
 
 $$
 M_{\text{act}} \approx L \cdot B \cdot T \cdot \big(34\,h + 5\,a\,T\big)\ \text{bytes},
-\tag{40.2}
+\qquad (40.2)
 $$
 
 where $L$ is the number of layers. The expression is linear in depth, batch size and
@@ -179,7 +179,7 @@ $\sum_i (n_i/N)\,\bar\ell_i$. Because the gradient is linear,
 
 $$
 g = \nabla_\theta \frac{1}{N}\sum_{j=1}^{N}\ell_j = \sum_{i=1}^{k} \frac{n_i}{N}\, \nabla_\theta \bar{\ell}_i .
-\tag{40.3}
+\qquad (40.3)
 $$
 
 When all micro-batches have the same size, $n_i/N = 1/k$ and the familiar rule
@@ -229,7 +229,7 @@ forward pass:
 
 $$
 F + 2F \;\longrightarrow\; F + 2F + F = \tfrac{4}{3}\,(F + 2F).
-\tag{40.4}
+\qquad (40.4)
 $$
 
 The theoretical time overhead is therefore about 33%. Memory falls from "all internal
@@ -331,7 +331,7 @@ m_t &= \beta_1 m_{t-1} + (1-\beta_1)\, g_t, \qquad v_t = \beta_2 v_{t-1} + (1-\b
 \hat m_t &= \frac{m_t}{1-\beta_1^{\,t}}, \qquad \hat v_t = \frac{v_t}{1-\beta_2^{\,t}}, \\
 \theta_t &= \theta_{t-1} - \eta \Big( \frac{\hat m_t}{\sqrt{\hat v_t} + \epsilon} + \lambda\, \theta_{t-1} \Big).
 \end{aligned}
-\tag{40.5}
+\qquad (40.5)
 $$
 
 The first moment $m_t$ is a running average of the gradient (momentum); the second moment

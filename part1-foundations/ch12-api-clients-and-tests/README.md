@@ -114,7 +114,7 @@ retries immediately, the extra load prevents it from recovering.
 **Exponential backoff** makes the wait before retry $n$ grow geometrically:
 
 $$
-d_n = b \cdot 2^{n}, \qquad n = 0, 1, \dots, R - 1, \tag{12.1}
+d_n = b \cdot 2^{n}, \qquad n = 0, 1, \dots, R - 1, \qquad (12.1)
 $$
 
 where $b$ is the base delay and $R$ the maximum number of retries. With
@@ -135,7 +135,7 @@ case. With a per-attempt timeout $\tau$ and $R$ retries, every attempt may
 wait until the timeout, so the worst-case duration of one logical call is
 
 $$
-T_{\max} = (R + 1)\,\tau + \sum_{n=0}^{R-1} b\, 2^{n} = (R + 1)\,\tau + b\,(2^{R} - 1). \tag{12.2}
+T_{\max} = (R + 1)\,\tau + \sum_{n=0}^{R-1} b\, 2^{n} = (R + 1)\,\tau + b\,(2^{R} - 1). \qquad (12.2)
 $$
 
 With $\tau = 5$ s, $R = 3$ and $b = 0.2$ s, $T_{\max} = 4 \times 5 + 0.2 \times 7
@@ -147,7 +147,7 @@ Why do retries help at all? If each attempt fails independently with
 probability $q$, all $R + 1$ attempts fail with probability
 
 $$
-P(\text{all attempts fail}) = q^{\,R+1}. \tag{12.3}
+P(\text{all attempts fail}) = q^{\,R+1}. \qquad (12.3)
 $$
 
 For $q = 0.05$ and $R = 3$, this is $0.05^4 \approx 6 \times 10^{-6}$. The
@@ -161,7 +161,7 @@ services, each of which retries $R$ times when the one below it fails, a
 single failure at the bottom can produce up to
 
 $$
-(R + 1)^{k} \tag{12.4}
+(R + 1)^{k} \qquad (12.4)
 $$
 
 requests at the failing service. With $R = 3$ and $k = 3$, that is 64 requests

@@ -32,7 +32,7 @@ either by cancelling or by not renewing. The **churn rate** is the share of
 customers who leave in a period:
 
 $$
-\text{monthly churn rate} = \frac{\text{customers who left during the month}}{\text{customers at the start of the month}} . \tag{2.1}
+\text{monthly churn rate} = \frac{\text{customers who left during the month}}{\text{customers at the start of the month}} . \qquad (2.1)
 $$
 
 Two kinds of churn are distinguished, because they need different responses:
@@ -51,7 +51,7 @@ If a constant share $c$ of the remaining customers leaves every month, the
 share still present after $n$ months is
 
 $$
-\text{retained}(n) = (1 - c)^n , \tag{2.2}
+\text{retained}(n) = (1 - c)^n , \qquad (2.2)
 $$
 
 where $c$ is the monthly churn rate and $n$ the number of months. Each month
@@ -301,7 +301,7 @@ the mean and the sample standard deviation:
 
 $$
 \bar{x} = \frac{1}{k}\sum_{i=1}^{k} x_i, \qquad
-s = \sqrt{\frac{1}{k-1}\sum_{i=1}^{k} (x_i - \bar{x})^2} , \tag{2.3}
+s = \sqrt{\frac{1}{k-1}\sum_{i=1}^{k} (x_i - \bar{x})^2} , \qquad (2.3)
 $$
 
 where $x_i$ is the metric obtained with seed $i$ and $k$ the number of seeds.
@@ -349,7 +349,7 @@ A configuration that is plain data can be saved, compared and hashed, and the
 hash becomes the run's name. The identity used in this book is
 
 $$
-\text{run\_id} = \operatorname{hex}_{12}\Big(\operatorname{SHA256}\big(\operatorname{json}_{\text{sorted}}(\text{config})\big)\Big) , \tag{2.4}
+\text{run\_id} = \operatorname{hex}_{12}\Big(\operatorname{SHA256}\big(\operatorname{json}_{\text{sorted}}(\text{config})\big)\Big) , \qquad (2.4)
 $$
 
 where $\operatorname{json}_{\text{sorted}}$ serialises the configuration with
@@ -367,7 +367,7 @@ How likely is a collision between two different configurations? For $N$
 runs and a $b$-bit identity, the birthday approximation gives
 
 $$
-P(\text{collision}) \approx \frac{N^2}{2^{\,b+1}} , \tag{2.5}
+P(\text{collision}) \approx \frac{N^2}{2^{\,b+1}} , \qquad (2.5)
 $$
 
 so for $N = 10{,}000$ runs and $b = 48$, $P \approx 10^8 / 5.6 \times 10^{14} \approx 2 \times 10^{-7}$.

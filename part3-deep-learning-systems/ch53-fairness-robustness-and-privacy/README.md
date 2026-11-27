@@ -58,7 +58,7 @@ $N$ is the probability that a randomly chosen positive scores higher than a rand
 
 $$
 \mathrm{AUC}(P, N) = \Pr\big(s(x^{+}) > s(x^{-})\big), \qquad x^{+} \sim P,\ x^{-} \sim N
-\tag{53.1}
+\qquad (53.1)
 $$
 
 with ties counted as one half. For an identity subgroup $g$, split the test set four ways: subgroup positives (SP,
@@ -71,7 +71,7 @@ $$
 \text{BPSN AUC} &= \mathrm{AUC}(\text{BP},\ \text{SN}) \\
 \text{BNSP AUC} &= \mathrm{AUC}(\text{SP},\ \text{BN})
 \end{aligned}
-\tag{53.2}
+\qquad (53.2)
 $$
 
 * **Subgroup AUC** is low when the model separates toxic from non-toxic comments poorly *within* conversations
@@ -102,7 +102,7 @@ generalised (power) mean,
 
 $$
 M_p(m_1, \dots, m_G) = \Big(\frac{1}{G} \sum_{g=1}^{G} m_g^{\,p}\Big)^{1/p}, \qquad p = -5
-\tag{53.3}
+\qquad (53.3)
 $$
 
 A negative exponent pulls the mean towards the *worst* group: $M_{-5}(0.9, 0.7) = 0.765$, whereas the arithmetic
@@ -118,7 +118,7 @@ A deployed classifier needs a threshold $t$. The per-group error rates at $t$ ar
 
 $$
 \mathrm{FPR}_g(t) = \Pr(s \ge t \mid y = 0, g), \qquad \mathrm{FNR}_g(t) = \Pr(s < t \mid y = 1, g)
-\tag{53.4}
+\qquad (53.4)
 $$
 
 Because the score distributions of benign comments differ by group, one global threshold cuts them at different
@@ -206,7 +206,7 @@ data sets $D$ and $D'$ (differing by one record) and every set of possible outpu
 
 $$
 \Pr[A(D) \in S] \le e^{\varepsilon}\, \Pr[A(D') \in S] + \delta
-\tag{53.5}
+\qquad (53.5)
 $$
 
 Adding or removing any one record changes the probability of any outcome by at most a factor $e^{\varepsilon}$, plus a
@@ -221,7 +221,7 @@ $$
 \bar{g}_i = g_i \cdot \min\!\left(1, \frac{C}{\lVert g_i \rVert_2}\right), \qquad
 \tilde{g} = \frac{1}{n}\left( \sum_{i=1}^{n} \bar{g}_i + \mathcal{N}(0, \sigma^2 C^2 I) \right), \qquad
 \theta \leftarrow \theta - \eta\, \tilde{g}
-\tag{53.6}
+\qquad (53.6)
 $$
 
 1. **Clipping** each example's gradient to L2 norm at most $C$ bounds the contribution of any single record to the sum

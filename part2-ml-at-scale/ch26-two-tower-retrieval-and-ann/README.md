@@ -56,7 +56,7 @@ The score is the cosine similarity of the two normalised vectors divided by a
 
 $$
 s(u, i) = \frac{\mathbf{u}^\top \mathbf{v}_i}{\tau}, \qquad \lVert \mathbf{u} \rVert = \lVert \mathbf{v}_i \rVert = 1
-\tag{26.1}
+\qquad (26.1)
 $$
 
 where $\mathbf{u}$ is the user-tower output and $\mathbf{v}_i$ the item-tower
@@ -106,7 +106,7 @@ their own item out of the batch:
 
 $$
 L = -\frac{1}{B} \sum_{b=1}^{B} \log \frac{\exp\!\big(s(u_b, i_b) - \log q_{i_b}\big)}{\sum_{j=1}^{B} \exp\!\big(s(u_b, i_j) - \log q_{i_j}\big)}
-\tag{26.2}
+\qquad (26.2)
 $$
 
 where $q_i$ is item $i$'s sampling probability, introduced below; without the
@@ -132,7 +132,7 @@ by logits that satisfy
 
 $$
 s(u, i) = \log p(i \mid u) - \log q_i + \text{const}(u)
-\tag{26.3}
+\qquad (26.3)
 $$
 
 rather than $s(u, i) = \log p(i \mid u) + \text{const}(u)$. The uncorrected model
@@ -220,7 +220,7 @@ $\mathbf{u}$. Exact search costs
 
 $$
 \text{cost} = N \cdot d \ \text{multiply-adds per query}
-\tag{26.4}
+\qquad (26.4)
 $$
 
 for $N$ items of dimension $d$. With 4,000 items this is negligible. With
@@ -231,7 +231,7 @@ recall against exact search:
 
 $$
 \operatorname{Recall@}k = \frac{1}{\lvert Q \rvert} \sum_{q \in Q} \frac{\lvert \text{ANN}_k(q) \cap \text{Exact}_k(q) \rvert}{k}
-\tag{26.5}
+\qquad (26.5)
 $$
 
 where $Q$ is a set of queries and $\text{ANN}_k(q)$, $\text{Exact}_k(q)$ are the

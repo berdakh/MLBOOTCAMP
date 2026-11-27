@@ -225,7 +225,7 @@ $$
 \text{review} & 2 \le \bar r < 3 \\
 \text{priority} & \bar r < 2
 \end{cases}
-\tag{1.1}
+\qquad (1.1)
 $$
 
 where $m = 3$ statements per area and each $r_j \in \{1, 2, 3, 4\}$. For
@@ -242,7 +242,7 @@ within time and $q$ passed over time, out of $n$ items, the share used below
 is
 
 $$
-s = \frac{p + 0.5\,q}{n} . \tag{1.2}
+s = \frac{p + 0.5\,q}{n} . \qquad (1.2)
 $$
 
 With one item per graded area, $s$ is 1, 0.5 or 0; across the six graded

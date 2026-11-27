@@ -191,7 +191,7 @@ build times $t_1, \dots, t_L$, and $\ell^{*}$ is the first layer whose inputs
 changed, the build time is
 
 $$
-T_{\text{build}} = \sum_{\ell = \ell^{*}}^{L} t_{\ell}. \tag{13.1}
+T_{\text{build}} = \sum_{\ell = \ell^{*}}^{L} t_{\ell}. \qquad (13.1)
 $$
 
 Installing dependencies is slow (large $t_\ell$) and its input, the lock
@@ -216,7 +216,7 @@ Uvicorn's `--workers N` option starts $N$ separate processes. Each imports
 First, memory grows with the number of workers. Approximately,
 
 $$
-M_{\text{total}} \approx N \left( M_{\text{runtime}} + M_{\text{model}} \right), \tag{13.2}
+M_{\text{total}} \approx N \left( M_{\text{runtime}} + M_{\text{model}} \right), \qquad (13.2)
 $$
 
 where $M_{\text{runtime}}$ is the memory of one Python process with its

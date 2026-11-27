@@ -49,7 +49,7 @@ top. With $rel_i$ the relevance of the document at rank $i$,
 
 $$
 \operatorname{DCG@}k = \sum_{i=1}^{k} \frac{rel_i}{\log_2(i + 1)}, \qquad \operatorname{nDCG@}k = \frac{\operatorname{DCG@}k}{\operatorname{IDCG@}k},
-\tag{45.1}
+\qquad (45.1)
 $$
 
 where IDCG@$k$ is the DCG of the best possible ordering for that query, so that nDCG lies between 0 and 1. A single
@@ -60,7 +60,7 @@ it rewards placing the answer *first*, which is what a user, or a language model
 
 $$
 \operatorname{Recall@}k = \frac{\lvert \text{relevant} \cap \text{top-}k \rvert}{\lvert \text{relevant} \rvert} .
-\tag{45.2}
+\qquad (45.2)
 $$
 
 For a **first-stage** retriever whose output is re-ranked (Chapter 46), Recall@k at the re-ranking depth is what matters:
@@ -83,7 +83,7 @@ normalisation**: long documents contain more words and match more query terms by
 $$
 \operatorname{BM25}(q, d) = \sum_{t \in q} \operatorname{idf}(t)\, \frac{f(t,d)\,(k_1 + 1)}{f(t,d) + k_1 \big(1 - b + b\, \lvert d \rvert / \text{avgdl}\big)}, \qquad
 \operatorname{idf}(t) = \ln\!\Big(1 + \frac{N - n_t + 0.5}{n_t + 0.5}\Big),
-\tag{45.3}
+\qquad (45.3)
 $$
 
 where $f(t,d)$ is the count of term $t$ in document $d$, $\lvert d \rvert$ the document length in tokens, avgdl the average
@@ -114,7 +114,7 @@ vectors, the inner product equals the cosine similarity:
 
 $$
 \operatorname{sim}(\mathbf q, \mathbf d) = \frac{\mathbf q \cdot \mathbf d}{\lVert \mathbf q \rVert\, \lVert \mathbf d \rVert} = \mathbf q \cdot \mathbf d \quad \text{if } \lVert \mathbf q \rVert = \lVert \mathbf d \rVert = 1 .
-\tag{45.4}
+\qquad (45.4)
 $$
 
 Normalisation matters in practice: an index built for inner product on unnormalised vectors favours documents with large
@@ -176,7 +176,7 @@ Clarke & Büttcher, 2009) uses only ranks, which are comparable across systems:
 
 $$
 \operatorname{RRF}(d) = \sum_{s} \frac{1}{k + \operatorname{rank}_s(d)}, \qquad k = 60 \text{ by convention},
-\tag{45.5}
+\qquad (45.5)
 $$
 
 where the sum runs over the systems $s$ that retrieved $d$, and ranks start at 1. A document ranked high by either system

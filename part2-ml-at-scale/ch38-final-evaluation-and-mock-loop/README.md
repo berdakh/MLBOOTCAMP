@@ -55,7 +55,7 @@ The pre-registration file's **hash** (a short fingerprint that changes if any by
 The **position-based click model** (Chapter 23) assumes that a click requires two independent events: the user **examines** position $k$, with probability $\theta_k$ that depends only on the position, and finds the item relevant, with probability that depends only on the item:
 
 $$
-P(\text{click} \mid \text{item}, k) = \theta_k \cdot P(\text{relevant} \mid \text{item}). \tag{38.1}
+P(\text{click} \mid \text{item}, k) = \theta_k \cdot P(\text{relevant} \mid \text{item}). \qquad (38.1)
 $$
 
 ShopStream's hidden examination model is a power law, $\theta_k = (1 + k)^{-\eta}$ with $\eta = 0.9$ and $k = 0, 1, \dots$ the position index; position index 4 is examined $5^{-0.9} = 0.235$ times as often as the top.
@@ -87,13 +87,13 @@ The lab then re-ranks the 10 items shown in each of about 32,000 logged policy r
 On raw clicks, the old policy is best by a wide margin. This is position bias: the items the policy put at the top were examined, so they received the clicks, and any other ordering moves clicked items down. **Inverse propensity scoring** reverses the conclusion and agrees with the truth. Each click is weighted by the inverse of the examination probability of the position where it was *logged*, and discounted by the rank the *new* ordering gives it:
 
 $$
-\widehat{\text{DCG}}_{\text{IPS}} = \sum_{i \,\in\, \text{clicked}} \frac{1}{\theta_{k_i^{\text{logged}}}} \cdot \frac{1}{\log_2(1 + r_i^{\text{new}})}. \tag{38.2}
+\widehat{\text{DCG}}_{\text{IPS}} = \sum_{i \,\in\, \text{clicked}} \frac{1}{\theta_{k_i^{\text{logged}}}} \cdot \frac{1}{\log_2(1 + r_i^{\text{new}})}. \qquad (38.2)
 $$
 
 **Why it works.** Under Equation (38.1), the click indicator $c_i$ of an item logged at position $k_i$ has expectation $\theta_{k_i} P(\text{relevant}_i)$, so
 
 $$
-\mathbb{E}\!\left[\frac{c_i}{\theta_{k_i}}\right] = P(\text{relevant}_i), \tag{38.3}
+\mathbb{E}\!\left[\frac{c_i}{\theta_{k_i}}\right] = P(\text{relevant}_i), \qquad (38.3)
 $$
 
 and the weighted clicks are unbiased estimates of relevance, provided the propensities are correct and positive. *Example:* a click logged at position index 4 ($\theta = 0.235$) counts as $1/0.235 = 4.26$ clicks; if the new ordering places the item first, it contributes 4.26 to the DCG.
@@ -111,7 +111,7 @@ Requests from the same user are correlated (same tastes, same activity), so the 
 A row-level bootstrap treats correlated rows as independent and gives intervals that are too narrow. With $m$ rows per user and **intra-class correlation** $\rho_{\text{ICC}}$ between two rows of the same user, the variance of a mean is inflated by the design effect of Chapter 29:
 
 $$
-\operatorname{Var}_{\text{grouped}} \approx \operatorname{Var}_{\text{iid}} \cdot \big(1 + (m - 1)\,\rho_{\text{ICC}}\big). \tag{38.4}
+\operatorname{Var}_{\text{grouped}} \approx \operatorname{Var}_{\text{iid}} \cdot \big(1 + (m - 1)\,\rho_{\text{ICC}}\big). \qquad (38.4)
 $$
 
 *Example:* four requests per user with $\rho_{\text{ICC}} = 0.2$ multiply the variance by 1.6, so the correct interval is $\sqrt{1.6} = 1.26$ times wider than the row-level one. Averaging per-user means instead of rows is not a remedy: it weights a user with one request like a user with fifty, which estimates a different quantity. If users themselves interact (marketplaces, social graphs), even users are not independent, and larger clusters are needed.
@@ -121,7 +121,7 @@ $$
 When two systems are scored on the same requests, their errors are correlated, and the variance of the difference is
 
 $$
-\operatorname{Var}(A - B) = \operatorname{Var}(A) + \operatorname{Var}(B) - 2\operatorname{Cov}(A, B). \tag{38.5}
+\operatorname{Var}(A - B) = \operatorname{Var}(A) + \operatorname{Var}(B) - 2\operatorname{Cov}(A, B). \qquad (38.5)
 $$
 
 With unit variances and correlation 0.9 the variance of the difference is 0.2 rather than 2, an interval about $\sqrt{10} \approx 3.2$ times narrower than the comparison of two separate intervals would suggest. Differences are therefore bootstrapped directly, resampling users and computing both systems on the same draw.

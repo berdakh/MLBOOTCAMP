@@ -52,7 +52,7 @@ normal. If the variants are in truth equally good ($\theta_j = \theta$) and the
 best-looking one is reported, the reported value is on average
 
 $$
-\mathbb{E}\Bigl[\max_{j} \hat{\theta}_j\Bigr] = \theta + \sigma\, \mathbb{E}\Bigl[\max_{j \le K} Z_j\Bigr], \tag{16.1}
+\mathbb{E}\Bigl[\max_{j} \hat{\theta}_j\Bigr] = \theta + \sigma\, \mathbb{E}\Bigl[\max_{j \le K} Z_j\Bigr], \qquad (16.1)
 $$
 
 which exceeds the true value. For independent $Z_j$ and $K = 20$, the expected
@@ -133,7 +133,7 @@ A 95% percentile interval is formed from the 2.5th and 97.5th percentiles of
 the $B$ bootstrap values $\hat{\theta}^{*}_1, \dots, \hat{\theta}^{*}_B$:
 
 $$
-\text{CI}_{95\%} = \left[\, Q_{0.025}\bigl(\hat{\theta}^{*}_{1..B}\bigr),\; Q_{0.975}\bigl(\hat{\theta}^{*}_{1..B}\bigr) \right]. \tag{16.2}
+\text{CI}_{95\%} = \left[\, Q_{0.025}\bigl(\hat{\theta}^{*}_{1..B}\bigr),\; Q_{0.975}\bigl(\hat{\theta}^{*}_{1..B}\bigr) \right]. \qquad (16.2)
 $$
 
 To compare two models, the **paired bootstrap** resamples the same customers
@@ -145,7 +145,7 @@ gain becomes detectable. Two separate intervals that overlap do *not* show
 that there is no difference. The pre-registered decision rule is
 
 $$
-\text{report "better"} \iff Q_{0.025}\bigl(\Delta^{*}_{1..B}\bigr) > 0, \tag{16.3}
+\text{report "better"} \iff Q_{0.025}\bigl(\Delta^{*}_{1..B}\bigr) > 0, \qquad (16.3)
 $$
 
 that is, the whole 95% interval of the difference lies above zero.
@@ -181,7 +181,7 @@ is **precision at $k$**:
 
 $$
 \text{precision@}k_m = \frac{\#\{\text{churners among the } k \text{ highest scores in month } m\}}{k}, \qquad
-\text{lift}_m = \frac{\text{precision@}k_m}{\pi_m}, \tag{16.4}
+\text{lift}_m = \frac{\text{precision@}k_m}{\pi_m}, \qquad (16.4)
 $$
 
 where $\pi_m$ is the churn rate in month $m$. For example, 11 churners among 40
@@ -192,7 +192,7 @@ the course's assumptions, a true positive reached is worth \$150 and a call
 that was not needed costs \$30, so
 
 $$
-\text{EV} = 150 \cdot \text{TP} - 30 \cdot \text{FP}. \tag{16.5}
+\text{EV} = 150 \cdot \text{TP} - 30 \cdot \text{FP}. \qquad (16.5)
 $$
 
 On the test period this is positive (a few thousand dollars over five months,

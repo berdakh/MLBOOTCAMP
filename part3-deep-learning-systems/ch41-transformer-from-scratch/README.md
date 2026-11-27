@@ -73,7 +73,7 @@ $Q = XW^Q$, $K = XW^K$, $V = XW^V$. Scaled dot-product attention is
 
 $$
 \operatorname{Attention}(Q, K, V) = \operatorname{softmax}\!\Big(\frac{Q K^\top}{\sqrt{d_k}} + M\Big)\, V ,
-\tag{41.1}
+\qquad (41.1)
 $$
 
 where $d_k$ is the dimension of each query and key, the softmax is applied to each row, and
@@ -110,7 +110,7 @@ each head, concatenates the results and mixes them with an output projection $W^
 $$
 \operatorname{MHA}(X) = \operatorname{Concat}(\text{head}_1, \dots, \text{head}_H)\, W^O, \qquad
 \text{head}_i = \operatorname{Attention}(X W_i^Q, X W_i^K, X W_i^V).
-\tag{41.2}
+\qquad (41.2)
 $$
 
 Different heads can learn different relations (the previous token, the start of the current
@@ -148,7 +148,7 @@ The design choices each have a reason:
   $$
   \operatorname{LN}(x) = \gamma \odot \frac{x - \mu}{\sqrt{\sigma^2 + \epsilon}} + \beta, \qquad
   \mu = \frac{1}{C}\sum_c x_c, \quad \sigma^2 = \frac{1}{C}\sum_c (x_c - \mu)^2 ,
-  \tag{41.3}
+\qquad (41.3)
   $$
   with learned scale $\gamma$ and shift $\beta$ (Ba, Kiros & Hinton, 2016). For $x = (1, 2, 3)$,
   $\mu = 2$, $\sigma^2 = 2/3$, and the normalised output is about $(-1.22, 0, 1.22)$.
@@ -183,7 +183,7 @@ next tokens, and **perplexity** is its exponential:
 $$
 \mathcal{L} = -\frac{1}{N} \sum_{t=1}^{N} \log p_\theta\big(x_{t+1} \mid x_{\le t}\big), \qquad
 \operatorname{PPL} = e^{\mathcal{L}} .
-\tag{41.4}
+\qquad (41.4)
 $$
 
 Perplexity has a direct reading: a model with perplexity $P$ is as uncertain, on average, as a
@@ -230,7 +230,7 @@ repeat. The choice of token is a design decision.
 * **Temperature** $\tau$ rescales the logits before the softmax:
   $$
   p_i = \frac{e^{z_i/\tau}}{\sum_j e^{z_j/\tau}} .
-  \tag{41.5}
+\qquad (41.5)
   $$
   $\tau < 1$ sharpens the distribution, $\tau > 1$ flattens it, and $\tau \to 0$ approaches
   greedy decoding. For logits $(2, 1, 0)$ the probabilities are $(0.665, 0.245, 0.090)$ at $\tau = 1$
@@ -280,7 +280,7 @@ cache still grows with context, and this simple implementation concatenates the 
 
 $$
 \text{bytes} = 2 \cdot L \cdot H \cdot d_{\text{head}} \cdot T \cdot B \cdot b ,
-\tag{41.6}
+\qquad (41.6)
 $$
 
 with $L$ layers, $H$ heads of $d_{\text{head}}$ channels, $T$ positions, $B$ sequences and $b$ bytes per

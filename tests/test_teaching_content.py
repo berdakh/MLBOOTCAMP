@@ -95,3 +95,12 @@ def test_tables_of_contents_are_current():
     result = subprocess.run([sys.executable, str(ROOT / "tools" / "make_toc.py"), "--check"],
                             capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
+
+
+def test_markdown_equations_do_not_use_tag():
+    """GitHub renders Markdown maths as MathML, and Chrome cannot lay out the
+    labelled rows that ``\\tag`` produces: the equation collapses into a
+    vertical column. Number equations with ``\\qquad (N)`` instead."""
+    offenders = [str(p.relative_to(ROOT)) for p in ROOT.rglob("*.md")
+                 if ".git" not in p.parts and "\\tag{" in p.read_text(encoding="utf-8")]
+    assert not offenders, f"replace \\tag{{...}} with \\qquad (...) in: {offenders}"

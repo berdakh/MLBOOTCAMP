@@ -65,7 +65,7 @@ $$
 P = \frac{\mathrm{TP}}{\#\text{non-empty predicted fields}}, \qquad
 R = \frac{\mathrm{TP}}{\#\text{gold fields}}, \qquad
 F_1 = \frac{2PR}{P + R}
-\tag{54.1}
+\qquad (54.1)
 $$
 
 A missing field costs recall; a wrong or extra field costs precision. For example, if the gold record has four
@@ -90,7 +90,7 @@ and takes percentiles of the resampled mean differences:
 $$
 \bar{d}^{\,*}_b = \frac{1}{n} \sum_{i \in \text{resample}_b} d_i, \qquad
 \mathrm{CI}_{95\%} = \big[\, q_{2.5\%}(\bar{d}^{\,*}),\ q_{97.5\%}(\bar{d}^{\,*}) \,\big]
-\tag{54.2}
+\qquad (54.2)
 $$
 
 where $n$ is the number of items and $q$ denotes an empirical quantile over the $B$ resamples. The bootstrap only
@@ -125,7 +125,7 @@ slot decided. The **position-bias rate** is the fraction of pairs with the same 
 
 $$
 \text{bias rate} = \frac{1}{n} \sum_{i=1}^{n} \mathbb{1}\big[\, v_i^{(X,Y)} = v_i^{(Y,X)} \,\big]
-\tag{54.3}
+\qquad (54.3)
 $$
 
 where $v_i^{(X,Y)}$ is the verdict on pair $i$ shown in order $(X, Y)$. A perfectly consistent judge scores 0.
@@ -167,7 +167,7 @@ The lab appends one of six injection styles to each ticket and records which fie
 
 $$
 \mathrm{ASR} = \frac{\#\text{injected inputs where the target field took the attacker's value}}{\#\text{injected inputs}}
-\tag{54.4}
+\qquad (54.4)
 $$
 
 *Measured:* attacks succeeded on 8 of 12 tickets with the terse prompt (0.67) and 6 of 12 with the schema prompt
@@ -223,7 +223,7 @@ request can be computed in two ways:
 $$
 \text{API-style: } c = n_{\text{in}}\, p_{\text{in}} + n_{\text{out}}\, p_{\text{out}}, \qquad
 \text{self-hosted: } c = \frac{p_{\text{hour}}}{3600} \cdot t_{\text{request}}
-\tag{54.5}
+\qquad (54.5)
 $$
 
 where $n_{\text{in}}, n_{\text{out}}$ are the input and output token counts, $p_{\text{in}}, p_{\text{out}}$ the

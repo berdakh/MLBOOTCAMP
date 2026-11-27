@@ -72,14 +72,14 @@ sampling theory gives the uncertainty directly. If $\hat p$ is an observed
 proportion over $n$ independent trials,
 
 $$
-\operatorname{SE}(\hat p) = \sqrt{\frac{\hat p\,(1 - \hat p)}{n}} , \tag{7.1}
+\operatorname{SE}(\hat p) = \sqrt{\frac{\hat p\,(1 - \hat p)}{n}} , \qquad (7.1)
 $$
 
 and an approximate 95% interval is $\hat p \pm 1.96\,\operatorname{SE}$.
 Inverting the formula gives the sample size needed for a margin $\pm m$:
 
 $$
-n \approx \frac{1.96^2\, p\,(1-p)}{m^2} . \tag{7.2}
+n \approx \frac{1.96^2\, p\,(1-p)}{m^2} . \qquad (7.2)
 $$
 
 For example, a precision of 0.27 over $n = 192$ calls has
@@ -102,7 +102,7 @@ replacement**; recompute the metric $\hat\theta^{*}_b$ on each; and take the
 middle 95% of the results:
 
 $$
-\text{CI}_{95\%} = \left[\, Q_{0.025}\big(\hat\theta^{*}_{1}, \dots, \hat\theta^{*}_{B}\big),\; Q_{0.975}\big(\hat\theta^{*}_{1}, \dots, \hat\theta^{*}_{B}\big) \,\right] , \tag{7.3}
+\text{CI}_{95\%} = \left[\, Q_{0.025}\big(\hat\theta^{*}_{1}, \dots, \hat\theta^{*}_{B}\big),\; Q_{0.975}\big(\hat\theta^{*}_{1}, \dots, \hat\theta^{*}_{B}\big) \,\right] , \qquad (7.3)
 $$
 
 where $Q_q$ is the $q$-quantile. With $B = 500$, if the sorted resampled
@@ -190,7 +190,7 @@ test than needed. The question "is B better than A?" is answered directly by
 a **paired bootstrap**: on each resample $b$ compute
 
 $$
-\Delta^{*}_b = m_B(\text{resample}_b) - m_A(\text{resample}_b) , \tag{7.4}
+\Delta^{*}_b = m_B(\text{resample}_b) - m_A(\text{resample}_b) , \qquad (7.4)
 $$
 
 where $m_A$ and $m_B$ are the metric values of the two models on the same

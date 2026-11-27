@@ -80,7 +80,7 @@ For a user $u$, the click feature of the snapshot stamped at day $d$ is
 
 $$
 x_u(d) = \sum_{t=d-7}^{d-1} \text{clicks}_u(t)
-\tag{21.1}
+\qquad (21.1)
 $$
 
 where $\text{clicks}_u(t)$ is the number of clicks by user $u$ on day $t$. For
@@ -102,7 +102,7 @@ prior rate $p_0$:
 
 $$
 \widetilde{\text{CTR}} = \frac{\text{clicks} + \alpha\, p_0}{\text{impressions} + \alpha}
-\tag{21.2}
+\qquad (21.2)
 $$
 
 With one click in two impressions, $p_0 = 0.137$ and $\alpha = 20$, the smoothed
@@ -121,7 +121,7 @@ $\tau_s$,
 $$
 s^{*}(e) = \underset{s:\; k_s = k_e,\; \tau_s < t_e}{\arg\max}\; \tau_s,
 \qquad \text{use } s^{*} \text{ only if } t_e - \tau_{s^{*}} \le \text{TTL}
-\tag{21.3}
+\qquad (21.3)
 $$
 
 The second half of Equation (21.3) addresses a trap. Snapshots contain only
@@ -206,7 +206,7 @@ it has a history. A backfill is safe if it has two properties.
 
 $$
 \text{age} = t_\text{request} - t_\text{newest event in the value}
-\tag{21.4}
+\qquad (21.4)
 $$
 
 A daily batch job that runs at 02:00 over data up to midnight serves values

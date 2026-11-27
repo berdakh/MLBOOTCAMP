@@ -101,7 +101,7 @@ entities, key size $k$ bytes, $F$ features of $b$ bytes each, a storage overhead
 
 $$
 \text{online GB} = \frac{E \cdot (k + F \cdot b) \cdot o \cdot r}{10^9}
-\tag{55.1}
+\qquad (55.1)
 $$
 
 For $E = 2 \times 10^8$ users, $k = 16$, $F = 400$, $b = 4$, $o = 1.5$ and $r = 3$, this gives about 1,454 GB. The lab's
@@ -137,7 +137,7 @@ dense transformer's training compute can be estimated as about six floating-poin
 $$
 \text{FLOPs} \approx 6\, N\, D, \qquad
 \text{GPU-hours} = \frac{6\, N\, D}{\text{peak FLOP/s} \cdot \mathrm{MFU} \cdot 3600}
-\tag{55.2}
+\qquad (55.2)
 $$
 
 where $N$ is the number of parameters, $D$ the number of training tokens and MFU the model FLOPs utilisation, the
@@ -153,7 +153,7 @@ the time,
 
 $$
 \text{cost per useful GPU-hour} = \frac{p}{u}
-\tag{55.3}
+\qquad (55.3)
 $$
 
 A \$2 card used 20% of the time costs \$10 per useful hour. In the lab's illustrative four-team table, 48% of the monthly
@@ -196,7 +196,7 @@ degraded rate $p_2$, two-sided significance $\alpha$ and power $1 - \beta$, the 
 $$
 n = \frac{\left( z_{1-\alpha/2} \sqrt{2 \bar{p} (1 - \bar{p})} + z_{1-\beta} \sqrt{p_1 (1 - p_1) + p_2 (1 - p_2)} \right)^2}{(p_2 - p_1)^2},
 \qquad \bar{p} = \frac{p_1 + p_2}{2}
-\tag{55.4}
+\qquad (55.4)
 $$
 
 where $z_q$ is the standard normal quantile. For an error rate rising from 0.5% to 0.6% (+20%), with $z = 1.96$ and $0.84$,
@@ -223,7 +223,7 @@ prediction. If the delay is roughly exponential with mean $\tau$, the fraction o
 
 $$
 F(t) = 1 - e^{-t/\tau}
-\tag{55.5}
+\qquad (55.5)
 $$
 
 With $\tau = 20$ days, 5%, 30%, 50%, 78%, 95% and 99% of labels are visible after 1, 7, 14, 30, 60 and 90 days. Two

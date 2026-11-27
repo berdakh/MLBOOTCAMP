@@ -67,13 +67,13 @@ The lab scores several orderings on the same 1,000 validation requests. The key 
 $$
 \underbrace{1 - \text{NDCG}_{\text{cascade}}}_{\text{total loss}}
 = \underbrace{\big(1 - \text{NDCG}_{\text{oracle}}\big)}_{\text{retrieval loss}}
-+ \underbrace{\big(\text{NDCG}_{\text{oracle}} - \text{NDCG}_{\text{cascade}}\big)}_{\text{ranking loss}}. \tag{35.1}
++ \underbrace{\big(\text{NDCG}_{\text{oracle}} - \text{NDCG}_{\text{cascade}}\big)}_{\text{ranking loss}}. \qquad (35.1)
 $$
 
 The retrieval stage is also measured directly by **recall@K**, the share of the user's truly best items that appear among the candidates:
 
 $$
-\text{recall@}K = \frac{\lvert \text{relevant} \cap \text{top-}K \text{ candidates} \rvert}{\lvert \text{relevant} \rvert}. \tag{35.2}
+\text{recall@}K = \frac{\lvert \text{relevant} \cap \text{top-}K \text{ candidates} \rvert}{\lvert \text{relevant} \rvert}. \qquad (35.2)
 $$
 
 In the lab (course synthetic data, CPU run) recall of the true top 10 is about 0.85 with about 320 candidates. Without a category cap, the catalogue NDCG@10 values are: popularity 0.39, the logged policy 0.41, ANN only 0.79, the LightGBM cascade 0.875, and the oracle over candidates 0.99. Three conclusions follow:
@@ -99,7 +99,7 @@ User features change slowly and cost a network round trip to fetch. A **least-re
 The value of a cache depends on its **hit rate** $h$, the share of lookups answered without a round trip. Even an unbounded cache misses the first request for every key, so for a stream of $R$ requests over $U$ distinct keys
 
 $$
-h \le 1 - \frac{U}{R}, \qquad \mathbb{E}[t] = h\, t_{\text{hit}} + (1 - h)\, t_{\text{miss}}. \tag{35.3}
+h \le 1 - \frac{U}{R}, \qquad \mathbb{E}[t] = h\, t_{\text{hit}} + (1 - h)\, t_{\text{miss}}. \qquad (35.3)
 $$
 
 In the lab one validation day has 4,483 requests from 3,177 distinct users, so $h \le 1 - 3{,}177/4{,}483 = 0.29$. Replaying the day in time order, the measured hit rate rises from 0.015 with 100 entries to 0.29 once the cache can hold every user of the day. With $t_{\text{hit}} \approx 0$ and $t_{\text{miss}} = 1$ ms, the expected feature-fetch time falls only from 1 ms to 0.71 ms. A curve of hit rate against capacity is a capacity-planning tool: memory per entry times capacity, against round trips saved.
@@ -176,7 +176,7 @@ These numbers are relative, not capacities. Client and server share one Python p
 **Little's law.** In any stable system, the average number of requests in the system $L$, the throughput $\lambda$ and the mean time in the system $W$ satisfy
 
 $$
-L = \lambda\, W, \tag{35.4}
+L = \lambda\, W, \qquad (35.4)
 $$
 
 without any assumption about distributions. With 16 clients each waiting for its response, $L = 16$; at about 210 requests/s, $W = 16/210 \approx 76$ ms, between the measured p50 and p99. At concurrency 1 and 140 requests/s, $W \approx 7$ ms against a p50 of 6.5 ms. Little's law is a consistency check on any load-test result.
@@ -184,7 +184,7 @@ without any assumption about distributions. With 16 clients each waiting for its
 **Latency near saturation.** For a single server with random (Poisson) arrivals and exponential service times (the M/M/1 queue), with service time $S$ and utilisation $\rho = \lambda S < 1$, the mean time in the system is
 
 $$
-W = \frac{S}{1 - \rho}. \tag{35.5}
+W = \frac{S}{1 - \rho}. \qquad (35.5)
 $$
 
 With $S = 5$ ms, $W$ is 10 ms at $\rho = 0.5$, 50 ms at $\rho = 0.9$ and 500 ms at $\rho = 0.99$. Real services are not M/M/1 queues, but the qualitative conclusion holds generally: waiting time grows without bound as utilisation approaches 1. This is why capacity plans target utilisations of about 50–70%, and why the remedy for the saturated row above is more replicas or processes and load shedding, not a faster model.
@@ -202,7 +202,7 @@ Three rules apply when budgeting:
 1. **Percentiles do not add.** Because the slowest requests of different stages rarely coincide,
 
 $$
-p_{99}\Big(\sum_s t_s\Big) \le \sum_s p_{99}(t_s) \tag{35.6}
+p_{99}\Big(\sum_s t_s\Big) \le \sum_s p_{99}(t_s) \qquad (35.6)
 $$
 
    in typical systems (it is not a theorem for arbitrary dependent latencies, but holds when stage delays are not strongly positively correlated). Per-stage p99 budgets that sum to the SLO are therefore conservative.
@@ -210,7 +210,7 @@ $$
 2. **Fan-out amplifies tails.** A request that waits for $N$ parallel calls is as slow as the slowest. If each call is slow with probability $q$, independently,
 
 $$
-P(\text{the request waits for a slow call}) = 1 - (1 - q)^N. \tag{35.7}
+P(\text{the request waits for a slow call}) = 1 - (1 - q)^N. \qquad (35.7)
 $$
 
    With 10 shards and $q = 0.01$ (each shard's p99), about 10% of requests experience some shard's p99. Per-shard timeouts and **hedged requests** (sending a duplicate request to another replica when the first is slow) are the standard remedies (Dean and Barroso, 2013). Shard delays are often correlated through shared networks or load, which can make the tail better or much worse than Equation (35.7) suggests.

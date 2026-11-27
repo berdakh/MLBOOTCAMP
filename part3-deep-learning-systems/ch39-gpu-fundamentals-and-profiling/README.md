@@ -143,7 +143,7 @@ additions. The total floating-point operation count is therefore
 
 $$
 \text{FLOPs}(A_{m\times k} B_{k\times n}) = 2\,m\,n\,k ,
-\tag{39.1}
+\qquad (39.1)
 $$
 
 which for square $n \times n$ matrices is $2n^3$. (A fused multiply-add counts as
@@ -177,7 +177,7 @@ some bytes back. Its **arithmetic intensity** is the ratio
 
 $$
 I = \frac{\text{FLOPs performed}}{\text{bytes moved to and from memory}} \quad [\text{FLOP/byte}].
-\tag{39.2}
+\qquad (39.2)
 $$
 
 Two examples fix the idea:
@@ -198,7 +198,7 @@ with the two hardware limits:
 $$
 P_{\text{attainable}} = \min\!\big(P_{\text{peak}},\; I \cdot B_{\text{mem}}\big),
 \qquad I^{\star} = \frac{P_{\text{peak}}}{B_{\text{mem}}} .
-\tag{39.3}
+\qquad (39.3)
 $$
 
 Here $P_{\text{peak}}$ is the peak arithmetic rate (FLOP/s), $B_{\text{mem}}$ the
@@ -325,7 +325,7 @@ $$
 T_{\text{epoch}} \approx n_b\,(t_{\text{load}} + t_{\text{step}}) \;\; (\text{no workers}),
 \qquad
 T_{\text{epoch}} \approx n_b \max\!\Big(\frac{t_{\text{load}}}{k},\; t_{\text{step}}\Big) \;\; (k \text{ workers}).
-\tag{39.4}
+\qquad (39.4)
 $$
 
 Without workers the two times add; with $k$ workers they overlap and the slower of the

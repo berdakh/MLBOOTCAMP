@@ -47,7 +47,7 @@ A design becomes concrete when its numbers are computed. Four formulas cover mos
 **Peak queries per second.**
 
 $$
-\text{QPS}_{\text{peak}} = \frac{\text{DAU} \times \text{requests per user per day}}{86{,}400} \times \text{peak factor}. \tag{37.1}
+\text{QPS}_{\text{peak}} = \frac{\text{DAU} \times \text{requests per user per day}}{86{,}400} \times \text{peak factor}. \qquad (37.1)
 $$
 
 With 50 million daily active users (DAU) making 20 requests each and a peak-to-average ratio of 2.5: $10^9$ requests per day, about 11,600 QPS on average and about 28,900 at peak. For mental arithmetic, $86{,}400 \approx 10^5$ seconds per day gives "about 30,000 at peak" to one significant figure.
@@ -56,7 +56,7 @@ With 50 million daily active users (DAU) making 20 requests each and a peak-to-a
 
 $$
 \text{rows/s} = \text{QPS} \times \text{candidates scored}, \qquad
-\text{servers} = \left\lceil \frac{\text{rows/s}}{\text{rows/s per core} \times \text{cores} \times \text{utilisation}} \right\rceil. \tag{37.2}
+\text{servers} = \left\lceil \frac{\text{rows/s}}{\text{rows/s per core} \times \text{cores} \times \text{utilisation}} \right\rceil. \qquad (37.2)
 $$
 
 At 28,900 QPS and 500 candidates, the heavy ranker scores 14.5 million rows per second. At an assumed (to be measured) 20,000 rows per second per core, 32 cores per server and 60% target utilisation (Chapter 35 explained why servers are not run near saturation), that is $14.5\text{M} / 384{,}000 = 37.7$, so 38 servers. Halving either the number of candidates or the cost per row saves about 19 servers, which is the economic case for pre-rankers and for the techniques of Chapter 36.
@@ -64,7 +64,7 @@ At 28,900 QPS and 500 candidates, the heavy ranker scores 14.5 million rows per 
 **Embedding and index memory.** For $n$ vectors of dimension $d$ with $b$ bytes per number,
 
 $$
-\text{flat: } n\,d\,b, \qquad \text{HNSW: } n\,(d\,b + 2M \cdot 4), \qquad \text{IVF-PQ: } n\,(\text{code bytes} + 8), \tag{37.3}
+\text{flat: } n\,d\,b, \qquad \text{HNSW: } n\,(d\,b + 2M \cdot 4), \qquad \text{IVF-PQ: } n\,(\text{code bytes} + 8), \qquad (37.3)
 $$
 
 where $M$ is the HNSW connectivity parameter (the bottom layer stores up to $2M$ neighbours per node as 4-byte ids; upper layers add little) and IVF-PQ stores a compressed code plus an 8-byte id per vector. For 100 million items with 128-dimensional float32 embeddings: 51.2 GB flat, 76.8 GB with HNSW links ($M = 32$), and 7.2 GB with 64-byte product-quantisation codes. This single calculation changes the architecture: 51–77 GB does not fit comfortably on one commodity serving host together with everything else, while 7 GB does — at a cost in recall. Training adds further copies (the Adam optimiser keeps two moment estimates per parameter, so roughly three times the parameter memory), and serving adds replicas. Units must be stated: decimal gigabytes ($10^9$ bytes) differ from binary gibibytes ($2^{30}$) by 7.4%.
@@ -149,7 +149,7 @@ A latency budget for the 150 ms server p99: request fan-in and user features 10 
 - **Lexical retrieval** uses an inverted index scored by **BM25** over title, attribute and description fields, filtered by the extracted attributes; top 1,000. For one query term $t$ and document $D$,
 
 $$
-\operatorname{score}(t, D) = \operatorname{IDF}(t) \cdot \frac{f(t, D)\,(k_1 + 1)}{f(t, D) + k_1\left(1 - b + b\,\frac{\lvert D \rvert}{\text{avgdl}}\right)}, \tag{37.4}
+\operatorname{score}(t, D) = \operatorname{IDF}(t) \cdot \frac{f(t, D)\,(k_1 + 1)}{f(t, D) + k_1\left(1 - b + b\,\frac{\lvert D \rvert}{\text{avgdl}}\right)}, \qquad (37.4)
 $$
 
   summed over the query's terms. Here $f(t, D)$ is the number of occurrences of $t$ in $D$, $\lvert D \rvert$ the document length, avgdl the average length, $\operatorname{IDF}(t)$ the inverse document frequency (rare terms count more), and typically $k_1 \approx 1.2$, $b \approx 0.75$. Repeated occurrences help with diminishing returns controlled by $k_1$, and long documents are penalised through $b$. *Example:* with IDF 2.0, three occurrences in a document of average length give $2.0 \times 3 \times 2.2 / (3 + 1.2) = 3.14$; ten occurrences give only 3.9. Lexical retrieval is precise for exact terms, model numbers and brands.

@@ -51,7 +51,7 @@ inputs, each weight is read once and used $B$ times:
 
 $$
 I(B) \approx \frac{2\,B\,d_{\text{in}}\,d_{\text{out}}}{b\,d_{\text{in}}\,d_{\text{out}}} = \frac{2B}{b}\ \ \text{FLOPs per byte}
-\tag{50.1}
+\qquad (50.1)
 $$
 
 where $b$ is the number of bytes per weight. The roofline model (Chapter 39) states that a computation is
@@ -65,7 +65,7 @@ The throughput of batched calls and the latency of a request are
 
 $$
 \text{throughput}(B) = \frac{B}{t(B)}, \qquad \text{latency} \approx t_{\text{wait}} + t(B)
-\tag{50.2}
+\qquad (50.2)
 $$
 
 where $t(B)$ is the time of one model call on a batch of $B$ and $t_{\text{wait}}$ the time a request spends
@@ -140,7 +140,7 @@ latency **service-level objective (SLO)** such as "p95 ≤ 60 ms" is stated in p
 
 $$
 L = \lambda\, W
-\tag{50.3}
+\qquad (50.3)
 $$
 
 where $L$ is the average number of requests in the system, $\lambda$ the arrival rate (requests per second)
@@ -224,7 +224,7 @@ The cache costs memory, linear in the number of tokens:
 
 $$
 \text{KV bytes per token} = 2 \cdot n_{\text{layers}} \cdot n_{\text{kv heads}} \cdot d_{\text{head}} \cdot b
-\tag{50.4}
+\qquad (50.4)
 $$
 
 The factor 2 counts keys and values; $n_{\text{layers}}$ is the number of transformer layers,
@@ -295,7 +295,7 @@ average for a fraction $u$ of the time costs
 
 $$
 \text{cost}_{1k} = \frac{1000 \cdot p}{3600 \cdot r \cdot u}
-\tag{50.5}
+\qquad (50.5)
 $$
 
 dollars per 1,000 requests. Utilisation $u$ is below 1 because capacity is provisioned for the peak of the

@@ -97,7 +97,7 @@ one event at a time. Three window types cover almost every streaming feature.
 
 $$
 \text{start}(t) = \left\lfloor \frac{t}{w} \right\rfloor w
-\tag{22.1}
+\qquad (22.1)
 $$
 
 where $t$ is the event time in seconds since an agreed epoch and $w$ the window
@@ -110,7 +110,7 @@ event at time $t$ belongs to the $S/h$ windows whose starts are
 
 $$
 \left\{\, \left\lfloor t/h \right\rfloor h - j h \;:\; j = 0, \dots, S/h - 1 \,\right\}
-\tag{22.2}
+\qquad (22.2)
 $$
 
 With $S = 3600$ s, $h = 900$ s and $t = 2{,}000$ s, the starts are 1,800, 900, 0
@@ -127,7 +127,7 @@ session within the gap:
 
 $$
 t \text{ joins } [a, b] \iff a - g \le t \le b + g
-\tag{22.3}
+\qquad (22.3)
 $$
 
 For example, with $g = 30$ minutes and sessions $[10{:}00, 10{:}20]$ and
@@ -148,7 +148,7 @@ $$
 W = \max_{\text{events seen}} t \; - \; L,
 \qquad \text{close } [s, s+w) \text{ when } W \ge s + w,
 \qquad \text{an event is late if } s + w \le W_\text{before}
-\tag{22.4}
+\qquad (22.4)
 $$
 
 where $L$ is the *allowed lateness*, $[s, s+w)$ a tumbling window, and

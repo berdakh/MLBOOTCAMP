@@ -32,7 +32,7 @@ Two further topics concern interpretation. Segment analyses performed after the 
 Much of the variance of a per-user metric such as clicks per user is *between-user* variance: heavy users click a lot in any period. That part is predictable from the same user's behaviour before the experiment. Let $y_i$ be user $i$'s metric during the experiment and $x_i$ a **covariate** measured before assignment, typically the same metric in a pre-period of the same length. CUPED (Controlled-experiment Using Pre-Experiment Data; Deng, Xu, Kohavi and Walker, 2013) replaces $y_i$ with
 
 $$
-y^{cv}_i = y_i - \theta\,(x_i - \bar x). \tag{30.1}
+y^{cv}_i = y_i - \theta\,(x_i - \bar x). \qquad (30.1)
 $$
 
 **Unbiasedness.** Because $x$ is measured before randomisation, its distribution is the same in both arms, so $E[\bar x_B - \bar x_A] = 0$. The difference in adjusted means is $(\bar y_B - \bar y_A) - \theta(\bar x_B - \bar x_A)$, whose expectation equals that of the raw difference for *any* fixed $\theta$. Subtracting $\bar x$ also keeps the adjusted metric in the original units.
@@ -47,7 +47,7 @@ a quadratic in $\theta$ minimised at
 
 $$
 \theta^* = \frac{\operatorname{cov}(x, y)}{\operatorname{Var}(x)}, \qquad
-\operatorname{Var}(y^{cv}) = \operatorname{Var}(y)\,(1 - \rho^2), \tag{30.2}
+\operatorname{Var}(y^{cv}) = \operatorname{Var}(y)\,(1 - \rho^2), \qquad (30.2)
 $$
 
 where $\rho = \operatorname{corr}(x, y)$. $\theta^*$ is the ordinary least-squares slope of $y$ on $x$; CUPED is regression adjustment with one pre-treatment covariate. Since the required sample size is proportional to the variance (Equation 29.4), the factor $1 - \rho^2$ applies directly to the number of users or the duration of the test. In practice $\theta$ is estimated on both arms pooled; with a large sample the estimation error in $\theta$ is negligible.
@@ -94,13 +94,13 @@ $$
 The covariance matrix of $(\bar c, \bar n)$ is $\Sigma / N$, where $\Sigma$ holds the per-user variances $\sigma_c^2$, $\sigma_n^2$ and covariance $\sigma_{cn}$. The variance of a linear function is $\nabla f^\top (\Sigma/N) \nabla f$, which expands to
 
 $$
-\operatorname{Var}(\hat R) \approx \frac{1}{N}\left( \frac{\sigma_c^2}{\mu_n^2} - \frac{2\,\mu_c\,\sigma_{cn}}{\mu_n^3} + \frac{\mu_c^2\,\sigma_n^2}{\mu_n^4} \right). \tag{30.3}
+\operatorname{Var}(\hat R) \approx \frac{1}{N}\left( \frac{\sigma_c^2}{\mu_n^2} - \frac{2\,\mu_c\,\sigma_{cn}}{\mu_n^3} + \frac{\mu_c^2\,\sigma_n^2}{\mu_n^4} \right). \qquad (30.3)
 $$
 
 The middle term matters: users with more impressions also have more clicks ($\sigma_{cn} > 0$), and the numerator and denominator move together, partly cancelling. An equivalent form is often easier to compute and to combine with CUPED: define the **linearised** per-user values
 
 $$
-\ell_i = \frac{c_i - R\, n_i}{\mu_n}, \qquad \operatorname{Var}(\hat R) \approx \frac{\operatorname{Var}(\ell)}{N}. \tag{30.4}
+\ell_i = \frac{c_i - R\, n_i}{\mu_n}, \qquad \operatorname{Var}(\hat R) \approx \frac{\operatorname{Var}(\ell)}{N}. \qquad (30.4)
 $$
 
 Because $\ell_i$ is an ordinary per-user value, a t-test on $\ell$ or a CUPED regression of $\ell$ on a pre-period covariate can be applied without further derivation.
@@ -153,7 +153,7 @@ Each shown item belongs to exactly one team, the teams' sizes differ by at most 
 For each user $u$, let $\text{clicks}_{A,u}$ and $\text{clicks}_{B,u}$ be the clicks credited to each ranker. The per-user difference has mean
 
 $$
-\Delta = \frac{1}{U}\sum_{u=1}^{U} \left(\text{clicks}_{A,u} - \text{clicks}_{B,u}\right), \qquad t = \frac{\Delta}{s_\Delta / \sqrt{U}}, \tag{30.5}
+\Delta = \frac{1}{U}\sum_{u=1}^{U} \left(\text{clicks}_{A,u} - \text{clicks}_{B,u}\right), \qquad t = \frac{\Delta}{s_\Delta / \sqrt{U}}, \qquad (30.5)
 $$
 
 a one-sample t-test of whether the mean difference is zero, where $U$ is the number of users and $s_\Delta$ the standard deviation of the per-user differences. A sign test on per-user preferences is an alternative. *Worked example:* 400 users with mean difference 0.05 and SD 0.8 give $t = 0.05 / (0.8/20) = 1.25$, not significant; 1,600 users with the same values give $t = 2.5$.

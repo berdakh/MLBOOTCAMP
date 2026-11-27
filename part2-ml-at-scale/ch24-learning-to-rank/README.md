@@ -69,7 +69,7 @@ $$
 \operatorname{DCG@}k = \sum_{i=1}^{k} \frac{2^{\,\text{rel}_i} - 1}{\log_2(i + 1)},
 \qquad
 \operatorname{NDCG@}k = \frac{\operatorname{DCG@}k}{\operatorname{IDCG@}k}
-\tag{24.1}
+\qquad (24.1)
 $$
 
 where IDCG@$k$ is the DCG of the ideal ordering of the same items, so that
@@ -83,7 +83,7 @@ ideal order (ranks 1 and 2) gives $1 + 0.631 = 1.631$; hence NDCG $= 0.624$.
 
 $$
 \operatorname{MRR} = \frac{1}{\lvert Q \rvert} \sum_{q \in Q} \frac{1}{\text{rank}_q}
-\tag{24.2}
+\qquad (24.2)
 $$
 
 where $\text{rank}_q$ is the rank of the first relevant item in group $q$. First
@@ -96,7 +96,7 @@ score (ties counting one half):
 
 $$
 \operatorname{PA} = \frac{\sum_{g}\sum_{i,j \in g:\, y_i > y_j} \left( \mathbb{1}[s_i > s_j] + \tfrac{1}{2}\mathbb{1}[s_i = s_j] \right)}{\sum_{g} \lvert \{(i, j) \in g : y_i > y_j\} \rvert}
-\tag{24.3}
+\qquad (24.3)
 $$
 
 This is the quantity a pairwise objective optimises, and the within-group
@@ -161,7 +161,7 @@ $$
 L_{ij} = \log\!\left(1 + e^{-\sigma (s_i - s_j)}\right),
 \qquad
 \lambda_{ij} = \frac{\partial L_{ij}}{\partial s_i} = \frac{-\sigma}{1 + e^{\sigma (s_i - s_j)}}
-\tag{24.4}
+\qquad (24.4)
 $$
 
 where $s_i$ and $s_j$ are the model scores and $\sigma$ a scale parameter (1 in
@@ -182,7 +182,7 @@ NDCG that would result from swapping $i$ and $j$ in the current ranking:
 
 $$
 \lambda^{\text{LR}}_{ij} = \lambda_{ij} \cdot \left\lvert \Delta \operatorname{NDCG}_{ij} \right\rvert
-\tag{24.5}
+\qquad (24.5)
 $$
 
 The gradient of item $i$ is the sum of its $\lambda^{\text{LR}}_{ij}$ over all its

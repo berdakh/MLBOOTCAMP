@@ -120,7 +120,7 @@ A minimal service, of the kind built at the start of the lab, has a hand-written
 "model" so that attention stays on the structure of the app:
 
 $$
-z = -1.0 - 0.05\, s + 0.8\, f, \qquad p = \sigma(z) = \frac{1}{1 + e^{-z}} \tag{10.1}
+z = -1.0 - 0.05\, s + 0.8\, f, \qquad p = \sigma(z) = \frac{1}{1 + e^{-z}} \qquad (10.1)
 $$
 
 where $s$ is the number of sessions in the last four weeks, $f$ is the number
@@ -364,7 +364,7 @@ $R_{\text{new}}$ be the sets of response fields, with their meanings, that
 the two versions guarantee. A change is backwards compatible if
 
 $$
-V_{\text{old}} \subseteq V_{\text{new}} \quad \text{and} \quad R_{\text{old}} \subseteq R_{\text{new}}, \tag{10.2}
+V_{\text{old}} \subseteq V_{\text{new}} \quad \text{and} \quad R_{\text{old}} \subseteq R_{\text{new}}, \qquad (10.2)
 $$
 
 that is, every request that used to be accepted is still accepted, and every

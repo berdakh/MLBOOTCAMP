@@ -94,7 +94,7 @@ $$
 m_r = \frac{1}{\lvert S_r \rvert} \sum_{s \in S_r} x_{r,s}, \qquad
 \text{overall} = \frac{\sum_r w_r\, m_r}{\sum_r w_r}, \qquad
 \bar{x}_s = \frac{1}{\lvert R_s \rvert} \sum_{r \in R_s} x_{r,s}
-\tag{58.1}
+\qquad (58.1)
 $$
 
 $m_r$ is the mean of round $r$, the overall score is a weighted mean of round means (so that a round with five signals does not outweigh one
@@ -146,7 +146,7 @@ done **unaided, from a blank file, within interview time**, which is level 3 of 
 
 $$
 \text{readiness} = \frac{\#\{\text{skills done unaided}\}}{\#\{\text{skills}\}}
-\tag{58.2}
+\qquad (58.2)
 $$
 
 and it should be tracked weekly, not measured once. Recognising a method when reading about it is level 1, not level 3; strict self-assessment is
@@ -171,7 +171,7 @@ headroom $h$, a price $p$ per replica-hour, 730 hours per month and an average l
 $$
 n = \max\!\left(2, \left\lceil \frac{\text{QPS}_{\text{peak}}}{\text{QPS}_{\text{replica}}\,(1 - h)} \right\rceil\right), \qquad
 \text{cost}_{1k} = \frac{n \cdot p \cdot 730}{\overline{\text{QPS}} \cdot 3600 \cdot 730 / 1000}
-\tag{58.3}
+\qquad (58.3)
 $$
 
 *Worked example (assumptions stated):* a peak of 1,000 QPS, 100 QPS per replica (measured), $h = 0.3$: $n = \lceil 14.3 \rceil = 15$ replicas. At

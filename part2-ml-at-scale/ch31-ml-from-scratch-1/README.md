@@ -59,7 +59,7 @@ Pairwise squared distances between the rows of $A \in \mathbb{R}^{m \times d}$ a
 3. **The expansion**
 
 $$
-\lVert a - b \rVert^2 = \lVert a \rVert^2 - 2\,a^\top b + \lVert b \rVert^2, \tag{31.1}
+\lVert a - b \rVert^2 = \lVert a \rVert^2 - 2\,a^\top b + \lVert b \rVert^2, \qquad (31.1)
 $$
 
 computed as `(A**2).sum(1)[:, None] - 2 * A @ B.T + (B**2).sum(1)[None, :]`. The dominant cost is one matrix product, $O(mnd)$, executed by an optimised, multi-threaded BLAS routine; memory is $O(mn)$ for the result only.
@@ -81,7 +81,7 @@ A complexity claim can be checked empirically. If $t(n) \approx c\, n^k$, then $
 In float64, `exp(x)` overflows for $x > 709.8$ (the largest representable number is about $1.8 \times 10^{308}$). Logits of several hundred are common: an unnormalised feature, a large learning rate, a temperature of 0.01. For any constant $m$,
 
 $$
-\log \sum_j e^{z_j} = m + \log \sum_j e^{z_j - m}, \tag{31.2}
+\log \sum_j e^{z_j} = m + \log \sum_j e^{z_j - m}, \qquad (31.2)
 $$
 
 because $\sum_j e^{z_j} = e^m \sum_j e^{z_j - m}$. Choosing $m = \max_j z_j$ makes every exponent non-positive and the largest term exactly 1, so the sum lies in $[1, J]$ for $J$ terms and neither overflows nor underflows to zero. Softmax is invariant to the same shift, $\operatorname{softmax}(z) = \operatorname{softmax}(z - m)$, since the factor $e^{-m}$ cancels between numerator and denominator.
@@ -102,7 +102,7 @@ because $\sum_j e^{z_j} = e^m \sum_j e^{z_j - m}$. Choosing $m = \max_j z_j$ mak
 A gradient derived by hand should be checked numerically before it is trusted. The **central difference**
 
 $$
-\frac{\partial f}{\partial w_i} \approx \frac{f(w + \varepsilon e_i) - f(w - \varepsilon e_i)}{2\varepsilon} \tag{31.3}
+\frac{\partial f}{\partial w_i} \approx \frac{f(w + \varepsilon e_i) - f(w - \varepsilon e_i)}{2\varepsilon} \qquad (31.3)
 $$
 
 has truncation error $O(\varepsilon^2)$: in the Taylor expansions of $f(w \pm \varepsilon e_i)$ the even-order terms cancel, leaving $\varepsilon^2 f'''/6$ as the leading error. (The one-sided difference has error $O(\varepsilon)$.) Here $e_i$ is the $i$-th unit vector. Rounding error grows as $\varepsilon$ shrinks, roughly as $\epsilon_{\text{mach}} / \varepsilon$, so $\varepsilon \approx 10^{-5}$ is a good compromise in float64.
@@ -110,7 +110,7 @@ has truncation error $O(\varepsilon^2)$: in the Taylor expansions of $f(w \pm \v
 The analytic gradient $g$ and the numerical one $g_{\text{num}}$ are compared by the **relative error**
 
 $$
-\frac{\lVert g - g_{\text{num}} \rVert}{\lVert g \rVert + \lVert g_{\text{num}} \rVert}. \tag{31.4}
+\frac{\lVert g - g_{\text{num}} \rVert}{\lVert g \rVert + \lVert g_{\text{num}} \rVert}. \qquad (31.4)
 $$
 
 Below about $10^{-7}$ the gradient is correct; $10^{-4}$ or above indicates a bug. Typical bugs give much larger values: a missing factor of 2 gives exactly $\lvert g/2 - g \rvert / (\lvert g/2 \rvert + \lvert g \rvert) = 1/3$, which is what the lab measures (about $10^{-11}$ for the correct gradient).
@@ -132,7 +132,7 @@ $$
 With L2 regularisation of strength $\lambda$ on the weights only, the training objective is
 
 $$
-L(w, b) = \frac{1}{n}\sum_{i=1}^n \big[\log(1 + e^{z_i}) - y_i z_i\big] + \frac{\lambda}{2}\lVert w\rVert^2. \tag{31.5}
+L(w, b) = \frac{1}{n}\sum_{i=1}^n \big[\log(1 + e^{z_i}) - y_i z_i\big] + \frac{\lambda}{2}\lVert w\rVert^2. \qquad (31.5)
 $$
 
 ### 31.6.2 Gradient
@@ -140,7 +140,7 @@ $$
 Since $\frac{d}{dz}\log(1 + e^z) = \sigma(z)$, the derivative of the per-example loss with respect to the logit is $\sigma(z) - y = p - y$, "prediction minus target". The chain rule through $z_i = x_i^\top w + b$ gives
 
 $$
-\nabla_w L = \frac{1}{n} X^\top (p - y) + \lambda w, \qquad \frac{\partial L}{\partial b} = \frac{1}{n}\sum_i (p_i - y_i). \tag{31.6}
+\nabla_w L = \frac{1}{n} X^\top (p - y) + \lambda w, \qquad \frac{\partial L}{\partial b} = \frac{1}{n}\sum_i (p_i - y_i). \qquad (31.6)
 $$
 
 The same "mean minus observation" form appears for softmax regression and for linear regression with squared loss. All three are generalised linear models with the **canonical link**, for which the gradient of the negative log-likelihood with respect to the natural parameter is always the mean minus the observation.
@@ -166,7 +166,7 @@ For $C$ classes, softmax (multinomial logistic) regression computes logits $Z = 
 **Gradient derivation.** For one example with logits $z$ and true class $y$, $L = -z_y + \log \sum_j e^{z_j}$. Differentiating, $\partial L/\partial z_k = -\mathbb{1}[k = y] + e^{z_k} / \sum_j e^{z_j} = p_k - \mathbb{1}[k = y]$. In matrix form, $\partial L/\partial Z = (P - Y)/n$, and the chain rule through $Z = XW$ gives
 
 $$
-\nabla_W L = \frac{1}{n} X^\top (P - Y). \tag{31.7}
+\nabla_W L = \frac{1}{n} X^\top (P - Y). \qquad (31.7)
 $$
 
 A confidently wrong prediction produces a large gradient; a confidently correct one, almost none. *Worked example:* $z = (2, 1, 0)$, $y = 0$: $p = (0.665, 0.245, 0.090)$ and the gradient with respect to $z$ is $(-0.335, 0.245, 0.090)$.
@@ -180,7 +180,7 @@ Implementation notes: build $Y$ by indexing (`Y[np.arange(n), y] = 1`), not with
 k-means partitions $n$ points into $k$ clusters by minimising the **inertia** (within-cluster sum of squares)
 
 $$
-J(c, \mu) = \sum_{i=1}^n \lVert x_i - \mu_{c(i)} \rVert^2, \tag{31.8}
+J(c, \mu) = \sum_{i=1}^n \lVert x_i - \mu_{c(i)} \rVert^2, \qquad (31.8)
 $$
 
 where $c(i) \in \{1, \dots, k\}$ is the cluster of point $i$ and $\mu_1, \dots, \mu_k$ are the centres. Lloyd's algorithm alternates two steps:
@@ -230,7 +230,7 @@ $$
 Evaluated directly this costs $O(n_+ n_-)$. Sorting gives an $O(n \log n)$ algorithm. Let $r_i$ be the 1-based rank of score $i$ among all $n$ scores, with tied scores sharing their average rank. Then
 
 $$
-\text{AUC} = \frac{\sum_{i \in \text{pos}} r_i - n_+(n_+ + 1)/2}{n_+\, n_-}. \tag{31.9}
+\text{AUC} = \frac{\sum_{i \in \text{pos}} r_i - n_+(n_+ + 1)/2}{n_+\, n_-}. \qquad (31.9)
 $$
 
 **Why this holds (sketch, no ties).** The rank $r_i$ of a positive equals one plus the number of scores below it, which is (number of negatives below it) + (number of positives below it) + 1. Summing over positives, the positives-below-positives counts plus the ones add up to $1 + 2 + \dots + n_+ = n_+(n_+ + 1)/2$. What remains, $\sum r_i - n_+(n_+ + 1)/2$, is the number of (positive, negative) pairs correctly ordered: the Mann–Whitney $U$ statistic. Dividing by the number of pairs gives AUC. Average ranks for tie groups contribute exactly one half per tied pair.
@@ -244,7 +244,7 @@ Average ranks are computed by sorting once, finding the boundaries of runs of eq
 For one query, rank items by score (descending, with a stable sort so that ties keep their input order) and compute
 
 $$
-\text{DCG@}k = \sum_{i=1}^{\min(k, n)} \frac{2^{\text{rel}_i} - 1}{\log_2(i + 1)}, \qquad \text{NDCG@}k = \frac{\text{DCG@}k}{\text{IDCG@}k}, \tag{31.10}
+\text{DCG@}k = \sum_{i=1}^{\min(k, n)} \frac{2^{\text{rel}_i} - 1}{\log_2(i + 1)}, \qquad \text{NDCG@}k = \frac{\text{DCG@}k}{\text{IDCG@}k}, \qquad (31.10)
 $$
 
 where $\text{rel}_i$ is the graded relevance of the item at position $i$ and IDCG@$k$ is the DCG of the ideal ordering (labels sorted descending). If no item is relevant, IDCG is zero and NDCG is defined as 0 by convention (some evaluations skip such queries instead).

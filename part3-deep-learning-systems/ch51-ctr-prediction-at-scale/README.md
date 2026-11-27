@@ -73,7 +73,7 @@ minimising the **log loss** over $N$ impressions with labels $y_i \in \{0, 1\}$:
 
 $$
 \mathrm{LL} = -\frac{1}{N} \sum_{i=1}^{N} \big[\, y_i \log p_i + (1 - y_i) \log (1 - p_i) \,\big]
-\tag{51.1}
+\qquad (51.1)
 $$
 
 Predicting 0.03 costs $-\ln 0.03 = 3.51$ on a click and $-\ln 0.97 = 0.030$ on a non-click. Log loss is a
@@ -87,7 +87,7 @@ predictor, which always predicts the base rate $\bar{p}$ (the mean of $y$):
 $$
 \mathrm{NE} = \frac{\mathrm{LL}}{H(\bar{p})}, \qquad
 H(\bar{p}) = -\big[\, \bar{p} \log \bar{p} + (1 - \bar{p}) \log (1 - \bar{p}) \,\big]
-\tag{51.2}
+\qquad (51.2)
 $$
 
 $\mathrm{NE} = 1$ means "no better than predicting the average"; lower is better. For $\bar{p} = 0.03$,
@@ -123,7 +123,7 @@ vocabulary with a hash function:
 
 $$
 \text{bucket} = h(\text{field}, \text{value}) \bmod n
-\tag{51.3}
+\qquad (51.3)
 $$
 
 where $h$ is a hash function and $n$ the number of buckets. Unseen values require no special case, memory
@@ -149,7 +149,7 @@ key shares its bucket with at least one other key is
 
 $$
 P(\text{collision}) = 1 - \left(1 - \tfrac{1}{n}\right)^{k - 1} \approx 1 - e^{-k/n}
-\tag{51.4}
+\qquad (51.4)
 $$
 
 For the lab's $k = 425{,}677$ keys and $n = 2^{19}$ buckets this is $1 - e^{-0.81} \approx 0.56$; the
@@ -175,7 +175,7 @@ row of a table of size rows × dimension. The memory during training is
 
 $$
 \text{bytes} = \text{rows} \times \text{dim} \times \text{bytes per value} \times (1 + \text{optimiser slots})
-\tag{51.5}
+\qquad (51.5)
 $$
 
 where Adagrad keeps one accumulator per value (one slot) and Adam two. The lab's CPU table ($2^{18}$ rows
@@ -211,7 +211,7 @@ version 2 (Wang et al., 2021), uses *cross layers*:
 
 $$
 \mathbf{x}_{l+1} = \mathbf{x}_0 \odot \left( W_l\, \mathbf{x}_l + \mathbf{b}_l \right) + \mathbf{x}_l
-\tag{51.6}
+\qquad (51.6)
 $$
 
 Here $\mathbf{x}_0$ is the input vector (the concatenated embeddings and transformed dense features),
@@ -269,7 +269,7 @@ $$
 \frac{q}{1 - q} = \frac{1}{w} \cdot \frac{p}{1 - p}
 \quad\Longrightarrow\quad
 p = \frac{q}{q + (1 - q)/w}
-\tag{51.7}
+\qquad (51.7)
 $$
 
 (He et al., 2014). For example, $q = 0.236$ and $w = 0.1$ give $p = 0.236 / (0.236 + 7.64) = 0.030$. The
@@ -299,7 +299,7 @@ cumulative distribution function $F$, the probability that a click with elapsed 
 $$
 P(y_{\text{obs}} = 1 \mid \mathbf{x}, e) = \mathrm{pCVR}(\mathbf{x}) \cdot F(e), \qquad
 F(e) = 1 - e^{-e/\tau}\ \ \text{(exponential delays)}
-\tag{51.8}
+\qquad (51.8)
 $$
 
 where $\tau$ is the mean delay. With $\tau = 48$ hours, a click from 12 hours ago has shown only

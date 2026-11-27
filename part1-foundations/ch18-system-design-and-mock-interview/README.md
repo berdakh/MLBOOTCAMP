@@ -209,7 +209,7 @@ throughput of one replica in queries per second. Then
 $$
 \text{QPS}_{\text{avg}} = \frac{\text{DAU} \times r}{86{,}400}, \qquad
 \text{QPS}_{\text{peak}} = f\, \text{QPS}_{\text{avg}}, \qquad
-\text{replicas} = \left\lceil \frac{\text{QPS}_{\text{peak}}}{u\, \text{QPS}_{\text{rep}}} \right\rceil. \tag{18.1}
+\text{replicas} = \left\lceil \frac{\text{QPS}_{\text{peak}}}{u\, \text{QPS}_{\text{rep}}} \right\rceil. \qquad (18.1)
 $$
 
 A day has 86,400 seconds; rounding to $10^5$ makes the division easy and
@@ -228,7 +228,7 @@ did for the churn service.
 Little's law (Chapter 14) gives the concurrency the system must support:
 
 $$
-L = \lambda\, W. \tag{18.2}
+L = \lambda\, W. \qquad (18.2)
 $$
 
 At 521 QPS and 100 ms per request, about 52 requests are in flight at any
@@ -239,7 +239,7 @@ A **latency budget** splits an end-to-end target among the steps of a
 request, so that each component knows how much time it may take:
 
 $$
-\text{headroom} = T_{\text{total}} - \sum_{s} t_s, \tag{18.3}
+\text{headroom} = T_{\text{total}} - \sum_{s} t_s, \qquad (18.3)
 $$
 
 where $t_s$ is the (p95) time of step $s$. For the support-console API in the

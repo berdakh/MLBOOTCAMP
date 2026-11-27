@@ -93,7 +93,7 @@ $n_U(c)$ rows in table $U$ and $n_K(c)$ rows in table $K$,
 $$
 \text{rows after join} = \sum_{c} n_U(c)\, n_K(c) ,
 \qquad
-\text{SUM}_{\text{joined}}(x) = \sum_{c} n_K(c) \sum_{u \in U_c} x_u , \tag{4.1}
+\text{SUM}_{\text{joined}}(x) = \sum_{c} n_K(c) \sum_{u \in U_c} x_u , \qquad (4.1)
 $$
 
 where $U_c$ is the set of $U$-rows of customer $c$ and $x_u$ a value in $U$.
@@ -193,7 +193,7 @@ ended. A usage week starting on day $w$ is therefore usable at snapshot $T$
 only if
 
 $$
-w + 7\ \text{days} \le T . \tag{4.2}
+w + 7\ \text{days} \le T . \qquad (4.2)
 $$
 
 The obvious condition $w < T$ is wrong. For $T$ = Friday 2024-03-01, the week
@@ -205,7 +205,7 @@ conditions agree, which is why the error survives casual testing.
 **The label.** For an account $i$ active at $T$,
 
 $$
-y_i(T) = \mathbb{1}\left[\, T \le \text{churn\_date}_i < T + 30\ \text{days} \,\right] , \tag{4.3}
+y_i(T) = \mathbb{1}\left[\, T \le \text{churn\_date}_i < T + 30\ \text{days} \,\right] , \qquad (4.3)
 $$
 
 where $\mathbb{1}[\cdot]$ equals 1 if the condition holds and 0 otherwise.

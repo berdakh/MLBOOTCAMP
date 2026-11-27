@@ -47,7 +47,7 @@ et al., 2018) treats each query as an $N$-way classification problem whose corre
 
 $$
 \mathcal{L} = -\frac{1}{B} \sum_{i=1}^{B} \log \frac{\exp(\mathbf q_i \cdot \mathbf d_i / \tau)}{\sum_{j=1}^{N} \exp(\mathbf q_i \cdot \mathbf d_j / \tau)} .
-\tag{46.1}
+\qquad (46.1)
 $$
 
 Here $\mathbf q_i \cdot \mathbf d_j$ is a cosine similarity in $[-1, 1]$ and $\tau$ is the **temperature**. In matrix form, the loss is the
@@ -69,7 +69,7 @@ temperature makes training unstable and punishes false negatives severely.
 
 $$
 \mathcal{L}_{\text{uniform}} = \ln N ,
-\tag{46.2}
+\qquad (46.2)
 $$
 
 for example $\ln 32 = 3.47$ for a batch of 16 with 16 hard negatives. More candidates make each classification harder and the softmax
@@ -115,7 +115,7 @@ replacement $b$ times; in each resample it computes the mean difference between 
 
 $$
 \Delta^{\star(b)} = \frac{1}{n} \sum_{i \in \text{sample } b} \big(m_A(i) - m_B(i)\big),
-\tag{46.3}
+\qquad (46.3)
 $$
 
 and the 2.5th and 97.5th percentiles of the $\Delta^{\star}$ values form a 95% confidence interval (Efron & Tibshirani, 1993). If the interval
@@ -190,7 +190,7 @@ documents to bring up (its Recall@depth is the ceiling), whereas latency rises l
 $$
 \text{latency} \approx \frac{\text{depth} \times t_{\text{pair}}}{\text{parallelism}}, \qquad
 \text{pair inferences per second} = \text{QPS} \times \text{depth} .
-\tag{46.4}
+\qquad (46.4)
 $$
 
 **Worked example.** With a 100 ms p99 latency budget and about 1 ms per pair on a GPU, a 50-deep re-rank fits. At 1,000 queries per second it
